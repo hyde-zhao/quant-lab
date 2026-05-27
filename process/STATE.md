@@ -1,15 +1,15 @@
 ---
 project_id: "local_backtest"
 workflow_mode: "production"
-current_phase: "story-execution"
+current_phase: "requirement-clarification"
 current_agent: "meta-po"
-active_change: "CR-014"
-active_story: "CR014-S09-windowed-real-fetch-lake-write-run"
-iteration: 252
+active_change: "CR-015, CR-016"
+active_story: ""
+iteration: 253
 blocked: false
 blocked_reason: ""
-last_action: "按用户授权使用 uv --env-file .env 执行 CR014-S09 2026 YTD 真实 Tushare smoke，写入 /tmp/local-backtest-cr014-s09-ytd-lake；6 个真实抓取命令均 success。"
-next_action: "如需全 A prices/adj_factor 2026 YTD 完整回补，需要新增或批准 symbol batching runner；当前只完成 prices/adj_factor 的 000001.SZ 小样本。"
+last_action: "按用户要求先提交当前代码基线 commit 2aeba1d，再创建 QMT 相关变更单 CR-015 与 CR-016。"
+next_action: "等待用户确认 CR-015/CR-016 拆分和范围；确认后按 standard 流程进入 QMT 需求澄清、HLD/ADR、Story Plan 与 CP5 批次门控。"
 checkpoints:
   requirement_confirmed: true
   hld_confirmed: true
