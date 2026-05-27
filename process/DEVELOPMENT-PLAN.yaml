@@ -1,0 +1,4031 @@
+project_id: "local_backtest"
+version: "1.1"
+status: "confirmed-with-cr014-planned"
+confirmed: true
+confirmed_by: "user"
+confirmed_at: "2026-05-14"
+created_at: "2026-05-14"
+created_by: "meta-se"
+last_updated: "2026-05-27T21:33:34+08:00"
+source_hld: "process/HLD.md"
+companion_hld: "process/HLD-DATA-LAKE.md"
+source_adr: "process/ARCHITECTURE-DECISION.md"
+story_backlog: "process/STORY-BACKLOG.md"
+active_change: "CR-014"
+secondary_change: "CR-010"
+cr004_status: "draft-pending-cp4"
+cr004_confirmed: false
+cr005_status: "verified-cp7-pass"
+cr005_confirmed: true
+cr006_status: "cp5-required-fixes-pending"
+cr006_confirmed: true
+cr010_status: "remaining-batches-registered-cp4-addendum-approved"
+cr010_confirmed: true
+cr010_confirmed_by: "user"
+cr010_confirmed_at: "2026-05-22T15:09:54+08:00"
+cr010_remaining_batches_confirmed_at: "2026-05-22T19:33:44+08:00"
+cr010_remaining_batches_approval_source: "user-preauthorized"
+cr011_status: "closed"
+cr011_confirmed: true
+cr011_confirmed_by: "user"
+cr011_confirmed_at: "2026-05-24T08:25:22+08:00"
+cr011_lld_batches:
+  - "CR011-DATA-BATCH-A"
+  - "CR011-RESEARCH-BATCH-B"
+  - "CR011-VALIDATION-BATCH-C"
+cr013_status: "draft-pending-cp3-cp4"
+cr013_confirmed: false
+cr013_lld_batches:
+  - "CR013-BATCH-A"
+cr014_status: "s09-partial-real-smoke-pass-full-a-prices-pending"
+cr014_confirmed: true
+cr014_lld_batches:
+  - "CR014-FULL-HISTORY-LAKE-BATCH-A"
+  - "CR014-REAL-RUN-BATCH-B"
+state_closure:
+  cr005:
+    status: "verified-cp7-pass"
+    note: "CR005-S01..S06 的 Story 卡片、CP6/CP7 检查与 STATE 已显示 verified / CP7 PASS；本计划中的旧 draft/rerun 阻塞口径已 superseded，不再阻塞 CR006-BATCH-A。"
+    authoritative_evidence:
+      - "process/stories/CR005-S01-tushare-connector-real-lake-writer.md"
+      - "process/stories/CR005-S02-tushare-dataset-schema-normalization.md"
+      - "process/stories/CR005-S03-multidataset-quality-catalog-readers.md"
+      - "process/stories/CR005-S04-hs300-local-benchmark.md"
+      - "process/stories/CR005-S05-comparison-backfill-docs.md"
+      - "process/stories/CR005-S06-backtrader-optional-backend.md"
+      - "process/checks/CP7-CR005-S01-tushare-connector-real-lake-writer-VERIFICATION-DONE.md"
+      - "process/checks/CP7-CR005-S02-tushare-dataset-schema-normalization-VERIFICATION-DONE.md"
+      - "process/checks/CP7-CR005-S03-multidataset-quality-catalog-readers-VERIFICATION-DONE.md"
+      - "process/checks/CP7-CR005-S04-hs300-local-benchmark-VERIFICATION-DONE.md"
+      - "process/checks/CP7-CR005-S05-comparison-backfill-docs-VERIFICATION-DONE.md"
+      - "process/checks/CP7-CR005-S06-backtrader-optional-backend-VERIFICATION-DONE.md"
+governance:
+  current_phase: "story-execution"
+  story_plan_confirmed: true
+  cr014_story_plan_confirmed: true
+  next_gate: "S09-FULL-A-PRICES-BATCHING-DECISION"
+  active_wave: "CR014-W5-REAL-RUN"
+  active_story: "CR014-S09-windowed-real-fetch-lake-write-run"
+  qa_documentation_readiness:
+    checked_by: "meta-qa Galileo"
+    checked_at: "2026-05-16"
+    result: "PASS"
+    handoff: "process/handoffs/META-QA-DOCUMENTATION-READINESS-2026-05-16.md"
+    summary: "STORY-001..013 verified；QA-IND-REQ-001 / F-004 CLOSED / REGRESSION_PASS；建议进入 meta-doc/documentation。"
+  workflow_correction:
+    corrected_at: "2026-05-15"
+    corrected_by: "user"
+    summary: "Story 分解完成后先输出各 Story LLD，人工确认后再进入对应 Story 开发；不再按单个 Story 临到开发前才输出 LLD 的旧流程推进"
+    batch_lld_plan: "process/LLD-BATCH-PLAN.md"
+    batch_lld_handoff: "process/handoffs/META-DEV-LLD-BATCH-REMAINING-2026-05-15.md"
+  forbidden_until_lld_confirmed:
+    - "不得实现代码"
+    - "不得写入 delivery/**"
+    - "不得生成安装脚本"
+entry_conditions:
+  - "baseline HLD status=confirmed 且 confirmed=true"
+  - "CR-004 HLD 增量为 draft-pending-cp3-cp4，需 CP3 通过后才可作为实现输入"
+  - "checkpoints/CHECKPOINT-HLD.md 已确认"
+  - "baseline Story Plan 已由用户确认通过"
+  - "CR-004 STORY-014..018 需 CP4 通过后才可进入 CP5/LLD"
+exit_conditions:
+  - "baseline process/ARCHITECTURE-DECISION.md 已确认；CR-004 ADR-008..012 待 CP3/CP4 确认"
+  - "process/STORY-BACKLOG.md 已保留 13 个 verified Story，并追加 5 个 CR-004 draft Story"
+  - "process/DEVELOPMENT-PLAN.yaml 已追加 CR-004 DAG，静态规划无环"
+  - "CR-004 Story LLD 需按 CP5 批次 A/B/C 滚动确认"
+  - "未创建代码实现文件、delivery 文件或安装脚本"
+completion_criteria:
+  story_count: 75
+  baseline_story_count: 13
+  cr004_story_count: 5
+  cr005_story_count: 6
+  cr006_story_count: 4
+  cr007_story_count: 5
+  cr008_story_count: 6
+  story_count_after_cr005: 24
+  story_count_after_cr006: 28
+  story_count_after_cr007: 33
+  story_count_after_cr008: 39
+  story_count_after_cr010: 55
+  cr010_story_count: 16
+  story_count_after_cr011: 63
+  cr011_story_count: 8
+  story_count_after_cr013: 67
+  cr013_story_count: 4
+  story_count_after_cr014: 75
+  cr014_story_count: 8
+  wave_count: 31
+  hld_phase_alignment:
+    M0: "W0"
+    M1: "W1"
+    M2: "W2"
+    M3: "W3"
+    M4: "W4"
+  dag_validation:
+    expected_cycles: 0
+    invalid_references: 0
+    parallel_internal_dependencies: 0
+  cr005_gates:
+    tushare_only_writes_lake: true
+    pit_asof_join_in_pandas_data_layer: true
+    adjusted_prices_in_market_data_layer: true
+    backtrader_optional_backend: true
+    backtrader_depends_on_quality_readers: true
+    two_step_missing_remediation_contract: true
+    benchmark_result_schema_required: true
+    hs300_backfill_job_owner_no_later_than_s04: true
+    no_code_or_dependency_change_in_planning: true
+  cr006_gates:
+    tushare_first_structured_lake_fact_source: true
+    raw_manifest_audit_only_not_runtime_input: true
+    lightweight_engine_consumes_canonical_gold_or_external_legacy_flat: true
+    backtrader_consumes_quality_gated_clean_feed: true
+    old_repo_data_reference_only: true
+    data_fallback_preserved: false
+    no_automatic_real_data_migration_copy_delete: true
+    no_env_credentials_or_private_paths_recorded: true
+    no_code_or_docs_change_in_planning: true
+  cr007_gates:
+    long_horizon_prices_planner_required_before_real_fetch: true
+    benchmark_calendar_same_interval_coverage_required: true
+    dataset_readiness_and_pit_status_explicit: true
+    experiment_13_real_benchmark_preferred_proxy_named_only: true
+    legacy_quality_report_not_current_truth: true
+    no_real_tushare_fetch_or_lake_write_authorized: true
+    no_old_data_operations_authorized: true
+    no_env_credentials_or_private_paths_recorded: true
+    no_code_or_docs_change_in_planning: true
+  cr008_gates:
+    research_input_v1_required_for_new_reports: true
+    proxy_real_benchmark_fields_separated: true
+    research_dataset_builder_read_only: true
+    quality_adjustment_label_window_gates_required: true
+    pit_fixed_universe_explicit: true
+    factor_auxiliary_missing_claims_blocked: true
+    cr007_s02_parallel_implementation_allowed: true
+    cr007_s04_s05_hold_until_cr008_design_confirmation: true
+    cr008_implementation_allowed_before_cp5: false
+    no_real_tushare_fetch_or_lake_write_authorized: true
+    no_old_data_or_legacy_report_content_read_authorized: true
+    no_env_credentials_or_private_paths_recorded: true
+  cr010_gates:
+    companion_hld_required: true
+    consumer_read_only_published_catalog: true
+    daily_price_available_at_rule_required: true
+    w3_unresolved_fail_fast: true
+    catalog_publish_gate_required: true
+    staged_real_backfill_authorization_required: true
+    real_tushare_small_window_authorized: true
+    real_lake_small_window_write_authorized: true
+    old_data_comparison_deferred: true
+    no_old_data_or_legacy_report_content_read_authorized: true
+    no_env_credentials_or_private_paths_recorded: true
+  cr011_gates:
+    old_experiment_17_21_report_preserved: true
+    benchmark_policy_consumption_required: true
+    proxy_real_benchmark_fields_separated: true
+    pit_universe_asof_gate_required: true
+    tradability_gates_required: true
+    execution_price_degradation_required: true
+    adjustment_and_corporate_action_audit_required: true
+    exposure_missing_claims_blocked: true
+    capacity_cost_sensitivity_required: true
+    factor_panel_audit_required: true
+    robust_validation_required: true
+    no_real_tushare_fetch_or_lake_write_authorized: true
+    no_old_data_or_legacy_report_overwrite_authorized: true
+    no_env_credentials_or_private_paths_recorded: true
+  cr013_gates:
+    limited_window_not_extrapolated_to_full_history: true
+    full_history_2020_2024_blocked_until_new_audit: true
+    real_vwap_and_minute_execution_claims_blocked: true
+    unsupported_register_enters_claim_boundary: true
+    pass_denominator_excluded_not_counted: true
+    old_evidence_reports_preserved: true
+    roadmap_only_no_real_backfill_authorized: true
+    no_provider_fetch_authorized: true
+    no_real_lake_write_authorized: true
+    no_credential_read_authorized: true
+    no_legacy_data_read_authorized: true
+    no_old_report_overwrite_authorized: true
+  cr014_gates:
+    cr14_a_selected: true
+    parquet_manifest_catalog_source_of_truth: true
+    duckdb_readonly_candidate_not_source_of_truth: true
+    plan_run_normalize_replay_validate_publish_read_query_model: true
+    explicit_publish_gate_updates_current_pointer_only: true
+    normalize_replay_candidate_only_before_publish: true
+    validate_parity_pass_no_auto_publish: true
+    research_consumer_read_only_published_current_truth: true
+    implementation_allowed_before_cp5: false
+    provider_fetch_before_cp5: 0
+    lake_write_before_cp5: 0
+    credential_read_before_cp5: 0
+    duckdb_dependency_change_before_cp5: 0
+    no_code_or_dependency_change_in_planning: true
+parallel_policy:
+  max_parallel_lld: 3
+  max_parallel_dev: 2
+  max_parallel_qa: 2
+  cr004_policy: "LLD 可按批次 A(014/015)、B(016/017)、C(018) 滚动确认；开发按 DAG、依赖类型和文件所有权串行为主，真实 adapter 默认关闭。"
+  cr005_policy: "历史 LLD 批次 A/B1/B2/C/D 已完成后续 CP5/CP6/CP7 门控；CR005-S01..S06 当前以 Story 卡片和 CP7 检查结果的 verified / PASS 为准。旧 draft-pending-cp4-rerun 口径已 superseded，不再阻塞 CR006-BATCH-A。"
+  cr006_policy: "LLD 统一进入 CR006-BATCH-A，覆盖 S01/S02/S03/S04 四张 Story；可按 max_parallel_lld=3 分轮起草，但 CP5 必须等全部 LLD 和自动预检完成后一次性确认。开发默认按 S01 -> S02 -> S03/S04 调度：S01 冻结 Tushare-first 数据层契约，S02 适配轻量 engine，S03 适配 Backtrader clean feed，S04 收敛旧 data reference-only 护栏。S04 对 S02/S03 的计划依赖类型为 contract，可在 S02/S03 LLD 合同与边界术语冻结后收敛，不要求等待 S02/S03 CP6 runtime。任何真实 data/** 读取、列出、迁移、复制、比对或删除均不在默认 dev_ready 范围内，必须用户另行授权。"
+  cr007_policy: "LLD 统一进入 CR007-BATCH-A，覆盖 S01/S02/S03/S04/S05 五张 Story；可按 max_parallel_lld=3 分轮起草，但 CP5 必须等全部 LLD 和自动预检完成后一次性确认。开发默认按 S01 -> S02 -> S03 -> S04 -> S05 调度：S01 冻结长期 prices planner，S02 冻结 benchmark/calendar coverage，S03 冻结 dataset readiness，S04 消费真实 benchmark，S05 收敛 legacy quality report 与文档 guardrail。S02/S03 可并行起草 LLD，但因共享 market_data/normalization.py、validation.py、readers.py，默认不得并行开发；除非 CP5 后 LLD 明确拆分文件所有权并由 meta-po 重新判定 file_conflict_free。任何真实 Tushare 抓取、真实 /mnt/ugreen-data-lake 写入、旧 data/** 操作、旧质量报告内容读取或凭据读取均不在默认 dev_ready 范围内。"
+  cr008_policy: "LLD 统一进入 CR008-BATCH-A，覆盖 S01/S02/S03/S04/S05/S06 六张 Story；可按 max_parallel_lld=3 分轮起草，但 CP5 必须等全部 LLD 和自动预检完成后一次性确认。开发默认按 S01/S02 合同先行 -> S03 research_dataset_builder -> S04/S05 gates -> S06 auxiliary contract 调度；S04/S05 可并行起草 LLD，但因共享 engine/research_dataset.py 与 gate result 语义默认不得并行开发。CR007-S02 可与 CR008 solution-design 并行离线实现；CR007-S04/S05 在 CR008 CP3/CP4 设计确认前保持 hold。CR008 未完成 CP3/CP4/CP5 前不得实现，任何真实 Tushare 抓取、真实 /mnt/ugreen-data-lake 写入、旧 data/** 操作、旧质量报告内容读取或凭据读取均不在默认 dev_ready 范围内。"
+  cr010_policy: "CR010 当前分四个批次：DL-BATCH-A 数据湖基础生产化、DL-BATCH-B W3 fail-fast、QF-BATCH-C 实验消费真实性、OPS-BATCH-D 备份/归档/恢复/保留策略。每批次均需全量 LLD 与 CP5 批次人工确认后才可实现。开发默认离线 / fixture / tmp lake / dry-run；真实联网、真实 MARKET_DATA_LAKE_ROOT 写入、旧 data/** 操作、旧 reports/data_quality_report.csv 内容读取和凭据读取均需用户另行明确授权；OPS-D 的 backup/restore/retention CLI 默认 dry-run，只有 --execute 才允许复制、恢复或删除。"
+  cr011_policy: "CR011 分三个批次：DATA-BATCH-A 覆盖 S01..S06 的 benchmark/PIT/tradability/execution/adjustment/exposure 合同；RESEARCH-BATCH-B 覆盖 S07 的 liquidity/capacity/cost sensitivity；VALIDATION-BATCH-C 覆盖 S08 的 factor panel audit 与 robust validation。每批次均需全量 LLD 与 CP5 批次人工确认后才可实现。LLD 可按 max_parallel_lld=3 分轮起草；开发默认按 S01/S02/S03/S05/S06 合同先行 -> S04 -> S07 -> S08。共享 engine/research_dataset.py、market_data/readers.py、experiments/run_experiment_17_21_factor_suite.py 的 Story 默认不得并行开发。不得真实联网、读凭据、写真实 lake、操作旧 data/** 或覆盖旧 reports/experiment_17_21/factor_strategy_report.md。"
+  cr013_policy: "CR013 采用单批次 CR013-BATCH-A，覆盖 S01 full-history gap register、S02 execution/VWAP claim boundary、S03 unsupported register/docs refresh、S04 full-history backfill roadmap。LLD 可按 max_parallel_lld=3 分轮起草，但 CP5 必须等四张 LLD 和自动预检全部完成后统一确认。开发默认 S01/S02 合同先行 -> S03 -> S04；S01/S02 可并行起草 LLD，S03/S04 消费其冻结合同。CP5 前不得实现；本轮不授权 provider fetch、真实 lake 写入、凭据读取、旧 data/** 读取或旧报告覆盖。"
+  cr014_policy: "CR014 分两批推进：BATCH-A=CR014-FULL-HISTORY-LAKE-BATCH-A 覆盖 S01 universe/lifecycle、S02 Parquet layout/manifest/catalog/publish、S03 P0 plan/run/normalize/validate/publish、S04 DuckDB read-only、S05 full-history readiness/claim、S06 incremental/replay/retention、S07 research consumer/docs boundary、S08 W3/minute/tick/Level2/VWAP blocked boundary；BATCH-B=CR014-REAL-RUN-BATCH-B 覆盖 S09 分时段真实 provider 抓取与 raw/manifest/run metadata 写湖。BATCH-A CP5 只确认 S01..S08 LLD，不授权真实执行。S09 必须等 S01..S08 verified、S09 LLD approved、S09 CP5 approved、用户提供 per-run authorization_id 和 dataset/date/source/lake/window 范围后才可执行。真实写 raw/manifest 不自动 publish current pointer；publish 仍需独立 Explicit Publish Gate 授权。"
+waves:
+  - wave: "W0"
+    hld_phase: "M0 - 数据准备与缓存可追溯"
+    parallel: false
+    status: "completed"
+    entry_conditions:
+      - "Story 计划已获人工确认"
+      - "STORY-001 LLD 获批后方可实现工程基线"
+    exit_conditions:
+      - "数据准备、raw、manifest、parquet、质量报告契约完成"
+      - "M1 可在合规本地数据上离线启动"
+    completion_criteria:
+      - "三类标准 parquet 契约覆盖 100% 必需字段"
+      - "manifest 批次字段覆盖 HLD §8.4 全部必需字段"
+      - "质量报告输出 pass/warn/fail 和数据新鲜度字段"
+    stories:
+      - story_id: "STORY-001"
+        title: "工程基线与数据契约骨架"
+        priority: "P0"
+        assignee: "meta-dev"
+        depends_on: []
+        status: "verified"
+        output_files:
+          - "pyproject.toml"
+          - "uv.lock"
+          - "config/data_prep.yaml"
+          - "engine/__init__.py"
+          - "engine/contracts.py"
+          - "strategies/__init__.py"
+          - "data/.gitkeep"
+          - "reports/.gitkeep"
+      - story_id: "STORY-002"
+        title: "数据准备节流重试与 manifest"
+        priority: "P0"
+        assignee: "meta-dev"
+        depends_on: ["STORY-001"]
+        status: "verified"
+        output_files:
+          - "engine/data_prep.py"
+          - "engine/akshare_adapter.py"
+          - "engine/manifest.py"
+          - "data/raw/**"
+          - "data/manifests/data_prep_manifest.jsonl"
+      - story_id: "STORY-003"
+        title: "标准化 parquet 与数据质量报告"
+        priority: "P0"
+        assignee: "meta-dev"
+        depends_on: ["STORY-001", "STORY-002"]
+        status: "verified"
+        output_files:
+          - "engine/normalizer.py"
+          - "engine/quality.py"
+          - "data/prices.parquet"
+          - "data/index_members.parquet"
+          - "data/trade_calendar.parquet"
+          - "reports/data_quality_report.*"
+  - wave: "W1"
+    hld_phase: "M1 - 本地动量最小回测器"
+    parallel: false
+    status: "verified"
+    entry_conditions:
+      - "W0 完成，或用户显式提供满足 HLD §8 schema 的本地 parquet/manifest/quality report"
+      - "STORY-004 至 STORY-006 的 LLD 已纳入批量 LLD / Story Package 确认"
+    exit_conditions:
+      - "默认单次动量回测可离线输出净值、指标和 metadata"
+    completion_criteria:
+      - "Data Loader 不触发任何网络调用"
+      - "信号日和成交日满足 T 收盘信号、T+1 或之后成交"
+      - "单次报告包含累计收益、年化收益、最大回撤、Sharpe、换手和限制项 metadata"
+    stories:
+      - story_id: "STORY-004"
+        title: "离线 Data Loader 与合同校验"
+        priority: "P0"
+        assignee: "meta-dev"
+        depends_on: ["STORY-003"]
+        status: "verified"
+        output_files:
+          - "engine/data_loader.py"
+          - "engine/contracts.py"
+      - story_id: "STORY-005"
+        title: "动量信号与组合成交引擎"
+        priority: "P0"
+        assignee: "meta-dev"
+        depends_on: ["STORY-004"]
+        status: "verified"
+        output_files:
+          - "strategies/momentum.py"
+          - "engine/portfolio.py"
+      - story_id: "STORY-006"
+        title: "指标、单次回测报告与 metadata"
+        priority: "P0"
+        assignee: "meta-dev"
+        depends_on: ["STORY-005"]
+        status: "verified"
+        output_files:
+          - "engine/backtest.py"
+          - "engine/metrics.py"
+          - "engine/reporting.py"
+  - wave: "W2"
+    hld_phase: "M2 - 参数扫描与候选报告"
+    parallel: false
+    status: "verified"
+    entry_conditions:
+      - "W1 完成"
+      - "单次回测入口和报告 schema 稳定"
+    exit_conditions:
+      - "60 组扫描报告和不超过 4 组候选报告完成"
+    completion_criteria:
+      - "默认参数网格输出 60 行"
+      - "失败参数组合保留 status 与 error_message"
+      - "候选报告覆盖默认、Sharpe 最优、收益最优、保守低换手参数并去重"
+    stories:
+      - story_id: "STORY-007"
+        title: "60 组参数扫描报告"
+        priority: "P0"
+        assignee: "meta-dev"
+        depends_on: ["STORY-006"]
+        status: "verified"
+        output_files:
+          - "engine/scanner.py"
+          - "reports/momentum_param_sweep_local.csv"
+      - story_id: "STORY-008"
+        title: "候选报告与聚宽人工验证模板"
+        priority: "P0"
+        assignee: "meta-dev"
+        depends_on: ["STORY-007"]
+        status: "verified"
+        output_files:
+          - "engine/candidates.py"
+          - "reports/momentum_candidates_local.csv"
+  - wave: "W3"
+    hld_phase: "M3 - 真实性增强"
+    parallel: false
+    status: "verified"
+    entry_conditions:
+      - "W2 完成"
+      - "M3 增强 Story LLD 已纳入批量 LLD / Story Package 确认"
+    exit_conditions:
+      - "PIT、交易状态、涨跌停/事件时点和偏差审计形成可增量交付路径"
+    completion_criteria:
+      - "增强字段同步扩展 raw、manifest、质量报告和离线读取契约"
+      - "审计报告量化收益、回撤、换手和候选排序变化"
+    stories:
+      - story_id: "STORY-009"
+        title: "PIT 股票池 Provider 增强契约"
+        priority: "P1"
+        assignee: "meta-dev"
+        depends_on: ["STORY-008"]
+        status: "verified"
+        output_files:
+          - "engine/universe.py"
+          - "engine/data_prep.py"
+          - "engine/manifest.py"
+          - "engine/normalizer.py"
+          - "engine/quality.py"
+          - "engine/data_loader.py"
+          - "engine/contracts.py"
+      - story_id: "STORY-010"
+        title: "交易状态与不可交易约束"
+        priority: "P1"
+        assignee: "meta-dev"
+        depends_on: ["STORY-009"]
+        status: "verified"
+        output_files:
+          - "engine/trade_status.py"
+          - "engine/data_prep.py"
+          - "engine/manifest.py"
+          - "engine/normalizer.py"
+          - "engine/portfolio.py"
+          - "engine/data_loader.py"
+          - "engine/quality.py"
+          - "engine/reporting.py"
+          - "engine/contracts.py"
+      - story_id: "STORY-011"
+        title: "涨跌停与事件 available_at 增强"
+        priority: "P1"
+        assignee: "meta-dev"
+        depends_on: ["STORY-009", "STORY-010"]
+        status: "verified"
+        output_files:
+          - "engine/trading_constraints.py"
+          - "engine/events.py"
+          - "engine/data_prep.py"
+          - "engine/manifest.py"
+          - "engine/normalizer.py"
+          - "engine/data_loader.py"
+      - story_id: "STORY-012"
+        title: "偏差审计报告"
+        priority: "P1"
+        assignee: "meta-dev"
+        depends_on: ["STORY-010", "STORY-011"]
+        status: "verified"
+        output_files:
+          - "engine/bias_audit.py"
+          - "reports/bias_audit_report.*"
+  - wave: "W4"
+    hld_phase: "M4 - 策略扩展"
+    parallel: false
+    status: "verified"
+    entry_conditions:
+      - "W3 完成；当前计划按 Wave 串行在真实性增强后执行"
+      - "若后续人工确认重排，STORY-013 可在 W2 完成后单独执行"
+      - "策略扩展 Story LLD 已纳入批量 LLD / Story Package 确认"
+    exit_conditions:
+      - "RSI/MACD 等策略接口复用数据加载、组合和指标层"
+    completion_criteria:
+      - "至少 2 个策略函数示例接入统一策略接口"
+      - "不修改组合层和指标层主契约"
+    stories:
+      - story_id: "STORY-013"
+        title: "策略扩展接口与 RSI/MACD 示例"
+        priority: "P2"
+        assignee: "meta-dev"
+        depends_on: ["STORY-008"]
+        status: "verified"
+        output_files:
+          - "strategies/base.py"
+          - "strategies/rsi.py"
+          - "strategies/macd.py"
+          - "engine/scanner.py"
+  - wave: "CR4-W0"
+    hld_phase: "CR-004 契约阶段 - market_data 包骨架与数据湖契约"
+    parallel: false
+    parallel_lld: true
+    parallel_dev: false
+    status: "draft-pending-cp4"
+    entry_conditions:
+      - "CR-004 HLD 增量 CP3 人工确认通过"
+      - "CR-004 Story Plan CP4 人工确认通过"
+    exit_conditions:
+      - "`market_data/` 包骨架、schema registry、source registry 和数据湖路径契约稳定"
+    completion_criteria:
+      - "`market_data` 不反向依赖 `engine`"
+      - "raw/manifest/canonical/gold/quality/catalog 六层路径均有契约"
+      - "canonical 与 manifest 最小字段在 Story/LLD 中冻结"
+    stories:
+      - story_id: "STORY-014"
+        title: "CR-004 market_data 包骨架与数据湖契约"
+        priority: "P0"
+        assignee: "meta-dev"
+        depends_on: []
+        dependency_type: []
+        status: "draft"
+        output_files:
+          - "market_data/__init__.py"
+          - "market_data/contracts.py"
+          - "market_data/config.py"
+          - "market_data/source_registry.py"
+          - "market_data/lake_layout.py"
+          - "market_data/py.typed"
+          - "tests/test_market_data_contracts.py"
+        file_ownership:
+          primary:
+            - "market_data/__init__.py"
+            - "market_data/contracts.py"
+            - "market_data/config.py"
+            - "market_data/source_registry.py"
+            - "market_data/lake_layout.py"
+            - "market_data/py.typed"
+            - "tests/test_market_data_contracts.py"
+          shared:
+            - "pyproject.toml"
+            - "uv.lock"
+          merge_owner: "STORY-014"
+          forbidden:
+            - "engine/**"
+            - "experiments/**"
+            - "delivery/**"
+            - "data/**/*.parquet"
+            - "data/market_data/raw/**"
+        lld_gate:
+          required_inputs:
+            - "process/HLD.md#21-cr-004-可迁移市场数据组件增量设计"
+            - "process/ARCHITECTURE-DECISION.md#adr-008market_data-作为独立可迁移市场数据包"
+            - "process/stories/STORY-014-cr004-market-data-package-lake-contracts.md"
+          status: "not-started"
+        dev_gate:
+          lld_confirmed: false
+          dependencies_satisfied: true
+          file_conflict_free: true
+          cp5_required: true
+  - wave: "CR4-W1"
+    hld_phase: "CR-004 获取运行时 - connector/runtime/storage"
+    parallel: false
+    parallel_lld: true
+    parallel_dev: false
+    status: "draft-pending-cp4"
+    entry_conditions:
+      - "STORY-014 LLD 已确认，schema/source registry contract frozen"
+    exit_conditions:
+      - "fake connector 可离线写 raw + manifest，真实 adapter 默认关闭并 fail fast"
+    completion_criteria:
+      - "fake connector deterministic"
+      - "限速、有限重试、熔断可由 fake clock/sleeper 测试"
+      - "manifest 字段覆盖 source/interface/params/status/attempts/raw_path/canonical_path"
+    stories:
+      - story_id: "STORY-015"
+        title: "CR-004 connector runtime 与 raw/manifest 写入"
+        priority: "P0"
+        assignee: "meta-dev"
+        depends_on: ["STORY-014"]
+        dependency_type:
+          - upstream: "STORY-014"
+            type: "contract"
+        status: "draft"
+        output_files:
+          - "market_data/connectors/__init__.py"
+          - "market_data/connectors/protocol.py"
+          - "market_data/connectors/fake.py"
+          - "market_data/connectors/akshare.py"
+          - "market_data/connectors/tushare.py"
+          - "market_data/connectors/tickflow.py"
+          - "market_data/runtime.py"
+          - "market_data/storage.py"
+          - "tests/test_market_data_runtime_storage.py"
+        file_ownership:
+          primary:
+            - "market_data/connectors/**"
+            - "market_data/runtime.py"
+            - "market_data/storage.py"
+            - "tests/test_market_data_runtime_storage.py"
+          shared:
+            - "market_data/contracts.py"
+            - "market_data/source_registry.py"
+          merge_owner: "STORY-015"
+          forbidden:
+            - "engine/**"
+            - "experiments/**"
+            - "delivery/**"
+            - "real data"
+            - "credentials"
+        lld_gate:
+          required_inputs:
+            - "process/HLD.md#216-真实-adapter-边界"
+            - "process/ARCHITECTURE-DECISION.md#adr-010真实联网-adapter-默认关闭fakeoffline-为默认测试路径"
+            - "process/stories/STORY-015-cr004-connector-runtime-raw-manifest.md"
+          status: "not-started"
+        dev_gate:
+          lld_confirmed: false
+          dependencies_satisfied: false
+          file_conflict_free: true
+          cp5_required: true
+  - wave: "CR4-W2"
+    hld_phase: "CR-004 标准化读取 - canonical/quality/readers"
+    parallel: false
+    parallel_lld: true
+    parallel_dev: false
+    status: "draft-pending-cp4"
+    entry_conditions:
+      - "STORY-015 raw/manifest contract frozen"
+    exit_conditions:
+      - "canonical parquet、quality、catalog 和只读 reader 完成"
+    completion_criteria:
+      - "reader 不导入 connector，不触发网络"
+      - "quality 覆盖字段缺失、重复、异常价格、覆盖缺口和 manifest 一致性"
+    stories:
+      - story_id: "STORY-016"
+        title: "CR-004 canonical 标准化、质量校验与只读 reader"
+        priority: "P0"
+        assignee: "meta-dev"
+        depends_on: ["STORY-015"]
+        dependency_type:
+          - upstream: "STORY-015"
+            type: "runtime"
+        status: "draft"
+        output_files:
+          - "market_data/normalization.py"
+          - "market_data/validation.py"
+          - "market_data/readers.py"
+          - "market_data/catalog.py"
+          - "tests/test_market_data_normalization_validation_readers.py"
+        file_ownership:
+          primary:
+            - "market_data/normalization.py"
+            - "market_data/validation.py"
+            - "market_data/readers.py"
+            - "market_data/catalog.py"
+            - "tests/test_market_data_normalization_validation_readers.py"
+          shared:
+            - "market_data/contracts.py"
+            - "market_data/lake_layout.py"
+          merge_owner: "STORY-016"
+          forbidden:
+            - "engine/**"
+            - "experiments/**"
+            - "delivery/**"
+            - "market_data/connectors/**"
+        lld_gate:
+          required_inputs:
+            - "process/HLD.md#214-数据湖分层"
+            - "process/ARCHITECTURE-DECISION.md#adr-011parquet-数据湖-canonical-schema-与-manifest-契约"
+            - "process/stories/STORY-016-cr004-canonical-validation-readers.md"
+          status: "not-started"
+        dev_gate:
+          lld_confirmed: false
+          dependencies_satisfied: false
+          file_conflict_free: true
+          cp5_required: true
+  - wave: "CR4-W3"
+    hld_phase: "CR-004 操作闭环 - CLI 和多源比对"
+    parallel: false
+    parallel_lld: true
+    parallel_dev: false
+    status: "draft-pending-cp4"
+    entry_conditions:
+      - "STORY-016 reader and validation contract frozen"
+    exit_conditions:
+      - "CLI offline smoke 与 fake/reference 多源比对完成"
+    completion_criteria:
+      - "默认 CLI source=fake/offline"
+      - "多源 comparison 输出字段完整且不真实联网"
+    stories:
+      - story_id: "STORY-017"
+        title: "CR-004 CLI offline 闭环与多源比对接口"
+        priority: "P0"
+        assignee: "meta-dev"
+        depends_on: ["STORY-016"]
+        dependency_type:
+          - upstream: "STORY-016"
+            type: "contract"
+        status: "draft"
+        output_files:
+          - "market_data/cli.py"
+          - "market_data/comparison.py"
+          - "tests/test_market_data_cli_comparison.py"
+        file_ownership:
+          primary:
+            - "market_data/cli.py"
+            - "market_data/comparison.py"
+            - "tests/test_market_data_cli_comparison.py"
+          shared:
+            - "pyproject.toml"
+            - "uv.lock"
+          merge_owner: "STORY-017"
+          forbidden:
+            - "engine/**"
+            - "experiments/**"
+            - "delivery/**"
+            - "credentials"
+            - "real data"
+        lld_gate:
+          required_inputs:
+            - "process/HLD.md#217-关键流程"
+            - "process/ARCHITECTURE-DECISION.md#adr-012多源校验先稳定接口真实多源比对后置启用"
+            - "process/stories/STORY-017-cr004-cli-offline-comparison.md"
+          status: "not-started"
+        dev_gate:
+          lld_confirmed: false
+          dependencies_satisfied: false
+          file_conflict_free: true
+          cp5_required: true
+  - wave: "CR4-W4"
+    hld_phase: "CR-004 实验接入 - 实验十/十二和真实沪深 300 基准路线"
+    parallel: false
+    parallel_lld: true
+    parallel_dev: false
+    status: "draft-pending-cp4"
+    entry_conditions:
+      - "STORY-016 reader verified"
+      - "STORY-017 CLI/comparison contract frozen"
+    exit_conditions:
+      - "实验十/十二只读 reader 接入路线完成，真实沪深 300 基准只读契约明确"
+    completion_criteria:
+      - "实验入口默认不联网"
+      - "真实基准缺失时返回 structured unavailable/required_missing；旧代理只能作为 `proxy_baseline`，不得填充 `hs300_index` 或声明沪深 300 相对收益"
+      - "旧 `--data-dir` 路径保留可回退"
+    stories:
+      - story_id: "STORY-018"
+        title: "CR-004 实验十/十二只读接入与真实沪深 300 基准路线"
+        priority: "P1"
+        assignee: "meta-dev"
+        depends_on: ["STORY-016", "STORY-017"]
+        dependency_type:
+          - upstream: "STORY-016"
+            type: "runtime"
+          - upstream: "STORY-017"
+            type: "contract"
+        status: "draft"
+        output_files:
+          - "market_data/benchmarks.py"
+          - "experiments/run_experiment_10.py"
+          - "experiments/run_experiment_12.py"
+          - "tests/test_market_data_experiment_readers.py"
+        file_ownership:
+          primary:
+            - "market_data/benchmarks.py"
+            - "tests/test_market_data_experiment_readers.py"
+          shared:
+            - "experiments/run_experiment_10.py"
+            - "experiments/run_experiment_12.py"
+          merge_owner: "STORY-018"
+          forbidden:
+            - "engine/**"
+            - "delivery/**"
+            - "real data"
+            - "credentials"
+        lld_gate:
+          required_inputs:
+            - "process/HLD.md#217-关键流程"
+            - "process/ARCHITECTURE-DECISION.md#adr-009回测与实验主路径只读-market_data-数据湖"
+            - "process/stories/STORY-018-cr004-experiment-readonly-benchmark.md"
+          status: "not-started"
+        dev_gate:
+          lld_confirmed: false
+          dependencies_satisfied: false
+          file_conflict_free: false
+          cp5_required: true
+  - wave: "CR5-W0"
+    hld_phase: "CR-005 Tushare 写湖边界"
+    parallel: false
+    parallel_lld: true
+    parallel_dev: false
+    status: "draft-pending-cp4-rerun"
+    entry_conditions:
+      - "CR-005 HLD 增量 CP3 人工确认通过"
+      - "CR-005 Story Plan CP4 人工确认通过"
+      - "STORY-015 raw/manifest contract verified 或 contract frozen"
+    exit_conditions:
+      - "Tushare connector 显式启用、allowlist、token env、plan/dry-run 和 `hs300_index` backfill job spec 契约稳定"
+    completion_criteria:
+      - "import `market_data.connectors.tushare` 网络调用次数为 0"
+      - "无 token、未启用或接口未 allowlist 时返回非重试结构化错误"
+      - "Tushare 只写 raw/manifest，不直接进入 Data Loader、实验或 Backtrader"
+      - "`hs300_index` backfill job spec 含 dataset/source/interface/index_code/date range/lake root/run id/resume policy/dry-run/manifest/quality/catalog/error enum"
+    stories:
+      - story_id: "CR005-S01"
+        title: "Tushare connector 真实写湖边界"
+        priority: "P0"
+        assignee: "meta-dev"
+        depends_on: ["STORY-015"]
+        dependency_type:
+          - upstream: "STORY-015"
+            type: "contract"
+        status: "draft"
+        output_files:
+          - "market_data/connectors/tushare.py"
+          - "market_data/config.py"
+          - "market_data/source_registry.py"
+          - "market_data/runtime.py"
+          - "market_data/storage.py"
+          - "market_data/cli.py"
+          - "tests/test_market_data_tushare_connector.py"
+          - "pyproject.toml"
+          - "uv.lock"
+        file_ownership:
+          primary:
+            - "market_data/connectors/tushare.py"
+            - "tests/test_market_data_tushare_connector.py"
+          shared:
+            - "market_data/config.py"
+            - "market_data/source_registry.py"
+            - "market_data/runtime.py"
+            - "market_data/storage.py"
+            - "market_data/cli.py"
+            - "pyproject.toml"
+            - "uv.lock"
+          merge_owner: "CR005-S01"
+          forbidden:
+            - "engine/data_loader.py"
+            - "engine/backtest.py"
+            - "experiments/**"
+            - "market_data/readers.py"
+            - "data/**"
+            - "reports/**"
+            - "credentials"
+            - "delivery/**"
+        lld_gate:
+          required_inputs:
+            - "process/HLD.md#22-cr-005-tushare-真实写湖与-backtrader-可选后端增量设计"
+            - "process/ARCHITECTURE-DECISION.md#adr-013tushare-只写入本地数据湖链路"
+            - "process/stories/CR005-S01-tushare-connector-real-lake-writer.md"
+          status: "not-started"
+        dev_gate:
+          lld_confirmed: false
+          dependencies_satisfied: false
+          required_contracts:
+            - "`hs300_index` backfill job spec frozen"
+            - "plan/dry-run default no-network/no-write contract frozen"
+            - "Tushare error enum and resume policy frozen"
+          file_conflict_free: true
+          cp5_required: true
+  - wave: "CR5-W1"
+    hld_phase: "CR-005 dataset schema、PIT 字段与复权 normalization"
+    parallel: false
+    parallel_lld: true
+    parallel_dev: false
+    status: "draft-pending-cp4-rerun"
+    entry_conditions:
+      - "CR005-S01 connector result/raw contract frozen"
+      - "STORY-016 canonical normalization 基础已稳定"
+    exit_conditions:
+      - "P0 dataset schema、exact interface 映射、PIT 可得性字段和 adjusted price normalization 扩展稳定"
+    completion_criteria:
+      - "至少 `prices`、`hs300_index`、`trade_calendar`、`index_weights` 有 schema 契约"
+      - "raw 到 dataset 只允许显式 `target_dataset` 或 exact interface 映射"
+      - "非行情 dataset 定义 `available_date` / `effective_date` / `available_at` 或等价字段"
+      - "`prices` 或关联行情层保存 `adj_factor` 与 adjusted price，复权口径缺失或冲突可结构化 fail"
+      - "`hs300_index` schema 含 benchmark_kind、source_interface、index_code、run/source lineage、raw checksum 或等价 lineage"
+    stories:
+      - story_id: "CR005-S02"
+        title: "Tushare 多 dataset schema、PIT 字段与复权 normalization"
+        priority: "P0"
+        assignee: "meta-dev"
+        depends_on: ["CR005-S01", "STORY-016"]
+        dependency_type:
+          - upstream: "CR005-S01"
+            type: "contract"
+          - upstream: "STORY-016"
+            type: "contract"
+        status: "draft"
+        output_files:
+          - "market_data/contracts.py"
+          - "market_data/source_registry.py"
+          - "market_data/normalization.py"
+          - "tests/test_market_data_tushare_datasets.py"
+        file_ownership:
+          primary:
+            - "tests/test_market_data_tushare_datasets.py"
+          shared:
+            - "market_data/contracts.py"
+            - "market_data/source_registry.py"
+            - "market_data/normalization.py"
+          merge_owner: "CR005-S02"
+          forbidden:
+            - "engine/**"
+            - "experiments/**"
+            - "market_data/connectors/tushare.py"
+            - "market_data/readers.py"
+            - "data/**"
+            - "reports/**"
+            - "delivery/**"
+        lld_gate:
+          required_inputs:
+            - "process/HLD.md#224-dataset-与接口契约"
+            - "process/ARCHITECTURE-DECISION.md#adr-014cr-005-多-dataset-schema-与-quality-gate-先于消费方冻结"
+            - "process/ARCHITECTURE-DECISION.md#adr-017pit-与复权由-pandas-数据层保证backtrader-只消费干净输入"
+            - "process/stories/CR005-S02-tushare-dataset-schema-normalization.md"
+          status: "not-started"
+        dev_gate:
+          lld_confirmed: false
+          dependencies_satisfied: false
+          required_contracts:
+            - "CR005-S01 `hs300_index` backfill job spec frozen"
+            - "Tushare `index_daily` raw -> canonical exact mapping frozen before implementation"
+          file_conflict_free: false
+          cp5_required: true
+  - wave: "CR5-W2"
+    hld_phase: "CR-005 多 dataset quality/catalog/readers 与 PIT/复权 gate"
+    parallel: false
+    parallel_lld: true
+    parallel_dev: false
+    status: "draft-pending-cp4-rerun"
+    entry_conditions:
+      - "CR005-S02 dataset schema、PIT 字段和复权价格契约 confirmed"
+    exit_conditions:
+      - "多 dataset quality CSV、catalog、只读 reader、PIT as-of gate 和复权一致 gate 契约稳定"
+    completion_criteria:
+      - "每个 dataset quality CSV 含 fetch_status、dataset_status、coverage、thresholds、denominator、复现字段"
+      - "PIT as-of join 违规和复权口径混用均阻断 reader 消费"
+      - "reader 不导入 connector/runtime，网络调用次数为 0"
+      - "`hs300_index` quality gate 记录 trade calendar denominator、missing dates、gap reason、duplicate key、lineage 和 thresholds"
+    stories:
+      - story_id: "CR005-S03"
+        title: "多 dataset quality/catalog/readers 与 PIT/复权 gate"
+        priority: "P0"
+        assignee: "meta-dev"
+        depends_on: ["CR005-S02"]
+        dependency_type:
+          - upstream: "CR005-S02"
+            type: "contract"
+        status: "draft"
+        output_files:
+          - "market_data/validation.py"
+          - "market_data/catalog.py"
+          - "market_data/readers.py"
+          - "tests/test_market_data_multidataset_quality_readers.py"
+        file_ownership:
+          primary:
+            - "tests/test_market_data_multidataset_quality_readers.py"
+          shared:
+            - "market_data/validation.py"
+            - "market_data/catalog.py"
+            - "market_data/readers.py"
+            - "market_data/contracts.py"
+          merge_owner: "CR005-S03"
+          forbidden:
+            - "market_data/connectors/**"
+            - "market_data/runtime.py"
+            - "market_data/storage.py"
+            - "engine/backtest.py"
+            - "experiments/**"
+            - "data/**"
+            - "reports/**"
+            - "delivery/**"
+        lld_gate:
+          required_inputs:
+            - "process/HLD.md#226-集成契约"
+            - "process/ARCHITECTURE-DECISION.md#adr-014cr-005-多-dataset-schema-与-quality-gate-先于消费方冻结"
+            - "process/ARCHITECTURE-DECISION.md#adr-017pit-与复权由-pandas-数据层保证backtrader-只消费干净输入"
+            - "process/stories/CR005-S03-multidataset-quality-catalog-readers.md"
+          status: "not-started"
+        dev_gate:
+          lld_confirmed: false
+          dependencies_satisfied: false
+          required_contracts:
+            - "CR005-S02 hs300 schema and exact mapping frozen"
+            - "trade calendar coverage denominator frozen"
+            - "quality status and reader unavailable mapping frozen"
+          file_conflict_free: false
+          cp5_required: true
+  - wave: "CR5-W3"
+    hld_phase: "CR-005 沪深 300 本地基准"
+    parallel: false
+    parallel_lld: true
+    parallel_dev: false
+    status: "draft-pending-cp4-rerun"
+    entry_conditions:
+      - "CR005-S01 `hs300_index` backfill job spec frozen"
+      - "CR005-S03 reader/quality contract frozen"
+      - "STORY-018 实验只读接入边界保留"
+    exit_conditions:
+      - "本地 benchmark resolver 和实验只读基准状态契约完成"
+    completion_criteria:
+      - "缺少 `hs300_index` 时返回 typed `BenchmarkResult(status=unavailable|required_missing|quality_failed)`"
+      - "`BenchmarkResult` 含 status、dataset、source、index_code、interface、date range、coverage、quality_status、missing_reason、required、remediation spec、catalog entry、run/lineage"
+      - "实验入口默认网络调用次数为 0"
+      - "旧 `--data-dir` 或等价路径只回退本地价格数据，proxy 只能命名为 `proxy_baseline`"
+    stories:
+      - story_id: "CR005-S04"
+        title: "沪深 300 本地基准与实验只读接入"
+        priority: "P0"
+        assignee: "meta-dev"
+        depends_on: ["CR005-S01", "CR005-S03", "STORY-018"]
+        dependency_type:
+          - upstream: "CR005-S01"
+            type: "contract"
+          - upstream: "CR005-S03"
+            type: "runtime"
+          - upstream: "STORY-018"
+            type: "contract"
+        status: "draft"
+        output_files:
+          - "market_data/benchmarks.py"
+          - "experiments/run_experiment_10.py"
+          - "experiments/run_experiment_12.py"
+          - "tests/test_market_data_hs300_benchmark.py"
+        file_ownership:
+          primary:
+            - "market_data/benchmarks.py"
+            - "tests/test_market_data_hs300_benchmark.py"
+          shared:
+            - "experiments/run_experiment_10.py"
+            - "experiments/run_experiment_12.py"
+            - "market_data/readers.py"
+          merge_owner: "CR005-S04"
+          forbidden:
+            - "market_data/connectors/**"
+            - "engine/backtest.py"
+            - "engine/backtrader_adapter.py"
+            - "data/**"
+            - "reports/**"
+            - "credentials"
+            - "delivery/**"
+        lld_gate:
+          required_inputs:
+            - "process/HLD.md#227-关键流程"
+            - "process/ARCHITECTURE-DECISION.md#adr-015沪深-300-基准优先使用本地-hs300_index"
+            - "process/HLD.md#2261-benchmarkresult-typed-schema"
+            - "process/HLD.md#2262-hs300_index-backfill-job-spec"
+            - "process/stories/CR005-S04-hs300-local-benchmark.md"
+          status: "not-started"
+        dev_gate:
+          lld_confirmed: false
+          dependencies_satisfied: false
+          required_contracts:
+            - "CR005-S01 `hs300_index` backfill job spec frozen"
+            - "CR005-S03 `hs300_index` reader quality/catalog verified or contract frozen"
+            - "`BenchmarkResult` schema frozen"
+            - "benchmark policy / benchmark_kind frozen or available path disabled"
+          file_conflict_free: false
+          cp5_required: true
+  - wave: "CR5-W4"
+    hld_phase: "CR-005 多源 comparison 与文档"
+    parallel: true
+    parallel_lld: true
+    parallel_dev: true
+    status: "draft-pending-cp4-rerun"
+    entry_conditions:
+      - "CR005-S03 quality/catalog/readers contract frozen"
+      - "CR005-S01 explicit backfill job spec frozen"
+    exit_conditions:
+      - "comparison 输出、回补 runbook 和用户文档边界完成"
+    completion_criteria:
+      - "comparison 输出字段不少于 10 个，默认测试不联网"
+      - "README/USER-MANUAL 说明 Tushare 启用、显式 backfill、quality gate、Backtrader optional 和 proxy_baseline 边界"
+    stories:
+      - story_id: "CR005-S05"
+        title: "多源 comparison 与回补文档"
+        priority: "P1"
+        assignee: "meta-dev"
+        depends_on: ["CR005-S03"]
+        dependency_type:
+          - upstream: "CR005-S03"
+            type: "contract"
+        status: "draft"
+        output_files:
+          - "market_data/comparison.py"
+          - "README.md"
+          - "docs/USER-MANUAL.md"
+          - "tests/test_market_data_tushare_comparison.py"
+        file_ownership:
+          primary:
+            - "tests/test_market_data_tushare_comparison.py"
+          shared:
+            - "market_data/comparison.py"
+            - "README.md"
+            - "docs/USER-MANUAL.md"
+          merge_owner: "CR005-S05"
+          forbidden:
+            - "engine/**"
+            - "market_data/connectors/tushare.py"
+            - "data/**"
+            - "reports/**"
+            - "credentials"
+            - "delivery/**"
+        lld_gate:
+          required_inputs:
+            - "process/HLD.md#227-关键流程"
+            - "process/ARCHITECTURE-DECISION.md#adr-012多源校验先稳定接口真实多源比对后置启用"
+            - "process/stories/CR005-S05-comparison-backfill-docs.md"
+          status: "not-started"
+        dev_gate:
+          lld_confirmed: false
+          dependencies_satisfied: false
+          required_contracts:
+            - "CR005-S01 backfill job spec frozen; CR005-S05 does not own job entry implementation"
+            - "CR005-S03 quality/catalog fields frozen"
+          file_conflict_free: true
+          cp5_required: true
+  - wave: "CR5-W5"
+    hld_phase: "CR-005 Backtrader optional backend"
+    parallel: false
+    parallel_lld: true
+    parallel_dev: false
+    status: "draft-pending-cp4-rerun"
+    entry_conditions:
+      - "CR005-S02 PIT/复权契约 confirmed"
+      - "CR005-S03 verified 或 reader/quality gate confirmed"
+      - "CR005-S04 BenchmarkResult schema、benchmark policy 和 resolver contract frozen"
+      - "CR005-S01 hs300 backfill job spec frozen"
+      - "CP5 批次 D 人工确认通过"
+    exit_conditions:
+      - "Backtrader optional backend 可用或返回 structured backend_unavailable"
+    completion_criteria:
+      - "未安装 Backtrader 时轻量 `engine/backtest.py` 主路径不受影响"
+      - "Backtrader adapter 不导入 `market_data.connectors`、不读取 `TUSHARE_TOKEN`、不联网、不生成 PIT、不计算复权因子"
+      - "Backtrader 只消费数据层已 PIT/复权清洗的 factor panel / score / OHLCV feed"
+      - "Backtrader 输出仅作为对照报告，不覆盖轻量回测结果"
+      - "benchmark unavailable/required_missing 时只报告对照缺失，不触发 fetch/backfill"
+    stories:
+      - story_id: "CR005-S06"
+        title: "Backtrader optional backend"
+        priority: "P1"
+        assignee: "meta-dev"
+        depends_on: ["CR005-S02", "CR005-S03", "CR005-S04"]
+        dependency_type:
+          - upstream: "CR005-S02"
+            type: "contract"
+          - upstream: "CR005-S03"
+            type: "runtime"
+          - upstream: "CR005-S04"
+            type: "contract"
+        status: "draft"
+        output_files:
+          - "engine/backtest.py"
+          - "engine/backtrader_adapter.py"
+          - "tests/test_backtrader_optional_backend.py"
+          - "README.md"
+          - "docs/USER-MANUAL.md"
+          - "pyproject.toml"
+          - "uv.lock"
+        file_ownership:
+          primary:
+            - "engine/backtrader_adapter.py"
+            - "tests/test_backtrader_optional_backend.py"
+          shared:
+            - "engine/backtest.py"
+            - "README.md"
+            - "docs/USER-MANUAL.md"
+            - "pyproject.toml"
+            - "uv.lock"
+          merge_owner: "CR005-S06"
+          forbidden:
+            - "market_data/connectors/**"
+            - "market_data/runtime.py"
+            - "market_data/storage.py"
+            - "TUSHARE_TOKEN"
+            - "data/**"
+            - "reports/**"
+            - "delivery/**"
+        lld_gate:
+          required_inputs:
+            - "process/HLD.md#22-cr-005-tushare-真实写湖与-backtrader-可选后端增量设计"
+            - "process/ARCHITECTURE-DECISION.md#adr-016backtrader-作为可选后端不替代轻量主路径"
+            - "process/ARCHITECTURE-DECISION.md#adr-017pit-与复权由-pandas-数据层保证backtrader-只消费干净输入"
+            - "process/ARCHITECTURE-DECISION.md#adr-015沪深-300-基准优先使用本地-hs300_index"
+            - "process/stories/CR005-S02-tushare-dataset-schema-normalization.md"
+            - "process/stories/CR005-S03-multidataset-quality-catalog-readers.md"
+            - "process/stories/CR005-S04-hs300-local-benchmark.md"
+            - "process/stories/CR005-S06-backtrader-optional-backend.md"
+          status: "not-started"
+        dev_gate:
+          lld_confirmed: false
+          dependencies_satisfied: false
+          required_contracts:
+            - "CR005-S02 PIT as-of and adjusted price contract confirmed"
+            - "CR005-S03 quality gate and reader contract verified"
+            - "CR005-S04 BenchmarkResult schema and benchmark policy frozen"
+            - "CR005-S01 hs300 backfill job spec frozen"
+          file_conflict_free: false
+          cp5_required: true
+  - wave: "CR006-BATCH-A"
+    hld_phase: "CR-006 Tushare-first 数据方案"
+    parallel: false
+    parallel_lld: true
+    parallel_dev: false
+    status: "cp5-required-fixes-pending"
+    entry_conditions:
+      - "CR-006 HLD/ADR 增量 CP3 人工确认通过"
+      - "CR-006 Story Plan CP4 人工确认通过"
+      - "CR006-BATCH-A 全部 Story LLD 和 CP5 自动预检完成后统一人工确认"
+      - "不得读取、列出、迁移、复制或删除真实 `data/**`"
+      - "不得读取、打印或记录 `.env`、Tushare token、NAS 用户名、密码或真实私有路径"
+    exit_conditions:
+      - "Tushare-first acquisition、raw/manifest 审计和 canonical/gold 产出契约稳定"
+      - "当前轻量回测框架消费 canonical/gold 或外置派生 `legacy_flat` 的 adapter 契约稳定"
+      - "Backtrader clean OHLCV/factor/score feed contract 稳定"
+      - "旧 repo `data/` reference-only guardrail 稳定"
+    completion_criteria:
+      - "Tushare structured lake 是新数据事实源"
+      - "raw/manifest 仅用于采集审计、复现和质量追溯，不是回测运行时输入"
+      - "轻量 engine 默认读取 repo `data/` 证明新链路可用的次数为 0"
+      - "Backtrader 不读取 raw/manifest/token，不导入 connector/runtime/storage，不联网"
+      - "旧 `data/**` 读取、列出、迁移、复制、删除次数为 0"
+      - "默认测试不依赖真实 NAS、不需要 token、不联网"
+    lld_batch:
+      batch_id: "CR006-BATCH-A"
+      scope:
+        - "CR006-S01-tushare-first-data-acquisition-runbook"
+        - "CR006-S02-canonical-gold-lightweight-engine-adapter"
+        - "CR006-S03-backtrader-clean-feed-contract"
+        - "CR006-S04-old-data-reference-only-guardrail"
+      cp5_manual_review: "checkpoints/CP5-CR006-BATCH-A-LLD-BATCH.md"
+      all_target_story_lld_required: true
+    stories:
+      - story_id: "CR006-S01-tushare-first-data-acquisition-runbook"
+        title: "Tushare-first 数据获取与 runbook"
+        priority: "P0"
+        assignee: "meta-dev"
+        depends_on: ["CR005-S01", "CR005-S02", "CR005-S03"]
+        dependency_type:
+          - upstream: "CR005-S01"
+            type: "contract"
+          - upstream: "CR005-S02"
+            type: "contract"
+          - upstream: "CR005-S03"
+            type: "contract"
+        status: "lld-ready"
+        output_files:
+          - "market_data/cli.py"
+          - "market_data/connectors/tushare.py"
+          - "market_data/storage.py"
+          - "market_data/normalization.py"
+          - "market_data/validation.py"
+          - "market_data/catalog.py"
+          - "tests/test_cr006_tushare_first_acquisition.py"
+        file_ownership:
+          primary:
+            - "tests/test_cr006_tushare_first_acquisition.py"
+          shared:
+            - "market_data/cli.py"
+            - "market_data/connectors/tushare.py"
+            - "market_data/storage.py"
+            - "market_data/normalization.py"
+            - "market_data/validation.py"
+            - "market_data/catalog.py"
+          merge_owner: "CR006-S01-tushare-first-data-acquisition-runbook"
+          forbidden:
+            - "engine/**"
+            - "experiments/**"
+            - "README.md"
+            - "docs/USER-MANUAL.md"
+            - "data/**"
+            - ".env"
+            - "credentials"
+            - "delivery/**"
+        lld_gate:
+          required_inputs:
+            - "process/HLD.md#23-cr-006-tushare-first-数据方案增量设计"
+            - "process/ARCHITECTURE-DECISION.md#adr-018tushare-first-structured-lake-与运行时消费面分离"
+            - "process/stories/CR006-S01-tushare-first-data-acquisition-runbook.md"
+          status: "not-started"
+        dev_gate:
+          lld_confirmed: false
+          dependencies_satisfied: false
+          required_contracts:
+            - "Tushare dataset/runbook scope frozen"
+            - "raw/manifest audit-only boundary frozen"
+            - "canonical/gold lineage and quality gate contract frozen"
+            - "no old data read/list/migrate/delete boundary frozen"
+          file_conflict_free: false
+          cp5_required: true
+          implementation_allowed: false
+      - story_id: "CR006-S02-canonical-gold-lightweight-engine-adapter"
+        title: "canonical/gold 到轻量 engine 适配"
+        priority: "P0"
+        assignee: "meta-dev"
+        depends_on: ["CR006-S01-tushare-first-data-acquisition-runbook", "CR005-S03"]
+        dependency_type:
+          - upstream: "CR006-S01-tushare-first-data-acquisition-runbook"
+            type: "contract"
+          - upstream: "CR005-S03"
+            type: "contract"
+        status: "lld-ready"
+        output_files:
+          - "engine/data_loader.py"
+          - "engine/backtest.py"
+          - "experiments/run_experiment_06_07.py"
+          - "experiments/run_experiment_08.py"
+          - "experiments/run_experiment_09.py"
+          - "experiments/run_experiment_10.py"
+          - "experiments/run_experiment_12.py"
+          - "experiments/run_experiment_13.py"
+          - "market_data/readers.py"
+          - "tests/test_cr006_lightweight_engine_adapter.py"
+        file_ownership:
+          primary:
+            - "tests/test_cr006_lightweight_engine_adapter.py"
+          shared:
+            - "engine/data_loader.py"
+            - "engine/backtest.py"
+            - "experiments/run_experiment_06_07.py"
+            - "experiments/run_experiment_08.py"
+            - "experiments/run_experiment_09.py"
+            - "experiments/run_experiment_10.py"
+            - "experiments/run_experiment_12.py"
+            - "experiments/run_experiment_13.py"
+            - "market_data/readers.py"
+          merge_owner: "CR006-S02-canonical-gold-lightweight-engine-adapter"
+          forbidden:
+            - "market_data/connectors/**"
+            - "market_data/runtime.py"
+            - "market_data/storage.py"
+            - "README.md"
+            - "docs/USER-MANUAL.md"
+            - "data/**"
+            - ".env"
+            - "credentials"
+            - "delivery/**"
+        lld_gate:
+          required_inputs:
+            - "process/HLD.md §23.6 集成契约"
+            - "process/ARCHITECTURE-DECISION.md#adr-018tushare-first-structured-lake-与运行时消费面分离"
+            - "process/stories/CR006-S01-tushare-first-data-acquisition-runbook.md"
+            - "process/stories/CR006-S02-canonical-gold-lightweight-engine-adapter.md"
+          status: "not-started"
+        dev_gate:
+          lld_confirmed: false
+          dependencies_satisfied: false
+          required_contracts:
+            - "CR006-S01 canonical/gold and quality gate contract frozen"
+            - "external legacy_flat derivation policy frozen if used"
+            - "repo data reference-only behavior frozen"
+          file_conflict_free: false
+          cp5_required: true
+          implementation_allowed: false
+      - story_id: "CR006-S03-backtrader-clean-feed-contract"
+        title: "Backtrader clean feed contract"
+        priority: "P1"
+        assignee: "meta-dev"
+        depends_on:
+          - "CR006-S01-tushare-first-data-acquisition-runbook"
+          - "CR006-S02-canonical-gold-lightweight-engine-adapter"
+          - "CR005-S06"
+        dependency_type:
+          - upstream: "CR006-S01-tushare-first-data-acquisition-runbook"
+            type: "contract"
+          - upstream: "CR006-S02-canonical-gold-lightweight-engine-adapter"
+            type: "contract"
+          - upstream: "CR005-S06"
+            type: "contract"
+        status: "lld-ready"
+        output_files:
+          - "engine/backtrader_adapter.py"
+          - "engine/backtest.py"
+          - "market_data/readers.py"
+          - "tests/test_cr006_backtrader_clean_feed.py"
+        file_ownership:
+          primary:
+            - "tests/test_cr006_backtrader_clean_feed.py"
+          shared:
+            - "engine/backtrader_adapter.py"
+            - "engine/backtest.py"
+            - "market_data/readers.py"
+          merge_owner: "CR006-S03-backtrader-clean-feed-contract"
+          forbidden:
+            - "market_data/connectors/**"
+            - "market_data/runtime.py"
+            - "market_data/storage.py"
+            - "README.md"
+            - "docs/USER-MANUAL.md"
+            - "data/**"
+            - ".env"
+            - "credentials"
+            - "delivery/**"
+        lld_gate:
+          required_inputs:
+            - "process/HLD.md §23.6 集成契约"
+            - "process/ARCHITECTURE-DECISION.md#adr-016backtrader-作为可选后端不替代轻量主路径"
+            - "process/ARCHITECTURE-DECISION.md#adr-017pit-与复权由-pandas-数据层保证backtrader-只消费干净输入"
+            - "process/ARCHITECTURE-DECISION.md#adr-018tushare-first-structured-lake-与运行时消费面分离"
+            - "process/stories/CR006-S03-backtrader-clean-feed-contract.md"
+          status: "not-started"
+        dev_gate:
+          lld_confirmed: false
+          dependencies_satisfied: false
+          required_contracts:
+            - "clean OHLCV/factor/score feed schema frozen"
+            - "PIT/as-of and adjustment policy gate frozen"
+            - "Backtrader optional dependency strategy frozen"
+            - "no connector/runtime/token/raw/manifest consumption boundary frozen"
+          file_conflict_free: false
+          cp5_required: true
+          implementation_allowed: false
+      - story_id: "CR006-S04-old-data-reference-only-guardrail"
+        title: "旧 data reference-only 护栏"
+        priority: "P1"
+        assignee: "meta-dev"
+        depends_on:
+          - "CR006-S01-tushare-first-data-acquisition-runbook"
+          - "CR006-S02-canonical-gold-lightweight-engine-adapter"
+          - "CR006-S03-backtrader-clean-feed-contract"
+        dependency_type:
+          - upstream: "CR006-S01-tushare-first-data-acquisition-runbook"
+            type: "contract"
+          - upstream: "CR006-S02-canonical-gold-lightweight-engine-adapter"
+            type: "contract"
+          - upstream: "CR006-S03-backtrader-clean-feed-contract"
+            type: "contract"
+        status: "lld-ready"
+        output_files:
+          - "README.md"
+          - "docs/USER-MANUAL.md"
+          - ".gitignore"
+          - "tests/test_cr006_old_data_reference_guardrail.py"
+        file_ownership:
+          primary:
+            - "tests/test_cr006_old_data_reference_guardrail.py"
+          shared:
+            - "README.md"
+            - "docs/USER-MANUAL.md"
+            - ".gitignore"
+          merge_owner: "CR006-S04-old-data-reference-only-guardrail"
+          forbidden:
+            - "engine/**"
+            - "experiments/**"
+            - "market_data/**"
+            - "data/**"
+            - ".env"
+            - "credentials"
+            - "delivery/**"
+        lld_gate:
+          required_inputs:
+            - "process/HLD.md §23.13 Gotchas"
+            - "process/ARCHITECTURE-DECISION.md#adr-018tushare-first-structured-lake-与运行时消费面分离"
+            - "process/stories/CR006-S01-tushare-first-data-acquisition-runbook.md"
+            - "process/stories/CR006-S02-canonical-gold-lightweight-engine-adapter.md"
+            - "process/stories/CR006-S03-backtrader-clean-feed-contract.md"
+            - "process/stories/CR006-S04-old-data-reference-only-guardrail.md"
+          status: "not-started"
+        dev_gate:
+          lld_confirmed: false
+          dependencies_satisfied: false
+          required_contracts:
+            - "old repo data reference-only wording frozen"
+            - "no default fallback to repo data behavior frozen"
+            - "CR006-S02 lightweight adapter no repo data fallback contract frozen"
+            - "CR006-S03 Backtrader clean feed no raw/manifest runtime contract frozen"
+            - "future old data comparison requires separate authorization"
+          file_conflict_free: false
+          cp5_required: true
+          implementation_allowed: false
+  - wave: "CR007-BATCH-A"
+    hld_phase: "CR-007 Canonical 数据覆盖与真实 benchmark"
+    parallel: false
+    parallel_lld: true
+    parallel_dev: false
+    status: "draft-pending-cp4"
+    entry_conditions:
+      - "CR-007 HLD/ADR 增量 CP3 人工确认通过"
+      - "CR-007 Story Plan CP4 人工确认通过"
+      - "CR007-BATCH-A 全部 Story LLD 和 CP5 自动预检完成后统一人工确认"
+      - "不得执行真实 Tushare 抓取或写入 `/mnt/ugreen-data-lake`"
+      - "不得读取、列出、迁移、复制、比对或删除旧 `data/**`"
+      - "不得读取、打印或记录 `.env`、Tushare token、NAS 用户名、密码或真实私有路径"
+    exit_conditions:
+      - "长周期 `prices` backfill planner、resume policy 和 coverage gate 稳定"
+      - "`hs300_index` 与 `trade_calendar` 同区间 coverage gate 稳定"
+      - "`index_members`、`index_weights`、`stock_basic` readiness 与 PIT / 非 PIT 边界稳定"
+      - "实验十三真实 benchmark 消费合同稳定，代理仅命名为 `proxy_baseline`"
+      - "旧 `reports/data_quality_report.csv` legacy 边界和 lake quality/catalog 当前真相源文档化"
+    completion_criteria:
+      - "dry-run planner 网络调用次数为 0，写入次数为 0"
+      - "coverage 声明包含 dataset、start/end、denominator、run_id/source/interface、quality_status 和 lineage"
+      - "缺真实 benchmark 时返回 `required_missing` 或 `unavailable`，不得静默代理"
+      - "PIT 不完整的 dataset 不得标记为 PIT available"
+      - "旧质量报告不得作为当前 canonical lake quality truth"
+      - "默认测试不依赖真实 Tushare token、不需要 NAS、不联网、不读取旧 `data/**`"
+    lld_batch:
+      batch_id: "CR007-BATCH-A"
+      scope:
+        - "CR007-S01-prices-long-horizon-backfill-planner"
+        - "CR007-S02-benchmark-calendar-backfill"
+        - "CR007-S03-index-members-stock-basic-datasets"
+        - "CR007-S04-experiment-real-benchmark-consumption"
+        - "CR007-S05-data-quality-report-and-doc-guardrail"
+      cp5_manual_review: "checkpoints/CP5-CR007-BATCH-A-LLD-BATCH.md"
+      all_target_story_lld_required: true
+    stories:
+      - story_id: "CR007-S01-prices-long-horizon-backfill-planner"
+        title: "长周期 prices backfill planner"
+        priority: "P0"
+        assignee: "meta-dev"
+        depends_on: ["CR006-S01-tushare-first-data-acquisition-runbook", "CR005-S02", "CR005-S03"]
+        dependency_type:
+          - upstream: "CR006-S01-tushare-first-data-acquisition-runbook"
+            type: "contract"
+          - upstream: "CR005-S02"
+            type: "contract"
+          - upstream: "CR005-S03"
+            type: "contract"
+        status: "draft"
+        output_files:
+          - "market_data/cli.py"
+          - "market_data/runtime.py"
+          - "market_data/connectors/tushare.py"
+          - "market_data/normalization.py"
+          - "market_data/validation.py"
+          - "tests/test_cr007_prices_long_horizon_backfill_planner.py"
+        file_ownership:
+          primary:
+            - "tests/test_cr007_prices_long_horizon_backfill_planner.py"
+          shared:
+            - "market_data/cli.py"
+            - "market_data/runtime.py"
+            - "market_data/connectors/tushare.py"
+            - "market_data/normalization.py"
+            - "market_data/validation.py"
+          merge_owner: "CR007-S01-prices-long-horizon-backfill-planner"
+          forbidden:
+            - "engine/**"
+            - "experiments/**"
+            - "README.md"
+            - "docs/USER-MANUAL.md"
+            - "data/**"
+            - "reports/**"
+            - ".env"
+            - "credentials"
+            - "delivery/**"
+        lld_gate:
+          required_inputs:
+            - "process/HLD.md#24-cr-007-canonical-数据覆盖与真实-benchmark-增量设计"
+            - "process/ARCHITECTURE-DECISION.md#adr-019长周期-backfill-采用分批-plannerresume-与-coverage-gate"
+            - "process/stories/CR007-S01-prices-long-horizon-backfill-planner.md"
+          status: "not-started"
+        dev_gate:
+          lld_confirmed: false
+          dependencies_satisfied: false
+          required_contracts:
+            - "CR006 Tushare-first acquisition/runbook contract frozen"
+            - "CR005 dataset normalization and quality/readers contract frozen"
+            - "CR007 CP5 batch approved"
+            - "real fetch/write authorization not required for default dry-run implementation"
+          file_conflict_free: false
+          cp5_required: true
+          implementation_allowed: false
+      - story_id: "CR007-S02-benchmark-calendar-backfill"
+        title: "benchmark 与交易日历同区间 backfill"
+        priority: "P0"
+        assignee: "meta-dev"
+        depends_on: ["CR007-S01-prices-long-horizon-backfill-planner", "CR005-S04"]
+        dependency_type:
+          - upstream: "CR007-S01-prices-long-horizon-backfill-planner"
+            type: "contract"
+          - upstream: "CR005-S04"
+            type: "contract"
+        status: "draft"
+        output_files:
+          - "market_data/cli.py"
+          - "market_data/normalization.py"
+          - "market_data/validation.py"
+          - "market_data/catalog.py"
+          - "market_data/readers.py"
+          - "market_data/benchmarks.py"
+          - "tests/test_cr007_benchmark_calendar_backfill.py"
+        file_ownership:
+          primary:
+            - "tests/test_cr007_benchmark_calendar_backfill.py"
+          shared:
+            - "market_data/cli.py"
+            - "market_data/normalization.py"
+            - "market_data/validation.py"
+            - "market_data/catalog.py"
+            - "market_data/readers.py"
+            - "market_data/benchmarks.py"
+          merge_owner: "CR007-S02-benchmark-calendar-backfill"
+          forbidden:
+            - "engine/**"
+            - "experiments/run_experiment_13.py"
+            - "data/**"
+            - "reports/**"
+            - ".env"
+            - "credentials"
+            - "delivery/**"
+        lld_gate:
+          required_inputs:
+            - "process/HLD.md#247-关键流程"
+            - "process/ARCHITECTURE-DECISION.md#adr-020真实沪深300-benchmark-必须与交易日历同区间覆盖"
+            - "process/stories/CR007-S02-benchmark-calendar-backfill.md"
+          status: "not-started"
+        dev_gate:
+          lld_confirmed: false
+          dependencies_satisfied: false
+          required_contracts:
+            - "CR007-S01 planner and coverage contract frozen"
+            - "BenchmarkResult schema frozen"
+            - "trade_calendar denominator policy frozen"
+          file_conflict_free: false
+          cp5_required: true
+          implementation_allowed: false
+      - story_id: "CR007-S03-index-members-stock-basic-datasets"
+        title: "成分、权重与股票基础信息 readiness"
+        priority: "P0"
+        assignee: "meta-dev"
+        depends_on: ["CR007-S01-prices-long-horizon-backfill-planner", "CR005-S02", "CR005-S03"]
+        dependency_type:
+          - upstream: "CR007-S01-prices-long-horizon-backfill-planner"
+            type: "contract"
+          - upstream: "CR005-S02"
+            type: "contract"
+          - upstream: "CR005-S03"
+            type: "contract"
+        status: "draft"
+        output_files:
+          - "market_data/contracts.py"
+          - "market_data/source_registry.py"
+          - "market_data/connectors/tushare.py"
+          - "market_data/normalization.py"
+          - "market_data/validation.py"
+          - "market_data/readers.py"
+          - "tests/test_cr007_index_members_stock_basic_datasets.py"
+        file_ownership:
+          primary:
+            - "tests/test_cr007_index_members_stock_basic_datasets.py"
+          shared:
+            - "market_data/contracts.py"
+            - "market_data/source_registry.py"
+            - "market_data/connectors/tushare.py"
+            - "market_data/normalization.py"
+            - "market_data/validation.py"
+            - "market_data/readers.py"
+          merge_owner: "CR007-S03-index-members-stock-basic-datasets"
+          forbidden:
+            - "engine/**"
+            - "experiments/**"
+            - "README.md"
+            - "docs/USER-MANUAL.md"
+            - "data/**"
+            - "reports/**"
+            - ".env"
+            - "credentials"
+            - "delivery/**"
+        lld_gate:
+          required_inputs:
+            - "process/HLD.md#245-高层模块与职责划分"
+            - "process/ARCHITECTURE-DECISION.md#adr-021dataset-readiness-与-pit--非-pit-边界显式化"
+            - "process/stories/CR007-S03-index-members-stock-basic-datasets.md"
+          status: "not-started"
+        dev_gate:
+          lld_confirmed: false
+          dependencies_satisfied: false
+          required_contracts:
+            - "CR007-S01 planner contract frozen"
+            - "PIT/readiness status semantics frozen"
+            - "index_members/index_weights/stock_basic schema frozen"
+          file_conflict_free: false
+          cp5_required: true
+          implementation_allowed: false
+      - story_id: "CR007-S04-experiment-real-benchmark-consumption"
+        title: "实验真实 benchmark 消费"
+        priority: "P0"
+        assignee: "meta-dev"
+        depends_on: ["CR007-S02-benchmark-calendar-backfill", "CR007-S03-index-members-stock-basic-datasets"]
+        dependency_type:
+          - upstream: "CR007-S02-benchmark-calendar-backfill"
+            type: "contract"
+          - upstream: "CR007-S03-index-members-stock-basic-datasets"
+            type: "contract"
+        status: "draft"
+        output_files:
+          - "experiments/run_experiment_13.py"
+          - "experiments/run_experiment_10.py"
+          - "experiments/run_experiment_12.py"
+          - "market_data/benchmarks.py"
+          - "tests/test_cr007_experiment_real_benchmark_consumption.py"
+        file_ownership:
+          primary:
+            - "experiments/run_experiment_13.py"
+            - "tests/test_cr007_experiment_real_benchmark_consumption.py"
+          shared:
+            - "experiments/run_experiment_10.py"
+            - "experiments/run_experiment_12.py"
+            - "market_data/benchmarks.py"
+          merge_owner: "CR007-S04-experiment-real-benchmark-consumption"
+          forbidden:
+            - "market_data/connectors/**"
+            - "market_data/runtime.py"
+            - "market_data/storage.py"
+            - "data/**"
+            - "reports/**"
+            - ".env"
+            - "credentials"
+            - "delivery/**"
+        lld_gate:
+          required_inputs:
+            - "process/HLD.md#247-关键流程"
+            - "process/ARCHITECTURE-DECISION.md#adr-020真实沪深300-benchmark-必须与交易日历同区间覆盖"
+            - "process/ARCHITECTURE-DECISION.md#adr-021dataset-readiness-与-pit--非-pit-边界显式化"
+            - "process/stories/CR007-S04-experiment-real-benchmark-consumption.md"
+          status: "not-started"
+        dev_gate:
+          lld_confirmed: false
+          dependencies_satisfied: false
+          required_contracts:
+            - "CR007-S02 benchmark/calendar coverage contract frozen"
+            - "CR007-S03 dataset readiness semantics frozen"
+            - "proxy_baseline naming and missing benchmark behavior frozen"
+          file_conflict_free: false
+          cp5_required: true
+          implementation_allowed: false
+      - story_id: "CR007-S05-data-quality-report-and-doc-guardrail"
+        title: "质量报告与文档护栏"
+        priority: "P1"
+        assignee: "meta-dev"
+        depends_on:
+          - "CR007-S01-prices-long-horizon-backfill-planner"
+          - "CR007-S02-benchmark-calendar-backfill"
+          - "CR007-S03-index-members-stock-basic-datasets"
+          - "CR007-S04-experiment-real-benchmark-consumption"
+        dependency_type:
+          - upstream: "CR007-S01-prices-long-horizon-backfill-planner"
+            type: "contract"
+          - upstream: "CR007-S02-benchmark-calendar-backfill"
+            type: "contract"
+          - upstream: "CR007-S03-index-members-stock-basic-datasets"
+            type: "contract"
+          - upstream: "CR007-S04-experiment-real-benchmark-consumption"
+            type: "contract"
+        status: "draft"
+        output_files:
+          - "README.md"
+          - "docs/USER-MANUAL.md"
+          - ".gitignore"
+          - "tests/test_cr007_quality_report_doc_guardrail.py"
+        file_ownership:
+          primary:
+            - "tests/test_cr007_quality_report_doc_guardrail.py"
+          shared:
+            - "README.md"
+            - "docs/USER-MANUAL.md"
+            - ".gitignore"
+          merge_owner: "CR007-S05-data-quality-report-and-doc-guardrail"
+          forbidden:
+            - "engine/**"
+            - "experiments/**"
+            - "market_data/connectors/**"
+            - "market_data/runtime.py"
+            - "market_data/storage.py"
+            - "data/**"
+            - "reports/**"
+            - ".env"
+            - "credentials"
+            - "delivery/**"
+        lld_gate:
+          required_inputs:
+            - "process/HLD.md#2413-gotchas"
+            - "process/ARCHITECTURE-DECISION.md#adr-022旧质量报告作为-legacy当前质量真相源为-lake-qualitycatalog"
+            - "process/stories/CR007-S01-prices-long-horizon-backfill-planner.md"
+            - "process/stories/CR007-S02-benchmark-calendar-backfill.md"
+            - "process/stories/CR007-S03-index-members-stock-basic-datasets.md"
+            - "process/stories/CR007-S04-experiment-real-benchmark-consumption.md"
+            - "process/stories/CR007-S05-data-quality-report-and-doc-guardrail.md"
+          status: "not-started"
+        dev_gate:
+          lld_confirmed: false
+          dependencies_satisfied: false
+          required_contracts:
+            - "legacy quality report wording frozen"
+            - "lake quality/catalog current truth wording frozen"
+            - "no old data/no reports content read boundary frozen"
+            - "experiment benchmark naming contract frozen"
+          file_conflict_free: false
+          cp5_required: true
+          implementation_allowed: false
+  - wave: "CR008-BATCH-A"
+    hld_phase: "CR-008 研究级数据层口径硬化"
+    parallel: false
+    parallel_lld: true
+    parallel_dev: false
+    status: "draft-pending-cp3-cp4"
+    entry_conditions:
+      - "CR-008 HLD/ADR 增量 CP3 人工确认通过"
+      - "CR-008 Story Plan CP4 人工确认通过"
+      - "CR008-BATCH-A 全部 Story LLD 和 CP5 自动预检完成后统一人工确认"
+      - "CR008 未完成 CP3/CP4/CP5 前不得实现"
+      - "不得执行真实 Tushare 抓取或写入 `/mnt/ugreen-data-lake`"
+      - "不得读取、列出、迁移、复制、比对或删除旧 `data/**`"
+      - "不得读取、打开、覆盖旧 `reports/data_quality_report.csv` 内容"
+      - "不得读取、打印或记录 `.env`、Tushare token、NAS 用户名、密码或真实私有路径"
+    exit_conditions:
+      - "`research_input_v1` 与报告 metadata 合同稳定"
+      - "proxy benchmark 与真实 `hs300_index` 字段隔离稳定"
+      - "`research_dataset_builder` 只读消费边界稳定"
+      - "quality、复权、label window gate 稳定"
+      - "PIT / fixed universe 声明和幸存者偏差披露稳定"
+      - "因子辅助数据缺失时的 allowed claims 稳定"
+    completion_criteria:
+      - "新报告 metadata 必填字段覆盖 coverage、benchmark、universe、adjustment、label window、quality/readiness 和 known limitations"
+      - "缺真实 benchmark 时 `hs300_*` 输出次数为 0"
+      - "builder 消费路径 connector/runtime/storage import 次数为 0，网络调用次数为 0"
+      - "quality fail、复权混用、label window 不足在严肃研究中 fail"
+      - "PIT 不可用时严肃研究 fail；fixed snapshot 必须写 survivorship warning"
+      - "缺行业/市值/可交易性/风格暴露时对应严肃结论输出次数为 0"
+    lld_batch:
+      batch_id: "CR008-BATCH-A"
+      scope:
+        - "CR008-S01-research-input-contract-and-report-metadata"
+        - "CR008-S02-proxy-real-benchmark-field-separation"
+        - "CR008-S03-research-dataset-builder"
+        - "CR008-S04-quality-adjustment-label-window-gates"
+        - "CR008-S05-pit-universe-consumption-contract"
+        - "CR008-S06-factor-research-auxiliary-data-contract"
+      cp5_manual_review: "checkpoints/CP5-CR008-BATCH-A-LLD-BATCH.md"
+      all_target_story_lld_required: true
+    stories:
+      - story_id: "CR008-S01-research-input-contract-and-report-metadata"
+        title: "research input 合同与报告 metadata"
+        priority: "P0"
+        assignee: "meta-dev"
+        depends_on: ["CR007-S02-benchmark-calendar-backfill"]
+        dependency_type:
+          - upstream: "CR007-S02-benchmark-calendar-backfill"
+            type: "contract"
+        status: "draft"
+        output_files:
+          - "engine/research_dataset.py"
+          - "experiments/reporting.py"
+          - "experiments/run_experiment_14.py"
+          - "experiments/run_experiment_15_factor_framework.py"
+          - "tests/test_cr008_research_input_metadata.py"
+        file_ownership:
+          primary:
+            - "tests/test_cr008_research_input_metadata.py"
+          shared:
+            - "engine/research_dataset.py"
+            - "experiments/reporting.py"
+            - "experiments/run_experiment_14.py"
+            - "experiments/run_experiment_15_factor_framework.py"
+          merge_owner: "CR008-S01-research-input-contract-and-report-metadata"
+          forbidden:
+            - "market_data/connectors/**"
+            - "market_data/runtime.py"
+            - "market_data/storage.py"
+            - "data/**"
+            - "reports/data_quality_report.csv"
+            - ".env"
+            - "credentials"
+            - "delivery/**"
+        lld_gate:
+          required_inputs:
+            - "process/HLD.md#25-cr-008-研究级数据层口径硬化增量设计"
+            - "process/ARCHITECTURE-DECISION.md#adr-024research_input_v1-作为唯一新研究入口与报告-metadata-合同"
+            - "process/stories/CR008-S01-research-input-contract-and-report-metadata.md"
+          status: "not-started"
+        dev_gate:
+          lld_confirmed: false
+          dependencies_satisfied: false
+          required_contracts:
+            - "CR008 CP3/CP4 approved"
+            - "CR008-BATCH-A CP5 approved"
+            - "CR007-S02 benchmark/calendar contract frozen"
+          file_conflict_free: false
+          cp5_required: true
+          implementation_allowed: false
+      - story_id: "CR008-S02-proxy-real-benchmark-field-separation"
+        title: "proxy / real benchmark 字段隔离"
+        priority: "P0"
+        assignee: "meta-dev"
+        depends_on: ["CR007-S02-benchmark-calendar-backfill", "CR008-S01-research-input-contract-and-report-metadata"]
+        dependency_type:
+          - upstream: "CR007-S02-benchmark-calendar-backfill"
+            type: "contract"
+          - upstream: "CR008-S01-research-input-contract-and-report-metadata"
+            type: "contract"
+        status: "draft"
+        output_files:
+          - "experiments/run_experiment_13.py"
+          - "experiments/run_experiment_15_factor_framework.py"
+          - "market_data/benchmarks.py"
+          - "tests/test_cr008_proxy_real_benchmark_fields.py"
+        file_ownership:
+          primary:
+            - "tests/test_cr008_proxy_real_benchmark_fields.py"
+          shared:
+            - "experiments/run_experiment_13.py"
+            - "experiments/run_experiment_15_factor_framework.py"
+            - "market_data/benchmarks.py"
+          merge_owner: "CR008-S02-proxy-real-benchmark-field-separation"
+          forbidden:
+            - "market_data/connectors/**"
+            - "market_data/runtime.py"
+            - "market_data/storage.py"
+            - "data/**"
+            - "reports/data_quality_report.csv"
+            - ".env"
+            - "credentials"
+            - "delivery/**"
+        lld_gate:
+          required_inputs:
+            - "process/HLD.md#25.7"
+            - "process/ARCHITECTURE-DECISION.md#adr-025proxy-benchmark-与真实-benchmark-字段强隔离"
+            - "process/stories/CR008-S02-proxy-real-benchmark-field-separation.md"
+          status: "not-started"
+        dev_gate:
+          lld_confirmed: false
+          dependencies_satisfied: false
+          required_contracts:
+            - "CR007-S02 BenchmarkResult coverage contract frozen"
+            - "CR008-S01 research input metadata contract frozen"
+            - "CR008-BATCH-A CP5 approved"
+          file_conflict_free: false
+          cp5_required: true
+          implementation_allowed: false
+      - story_id: "CR008-S03-research-dataset-builder"
+        title: "统一 research dataset builder"
+        priority: "P0"
+        assignee: "meta-dev"
+        depends_on: ["CR008-S01-research-input-contract-and-report-metadata", "CR008-S02-proxy-real-benchmark-field-separation"]
+        dependency_type:
+          - upstream: "CR008-S01-research-input-contract-and-report-metadata"
+            type: "contract"
+          - upstream: "CR008-S02-proxy-real-benchmark-field-separation"
+            type: "contract"
+        status: "draft"
+        output_files:
+          - "engine/research_dataset.py"
+          - "engine/data_loader.py"
+          - "market_data/readers.py"
+          - "tests/test_cr008_research_dataset_builder.py"
+        file_ownership:
+          primary:
+            - "engine/research_dataset.py"
+            - "tests/test_cr008_research_dataset_builder.py"
+          shared:
+            - "engine/data_loader.py"
+            - "market_data/readers.py"
+          merge_owner: "CR008-S03-research-dataset-builder"
+          forbidden:
+            - "market_data/connectors/**"
+            - "market_data/runtime.py"
+            - "market_data/storage.py"
+            - "data/**"
+            - "reports/data_quality_report.csv"
+            - ".env"
+            - "credentials"
+            - "delivery/**"
+        lld_gate:
+          required_inputs:
+            - "process/HLD.md#25.4"
+            - "process/ARCHITECTURE-DECISION.md#adr-026research_dataset_builder-只读消费-canonicalgold不触发补数"
+            - "process/stories/CR008-S03-research-dataset-builder.md"
+          status: "not-started"
+        dev_gate:
+          lld_confirmed: false
+          dependencies_satisfied: false
+          required_contracts:
+            - "research_input_v1 contract frozen"
+            - "proxy/real benchmark field contract frozen"
+            - "CR008-BATCH-A CP5 approved"
+          file_conflict_free: false
+          cp5_required: true
+          implementation_allowed: false
+      - story_id: "CR008-S04-quality-adjustment-label-window-gates"
+        title: "质量、复权与 label window gate"
+        priority: "P0"
+        assignee: "meta-dev"
+        depends_on: ["CR008-S03-research-dataset-builder"]
+        dependency_type:
+          - upstream: "CR008-S03-research-dataset-builder"
+            type: "contract"
+          - upstream: "CR008-S03-research-dataset-builder"
+            type: "file-conflict"
+        status: "draft"
+        output_files:
+          - "engine/research_dataset.py"
+          - "engine/quality.py"
+          - "tests/test_cr008_quality_adjustment_label_gates.py"
+        file_ownership:
+          primary:
+            - "tests/test_cr008_quality_adjustment_label_gates.py"
+          shared:
+            - "engine/research_dataset.py"
+            - "engine/quality.py"
+          merge_owner: "CR008-S04-quality-adjustment-label-window-gates"
+          forbidden:
+            - "market_data/connectors/**"
+            - "market_data/runtime.py"
+            - "market_data/storage.py"
+            - "data/**"
+            - "reports/data_quality_report.csv"
+            - ".env"
+            - "credentials"
+            - "delivery/**"
+        lld_gate:
+          required_inputs:
+            - "process/HLD.md#25.8"
+            - "process/ARCHITECTURE-DECISION.md#adr-028quality--adjustment--label-window-gate-是研究准入硬门"
+            - "process/stories/CR008-S04-quality-adjustment-label-window-gates.md"
+          status: "not-started"
+        dev_gate:
+          lld_confirmed: false
+          dependencies_satisfied: false
+          required_contracts:
+            - "research_dataset_builder contract frozen"
+            - "CR008-BATCH-A CP5 approved"
+          file_conflict_free: false
+          cp5_required: true
+          implementation_allowed: false
+      - story_id: "CR008-S05-pit-universe-consumption-contract"
+        title: "PIT / fixed universe 消费合同"
+        priority: "P0"
+        assignee: "meta-dev"
+        depends_on: ["CR007-S03-index-members-stock-basic-datasets", "CR008-S03-research-dataset-builder"]
+        dependency_type:
+          - upstream: "CR007-S03-index-members-stock-basic-datasets"
+            type: "contract"
+          - upstream: "CR008-S03-research-dataset-builder"
+            type: "contract"
+          - upstream: "CR008-S03-research-dataset-builder"
+            type: "file-conflict"
+        status: "draft"
+        output_files:
+          - "engine/universe.py"
+          - "engine/research_dataset.py"
+          - "market_data/readers.py"
+          - "tests/test_cr008_pit_universe_contract.py"
+        file_ownership:
+          primary:
+            - "engine/universe.py"
+            - "tests/test_cr008_pit_universe_contract.py"
+          shared:
+            - "engine/research_dataset.py"
+            - "market_data/readers.py"
+          merge_owner: "CR008-S05-pit-universe-consumption-contract"
+          forbidden:
+            - "market_data/connectors/**"
+            - "market_data/runtime.py"
+            - "market_data/storage.py"
+            - "data/**"
+            - "reports/data_quality_report.csv"
+            - ".env"
+            - "credentials"
+            - "delivery/**"
+        lld_gate:
+          required_inputs:
+            - "process/HLD.md#25.8"
+            - "process/ARCHITECTURE-DECISION.md#adr-027pit--fixed-universe-必须显式声明"
+            - "process/stories/CR008-S05-pit-universe-consumption-contract.md"
+          status: "not-started"
+        dev_gate:
+          lld_confirmed: false
+          dependencies_satisfied: false
+          required_contracts:
+            - "CR007-S03 readiness and PIT semantics frozen"
+            - "research_dataset_builder contract frozen"
+            - "CR008-BATCH-A CP5 approved"
+          file_conflict_free: false
+          cp5_required: true
+          implementation_allowed: false
+      - story_id: "CR008-S06-factor-research-auxiliary-data-contract"
+        title: "因子研究辅助数据合同"
+        priority: "P1"
+        assignee: "meta-dev"
+        depends_on:
+          - "CR008-S03-research-dataset-builder"
+          - "CR008-S04-quality-adjustment-label-window-gates"
+          - "CR008-S05-pit-universe-consumption-contract"
+        dependency_type:
+          - upstream: "CR008-S03-research-dataset-builder"
+            type: "contract"
+          - upstream: "CR008-S04-quality-adjustment-label-window-gates"
+            type: "contract"
+          - upstream: "CR008-S05-pit-universe-consumption-contract"
+            type: "contract"
+        status: "draft"
+        output_files:
+          - "engine/research_dataset.py"
+          - "market_data/readers.py"
+          - "experiments/run_experiment_15_factor_framework.py"
+          - "tests/test_cr008_factor_auxiliary_data_contract.py"
+        file_ownership:
+          primary:
+            - "tests/test_cr008_factor_auxiliary_data_contract.py"
+          shared:
+            - "engine/research_dataset.py"
+            - "market_data/readers.py"
+            - "experiments/run_experiment_15_factor_framework.py"
+          merge_owner: "CR008-S06-factor-research-auxiliary-data-contract"
+          forbidden:
+            - "market_data/connectors/**"
+            - "market_data/runtime.py"
+            - "market_data/storage.py"
+            - "data/**"
+            - "reports/data_quality_report.csv"
+            - ".env"
+            - "credentials"
+            - "delivery/**"
+        lld_gate:
+          required_inputs:
+            - "process/HLD.md#25.5"
+            - "process/ARCHITECTURE-DECISION.md#adr-029因子辅助数据缺失时禁止对应严肃结论"
+            - "process/stories/CR008-S06-factor-research-auxiliary-data-contract.md"
+          status: "not-started"
+        dev_gate:
+          lld_confirmed: false
+          dependencies_satisfied: false
+          required_contracts:
+            - "research_dataset_builder contract frozen"
+            - "quality/adjustment/label gate contract frozen"
+            - "PIT/fixed universe contract frozen"
+            - "CR008-BATCH-A CP5 approved"
+          file_conflict_free: false
+          cp5_required: true
+          implementation_allowed: false
+  - wave: "CR010-DL-BATCH-A"
+    hld_phase: "CR-010 数据湖基础生产化"
+    parallel: false
+    status: "verified-offline"
+    entry_conditions:
+      - "CR-010 CP3/CP4 人工确认通过"
+      - "CR-009 已关闭；CR007/CR008/CR009 历史 PASS/FAIL 仅作审计上下文"
+      - "不得真实抓取、真实 lake 写入、旧 data/** 操作或凭据读取"
+    exit_conditions:
+      - "multi-dataset pipeline 可离线验证"
+      - "P0 dataset quality/catalog/readiness 可用"
+      - "publish gate 可用"
+    completion_criteria:
+      - "plan/run/normalize/validate/publish/read/revalidate/replay 生命周期合同存在"
+      - "validate 不自动成为 current truth；publish 后 reader 才可读"
+      - "prices、adj_factor、hs300_index、trade_calendar、index_members、index_weights、stock_basic 均有字段/readiness/lineage 合同"
+    stories:
+      - story_id: "CR010-S01-multidataset-plan-run-publish-cli-contract"
+        title: "multi-dataset plan/run/publish CLI 合同"
+        priority: "P0"
+        assignee: "meta-dev"
+        depends_on:
+          - "CR007-S01-prices-long-horizon-backfill-planner"
+          - "CR007-S02-benchmark-calendar-backfill"
+        status: "verified"
+        output_files:
+          - "market_data/cli.py"
+          - "market_data/catalog.py"
+          - "tests/test_cr010_data_lake_publish_and_contracts.py"
+        dev_gate:
+          cp5_required: true
+          implementation_allowed: true
+          cp6_status: "PASS"
+          cp7_status: "PASS"
+      - story_id: "CR010-S02-prices-adj-factor-history-backfill-loop"
+        title: "prices + adj_factor 历史回补闭环"
+        priority: "P0"
+        assignee: "meta-dev"
+        depends_on:
+          - "CR010-S01-multidataset-plan-run-publish-cli-contract"
+        status: "verified"
+        output_files:
+          - "market_data/contracts.py"
+          - "market_data/normalization.py"
+          - "market_data/validation.py"
+        dev_gate:
+          cp5_required: true
+          implementation_allowed: true
+          cp6_status: "PASS"
+          cp7_status: "PASS"
+      - story_id: "CR010-S03-hs300-index-trade-calendar-backfill-loop"
+        title: "hs300_index + trade_calendar 历史回补闭环"
+        priority: "P0"
+        assignee: "meta-dev"
+        depends_on:
+          - "CR010-S01-multidataset-plan-run-publish-cli-contract"
+          - "CR007-S02-benchmark-calendar-backfill"
+        status: "verified"
+        output_files:
+          - "market_data/normalization.py"
+          - "market_data/validation.py"
+          - "market_data/benchmarks.py"
+        dev_gate:
+          cp5_required: true
+          implementation_allowed: true
+          cp6_status: "PASS"
+          cp7_status: "PASS"
+      - story_id: "CR010-S04-index-members-weights-stock-basic-readiness"
+        title: "index_members/index_weights/stock_basic readiness 强化"
+        priority: "P0"
+        assignee: "meta-dev"
+        depends_on:
+          - "CR010-S01-multidataset-plan-run-publish-cli-contract"
+          - "CR007-S03-index-members-stock-basic-datasets"
+        status: "verified"
+        output_files:
+          - "market_data/contracts.py"
+          - "market_data/source_registry.py"
+          - "market_data/readers.py"
+        dev_gate:
+          cp5_required: true
+          implementation_allowed: true
+          cp6_status: "PASS"
+          cp7_status: "PASS"
+      - story_id: "CR010-S05-catalog-coverage-production-readiness-report"
+        title: "catalog coverage 与 production readiness report"
+        priority: "P0"
+        assignee: "meta-dev"
+        depends_on:
+          - "CR010-S02-prices-adj-factor-history-backfill-loop"
+          - "CR010-S03-hs300-index-trade-calendar-backfill-loop"
+          - "CR010-S04-index-members-weights-stock-basic-readiness"
+        status: "verified"
+        output_files:
+          - "market_data/catalog.py"
+          - "market_data/validation.py"
+          - "market_data/readers.py"
+        dev_gate:
+          cp5_required: true
+          implementation_allowed: true
+          cp6_status: "PASS"
+          cp7_status: "PASS"
+  - wave: "CR010-DL-BATCH-B"
+    hld_phase: "CR-010 W3 数据契约与 fail-fast"
+    parallel: false
+    status: "draft-pending-cp4"
+    entry_conditions:
+      - "CR010-DL-BATCH-A reader/catalog 合同冻结"
+      - "W3 exact source/interface 未确认前不得接真实 provider"
+    exit_conditions:
+      - "PIT/trade_status/prices_limit/events 未确认时 fail-fast"
+      - "exploratory 写 limitation，production_strict fail"
+    completion_criteria:
+      - "source_unresolved / required_missing / missing_required 单测覆盖"
+      - "index_weights 不替代 index_members；stock_basic 不证明 PIT"
+    stories:
+      - story_id: "CR010-S06-pit-source-interface-spike-readiness"
+        title: "PIT source/interface Spike 与 readiness 加固"
+        priority: "P1"
+        assignee: "meta-dev"
+        depends_on:
+          - "CR010-S04-index-members-weights-stock-basic-readiness"
+        status: "draft"
+        output_files:
+          - "market_data/source_registry.py"
+          - "market_data/readers.py"
+      - story_id: "CR010-S07-trade-status-contract-reader-fail-fast"
+        title: "trade_status 合同 / reader / fail-fast"
+        priority: "P1"
+        assignee: "meta-dev"
+        depends_on:
+          - "CR010-S06-pit-source-interface-spike-readiness"
+        status: "draft"
+        output_files:
+          - "market_data/contracts.py"
+          - "market_data/readers.py"
+          - "engine/trade_status.py"
+      - story_id: "CR010-S08-prices-limit-contract-gate-fail-fast"
+        title: "prices_limit 合同 / gate / fail-fast"
+        priority: "P1"
+        assignee: "meta-dev"
+        depends_on:
+          - "CR010-S06-pit-source-interface-spike-readiness"
+        status: "draft"
+        output_files:
+          - "market_data/contracts.py"
+          - "market_data/readers.py"
+          - "engine/trading_constraints.py"
+      - story_id: "CR010-S09-events-available-at-contract-fail-fast"
+        title: "events 合同 / available_at gate / fail-fast"
+        priority: "P1"
+        assignee: "meta-dev"
+        depends_on:
+          - "CR010-S06-pit-source-interface-spike-readiness"
+        status: "draft"
+        output_files:
+          - "market_data/contracts.py"
+          - "market_data/readers.py"
+          - "engine/events.py"
+  - wave: "CR010-QF-BATCH-C"
+    hld_phase: "CR-010 实验消费与真实性报告"
+    parallel: false
+    status: "draft-pending-cp4"
+    entry_conditions:
+      - "CR010-DL-BATCH-A/B 离线验证通过"
+      - "`realism_mode` 合同确认"
+      - "不得触发 backfill；真实 lake smoke 需用户授权"
+    exit_conditions:
+      - "16 个 experiments fixture/offline exploratory 可运行"
+      - "production_strict 对缺口正确 fail"
+      - "Backtrader/VectorBT clean feed 边界回归"
+    completion_criteria:
+      - "reports 输出 coverage、benchmark、universe、adjustment、quality/readiness、W3 限制、allowed_claims、blocked_claims"
+      - "consumer forbidden imports 与网络调用为 0"
+    stories:
+      - story_id: "CR010-S10-realism-mode-research-metadata"
+        title: "统一 realism_mode 与 research metadata"
+        priority: "P0"
+        assignee: "meta-dev"
+        depends_on:
+          - "CR010-S05-catalog-coverage-production-readiness-report"
+          - "CR010-S07-trade-status-contract-reader-fail-fast"
+          - "CR010-S08-prices-limit-contract-gate-fail-fast"
+          - "CR010-S09-events-available-at-contract-fail-fast"
+        status: "draft"
+        output_files:
+          - "engine/research_dataset.py"
+          - "experiments/reporting.py"
+      - story_id: "CR010-S11-experiments-smoke-limitation-matrix"
+        title: "16 个 experiments smoke 与 limitation matrix"
+        priority: "P0"
+        assignee: "meta-dev"
+        depends_on:
+          - "CR010-S10-realism-mode-research-metadata"
+        status: "draft"
+        output_files:
+          - "experiments/**"
+          - "tests/test_cr010_experiments_realism_metadata.py"
+      - story_id: "CR010-S12-backtrader-vectorbt-clean-feed-boundary"
+        title: "Backtrader / VectorBT clean feed 边界回归"
+        priority: "P1"
+        assignee: "meta-dev"
+        depends_on:
+          - "CR010-S10-realism-mode-research-metadata"
+        status: "draft"
+        output_files:
+          - "engine/backtrader_adapter.py"
+          - "engine/research_dataset.py"
+          - "tests/test_cr010_consumer_boundary.py"
+  - wave: "CR010-OPS-BATCH-D"
+    hld_phase: "CR-010 备份、归档、恢复与保留策略"
+    parallel: false
+    status: "registered-pending-lld-cp5"
+    entry_conditions:
+      - "NFS hot/archive/backup/restore root 已通过挂载与写删 marker 校验"
+      - "CR010-DL-BATCH-A current truth/report 合同冻结"
+      - "OPS-BATCH-D CP5 全量确认前不得实现"
+      - "不得打印 `.env`、token、NAS 凭据或真实私有路径"
+    exit_conditions:
+      - "backup/restore/retention CLI 默认 dry-run"
+      - "`--execute` 才允许复制、恢复或删除"
+      - "restore drill 只读执行 read/revalidate/replay 且 network_calls=0"
+      - "checksum skip/mismatch fail，报告脱敏"
+    completion_criteria:
+      - "backup-plan、backup-run、backup-verify、backup-report CLI 合同稳定"
+      - "restore-plan、restore-run、restore-drill CLI 合同稳定"
+      - "restore-root==lake-root fail-fast"
+      - "retention policy dry-run / execute 边界稳定"
+    stories:
+      - story_id: "CR010-S13-backup-archive-restore-env-manifest-contract"
+        title: "backup/archive/restore env 与 manifest/checksum/脱敏契约"
+        priority: "P0"
+        assignee: "meta-dev"
+        depends_on:
+          - "CR010-S05-catalog-coverage-production-readiness-report"
+        status: "lld-ready"
+        output_files:
+          - "market_data/cli.py"
+          - "market_data/storage.py"
+          - "tests/test_cr010_backup_restore_contracts.py"
+        dev_gate:
+          cp5_required: true
+          implementation_allowed: false
+          reason: "等待 OPS-BATCH-D 全量 LLD 与 CP5 批次确认。"
+      - story_id: "CR010-S14-backup-cli-dry-run-execute-verify-report"
+        title: "backup CLI dry-run / execute / verify / report"
+        priority: "P0"
+        assignee: "meta-dev"
+        depends_on:
+          - "CR010-S13-backup-archive-restore-env-manifest-contract"
+        status: "lld-ready"
+        output_files:
+          - "market_data/cli.py"
+          - "tests/test_cr010_backup_restore_contracts.py"
+        dev_gate:
+          cp5_required: true
+          implementation_allowed: false
+          reason: "等待 OPS-BATCH-D 全量 LLD 与 CP5 批次确认。"
+      - story_id: "CR010-S15-restore-cli-drill-read-revalidate-replay"
+        title: "restore CLI 与 restore drill"
+        priority: "P0"
+        assignee: "meta-dev"
+        depends_on:
+          - "CR010-S13-backup-archive-restore-env-manifest-contract"
+          - "CR010-S14-backup-cli-dry-run-execute-verify-report"
+        status: "lld-ready"
+        output_files:
+          - "market_data/cli.py"
+          - "market_data/readers.py"
+          - "tests/test_cr010_backup_restore_contracts.py"
+        dev_gate:
+          cp5_required: true
+          implementation_allowed: false
+          reason: "等待 OPS-BATCH-D 全量 LLD 与 CP5 批次确认。"
+      - story_id: "CR010-S16-retention-policy-archive-backup-cleanup"
+        title: "retention policy 与 archive/backup cleanup"
+        priority: "P1"
+        assignee: "meta-dev"
+        depends_on:
+          - "CR010-S13-backup-archive-restore-env-manifest-contract"
+        status: "lld-ready"
+        output_files:
+          - "market_data/cli.py"
+          - "tests/test_cr010_backup_restore_contracts.py"
+        dev_gate:
+          cp5_required: true
+          implementation_allowed: false
+          reason: "等待 OPS-BATCH-D 全量 LLD 与 CP5 批次确认；真实删除需另行 --execute 授权。"
+  - wave: "CR011-DATA-BATCH-A"
+    hld_phase: "CR-011 数据与研究消费合同"
+    parallel: false
+    parallel_lld: true
+    parallel_dev: false
+    status: "verified"
+    lld_batch: "CR011-DATA-BATCH-A"
+    cp5_batch_gate:
+      manual_checkpoint: "checkpoints/CP5-CR011-DATA-BATCH-A-LLD-BATCH.md"
+      status: "approved"
+      auto_status: "PASS"
+      manual_status: "approved"
+      reviewed_by: "user"
+      reviewed_at: "2026-05-24T10:24:02+08:00"
+      auto_results:
+        - "process/checks/CP5-CR011-S01-real-benchmark-and-policy-consumption-LLD-IMPLEMENTABILITY.md"
+        - "process/checks/CP5-CR011-S02-pit-universe-and-stock-lifecycle-completion-LLD-IMPLEMENTABILITY.md"
+        - "process/checks/CP5-CR011-S03-tradability-status-and-price-limit-gates-LLD-IMPLEMENTABILITY.md"
+        - "process/checks/CP5-CR011-S04-ohlcv-vwap-clean-execution-feed-LLD-IMPLEMENTABILITY.md"
+        - "process/checks/CP5-CR011-S05-adjustment-and-corporate-action-audit-LLD-IMPLEMENTABILITY.md"
+        - "process/checks/CP5-CR011-S06-industry-market-cap-style-exposure-data-LLD-IMPLEMENTABILITY.md"
+      required_story_llds:
+        - "process/stories/CR011-S01-real-benchmark-and-policy-consumption-LLD.md"
+        - "process/stories/CR011-S02-pit-universe-and-stock-lifecycle-completion-LLD.md"
+        - "process/stories/CR011-S03-tradability-status-and-price-limit-gates-LLD.md"
+        - "process/stories/CR011-S04-ohlcv-vwap-clean-execution-feed-LLD.md"
+        - "process/stories/CR011-S05-adjustment-and-corporate-action-audit-LLD.md"
+        - "process/stories/CR011-S06-industry-market-cap-style-exposure-data-LLD.md"
+      implementation_allowed_before_cp5: false
+      implementation_allowed: true
+    entry_conditions:
+      - "CR-011 CP3/CP4 人工确认通过"
+      - "CR010-DL-BATCH-A verified，CR010-DL-BATCH-B/QF-BATCH-C 相关合同至少冻结"
+      - "不得真实联网、读凭据、写真实 lake、操作旧 data/** 或覆盖旧实验报告"
+    exit_conditions:
+      - "benchmark、PIT、tradability、execution、adjustment、exposure 六类门禁进入研究消费合同"
+      - "六张 Story 卡片、依赖类型、文件所有权、LLD gate 和 dev gate 均稳定"
+    completion_criteria:
+      - "S01..S06 的 LLD 全量完成并通过 CP5-A 前不得实现"
+      - "proxy 不写入 hs300 字段；fixed snapshot 不证明 PIT；close proxy 不声明 VWAP"
+      - "缺行业/市值/风格时中性化 / pure alpha claims 被 blocked"
+    stories:
+      - story_id: "CR011-S01-real-benchmark-and-policy-consumption"
+        title: "真实 benchmark 与 policy 消费"
+        priority: "P0"
+        assignee: "meta-dev"
+        depends_on:
+          - "CR010-S03-hs300-index-trade-calendar-backfill-loop"
+          - "CR010-S05-catalog-coverage-production-readiness-report"
+          - "CR008-S02-proxy-real-benchmark-field-separation"
+        dependency_type:
+          - upstream: "CR010-S03-hs300-index-trade-calendar-backfill-loop"
+            type: "runtime"
+          - upstream: "CR010-S05-catalog-coverage-production-readiness-report"
+            type: "runtime"
+          - upstream: "CR008-S02-proxy-real-benchmark-field-separation"
+            type: "contract"
+        status: "verified"
+        output_files:
+          - "market_data/benchmarks.py"
+          - "engine/research_dataset.py"
+          - "experiments/run_experiment_17_21_factor_suite.py"
+          - "tests/test_cr011_benchmark_policy_consumption.py"
+        file_ownership:
+          primary:
+            - "tests/test_cr011_benchmark_policy_consumption.py"
+          shared:
+            - "market_data/benchmarks.py"
+            - "engine/research_dataset.py"
+            - "experiments/run_experiment_17_21_factor_suite.py"
+          merge_owner: "CR011-S01-real-benchmark-and-policy-consumption"
+          forbidden:
+            - "market_data/connectors/**"
+            - "market_data/runtime.py"
+            - "market_data/storage.py"
+            - ".env"
+            - "data/**"
+            - "reports/experiment_17_21/factor_strategy_report.md"
+            - "delivery/**"
+        lld_gate:
+          required_inputs:
+            - "process/HLD.md#27-cr-011-因子研究生产级数据补齐增量设计"
+            - "process/HLD-DATA-LAKE.md#14-cr-011-因子研究数据补齐增量"
+            - "process/ARCHITECTURE-DECISION.md#adr-036cr-011-benchmark-policy-consumption-必须区分真实-benchmark-与-proxy-baseline"
+            - "process/stories/CR011-S01-real-benchmark-and-policy-consumption.md"
+          status: "approved"
+          cp5_batch: "CR011-DATA-BATCH-A"
+        dev_gate:
+          lld_confirmed: true
+          dependencies_satisfied: true
+          required_contracts:
+            - "BenchmarkPolicyResult schema frozen"
+            - "CR011-DATA-BATCH-A CP5 approved"
+          file_conflict_free: true
+          cp5_required: true
+          implementation_allowed: true
+          reason: "CR011-DATA-BATCH-A CP5 已 approved；S01 上游合同已冻结，已完成 CP6/CP7 并收敛为 verified。"
+      - story_id: "CR011-S02-pit-universe-and-stock-lifecycle-completion"
+        title: "PIT 股票池与股票生命周期"
+        priority: "P0"
+        assignee: "meta-dev"
+        depends_on:
+          - "CR010-S04-index-members-weights-stock-basic-readiness"
+          - "CR010-S06-pit-source-interface-spike-readiness"
+          - "CR008-S05-pit-universe-consumption-contract"
+        dependency_type:
+          - upstream: "CR010-S04-index-members-weights-stock-basic-readiness"
+            type: "runtime"
+          - upstream: "CR010-S06-pit-source-interface-spike-readiness"
+            type: "contract"
+          - upstream: "CR008-S05-pit-universe-consumption-contract"
+            type: "contract"
+        status: "verified"
+        output_files:
+          - "market_data/readers.py"
+          - "engine/research_dataset.py"
+          - "tests/test_cr011_pit_universe_lifecycle.py"
+        file_ownership:
+          primary:
+            - "tests/test_cr011_pit_universe_lifecycle.py"
+          shared:
+            - "market_data/readers.py"
+            - "engine/research_dataset.py"
+          merge_owner: "CR011-S02-pit-universe-and-stock-lifecycle-completion"
+          forbidden:
+            - "market_data/connectors/**"
+            - "data/**"
+            - ".env"
+            - "reports/experiment_17_21/factor_strategy_report.md"
+            - "delivery/**"
+        lld_gate:
+          required_inputs:
+            - "process/HLD.md#27.5"
+            - "process/HLD-DATA-LAKE.md#14.2"
+            - "process/ARCHITECTURE-DECISION.md#adr-037cr-011-pit-universe-与股票生命周期采用-as-of-gate"
+            - "process/stories/CR011-S02-pit-universe-and-stock-lifecycle-completion.md"
+          status: "approved"
+          cp5_batch: "CR011-DATA-BATCH-A"
+        dev_gate:
+          lld_confirmed: true
+          dependencies_satisfied: true
+          required_contracts:
+            - "PIT membership/readiness schema frozen"
+            - "stock lifecycle missing behavior frozen"
+            - "CR011-DATA-BATCH-A CP5 approved"
+          file_conflict_free: true
+          cp5_required: true
+          implementation_allowed: true
+          reason: "S01 已 verified，CR010-S04 为 verified，CR010-S06 已完成 meta-qa CP7 PASS，CR008-S05 已 verified；原 dev-you 线程未返回 completed，replacement meta-dev/dev-zhang 已完成 CP6 接管复核并 PASS，meta-qa/qa-shi 已完成 CP7 PASS；S02 当前 verified。真实 PIT source/interface 未冻结时必须 fail-fast，不得伪造 available。"
+      - story_id: "CR011-S03-tradability-status-and-price-limit-gates"
+        title: "可交易性与涨跌停门控"
+        priority: "P0"
+        assignee: "meta-dev"
+        depends_on:
+          - "CR011-S02-pit-universe-and-stock-lifecycle-completion"
+          - "CR010-S07-trade-status-contract-reader-fail-fast"
+          - "CR010-S08-prices-limit-contract-gate-fail-fast"
+          - "CR010-S09-events-available-at-contract-fail-fast"
+        dependency_type:
+          - upstream: "CR011-S02-pit-universe-and-stock-lifecycle-completion"
+            type: "contract"
+          - upstream: "CR010-S07-trade-status-contract-reader-fail-fast"
+            type: "contract"
+          - upstream: "CR010-S08-prices-limit-contract-gate-fail-fast"
+            type: "contract"
+          - upstream: "CR010-S09-events-available-at-contract-fail-fast"
+            type: "contract"
+        status: "verified"
+        output_files:
+          - "market_data/readers.py"
+          - "engine/trade_status.py"
+          - "engine/trading_constraints.py"
+          - "engine/events.py"
+          - "engine/research_dataset.py"
+          - "tests/test_cr011_tradability_gates.py"
+        file_ownership:
+          primary:
+            - "tests/test_cr011_tradability_gates.py"
+          shared:
+            - "market_data/readers.py"
+            - "engine/trade_status.py"
+            - "engine/trading_constraints.py"
+            - "engine/events.py"
+            - "engine/research_dataset.py"
+          merge_owner: "CR011-S03-tradability-status-and-price-limit-gates"
+          forbidden:
+            - "market_data/connectors/**"
+            - "market_data/runtime.py"
+            - "data/**"
+            - ".env"
+            - "reports/experiment_17_21/factor_strategy_report.md"
+            - "delivery/**"
+        lld_gate:
+          required_inputs:
+            - "process/HLD.md#27.7"
+            - "process/HLD-DATA-LAKE.md#14.2"
+            - "process/ARCHITECTURE-DECISION.md#adr-038cr-011-tradability-gates-必须覆盖真实可交易约束"
+            - "process/stories/CR011-S03-tradability-status-and-price-limit-gates.md"
+          status: "approved"
+          cp5_batch: "CR011-DATA-BATCH-A"
+        dev_gate:
+          lld_confirmed: true
+          dependencies_satisfied: true
+          required_contracts:
+            - "trade_status/prices_limit/events gate matrix frozen"
+            - "CR011-S02 lifecycle / min_listing_days contract frozen"
+            - "CR011-DATA-BATCH-A CP5 approved"
+          file_conflict_free: true
+          cp5_required: true
+          implementation_allowed: true
+          reason: "S02 已 verified，CR010-S07/S08/S09 均为 implemented / meta-qa CP7 PASS，CR011-DATA-BATCH-A CP5 已 approved；meta-dev/dev-he 已完成 CP6 PASS，meta-qa/qa-wei 已完成 CP7 PASS；S03 当前 verified。"
+      - story_id: "CR011-S04-ohlcv-vwap-clean-execution-feed"
+        title: "OHLCV / VWAP 干净执行 feed"
+        priority: "P1"
+        assignee: "meta-dev"
+        depends_on:
+          - "CR011-S03-tradability-status-and-price-limit-gates"
+          - "CR010-S02-prices-adj-factor-history-backfill-loop"
+        dependency_type:
+          - upstream: "CR011-S03-tradability-status-and-price-limit-gates"
+            type: "contract"
+          - upstream: "CR010-S02-prices-adj-factor-history-backfill-loop"
+            type: "runtime"
+        status: "verified"
+        output_files:
+          - "market_data/readers.py"
+          - "engine/research_dataset.py"
+          - "engine/backtest.py"
+          - "tests/test_cr011_execution_price_policy.py"
+        file_ownership:
+          primary:
+            - "tests/test_cr011_execution_price_policy.py"
+          shared:
+            - "market_data/readers.py"
+            - "engine/research_dataset.py"
+            - "engine/backtest.py"
+          merge_owner: "CR011-S04-ohlcv-vwap-clean-execution-feed"
+          forbidden:
+            - "market_data/connectors/**"
+            - "data/**"
+            - ".env"
+            - "reports/experiment_17_21/factor_strategy_report.md"
+            - "delivery/**"
+        lld_gate:
+          required_inputs:
+            - "process/HLD.md#27.7"
+            - "process/HLD-DATA-LAKE.md#14.2"
+            - "process/ARCHITECTURE-DECISION.md#adr-039cr-011-execution-price--vwap-缺失必须显式降级"
+            - "process/stories/CR011-S04-ohlcv-vwap-clean-execution-feed.md"
+          status: "approved"
+          cp5_batch: "CR011-DATA-BATCH-A"
+        dev_gate:
+          lld_confirmed: true
+          dependencies_satisfied: true
+          required_contracts:
+            - "tradability gate matrix frozen"
+            - "execution_price_policy enum and degradation metadata frozen"
+            - "CR011-DATA-BATCH-A CP5 approved"
+          file_conflict_free: true
+          cp5_required: true
+          implementation_allowed: true
+          reason: "CR011-DATA-BATCH-A CP5 已 approved；S03 tradability gate 已 CP7 PASS / verified，CR010-S02 prices/adj_factor 历史回补闭环已 verified；S04 首次 CP7 FAIL 的 exact policy 阻断项已完成 blocker-fix CP6 PASS，并由 meta-qa/qa-hua the 2nd CP7 复验 PASS；S04 当前 verified。"
+      - story_id: "CR011-S05-adjustment-and-corporate-action-audit"
+        title: "复权与公司行动审计"
+        priority: "P1"
+        assignee: "meta-dev"
+        depends_on:
+          - "CR010-S02-prices-adj-factor-history-backfill-loop"
+          - "CR008-S04-quality-adjustment-label-window-gates"
+        dependency_type:
+          - upstream: "CR010-S02-prices-adj-factor-history-backfill-loop"
+            type: "runtime"
+          - upstream: "CR008-S04-quality-adjustment-label-window-gates"
+            type: "contract"
+        status: "verified"
+        output_files:
+          - "market_data/readers.py"
+          - "engine/research_dataset.py"
+          - "tests/test_cr011_adjustment_audit.py"
+        file_ownership:
+          primary:
+            - "tests/test_cr011_adjustment_audit.py"
+          shared:
+            - "market_data/readers.py"
+            - "engine/research_dataset.py"
+          merge_owner: "CR011-S05-adjustment-and-corporate-action-audit"
+          forbidden:
+            - "market_data/connectors/**"
+            - "data/**"
+            - ".env"
+            - "reports/experiment_17_21/factor_strategy_report.md"
+            - "delivery/**"
+        lld_gate:
+          required_inputs:
+            - "process/HLD.md#27.7"
+            - "process/HLD-DATA-LAKE.md#14.2"
+            - "process/ARCHITECTURE-DECISION.md#adr-040cr-011-adjustment-与-corporate-action-audit-分层声明"
+            - "process/stories/CR011-S05-adjustment-and-corporate-action-audit.md"
+          status: "approved"
+          cp5_batch: "CR011-DATA-BATCH-A"
+        dev_gate:
+          lld_confirmed: true
+          dependencies_satisfied: true
+          required_contracts:
+            - "adjustment_policy and corporate_action_status metadata frozen"
+            - "CR011-DATA-BATCH-A CP5 approved"
+          file_conflict_free: true
+          cp5_required: true
+          implementation_allowed: true
+          reason: "CR011-DATA-BATCH-A CP5 已 approved；CR010-S02 runtime 与 CR008-S04 adjustment/label window contract 均已 verified；S04 已 verified；S05 CP6 adoption PASS 且 CP7 PASS，当前 verified。"
+      - story_id: "CR011-S06-industry-market-cap-style-exposure-data"
+        title: "行业 / 市值 / 风格暴露"
+        priority: "P1"
+        assignee: "meta-dev"
+        depends_on:
+          - "CR008-S06-factor-research-auxiliary-data-contract"
+          - "CR011-S02-pit-universe-and-stock-lifecycle-completion"
+        dependency_type:
+          - upstream: "CR008-S06-factor-research-auxiliary-data-contract"
+            type: "contract"
+          - upstream: "CR011-S02-pit-universe-and-stock-lifecycle-completion"
+            type: "contract"
+        status: "verified"
+        output_files:
+          - "market_data/readers.py"
+          - "engine/research_dataset.py"
+          - "tests/test_cr011_exposure_claims.py"
+        file_ownership:
+          primary:
+            - "tests/test_cr011_exposure_claims.py"
+          shared:
+            - "market_data/readers.py"
+            - "engine/research_dataset.py"
+          merge_owner: "CR011-S06-industry-market-cap-style-exposure-data"
+          forbidden:
+            - "market_data/connectors/**"
+            - "data/**"
+            - ".env"
+            - "reports/experiment_17_21/factor_strategy_report.md"
+            - "delivery/**"
+        lld_gate:
+          required_inputs:
+            - "process/HLD.md#27.7"
+            - "process/HLD-DATA-LAKE.md#14.2"
+            - "process/ARCHITECTURE-DECISION.md#adr-041cr-011-industry--market-cap--style-exposure-决定中性化声明边界"
+            - "process/stories/CR011-S06-industry-market-cap-style-exposure-data.md"
+          status: "approved"
+          cp5_batch: "CR011-DATA-BATCH-A"
+        dev_gate:
+          lld_confirmed: true
+          dependencies_satisfied: true
+          required_contracts:
+            - "PIT universe gate frozen"
+            - "auxiliary allowed/blocked claims contract frozen"
+            - "CR011-DATA-BATCH-A CP5 approved"
+          file_conflict_free: true
+          cp5_required: true
+          implementation_allowed: true
+          reason: "CR011-DATA-BATCH-A CP5 已 approved；S06 原 CP6 PASS 后 CP7 首验 FAIL，阻断项 CR011-S06-CP7-F01 已由 meta-dev/dev-zhang the 2nd 完成最小 blocker fix，并由 meta-qa/qa-jin the 2nd CP7 复验 PASS；S06 当前 verified。"
+  - wave: "CR011-RESEARCH-BATCH-B"
+    hld_phase: "CR-011 容量成本研究"
+    parallel: false
+    parallel_lld: true
+    parallel_dev: false
+    status: "verified"
+    lld_batch: "CR011-RESEARCH-BATCH-B"
+    cp5_batch_gate:
+      manual_checkpoint: "checkpoints/CP5-CR011-RESEARCH-BATCH-B-LLD-BATCH.md"
+      required_story_llds:
+        - "process/stories/CR011-S07-liquidity-capacity-and-cost-sensitivity-LLD.md"
+      implementation_allowed_before_cp5: false
+    entry_conditions:
+      - "CR011-DATA-BATCH-A 相关合同冻结"
+      - "CR011-S03/S04/S06 LLD 至少完成并在 CP5-A 中确认后才能实现"
+    exit_conditions:
+      - "流动性、容量和成本敏感性合同稳定"
+    completion_criteria:
+      - "四档成本网格和五类容量字段进入报告合同"
+    stories:
+      - story_id: "CR011-S07-liquidity-capacity-and-cost-sensitivity"
+        title: "流动性 / 容量 / 成本敏感性"
+        priority: "P1"
+        assignee: "meta-dev"
+        depends_on:
+          - "CR011-S03-tradability-status-and-price-limit-gates"
+          - "CR011-S04-ohlcv-vwap-clean-execution-feed"
+          - "CR011-S06-industry-market-cap-style-exposure-data"
+        dependency_type:
+          - upstream: "CR011-S03-tradability-status-and-price-limit-gates"
+            type: "contract"
+          - upstream: "CR011-S04-ohlcv-vwap-clean-execution-feed"
+            type: "contract"
+          - upstream: "CR011-S06-industry-market-cap-style-exposure-data"
+            type: "contract"
+        status: "verified"
+        output_files:
+          - "engine/research_dataset.py"
+          - "engine/portfolio.py"
+          - "experiments/run_experiment_17_21_factor_suite.py"
+          - "tests/test_cr011_capacity_cost_sensitivity.py"
+        file_ownership:
+          primary:
+            - "tests/test_cr011_capacity_cost_sensitivity.py"
+          shared:
+            - "engine/research_dataset.py"
+            - "engine/portfolio.py"
+            - "experiments/run_experiment_17_21_factor_suite.py"
+          merge_owner: "CR011-S07-liquidity-capacity-and-cost-sensitivity"
+          forbidden:
+            - "market_data/connectors/**"
+            - "data/**"
+            - ".env"
+            - "reports/experiment_17_21/factor_strategy_report.md"
+            - "delivery/**"
+        lld_gate:
+          required_inputs:
+            - "process/HLD.md#27.7"
+            - "process/ARCHITECTURE-DECISION.md#adr-042cr-011-liquidity--capacity--cost-sensitivity-使用固定网格和可审计输入"
+            - "process/stories/CR011-S07-liquidity-capacity-and-cost-sensitivity.md"
+          status: "approved"
+          cp5_batch: "CR011-RESEARCH-BATCH-B"
+          cp5_precheck: "process/checks/CP5-CR011-S07-liquidity-capacity-and-cost-sensitivity-LLD-IMPLEMENTABILITY.md"
+          manual_review: "checkpoints/CP5-CR011-RESEARCH-BATCH-B-LLD-BATCH.md"
+          confirmed_by: "user"
+          confirmed_at: "2026-05-24T15:25:45+08:00"
+        dev_gate:
+          lld_confirmed: true
+          dependencies_satisfied: true
+          required_contracts:
+            - "tradability/execution/exposure contracts frozen"
+            - "CR011-RESEARCH-BATCH-B CP5 approved"
+          file_conflict_free: true
+          cp5_required: true
+          implementation_allowed: true
+          reason: "CR011-RESEARCH-BATCH-B CP5-B 已由用户 approve；S07 已完成 CP6 PASS 与 CP7 PASS，当前 verified。"
+  - wave: "CR011-VALIDATION-BATCH-C"
+    hld_phase: "CR-011 因子面板审计与稳健性验证"
+    parallel: false
+    parallel_lld: true
+    parallel_dev: false
+    status: "verified"
+    lld_batch: "CR011-VALIDATION-BATCH-C"
+    cp5_batch_gate:
+      manual_checkpoint: "checkpoints/CP5-CR011-VALIDATION-BATCH-C-LLD-BATCH.md"
+      required_story_llds:
+        - "process/stories/CR011-S08-factor-panel-audit-and-robust-validation-LLD.md"
+      implementation_allowed_before_cp5: false
+    entry_conditions:
+      - "CR011-DATA-BATCH-A 与 CR011-RESEARCH-BATCH-B 合同冻结"
+      - "旧实验 17-21 报告 forbidden path 已写入 Story 卡片"
+    exit_conditions:
+      - "factor panel audit 与 robust validation 合同稳定"
+      - "新版报告版本化输出路径稳定"
+    completion_criteria:
+      - "四阶段 factor panel 和五类 robust validation 进入 LLD 输入"
+    stories:
+      - story_id: "CR011-S08-factor-panel-audit-and-robust-validation"
+        title: "因子审计面板与稳健性验证"
+        priority: "P1"
+        assignee: "meta-dev/dev-qin the 2nd"
+        depends_on:
+          - "CR011-S01-real-benchmark-and-policy-consumption"
+          - "CR011-S02-pit-universe-and-stock-lifecycle-completion"
+          - "CR011-S05-adjustment-and-corporate-action-audit"
+          - "CR011-S07-liquidity-capacity-and-cost-sensitivity"
+        dependency_type:
+          - upstream: "CR011-S01-real-benchmark-and-policy-consumption"
+            type: "contract"
+          - upstream: "CR011-S02-pit-universe-and-stock-lifecycle-completion"
+            type: "contract"
+          - upstream: "CR011-S05-adjustment-and-corporate-action-audit"
+            type: "contract"
+          - upstream: "CR011-S07-liquidity-capacity-and-cost-sensitivity"
+            type: "contract"
+        status: "verified"
+        output_files:
+          - "experiments/run_experiment_17_21_factor_suite.py"
+          - "reports/experiment_17_21_cr011/**"
+          - "tests/test_cr011_factor_panel_robust_validation.py"
+        file_ownership:
+          primary:
+            - "reports/experiment_17_21_cr011/**"
+            - "tests/test_cr011_factor_panel_robust_validation.py"
+          shared:
+            - "experiments/run_experiment_17_21_factor_suite.py"
+            - "engine/research_dataset.py"
+          merge_owner: "CR011-S08-factor-panel-audit-and-robust-validation"
+          forbidden:
+            - "reports/experiment_17_21/factor_strategy_report.md"
+            - "market_data/connectors/**"
+            - "data/**"
+            - ".env"
+            - "delivery/**"
+        lld_gate:
+          required_inputs:
+            - "process/HLD.md#27.10"
+            - "process/ARCHITECTURE-DECISION.md#adr-043cr-011-factor-panel-audit-与-robust-validation-是结论升级前置"
+            - "process/stories/CR011-S08-factor-panel-audit-and-robust-validation.md"
+          status: "approved"
+          cp5_batch: "CR011-VALIDATION-BATCH-C"
+          handoff: "process/handoffs/META-DEV-CR011-S08-LLD-2026-05-24.md"
+          agent_name: "dev-qin the 2nd"
+          agent_id: "019e58fe-0cb3-7d02-9bea-73d78492b7b5"
+          started_at: "2026-05-24T15:58:31+08:00"
+          completed_at: "2026-05-24T16:00:25+08:00"
+          closed_at: "2026-05-24T16:11:23+08:00"
+          expected_lld: "process/stories/CR011-S08-factor-panel-audit-and-robust-validation-LLD.md"
+          expected_cp5_precheck: "process/checks/CP5-CR011-S08-factor-panel-audit-and-robust-validation-LLD-IMPLEMENTABILITY.md"
+          cp5_status: "PASS"
+          manual_review: "checkpoints/CP5-CR011-VALIDATION-BATCH-C-LLD-BATCH.md"
+          manual_status: "approved"
+          confirmed_by: "user"
+          confirmed_at: "2026-05-24T16:34:46+08:00"
+        dev_gate:
+          lld_confirmed: true
+          dependencies_satisfied: true
+          required_contracts:
+            - "benchmark/PIT/adjustment/capacity contracts frozen"
+            - "CR011-VALIDATION-BATCH-C CP5 approved"
+          file_conflict_free: true
+          cp5_required: true
+          implementation_allowed: true
+          reason: "S01/S02/S05/S07 均已 verified，S08 LLD confirmed，CP5-C 批次人工确认 approved；S08 CP6 PASS 与 CP7 PASS，旧报告不得覆盖。"
+        implementation:
+          status: "coding-done"
+          handoff: "process/handoffs/META-DEV-CR011-S08-IMPLEMENT-2026-05-24.md"
+          agent_name: "dev-qin the 2nd"
+          agent_id: "019e58fe-0cb3-7d02-9bea-73d78492b7b5"
+          started_at: "2026-05-24T16:36:11+08:00"
+          completed_at: "2026-05-24T16:47:41+08:00"
+          closed_at: "2026-05-24T16:50:08+08:00"
+          expected_cp6: "process/checks/CP6-CR011-S08-factor-panel-audit-and-robust-validation-CODING-DONE.md"
+          cp6_status: "PASS"
+        verification:
+          status: "PASS"
+          handoff: "process/handoffs/META-QA-CR011-S08-CP7-VERIFY-2026-05-24.md"
+          agent_name: "qa-lv the 2nd"
+          agent_id: "019e5931-551d-7a41-bdf9-cbf98b0829fb"
+          started_at: "2026-05-24T16:54:32+08:00"
+          completed_at: "2026-05-24T16:58:37+08:00"
+          closed_at: "2026-05-24T17:04:06+08:00"
+          cp7: "process/checks/CP7-CR011-S08-factor-panel-audit-and-robust-validation-VERIFICATION-DONE.md"
+          result_summary: "S08 定向 3 passed；S01/S02/S05/S07/实验回归 29 passed；fail-closed probe 与安全边界计数 PASS。"
+  - wave: "CR013-BATCH-A"
+    hld_phase: "CR-013 unsupported data 与 claim boundary"
+    parallel: false
+    parallel_lld: true
+    parallel_dev: false
+    status: "draft-pending-cp3-cp4"
+    lld_batch: "CR013-BATCH-A"
+    cp5:
+      required: true
+      manual_checkpoint: "checkpoints/CP5-CR013-BATCH-A-LLD-BATCH.md"
+      scope:
+        - "process/stories/CR013-S01-full-history-readiness-gap-register-LLD.md"
+        - "process/stories/CR013-S02-execution-vwap-claim-boundary-LLD.md"
+        - "process/stories/CR013-S03-unsupported-register-and-doc-refresh-LLD.md"
+        - "process/stories/CR013-S04-full-history-backfill-roadmap-LLD.md"
+      status: "not-started"
+    entry_conditions:
+      - "CR-013 CP3 HLD 人工确认通过"
+      - "CR-013 CP4 自动预检 PASS 并由 meta-po 汇入 CP5"
+      - "CR011 状态保持 closed，不因 CR-013 规划回滚"
+      - "只读 CR-013 证据文件；不得 provider fetch、读凭据、写真实 lake、读旧 data 或覆盖旧报告"
+    exit_conditions:
+      - "四张 Story 卡片完整，包含 dev_context、validation_context、acceptance_criteria"
+      - "CR013-BATCH-A 的 LLD 输入清单、文件所有权、依赖类型和 dev_gate 已冻结"
+      - "CP5 全量 LLD 确认前 implementation_allowed=false"
+    completion_criteria:
+      - "full-history blocked、execution/VWAP blocked、unsupported excluded denominator 和 roadmap-only 权限边界均可追溯到 REQ-083..REQ-087"
+      - "默认安全计数 provider_fetches/lake_writes/credential_reads/legacy_data_reads/old_report_overwrites 均为 0"
+      - "无 Story 输出文件冲突；S03/S04 不与 S01/S02 并行开发"
+    stories:
+      - story_id: "CR013-S01-full-history-readiness-gap-register"
+        title: "full-history readiness gap register"
+        priority: "P0"
+        assignee: "meta-dev"
+        depends_on:
+          - "CR011-S08-factor-panel-audit-and-robust-validation"
+        dependency_type:
+          - "contract"
+        dependency_contracts:
+          - upstream: "CR011-S08-factor-panel-audit-and-robust-validation"
+            type: "contract"
+            required: "CR011 closed 后的报告声明与 allowed/blocked claims 基线已冻结"
+        status: "draft-pending-cp4"
+        output_files:
+          - "reports/data_lake_readiness_2020_2024_cr013/full_history_gap_register.csv"
+          - "reports/data_lake_readiness_2020_2024_cr013/full_history_gap_summary.md"
+          - "tests/test_cr013_full_history_gap_register.py"
+        file_ownership:
+          primary:
+            - "reports/data_lake_readiness_2020_2024_cr013/full_history_gap_register.csv"
+            - "reports/data_lake_readiness_2020_2024_cr013/full_history_gap_summary.md"
+            - "tests/test_cr013_full_history_gap_register.py"
+          shared: []
+          merge_owner: "CR013-S01-full-history-readiness-gap-register"
+          forbidden:
+            - "reports/data_lake_readiness_2020_2024/readiness_summary.md"
+            - "reports/data_lake_readiness_2020_2024/readiness_matrix.csv"
+            - "reports/data_lake_readiness_2020_2024/data_validity_assessment.md"
+            - "reports/data_lake_readiness_2020_2024/execution_price_audit.csv"
+            - "reports/data_lake_readiness_limited_2025_2026/unsupported_data_register.csv"
+            - "/mnt/ugreen-data-lake/**"
+            - "data/**"
+            - ".env"
+        lld_gate:
+          required_inputs:
+            - "process/HLD.md#29.1"
+            - "process/HLD-DATA-LAKE.md#16.2"
+            - "process/ARCHITECTURE-DECISION.md#adr-044cr-013-limited-window-pass-不得外推为-full-history-production-strict"
+            - "process/stories/CR013-S01-full-history-readiness-gap-register.md"
+          status: "pending"
+          cp5_batch: "CR013-BATCH-A"
+          required_before_dev: true
+        dev_gate:
+          lld_confirmed: false
+          dependencies_satisfied: false
+          file_conflict_free: true
+          cp5_required: true
+          implementation_allowed: false
+          reason: "CR-013 CP3/CP4/CP5 尚未完成；本轮只写规划，不生成 LLD 或实现。"
+      - story_id: "CR013-S02-execution-vwap-claim-boundary"
+        title: "execution / VWAP claim boundary"
+        priority: "P0"
+        assignee: "meta-dev"
+        depends_on:
+          - "CR011-S04-ohlcv-vwap-clean-execution-feed"
+        dependency_type:
+          - "contract"
+        dependency_contracts:
+          - upstream: "CR011-S04-ohlcv-vwap-clean-execution-feed"
+            type: "contract"
+            required: "execution_price_policy exact 四值语义、close_proxy 降级和 blocked claims 基线已 verified"
+        status: "draft-pending-cp4"
+        output_files:
+          - "reports/data_lake_readiness_2020_2024_cr013/execution_claim_boundary.md"
+          - "tests/test_cr013_execution_vwap_claim_boundary.py"
+        file_ownership:
+          primary:
+            - "reports/data_lake_readiness_2020_2024_cr013/execution_claim_boundary.md"
+            - "tests/test_cr013_execution_vwap_claim_boundary.py"
+          shared:
+            - "engine/research_dataset.py"
+            - "experiments/reporting.py"
+          merge_owner: "CR013-S02-execution-vwap-claim-boundary"
+          forbidden:
+            - "reports/data_lake_readiness_2020_2024/execution_price_audit.csv"
+            - "market_data/connectors/**"
+            - "/mnt/ugreen-data-lake/**"
+            - "data/**"
+            - ".env"
+        lld_gate:
+          required_inputs:
+            - "process/HLD.md#29.5"
+            - "process/HLD-DATA-LAKE.md#16.3"
+            - "process/ARCHITECTURE-DECISION.md#adr-045cr-013-execution--vwap--minute-execution-claims-必须保持-blocked"
+            - "process/stories/CR013-S02-execution-vwap-claim-boundary.md"
+          status: "pending"
+          cp5_batch: "CR013-BATCH-A"
+          required_before_dev: true
+        dev_gate:
+          lld_confirmed: false
+          dependencies_satisfied: false
+          file_conflict_free: true
+          cp5_required: true
+          implementation_allowed: false
+          reason: "CR-013 CP3/CP4/CP5 尚未完成；不得实现 execution claim 修改或报告刷新。"
+      - story_id: "CR013-S03-unsupported-register-and-doc-refresh"
+        title: "unsupported register and docs refresh"
+        priority: "P0"
+        assignee: "meta-dev"
+        depends_on:
+          - "CR013-S01-full-history-readiness-gap-register"
+          - "CR013-S02-execution-vwap-claim-boundary"
+        dependency_type:
+          - "contract"
+        dependency_contracts:
+          - upstream: "CR013-S01-full-history-readiness-gap-register"
+            type: "contract"
+            required: "supported_window / blocked_window / full_history_status 合同冻结"
+          - upstream: "CR013-S02-execution-vwap-claim-boundary"
+            type: "contract"
+            required: "execution/VWAP blocked claims 与解除条件冻结"
+        status: "draft-pending-cp4"
+        output_files:
+          - "README.md"
+          - "docs/USER-MANUAL.md"
+          - "reports/data_lake_readiness_2020_2024_cr013/unsupported_claim_boundary_summary.md"
+          - "tests/test_cr013_unsupported_register_claim_boundary.py"
+        file_ownership:
+          primary:
+            - "README.md"
+            - "docs/USER-MANUAL.md"
+            - "reports/data_lake_readiness_2020_2024_cr013/unsupported_claim_boundary_summary.md"
+            - "tests/test_cr013_unsupported_register_claim_boundary.py"
+          shared:
+            - "experiments/reporting.py"
+          merge_owner: "CR013-S03-unsupported-register-and-doc-refresh"
+          forbidden:
+            - "reports/data_lake_readiness_limited_2025_2026/unsupported_data_register.csv"
+            - "reports/data_lake_readiness_2020_2024/**"
+            - "/mnt/ugreen-data-lake/**"
+            - "data/**"
+            - ".env"
+        lld_gate:
+          required_inputs:
+            - "process/HLD.md#29.5"
+            - "process/HLD-DATA-LAKE.md#16.2"
+            - "process/ARCHITECTURE-DECISION.md#adr-046cr-013-unsupported-register-是正式声明边界输入"
+            - "process/stories/CR013-S03-unsupported-register-and-doc-refresh.md"
+          status: "pending"
+          cp5_batch: "CR013-BATCH-A"
+          required_before_dev: true
+        dev_gate:
+          lld_confirmed: false
+          dependencies_satisfied: false
+          file_conflict_free: true
+          cp5_required: true
+          implementation_allowed: false
+          reason: "CR-013 CP5 全量 LLD 未确认；本轮禁止修改 README/docs/report evidence。"
+      - story_id: "CR013-S04-full-history-backfill-roadmap"
+        title: "full-history backfill roadmap"
+        priority: "P1"
+        assignee: "meta-dev"
+        depends_on:
+          - "CR013-S01-full-history-readiness-gap-register"
+          - "CR013-S02-execution-vwap-claim-boundary"
+        dependency_type:
+          - "contract"
+        dependency_contracts:
+          - upstream: "CR013-S01-full-history-readiness-gap-register"
+            type: "contract"
+            required: "10 dataset remediation 与 evidence path 合同冻结"
+          - upstream: "CR013-S02-execution-vwap-claim-boundary"
+            type: "contract"
+            required: "VWAP / minute execution 解除条件冻结"
+        status: "draft-pending-cp4"
+        output_files:
+          - "docs/DATA-LAKE-FULL-HISTORY-BACKFILL-ROADMAP.md"
+          - "reports/data_lake_readiness_2020_2024_cr013/backfill_roadmap.md"
+          - "tests/test_cr013_backfill_roadmap_boundaries.py"
+        file_ownership:
+          primary:
+            - "docs/DATA-LAKE-FULL-HISTORY-BACKFILL-ROADMAP.md"
+            - "reports/data_lake_readiness_2020_2024_cr013/backfill_roadmap.md"
+            - "tests/test_cr013_backfill_roadmap_boundaries.py"
+          shared: []
+          merge_owner: "CR013-S04-full-history-backfill-roadmap"
+          forbidden:
+            - "market_data/connectors/**"
+            - "market_data/storage.py"
+            - "/mnt/ugreen-data-lake/**"
+            - "data/**"
+            - ".env"
+            - "reports/data_lake_readiness_2020_2024/**"
+        lld_gate:
+          required_inputs:
+            - "process/HLD.md#29.11"
+            - "process/HLD-DATA-LAKE.md#16.4"
+            - "process/ARCHITECTURE-DECISION.md#adr-047cr-013-证据保留与权限边界"
+            - "process/stories/CR013-S04-full-history-backfill-roadmap.md"
+          status: "pending"
+          cp5_batch: "CR013-BATCH-A"
+          required_before_dev: true
+        dev_gate:
+          lld_confirmed: false
+          dependencies_satisfied: false
+          file_conflict_free: true
+          cp5_required: true
+          implementation_allowed: false
+          reason: "S04 只能制定路线图；真实 provider/lake/credential/old data 操作必须另行授权。"
+dependency_graph:
+  nodes:
+    - "STORY-001"
+    - "STORY-002"
+    - "STORY-003"
+    - "STORY-004"
+    - "STORY-005"
+    - "STORY-006"
+    - "STORY-007"
+    - "STORY-008"
+    - "STORY-009"
+    - "STORY-010"
+    - "STORY-011"
+    - "STORY-012"
+    - "STORY-013"
+    - "STORY-014"
+    - "STORY-015"
+    - "STORY-016"
+    - "STORY-017"
+    - "STORY-018"
+    - "CR005-S01"
+    - "CR005-S02"
+    - "CR005-S03"
+    - "CR005-S04"
+    - "CR005-S05"
+    - "CR005-S06"
+    - "CR006-S01-tushare-first-data-acquisition-runbook"
+    - "CR006-S02-canonical-gold-lightweight-engine-adapter"
+    - "CR006-S03-backtrader-clean-feed-contract"
+    - "CR006-S04-old-data-reference-only-guardrail"
+    - "CR007-S01-prices-long-horizon-backfill-planner"
+    - "CR007-S02-benchmark-calendar-backfill"
+    - "CR007-S03-index-members-stock-basic-datasets"
+    - "CR007-S04-experiment-real-benchmark-consumption"
+    - "CR007-S05-data-quality-report-and-doc-guardrail"
+    - "CR008-S01-research-input-contract-and-report-metadata"
+    - "CR008-S02-proxy-real-benchmark-field-separation"
+    - "CR008-S03-research-dataset-builder"
+    - "CR008-S04-quality-adjustment-label-window-gates"
+    - "CR008-S05-pit-universe-consumption-contract"
+    - "CR008-S06-factor-research-auxiliary-data-contract"
+    - "CR010-S01-multidataset-plan-run-publish-cli-contract"
+    - "CR010-S02-prices-adj-factor-history-backfill-loop"
+    - "CR010-S03-hs300-index-trade-calendar-backfill-loop"
+    - "CR010-S04-index-members-weights-stock-basic-readiness"
+    - "CR010-S05-catalog-coverage-production-readiness-report"
+    - "CR010-S06-pit-source-interface-spike-readiness"
+    - "CR010-S07-trade-status-contract-reader-fail-fast"
+    - "CR010-S08-prices-limit-contract-gate-fail-fast"
+    - "CR010-S09-events-available-at-contract-fail-fast"
+    - "CR010-S10-realism-mode-research-metadata"
+    - "CR010-S11-experiments-smoke-limitation-matrix"
+    - "CR010-S12-backtrader-vectorbt-clean-feed-boundary"
+    - "CR010-S13-backup-archive-restore-env-manifest-contract"
+    - "CR010-S14-backup-cli-dry-run-execute-verify-report"
+    - "CR010-S15-restore-cli-drill-read-revalidate-replay"
+    - "CR010-S16-retention-policy-archive-backup-cleanup"
+    - "CR011-S01-real-benchmark-and-policy-consumption"
+    - "CR011-S02-pit-universe-and-stock-lifecycle-completion"
+    - "CR011-S03-tradability-status-and-price-limit-gates"
+    - "CR011-S04-ohlcv-vwap-clean-execution-feed"
+    - "CR011-S05-adjustment-and-corporate-action-audit"
+    - "CR011-S06-industry-market-cap-style-exposure-data"
+    - "CR011-S07-liquidity-capacity-and-cost-sensitivity"
+    - "CR011-S08-factor-panel-audit-and-robust-validation"
+    - "CR013-S01-full-history-readiness-gap-register"
+    - "CR013-S02-execution-vwap-claim-boundary"
+    - "CR013-S03-unsupported-register-and-doc-refresh"
+    - "CR013-S04-full-history-backfill-roadmap"
+  edges:
+    - ["STORY-001", "STORY-002"]
+    - ["STORY-001", "STORY-003"]
+    - ["STORY-002", "STORY-003"]
+    - ["STORY-003", "STORY-004"]
+    - ["STORY-004", "STORY-005"]
+    - ["STORY-005", "STORY-006"]
+    - ["STORY-006", "STORY-007"]
+    - ["STORY-007", "STORY-008"]
+    - ["STORY-008", "STORY-009"]
+    - ["STORY-009", "STORY-010"]
+    - ["STORY-009", "STORY-011"]
+    - ["STORY-010", "STORY-011"]
+    - ["STORY-010", "STORY-012"]
+    - ["STORY-011", "STORY-012"]
+    - ["STORY-008", "STORY-013"]
+    - ["STORY-014", "STORY-015"]
+    - ["STORY-015", "STORY-016"]
+    - ["STORY-016", "STORY-017"]
+    - ["STORY-016", "STORY-018"]
+    - ["STORY-017", "STORY-018"]
+    - ["STORY-015", "CR005-S01"]
+    - ["CR005-S01", "CR005-S02"]
+    - ["STORY-016", "CR005-S02"]
+    - ["CR005-S02", "CR005-S03"]
+    - ["CR005-S01", "CR005-S04"]
+    - ["CR005-S03", "CR005-S04"]
+    - ["STORY-018", "CR005-S04"]
+    - ["CR005-S03", "CR005-S05"]
+    - ["CR005-S02", "CR005-S06"]
+    - ["CR005-S03", "CR005-S06"]
+    - ["CR005-S04", "CR005-S06"]
+    - ["CR005-S01", "CR006-S01-tushare-first-data-acquisition-runbook"]
+    - ["CR005-S02", "CR006-S01-tushare-first-data-acquisition-runbook"]
+    - ["CR005-S03", "CR006-S01-tushare-first-data-acquisition-runbook"]
+    - ["CR006-S01-tushare-first-data-acquisition-runbook", "CR006-S02-canonical-gold-lightweight-engine-adapter"]
+    - ["CR005-S03", "CR006-S02-canonical-gold-lightweight-engine-adapter"]
+    - ["CR006-S01-tushare-first-data-acquisition-runbook", "CR006-S03-backtrader-clean-feed-contract"]
+    - ["CR006-S02-canonical-gold-lightweight-engine-adapter", "CR006-S03-backtrader-clean-feed-contract"]
+    - ["CR005-S06", "CR006-S03-backtrader-clean-feed-contract"]
+    - ["CR006-S01-tushare-first-data-acquisition-runbook", "CR006-S04-old-data-reference-only-guardrail"]
+    - ["CR006-S02-canonical-gold-lightweight-engine-adapter", "CR006-S04-old-data-reference-only-guardrail"]
+    - ["CR006-S03-backtrader-clean-feed-contract", "CR006-S04-old-data-reference-only-guardrail"]
+    - ["CR006-S01-tushare-first-data-acquisition-runbook", "CR007-S01-prices-long-horizon-backfill-planner"]
+    - ["CR005-S02", "CR007-S01-prices-long-horizon-backfill-planner"]
+    - ["CR005-S03", "CR007-S01-prices-long-horizon-backfill-planner"]
+    - ["CR007-S01-prices-long-horizon-backfill-planner", "CR007-S02-benchmark-calendar-backfill"]
+    - ["CR005-S04", "CR007-S02-benchmark-calendar-backfill"]
+    - ["CR007-S01-prices-long-horizon-backfill-planner", "CR007-S03-index-members-stock-basic-datasets"]
+    - ["CR005-S02", "CR007-S03-index-members-stock-basic-datasets"]
+    - ["CR005-S03", "CR007-S03-index-members-stock-basic-datasets"]
+    - ["CR007-S02-benchmark-calendar-backfill", "CR007-S04-experiment-real-benchmark-consumption"]
+    - ["CR007-S03-index-members-stock-basic-datasets", "CR007-S04-experiment-real-benchmark-consumption"]
+    - ["CR007-S01-prices-long-horizon-backfill-planner", "CR007-S05-data-quality-report-and-doc-guardrail"]
+    - ["CR007-S02-benchmark-calendar-backfill", "CR007-S05-data-quality-report-and-doc-guardrail"]
+    - ["CR007-S03-index-members-stock-basic-datasets", "CR007-S05-data-quality-report-and-doc-guardrail"]
+    - ["CR007-S04-experiment-real-benchmark-consumption", "CR007-S05-data-quality-report-and-doc-guardrail"]
+    - ["CR007-S02-benchmark-calendar-backfill", "CR008-S01-research-input-contract-and-report-metadata"]
+    - ["CR007-S02-benchmark-calendar-backfill", "CR008-S02-proxy-real-benchmark-field-separation"]
+    - ["CR008-S01-research-input-contract-and-report-metadata", "CR008-S02-proxy-real-benchmark-field-separation"]
+    - ["CR008-S01-research-input-contract-and-report-metadata", "CR008-S03-research-dataset-builder"]
+    - ["CR008-S02-proxy-real-benchmark-field-separation", "CR008-S03-research-dataset-builder"]
+    - ["CR008-S03-research-dataset-builder", "CR008-S04-quality-adjustment-label-window-gates"]
+    - ["CR007-S03-index-members-stock-basic-datasets", "CR008-S05-pit-universe-consumption-contract"]
+    - ["CR008-S03-research-dataset-builder", "CR008-S05-pit-universe-consumption-contract"]
+    - ["CR008-S03-research-dataset-builder", "CR008-S06-factor-research-auxiliary-data-contract"]
+    - ["CR008-S04-quality-adjustment-label-window-gates", "CR008-S06-factor-research-auxiliary-data-contract"]
+    - ["CR008-S05-pit-universe-consumption-contract", "CR008-S06-factor-research-auxiliary-data-contract"]
+    - ["CR007-S01-prices-long-horizon-backfill-planner", "CR010-S01-multidataset-plan-run-publish-cli-contract"]
+    - ["CR007-S02-benchmark-calendar-backfill", "CR010-S01-multidataset-plan-run-publish-cli-contract"]
+    - ["CR010-S01-multidataset-plan-run-publish-cli-contract", "CR010-S02-prices-adj-factor-history-backfill-loop"]
+    - ["CR010-S01-multidataset-plan-run-publish-cli-contract", "CR010-S03-hs300-index-trade-calendar-backfill-loop"]
+    - ["CR010-S01-multidataset-plan-run-publish-cli-contract", "CR010-S04-index-members-weights-stock-basic-readiness"]
+    - ["CR007-S02-benchmark-calendar-backfill", "CR010-S03-hs300-index-trade-calendar-backfill-loop"]
+    - ["CR007-S03-index-members-stock-basic-datasets", "CR010-S04-index-members-weights-stock-basic-readiness"]
+    - ["CR010-S02-prices-adj-factor-history-backfill-loop", "CR010-S05-catalog-coverage-production-readiness-report"]
+    - ["CR010-S03-hs300-index-trade-calendar-backfill-loop", "CR010-S05-catalog-coverage-production-readiness-report"]
+    - ["CR010-S04-index-members-weights-stock-basic-readiness", "CR010-S05-catalog-coverage-production-readiness-report"]
+    - ["CR010-S04-index-members-weights-stock-basic-readiness", "CR010-S06-pit-source-interface-spike-readiness"]
+    - ["CR010-S06-pit-source-interface-spike-readiness", "CR010-S07-trade-status-contract-reader-fail-fast"]
+    - ["CR010-S06-pit-source-interface-spike-readiness", "CR010-S08-prices-limit-contract-gate-fail-fast"]
+    - ["CR010-S06-pit-source-interface-spike-readiness", "CR010-S09-events-available-at-contract-fail-fast"]
+    - ["CR010-S05-catalog-coverage-production-readiness-report", "CR010-S10-realism-mode-research-metadata"]
+    - ["CR010-S07-trade-status-contract-reader-fail-fast", "CR010-S10-realism-mode-research-metadata"]
+    - ["CR010-S08-prices-limit-contract-gate-fail-fast", "CR010-S10-realism-mode-research-metadata"]
+    - ["CR010-S09-events-available-at-contract-fail-fast", "CR010-S10-realism-mode-research-metadata"]
+    - ["CR010-S10-realism-mode-research-metadata", "CR010-S11-experiments-smoke-limitation-matrix"]
+    - ["CR010-S10-realism-mode-research-metadata", "CR010-S12-backtrader-vectorbt-clean-feed-boundary"]
+    - ["CR010-S05-catalog-coverage-production-readiness-report", "CR010-S13-backup-archive-restore-env-manifest-contract"]
+    - ["CR010-S13-backup-archive-restore-env-manifest-contract", "CR010-S14-backup-cli-dry-run-execute-verify-report"]
+    - ["CR010-S13-backup-archive-restore-env-manifest-contract", "CR010-S15-restore-cli-drill-read-revalidate-replay"]
+    - ["CR010-S14-backup-cli-dry-run-execute-verify-report", "CR010-S15-restore-cli-drill-read-revalidate-replay"]
+    - ["CR010-S13-backup-archive-restore-env-manifest-contract", "CR010-S16-retention-policy-archive-backup-cleanup"]
+    - ["CR010-S03-hs300-index-trade-calendar-backfill-loop", "CR011-S01-real-benchmark-and-policy-consumption"]
+    - ["CR010-S05-catalog-coverage-production-readiness-report", "CR011-S01-real-benchmark-and-policy-consumption"]
+    - ["CR008-S02-proxy-real-benchmark-field-separation", "CR011-S01-real-benchmark-and-policy-consumption"]
+    - ["CR010-S04-index-members-weights-stock-basic-readiness", "CR011-S02-pit-universe-and-stock-lifecycle-completion"]
+    - ["CR010-S06-pit-source-interface-spike-readiness", "CR011-S02-pit-universe-and-stock-lifecycle-completion"]
+    - ["CR008-S05-pit-universe-consumption-contract", "CR011-S02-pit-universe-and-stock-lifecycle-completion"]
+    - ["CR011-S02-pit-universe-and-stock-lifecycle-completion", "CR011-S03-tradability-status-and-price-limit-gates"]
+    - ["CR010-S07-trade-status-contract-reader-fail-fast", "CR011-S03-tradability-status-and-price-limit-gates"]
+    - ["CR010-S08-prices-limit-contract-gate-fail-fast", "CR011-S03-tradability-status-and-price-limit-gates"]
+    - ["CR010-S09-events-available-at-contract-fail-fast", "CR011-S03-tradability-status-and-price-limit-gates"]
+    - ["CR011-S03-tradability-status-and-price-limit-gates", "CR011-S04-ohlcv-vwap-clean-execution-feed"]
+    - ["CR010-S02-prices-adj-factor-history-backfill-loop", "CR011-S04-ohlcv-vwap-clean-execution-feed"]
+    - ["CR010-S02-prices-adj-factor-history-backfill-loop", "CR011-S05-adjustment-and-corporate-action-audit"]
+    - ["CR008-S04-quality-adjustment-label-window-gates", "CR011-S05-adjustment-and-corporate-action-audit"]
+    - ["CR008-S06-factor-research-auxiliary-data-contract", "CR011-S06-industry-market-cap-style-exposure-data"]
+    - ["CR011-S02-pit-universe-and-stock-lifecycle-completion", "CR011-S06-industry-market-cap-style-exposure-data"]
+    - ["CR011-S03-tradability-status-and-price-limit-gates", "CR011-S07-liquidity-capacity-and-cost-sensitivity"]
+    - ["CR011-S04-ohlcv-vwap-clean-execution-feed", "CR011-S07-liquidity-capacity-and-cost-sensitivity"]
+    - ["CR011-S06-industry-market-cap-style-exposure-data", "CR011-S07-liquidity-capacity-and-cost-sensitivity"]
+    - ["CR011-S01-real-benchmark-and-policy-consumption", "CR011-S08-factor-panel-audit-and-robust-validation"]
+    - ["CR011-S02-pit-universe-and-stock-lifecycle-completion", "CR011-S08-factor-panel-audit-and-robust-validation"]
+    - ["CR011-S05-adjustment-and-corporate-action-audit", "CR011-S08-factor-panel-audit-and-robust-validation"]
+    - ["CR011-S07-liquidity-capacity-and-cost-sensitivity", "CR011-S08-factor-panel-audit-and-robust-validation"]
+    - ["CR011-S08-factor-panel-audit-and-robust-validation", "CR013-S01-full-history-readiness-gap-register"]
+    - ["CR011-S04-ohlcv-vwap-clean-execution-feed", "CR013-S02-execution-vwap-claim-boundary"]
+    - ["CR013-S01-full-history-readiness-gap-register", "CR013-S03-unsupported-register-and-doc-refresh"]
+    - ["CR013-S02-execution-vwap-claim-boundary", "CR013-S03-unsupported-register-and-doc-refresh"]
+    - ["CR013-S01-full-history-readiness-gap-register", "CR013-S04-full-history-backfill-roadmap"]
+    - ["CR013-S02-execution-vwap-claim-boundary", "CR013-S04-full-history-backfill-roadmap"]
+dag_validation_result:
+  checked_by: "codex using dag-validator rules"
+  checked_at: "2026-05-25"
+  cycles: []
+  invalid_references: []
+  isolated_nodes: []
+  conclusion: "PASS-by-static-design-review-not-executed"
+  note: "CR-013 增量 DAG 以 CR011 closed / verified Story 为上游：S01 消费 CR011-S08 的报告声明基线，S02 消费 CR011-S04 的 execution policy 基线，S03 依赖 S01/S02 的 claim boundary 合同，S04 依赖 S01/S02 的 gap 与 VWAP 解除条件；所有新增边单向指向 CR013 下游，无回边。未执行测试或验证脚本，按 dag-validator 规则静态检查无环。"
+
+cr014_story_plan:
+  status: "story-execution-s05-cp7-running-s06-verified-batch-b-planned"
+  selected_solution: "CR14-A"
+  cp5_batch: "CR014-FULL-HISTORY-LAKE-BATCH-A"
+  future_real_run_batch: "CR014-REAL-RUN-BATCH-B"
+  future_real_run_story: "CR014-S09-windowed-real-fetch-lake-write-run"
+  implementation_allowed_before_cp5: false
+  security_counters_before_cp5:
+    provider_fetch: 0
+    lake_write: 0
+    credential_read: 0
+    duckdb_dependency_change: 0
+  lld_policy:
+    max_parallel_lld: 3
+    cp5_batch_confirm_required: true
+    story_lld_required_before_cp5: 8
+    batch_a_scope: "CR014-S01..S08 LLD only"
+    batch_b_lld_required_after_batch_a_verified: 1
+    batch_b_scope: "CR014-S09 windowed real provider fetch and raw/manifest lake write"
+    implementation_allowed: true
+    confirmed_at: "2026-05-27T07:22:46+08:00"
+  global_dev_gate:
+    cp5_required: true
+    lld_confirmed: true
+    dependencies_satisfied: true
+    file_conflict_free: true
+    implementation_allowed: true
+    provider_fetch: 0
+    lake_write: 0
+    credential_read: 0
+    duckdb_dependency_change: 0
+    reason: "CR014 BATCH-A CP5 已由用户按推荐全部允许；S01/S02/S03/S04/S06 已完成 CP6/CP7 并收敛为 verified，S05 已完成 CP6 PASS 并进入 CP7。S09 BATCH-B 只登记为后续真实执行 Story；S09 独立 CP5 / 用户显式授权前不得实现真实抓取、真实写湖、publish 或改依赖。"
+  validation_policy:
+    default_execution: "offline-fixture-controlled-story-execution"
+    real_provider_fetch_allowed: false
+    real_lake_write_allowed: false
+    credential_read_allowed: false
+    old_data_operation_allowed: false
+    docs_or_code_change_allowed_in_planning: false
+    real_fetch_write_story: "CR014-S09-windowed-real-fetch-lake-write-run"
+    real_fetch_write_timing: "after CR014-S01..S08 verified, S09 LLD approved, S09 CP5 approved, and per-run user authorization_id is provided"
+  waves:
+    - wave: "CR014-W1-CONTRACTS"
+      hld_phase: "CR-014 全 A 与数据湖事实合同"
+      parallel_lld: true
+      parallel_dev: false
+      status: "completed"
+      entry_conditions:
+        - "CR-014 CP3 R2 已由用户批准"
+        - "process/HLD-DATA-LAKE.md §17 与 ADR-048..052 可作为 Story Plan 输入"
+      exit_conditions:
+        - "全 A universe/lifecycle/code-change 合同和 catalog publish 合同可进入 LLD"
+      completion_criteria:
+        - "CR014-S01/S02 Story 卡片均存在"
+        - "CP5 前 provider_fetch=0、lake_write=0、credential_read=0、duckdb_dependency_change=0"
+      stories:
+        - story_id: "CR014-S01-a-share-universe-lifecycle-contract"
+          title: "全 A universe / lifecycle / code-change 合同"
+          priority: "P0"
+          assignee: "meta-dev"
+          depends_on: []
+          dependency_type: []
+          status: "verified"
+          output_files:
+            - "market_data/contracts.py"
+            - "market_data/lifecycle.py"
+            - "market_data/calendar.py"
+            - "tests/test_cr014_universe_lifecycle_contract.py"
+          file_ownership:
+            primary:
+              - "market_data/contracts.py"
+              - "market_data/lifecycle.py"
+              - "market_data/calendar.py"
+              - "tests/test_cr014_universe_lifecycle_contract.py"
+            shared:
+              - "market_data/validation.py"
+            merge_owner: "CR014-S01-a-share-universe-lifecycle-contract"
+            forbidden:
+              - ".env"
+              - "data/**"
+              - "reports/**"
+              - "pyproject.toml"
+              - "uv.lock"
+          lld_gate:
+            required_inputs:
+              - "process/HLD-DATA-LAKE.md#17"
+              - "process/ARCHITECTURE-DECISION.md#ADR-050"
+              - "process/stories/CR014-S01-a-share-universe-lifecycle-contract.md"
+            status: "approved"
+          dev_gate:
+            cp5_required: true
+            lld_confirmed: true
+            dependencies_satisfied: true
+            file_conflict_free: true
+            implementation_allowed: true
+            provider_fetch: 0
+            lake_write: 0
+            credential_read: 0
+            duckdb_dependency_change: 0
+          validation_criteria:
+            - "lifecycle 必需字段 10 类 100% 进入合同"
+            - "缺 lifecycle/code-change 字段时 full-A allowed claim 输出次数为 0"
+          completion_criteria:
+            - "universe denominator、delisting、code-change、required_missing/blocked_claims 合同冻结"
+        - story_id: "CR014-S02-parquet-layout-manifest-catalog-publish-gate"
+          title: "Parquet layout / manifest / catalog current pointer / publish gate"
+          priority: "P0"
+          assignee: "meta-dev"
+          depends_on: ["CR014-S01-a-share-universe-lifecycle-contract"]
+          dependency_type:
+            - upstream: "CR014-S01-a-share-universe-lifecycle-contract"
+              type: "contract"
+          status: "verified"
+          output_files:
+            - "market_data/lake_layout.py"
+            - "market_data/manifest.py"
+            - "market_data/catalog.py"
+            - "market_data/publish.py"
+            - "tests/test_cr014_catalog_publish_gate.py"
+          file_ownership:
+            primary:
+              - "market_data/lake_layout.py"
+              - "market_data/manifest.py"
+              - "market_data/catalog.py"
+              - "market_data/publish.py"
+              - "tests/test_cr014_catalog_publish_gate.py"
+            shared:
+              - "market_data/contracts.py"
+            merge_owner: "CR014-S02-parquet-layout-manifest-catalog-publish-gate"
+            forbidden:
+              - ".env"
+              - "data/**"
+              - "reports/**"
+              - "pyproject.toml"
+              - "uv.lock"
+          lld_gate:
+            required_inputs:
+              - "process/HLD-DATA-LAKE.md#17"
+              - "process/ARCHITECTURE-DECISION.md#ADR-048"
+              - "process/ARCHITECTURE-DECISION.md#ADR-052"
+              - "process/stories/CR014-S02-parquet-layout-manifest-catalog-publish-gate.md"
+            status: "approved"
+          dev_gate:
+            cp5_required: true
+            lld_confirmed: true
+            dependencies_satisfied: true
+            file_conflict_free: true
+            implementation_allowed: true
+            provider_fetch: 0
+            lake_write: 0
+            credential_read: 0
+            duckdb_dependency_change: 0
+          validation_criteria:
+            - "validate pass 自动更新 current pointer 次数为 0"
+            - "catalog current pointer 必填字段 100% 进入合同"
+          completion_criteria:
+            - "candidate path 与 published current truth 分离"
+            - "Explicit Publish Gate 是唯一 current pointer 更新路径"
+    - wave: "CR014-W2-PIPELINE"
+      hld_phase: "CR-014 P0 pipeline 与 DuckDB 只读候选层"
+      parallel_lld: true
+      parallel_dev: false
+      status: "verified"
+      entry_conditions:
+        - "CR014-S01/S02 合同冻结"
+        - "CP5 前不得改依赖或实现真实 provider/lake 操作"
+      exit_conditions:
+        - "P0 dataset pipeline 和 DuckDB read-only audit/parity 边界可进入 LLD"
+      completion_criteria:
+        - "plan -> run -> normalize/replay -> validate -> publish -> read/query 状态机完整"
+        - "DuckDB query/view/parity/report 反向成为事实源次数为 0"
+      stories:
+        - story_id: "CR014-S03-p0-plan-run-normalize-validate-publish-contract"
+          title: "P0 dataset plan/run/normalize/validate/publish 合同"
+          priority: "P0"
+          assignee: "meta-dev"
+          depends_on:
+            - "CR014-S01-a-share-universe-lifecycle-contract"
+            - "CR014-S02-parquet-layout-manifest-catalog-publish-gate"
+          dependency_type:
+            - upstream: "CR014-S01-a-share-universe-lifecycle-contract"
+              type: "contract"
+            - upstream: "CR014-S02-parquet-layout-manifest-catalog-publish-gate"
+              type: "contract"
+          status: "verified"
+          output_files:
+            - "market_data/cli.py"
+            - "market_data/runtime.py"
+            - "market_data/normalization.py"
+            - "market_data/validation.py"
+            - "tests/test_cr014_p0_pipeline_contract.py"
+          file_ownership:
+            primary:
+              - "market_data/cli.py"
+              - "market_data/runtime.py"
+              - "market_data/normalization.py"
+              - "market_data/validation.py"
+              - "tests/test_cr014_p0_pipeline_contract.py"
+            shared:
+              - "market_data/contracts.py"
+              - "market_data/manifest.py"
+              - "market_data/catalog.py"
+            merge_owner: "CR014-S03-p0-plan-run-normalize-validate-publish-contract"
+            forbidden:
+              - ".env"
+              - "data/**"
+              - "reports/**"
+              - "pyproject.toml"
+              - "uv.lock"
+          lld_gate:
+            required_inputs:
+              - "process/HLD-DATA-LAKE.md#17"
+              - "process/ARCHITECTURE-DECISION.md#ADR-051"
+              - "process/stories/CR014-S03-p0-plan-run-normalize-validate-publish-contract.md"
+            status: "approved"
+          dev_gate:
+            cp5_required: true
+            lld_confirmed: true
+            dependencies_satisfied: true
+            file_conflict_free: true
+            implementation_allowed: true
+            provider_fetch: 0
+            lake_write: 0
+            credential_read: 0
+            duckdb_dependency_change: 0
+          validation_criteria:
+            - "CP5 前真实操作计数均为 0"
+            - "run/normalize/replay/validate/publish 每阶段输入输出和 candidate/published 状态 100% 定义"
+          completion_criteria:
+            - "Provider Adapter / Run Gate 仅在 CP5 + 用户显式授权后可写 raw/manifest/run metadata"
+            - "Normalize / Replay 只生成 candidate，不更新 current pointer"
+        - story_id: "CR014-S04-duckdb-readonly-query-audit-parity-boundary"
+          title: "DuckDB read-only query/audit/parity 边界"
+          priority: "P1"
+          assignee: "meta-dev"
+          depends_on:
+            - "CR014-S02-parquet-layout-manifest-catalog-publish-gate"
+            - "CR014-S03-p0-plan-run-normalize-validate-publish-contract"
+          dependency_type:
+            - upstream: "CR014-S02-parquet-layout-manifest-catalog-publish-gate"
+              type: "contract"
+            - upstream: "CR014-S03-p0-plan-run-normalize-validate-publish-contract"
+              type: "contract"
+          status: "verified"
+          output_files:
+            - "market_data/duckdb_query.py"
+            - "market_data/audit.py"
+            - "tests/test_cr014_duckdb_readonly_boundary.py"
+          file_ownership:
+            primary:
+              - "market_data/duckdb_query.py"
+              - "market_data/audit.py"
+              - "tests/test_cr014_duckdb_readonly_boundary.py"
+            shared:
+              - "market_data/catalog.py"
+              - "market_data/validation.py"
+            merge_owner: "CR014-S04-duckdb-readonly-query-audit-parity-boundary"
+            forbidden:
+              - ".env"
+              - "data/**"
+              - "reports/**"
+              - "pyproject.toml"
+              - "uv.lock"
+              - "*.duckdb"
+          lld_gate:
+            required_inputs:
+              - "process/HLD-DATA-LAKE.md#17"
+              - "process/ARCHITECTURE-DECISION.md#ADR-049"
+              - "process/stories/CR014-S04-duckdb-readonly-query-audit-parity-boundary.md"
+            status: "approved"
+          dev_gate:
+            cp5_required: true
+            lld_confirmed: true
+            dependencies_satisfied: true
+            file_conflict_free: true
+            implementation_allowed: true
+            provider_fetch: 0
+            lake_write: 0
+            credential_read: 0
+            duckdb_dependency_change: 0
+          validation_criteria:
+            - "DuckDB 只读读取 catalog current pointer 或受控 candidate audit path"
+            - "DuckDB query/view/parity/report 写事实源次数为 0"
+          completion_criteria:
+            - "DuckDB 仅为 read-only query/audit/feature extraction/parity 候选层"
+            - "依赖变更在 CP5 前保持 0"
+    - wave: "CR014-W3-AUDIT-OPS"
+      hld_phase: "CR-014 full-history readiness 与 replay/retention"
+      parallel_lld: true
+      parallel_dev: false
+      status: "verified"
+      entry_conditions:
+        - "CR014-S01..S04 合同冻结"
+      exit_conditions:
+        - "readiness/gap/claim 与 incremental/replay/retention 边界可进入 LLD"
+      completion_criteria:
+        - "full-A allowed claim 在 P0 gate 未通过时为 0"
+        - "replay 不触发 provider、不读凭据、不写 raw、不改 current pointer"
+      stories:
+        - story_id: "CR014-S05-full-history-readiness-gap-claim-boundary"
+          title: "full-history readiness audit / gap register / claim boundary"
+          priority: "P0"
+          assignee: "meta-dev"
+          depends_on:
+            - "CR014-S01-a-share-universe-lifecycle-contract"
+            - "CR014-S02-parquet-layout-manifest-catalog-publish-gate"
+            - "CR014-S03-p0-plan-run-normalize-validate-publish-contract"
+            - "CR014-S04-duckdb-readonly-query-audit-parity-boundary"
+          dependency_type:
+            - upstream: "CR014-S01-a-share-universe-lifecycle-contract"
+              type: "contract"
+            - upstream: "CR014-S02-parquet-layout-manifest-catalog-publish-gate"
+              type: "contract"
+            - upstream: "CR014-S03-p0-plan-run-normalize-validate-publish-contract"
+              type: "contract"
+            - upstream: "CR014-S04-duckdb-readonly-query-audit-parity-boundary"
+              type: "audit-contract"
+          status: "verified"
+          output_files:
+            - "market_data/readiness.py"
+            - "market_data/claims.py"
+            - "tests/test_cr014_readiness_claim_boundary.py"
+          file_ownership:
+            primary:
+              - "market_data/readiness.py"
+              - "market_data/claims.py"
+              - "tests/test_cr014_readiness_claim_boundary.py"
+            shared:
+              - "market_data/validation.py"
+              - "market_data/audit.py"
+            merge_owner: "CR014-S05-full-history-readiness-gap-claim-boundary"
+            forbidden:
+              - ".env"
+              - "data/**"
+              - "reports/**"
+              - "pyproject.toml"
+              - "uv.lock"
+          lld_gate:
+            required_inputs:
+              - "process/HLD-DATA-LAKE.md#17"
+              - "process/ARCHITECTURE-DECISION.md#ADR-050"
+              - "process/stories/CR014-S05-full-history-readiness-gap-claim-boundary.md"
+            status: "approved"
+          dev_gate:
+            cp5_required: true
+            lld_confirmed: true
+            dependencies_satisfied: true
+            file_conflict_free: true
+            implementation_allowed: true
+            provider_fetch: 0
+            lake_write: 0
+            credential_read: 0
+            duckdb_dependency_change: 0
+          validation_criteria:
+            - "blocked_claims 100% 写缺口、证据和解除条件"
+            - "旧 reports 覆盖次数为 0"
+          completion_criteria:
+            - "readiness matrix、gap register、allowed_claims/blocked_claims/required_missing 合同冻结"
+        - story_id: "CR014-S06-incremental-refresh-replay-retention-contract"
+          title: "incremental refresh / replay / retention 合同"
+          priority: "P0"
+          assignee: "meta-dev"
+          depends_on:
+            - "CR014-S02-parquet-layout-manifest-catalog-publish-gate"
+            - "CR014-S03-p0-plan-run-normalize-validate-publish-contract"
+          dependency_type:
+            - upstream: "CR014-S02-parquet-layout-manifest-catalog-publish-gate"
+              type: "contract"
+            - upstream: "CR014-S03-p0-plan-run-normalize-validate-publish-contract"
+              type: "runtime-contract"
+          status: "verified"
+          output_files:
+            - "market_data/incremental.py"
+            - "market_data/replay.py"
+            - "market_data/retention.py"
+            - "tests/test_cr014_incremental_replay_retention.py"
+          file_ownership:
+            primary:
+              - "market_data/incremental.py"
+              - "market_data/replay.py"
+              - "market_data/retention.py"
+              - "tests/test_cr014_incremental_replay_retention.py"
+            shared:
+              - "market_data/runtime.py"
+              - "market_data/catalog.py"
+            merge_owner: "CR014-S06-incremental-refresh-replay-retention-contract"
+            forbidden:
+              - ".env"
+              - "data/**"
+              - "reports/**"
+              - "pyproject.toml"
+              - "uv.lock"
+          lld_gate:
+            required_inputs:
+              - "process/HLD-DATA-LAKE.md#17"
+              - "process/ARCHITECTURE-DECISION.md#ADR-051"
+              - "process/stories/CR014-S06-incremental-refresh-replay-retention-contract.md"
+            status: "approved"
+          dev_gate:
+            cp5_required: true
+            lld_confirmed: true
+            dependencies_satisfied: true
+            file_conflict_free: true
+            implementation_allowed: true
+            provider_fetch: 0
+            lake_write: 0
+            credential_read: 0
+            duckdb_dependency_change: 0
+          validation_criteria:
+            - "replay provider_fetches=0、credential_reads=0、raw_writes=0、current_pointer_changes=0"
+            - "resume_conflict 有结构化输出"
+          completion_criteria:
+            - "增量刷新、最近 N 个交易日回补、candidate retention 与 replay 合同冻结"
+    - wave: "CR014-W4-CONSUMER-BOUNDARY"
+      hld_phase: "CR-014 研究消费与 unsupported 决策边界"
+      parallel_lld: true
+      parallel_dev: false
+      status: "verified"
+      entry_conditions:
+        - "CR014-S05/S06 合同冻结"
+      exit_conditions:
+        - "research consumer read-only 与 W3/minute/tick/Level2/VWAP blocked 边界可进入 LLD"
+      completion_criteria:
+        - "consumer provider/lake/credential/old data 操作次数为 0"
+        - "W3/minute/tick/Level2/VWAP production allowed claim 输出次数为 0"
+      stories:
+        - story_id: "CR014-S07-research-consumer-readonly-docs-runbook-boundary"
+          title: "research consumer read-only contract 与 docs/runbook 后续边界"
+          priority: "P1"
+          assignee: "meta-dev"
+          depends_on:
+            - "CR014-S04-duckdb-readonly-query-audit-parity-boundary"
+            - "CR014-S05-full-history-readiness-gap-claim-boundary"
+            - "CR014-S06-incremental-refresh-replay-retention-contract"
+          dependency_type:
+            - upstream: "CR014-S04-duckdb-readonly-query-audit-parity-boundary"
+              type: "read-boundary"
+            - upstream: "CR014-S05-full-history-readiness-gap-claim-boundary"
+              type: "claim-contract"
+            - upstream: "CR014-S06-incremental-refresh-replay-retention-contract"
+              type: "ops-contract"
+          status: "verified"
+          output_files:
+            - "engine/research_dataset.py"
+            - "experiments/reporting.py"
+            - "README.md"
+            - "docs/USER-MANUAL.md"
+            - "tests/test_cr014_research_consumer_boundary.py"
+          file_ownership:
+            primary:
+              - "engine/research_dataset.py"
+              - "experiments/reporting.py"
+              - "tests/test_cr014_research_consumer_boundary.py"
+            shared:
+              - "README.md"
+              - "docs/USER-MANUAL.md"
+            merge_owner: "CR014-S07-research-consumer-readonly-docs-runbook-boundary"
+            forbidden:
+              - ".env"
+              - "data/**"
+              - "reports/**"
+              - "pyproject.toml"
+              - "uv.lock"
+          lld_gate:
+            required_inputs:
+              - "process/HLD.md#30"
+              - "process/ARCHITECTURE-DECISION.md#ADR-049"
+              - "process/stories/CR014-S07-research-consumer-readonly-docs-runbook-boundary.md"
+            status: "approved"
+          dev_gate:
+            cp5_required: true
+            lld_confirmed: true
+            dependencies_satisfied: true
+            file_conflict_free: true
+            implementation_allowed: true
+            provider_fetch: 0
+            lake_write: 0
+            credential_read: 0
+            duckdb_dependency_change: 0
+          validation_criteria:
+            - "研究消费层直接 provider/lake/credential/old data 操作次数为 0"
+            - "实验入口直接 DuckDB 写入或 publish 次数为 0"
+          completion_criteria:
+            - "研究消费层只读 published current truth / blocked claims / required_missing 合同冻结"
+            - "README/USER-MANUAL 后续刷新范围进入 LLD 输入，不在 Story Plan 阶段修改"
+        - story_id: "CR014-S08-w3-minute-tick-level2-vwap-blocked-decision-boundary"
+          title: "W3 / minute / tick / Level2 / VWAP blocked 决策边界"
+          priority: "P0"
+          assignee: "meta-dev"
+          depends_on:
+            - "CR014-S05-full-history-readiness-gap-claim-boundary"
+          dependency_type:
+            - upstream: "CR014-S05-full-history-readiness-gap-claim-boundary"
+              type: "claim-contract"
+          status: "verified"
+          output_files:
+            - "market_data/unsupported.py"
+            - "engine/research_dataset.py"
+            - "tests/test_cr014_unsupported_boundary.py"
+          file_ownership:
+            primary:
+              - "market_data/unsupported.py"
+              - "tests/test_cr014_unsupported_boundary.py"
+            shared:
+              - "engine/research_dataset.py"
+              - "market_data/claims.py"
+            merge_owner: "CR014-S08-w3-minute-tick-level2-vwap-blocked-decision-boundary"
+            forbidden:
+              - ".env"
+              - "data/**"
+              - "reports/**"
+              - "pyproject.toml"
+              - "uv.lock"
+          lld_gate:
+            required_inputs:
+              - "process/HLD-DATA-LAKE.md#17"
+              - "process/HLD.md#30"
+              - "process/ARCHITECTURE-DECISION.md#ADR-045"
+              - "process/ARCHITECTURE-DECISION.md#ADR-046"
+              - "process/stories/CR014-S08-w3-minute-tick-level2-vwap-blocked-decision-boundary.md"
+            status: "approved"
+          dev_gate:
+            cp5_required: true
+            lld_confirmed: true
+            dependencies_satisfied: true
+            file_conflict_free: true
+            implementation_allowed: true
+            provider_fetch: 0
+            lake_write: 0
+            credential_read: 0
+            duckdb_dependency_change: 0
+          validation_criteria:
+            - "W3/minute/tick/Level2/VWAP production allowed claim 输出次数为 0"
+            - "解除条件 100% 指向后续 source/interface + Story + CP5 + 用户授权"
+          completion_criteria:
+            - "unsupported / blocked decision matrix 与 claim boundary link 冻结"
+    - wave: "CR014-W5-REAL-RUN"
+      hld_phase: "CR-014 分时段真实抓取与 raw/manifest 写湖执行"
+      parallel_lld: false
+      parallel_dev: false
+      status: "partial-real-smoke-pass-full-a-prices-pending"
+      cp5_batch: "CR014-REAL-RUN-BATCH-B"
+      entry_conditions:
+        - "CR014-S01..S08 全部 verified，且 CP6 / CP7 均 PASS"
+        - "S09 独立 LLD 已完成并通过 CP5 自动预检"
+        - "S09 CP5 人工确认 approved"
+        - "用户提供每次真实 run 的 authorization_id、dataset、date range、window policy、source/interface allowlist、lake root 和 rollback policy"
+      exit_conditions:
+        - "按 dataset/date window 完成真实 provider fetch 与 raw/manifest/run metadata 写湖"
+        - "每个 window 都有独立 run_id、manifest、checksum、resume token 和状态"
+        - "current_pointer_changes=0；publish 仍等待独立 Explicit Publish Gate 授权"
+      completion_criteria:
+        - "全部授权窗口的 provider_fetch / lake_write / credential_read 计数与 run metadata 一致"
+        - "失败窗口不覆盖成功窗口，不触发 publish，不触发 retention execute"
+      stories:
+        - story_id: "CR014-S09-windowed-real-fetch-lake-write-run"
+          title: "分时段真实抓取与 raw/manifest 写湖执行"
+          priority: "P0"
+          assignee: "meta-dev"
+          depends_on:
+            - "CR014-S01-a-share-universe-lifecycle-contract"
+            - "CR014-S02-parquet-layout-manifest-catalog-publish-gate"
+            - "CR014-S03-p0-plan-run-normalize-validate-publish-contract"
+            - "CR014-S04-duckdb-readonly-query-audit-parity-boundary"
+            - "CR014-S05-full-history-readiness-gap-claim-boundary"
+            - "CR014-S06-incremental-refresh-replay-retention-contract"
+            - "CR014-S07-research-consumer-readonly-docs-runbook-boundary"
+            - "CR014-S08-w3-minute-tick-level2-vwap-blocked-decision-boundary"
+          dependency_type:
+            - upstream: "CR014-S01-a-share-universe-lifecycle-contract"
+              type: "verified-contract"
+            - upstream: "CR014-S02-parquet-layout-manifest-catalog-publish-gate"
+              type: "verified-contract"
+            - upstream: "CR014-S03-p0-plan-run-normalize-validate-publish-contract"
+              type: "verified-runtime"
+            - upstream: "CR014-S04-duckdb-readonly-query-audit-parity-boundary"
+              type: "verified-audit-boundary"
+            - upstream: "CR014-S05-full-history-readiness-gap-claim-boundary"
+              type: "verified-claim-boundary"
+            - upstream: "CR014-S06-incremental-refresh-replay-retention-contract"
+              type: "verified-ops-contract"
+            - upstream: "CR014-S07-research-consumer-readonly-docs-runbook-boundary"
+              type: "verified-consumer-boundary"
+            - upstream: "CR014-S08-w3-minute-tick-level2-vwap-blocked-decision-boundary"
+              type: "verified-unsupported-boundary"
+          status: "partial-real-smoke-pass-full-a-prices-pending"
+          output_files:
+            - "market_data/windowed_run.py"
+            - "market_data/runtime.py"
+            - "market_data/manifest.py"
+            - "market_data/lake_layout.py"
+            - "market_data/cli.py"
+            - "tests/test_cr014_windowed_real_run_contract.py"
+          file_ownership:
+            primary:
+              - "market_data/windowed_run.py"
+              - "tests/test_cr014_windowed_real_run_contract.py"
+            shared:
+              - "market_data/runtime.py"
+              - "market_data/manifest.py"
+              - "market_data/lake_layout.py"
+              - "market_data/cli.py"
+            merge_owner: "CR014-S09-windowed-real-fetch-lake-write-run"
+            forbidden:
+              - "old data/** operation without explicit authorization"
+              - "old reports overwrite"
+              - "catalog current pointer update"
+              - "retention execute"
+              - "DuckDB dependency change"
+          lld_gate:
+            required_inputs:
+              - "process/HLD-DATA-LAKE.md#17"
+              - "process/ARCHITECTURE-DECISION.md#ADR-048"
+              - "process/ARCHITECTURE-DECISION.md#ADR-051"
+              - "process/ARCHITECTURE-DECISION.md#ADR-052"
+              - "process/stories/CR014-S09-windowed-real-fetch-lake-write-run.md"
+            status: "approved"
+          dev_gate:
+            cp5_required: true
+            lld_confirmed: true
+            dependencies_satisfied: true
+            file_conflict_free: true
+            implementation_allowed: true
+            provider_fetch: 0
+            lake_write: 0
+            credential_read: 0
+            duckdb_dependency_change: 0
+            requires_user_authorization_id: true
+            requires_window_policy: true
+          validation_criteria:
+            - "无 authorization_id 时 provider_fetch=0、lake_write=0、credential_read=0"
+            - "每个 dataset/date window 均生成 run_id、manifest、checksum、resume token 和状态"
+            - "raw/manifest 写湖后 current_pointer_changes=0，publish 仍需独立授权"
+          completion_criteria:
+            - "分时段真实抓取与 raw/manifest 写湖完成范围与用户授权完全一致"
+            - "失败窗口不覆盖成功窗口，不触发 publish，不触发 retention execute"
+  dependency_graph:
+    nodes:
+      - "CR014-S01-a-share-universe-lifecycle-contract"
+      - "CR014-S02-parquet-layout-manifest-catalog-publish-gate"
+      - "CR014-S03-p0-plan-run-normalize-validate-publish-contract"
+      - "CR014-S04-duckdb-readonly-query-audit-parity-boundary"
+      - "CR014-S05-full-history-readiness-gap-claim-boundary"
+      - "CR014-S06-incremental-refresh-replay-retention-contract"
+      - "CR014-S07-research-consumer-readonly-docs-runbook-boundary"
+      - "CR014-S08-w3-minute-tick-level2-vwap-blocked-decision-boundary"
+      - "CR014-S09-windowed-real-fetch-lake-write-run"
+    edges:
+      - ["CR014-S01-a-share-universe-lifecycle-contract", "CR014-S02-parquet-layout-manifest-catalog-publish-gate"]
+      - ["CR014-S01-a-share-universe-lifecycle-contract", "CR014-S03-p0-plan-run-normalize-validate-publish-contract"]
+      - ["CR014-S02-parquet-layout-manifest-catalog-publish-gate", "CR014-S03-p0-plan-run-normalize-validate-publish-contract"]
+      - ["CR014-S02-parquet-layout-manifest-catalog-publish-gate", "CR014-S04-duckdb-readonly-query-audit-parity-boundary"]
+      - ["CR014-S03-p0-plan-run-normalize-validate-publish-contract", "CR014-S04-duckdb-readonly-query-audit-parity-boundary"]
+      - ["CR014-S01-a-share-universe-lifecycle-contract", "CR014-S05-full-history-readiness-gap-claim-boundary"]
+      - ["CR014-S02-parquet-layout-manifest-catalog-publish-gate", "CR014-S05-full-history-readiness-gap-claim-boundary"]
+      - ["CR014-S03-p0-plan-run-normalize-validate-publish-contract", "CR014-S05-full-history-readiness-gap-claim-boundary"]
+      - ["CR014-S04-duckdb-readonly-query-audit-parity-boundary", "CR014-S05-full-history-readiness-gap-claim-boundary"]
+      - ["CR014-S02-parquet-layout-manifest-catalog-publish-gate", "CR014-S06-incremental-refresh-replay-retention-contract"]
+      - ["CR014-S03-p0-plan-run-normalize-validate-publish-contract", "CR014-S06-incremental-refresh-replay-retention-contract"]
+      - ["CR014-S04-duckdb-readonly-query-audit-parity-boundary", "CR014-S07-research-consumer-readonly-docs-runbook-boundary"]
+      - ["CR014-S05-full-history-readiness-gap-claim-boundary", "CR014-S07-research-consumer-readonly-docs-runbook-boundary"]
+      - ["CR014-S06-incremental-refresh-replay-retention-contract", "CR014-S07-research-consumer-readonly-docs-runbook-boundary"]
+      - ["CR014-S05-full-history-readiness-gap-claim-boundary", "CR014-S08-w3-minute-tick-level2-vwap-blocked-decision-boundary"]
+      - ["CR014-S01-a-share-universe-lifecycle-contract", "CR014-S09-windowed-real-fetch-lake-write-run"]
+      - ["CR014-S02-parquet-layout-manifest-catalog-publish-gate", "CR014-S09-windowed-real-fetch-lake-write-run"]
+      - ["CR014-S03-p0-plan-run-normalize-validate-publish-contract", "CR014-S09-windowed-real-fetch-lake-write-run"]
+      - ["CR014-S04-duckdb-readonly-query-audit-parity-boundary", "CR014-S09-windowed-real-fetch-lake-write-run"]
+      - ["CR014-S05-full-history-readiness-gap-claim-boundary", "CR014-S09-windowed-real-fetch-lake-write-run"]
+      - ["CR014-S06-incremental-refresh-replay-retention-contract", "CR014-S09-windowed-real-fetch-lake-write-run"]
+      - ["CR014-S07-research-consumer-readonly-docs-runbook-boundary", "CR014-S09-windowed-real-fetch-lake-write-run"]
+      - ["CR014-S08-w3-minute-tick-level2-vwap-blocked-decision-boundary", "CR014-S09-windowed-real-fetch-lake-write-run"]
+  dag_validation_result:
+    checked_by: "codex using dag-validator rules"
+    checked_at: "2026-05-27T00:02:50+08:00"
+    cycles: []
+    invalid_references: []
+    parallel_internal_dependencies: 0
+    conclusion: "PASS-by-static-design-review-not-executed"
+    note: "CR014 增量 DAG 从 S01/S02 合同层单向流向 pipeline、readiness、replay 和 consumer boundary；新增 S09 只从 S01..S08 全部完成后单向进入真实分时段抓取与 raw/manifest 写湖，不存在下游回边；所有节点均有 Story 卡片路径规划和 Wave 归属。"

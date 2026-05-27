@@ -1,0 +1,61 @@
+.ipynb_checkpoints/
+notebooks/.ipynb_checkpoints/
+notebooks/outputs/
+notebooks/tmp/
+
+# Python 本地运行产物。
+.venv/
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# 误装 npm 依赖；当前项目使用 uv，不使用 npm 作为项目入口。
+node_modules/
+/package.json
+/package-lock.json
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+.agent/
+.agents/
+.codex/
+
+# 本地数据湖与报告产物不得入库；真实 lake root 必须通过 --lake-root
+# 或 MARKET_DATA_LAKE_ROOT 指向仓库外部目录。
+data/
+reports/
+raw/
+canonical/
+gold/
+quality/
+catalog/
+manifest/
+manifests/
+market_data_lake/
+legacy_flat/
+*.parquet
+*.feather
+*.arrow
+*.jsonl
+*.sqlite
+*.db
+
+# 本地环境与凭据文件。
+.env
+.env.*
+!.env.example
+credentials/
+*.pem
+*.key
+*.secret
+
+# 允许小型脱敏测试 fixture 进入版本控制。
+!tests/fixtures/
+!tests/fixtures/**

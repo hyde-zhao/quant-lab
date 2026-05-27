@@ -1,0 +1,47 @@
+---
+project_id: "local_backtest"
+phase: "story-execution"
+wave: "W0"
+story_id: "STORY-001"
+status: "confirmed"
+created_at: "2026-05-14"
+created_by: "meta-po"
+source_report: "process/VERIFICATION-REPORT.md"
+---
+
+validation_scope:
+  target_handoff: "process/handoffs/META-QA-VERIFY-W0-STORY-001-2026-05-14.md"
+  target_story_card: "process/stories/STORY-001-engine-baseline-data-contracts.md"
+  target_lld: "process/stories/STORY-001-engine-baseline-data-contracts-LLD.md"
+  report_path: "process/VERIFICATION-REPORT.md"
+  test_strategy_path: "process/TEST-STRATEGY.md"
+
+environment:
+  workspace_root: "/home/hyde/workspace/local_backtest"
+  operating_system: "Linux 6.6.87.2-microsoft-standard-WSL2 x86_64"
+  package_manager: "uv"
+  uv_version: "uv 0.11.6 (x86_64-unknown-linux-gnu)"
+  python_execution_policy: "uv run --python 3.11"
+  python_3_11_resolved_by_uv: "/home/hyde/.local/share/uv/python/cpython-3.11-linux-x86_64-gnu/bin/python3.11"
+  system_python3_11_in_path: false
+  dependency_sources:
+    - "pyproject.toml"
+    - "uv.lock"
+
+verification_boundaries:
+  allow_story_001_only: true
+  forbid_story_002_progress: true
+  forbid_delivery_writes: true
+  forbid_install_script_generation: true
+  forbid_market_data_network_calls: true
+  require_no_credentials: true
+  cache_cleanup:
+    engine_pycache_removed: true
+    checked_at: "2026-05-14"
+
+approval:
+  confirmed: true
+  confirmed_by: "user"
+  confirmed_at: "2026-05-14"
+  confirmation_basis: "用户确认当前验证环境可用于 STORY-001 正式 8 维度验收"
+  required_before_meta_qa: true
