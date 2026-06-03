@@ -1,12 +1,12 @@
 ---
 cr_id: "CR-015"
-status: "open"
+status: "controlled-offline-verified-pending-cp8"
 impact_level: "high"
 workflow_mode_before: "standard"
 workflow_mode_after_change: "standard"
 fast_lane_upgrade_reason: "QMT 接入引入外部交易接口、Windows 交易节点、broker adapter、OMS、订单状态机、pre-trade risk、broker lake、凭据和审计边界，命中架构、安全、权限、外部接口和多 Story 依赖，必须走 standard。"
 rollback_to: "requirement-clarification"
-approval_result: "approved-for-intake"
+approval_result: "controlled-offline-verified-pending-cp8"
 created_at: "2026-05-27T22:22:05+08:00"
 created_by: "meta-po"
 approved_by: "user"
@@ -16,6 +16,7 @@ approval_text: "同意你推荐的方案，将当前代码提供一个本地comm
 linked_issue: ""
 implementation_authorization: false
 real_order_authorization: false
+updated_at: "2026-05-31T21:43:48+08:00"
 ---
 
 # CR-015 QMT 交易接入基础：Adapter / OMS / Risk / Broker Lake
@@ -45,6 +46,23 @@ real_order_authorization: false
 | QMT-D9 | 目标权重转订单 | 严格处理 100 股、现金、T+1、可用持仓 | 减少研究目标和真实可执行订单的偏离。 |
 | QMT-D11 | 信号与下单数据源 | 数据湖生成信号，QMT 实时数据做下单前校验 | 兼顾可复现和实时可交易状态。 |
 | QMT-D14 | 凭据管理 | 交易节点本地配置 / 凭据管理，日志脱敏 | 仓库不保存实盘账户敏感信息。 |
+| QMT-D23 | 研究复权口径与交易价格口径 | 信号记录研究 `adjustment_policy`；订单、成交、对账只使用 raw / broker price | 避免把 qfq/hfq 复权价误当真实委托价格；依赖 CR-017 完成双口径数据契约。 |
+
+## 备选方案与优劣摘要
+
+| 决策组 | 方案 | 优点 | 缺点 | 推荐 |
+|---|---|---|---|---|
+| QMT 接入架构 | XtQuant 外部 API + OMS + adapter | 研究系统和交易节点解耦；风控、审计和 mock 测试可落地 | 需要 adapter、连接管理和跨节点运行约束 | 推荐 |
+| QMT 接入架构 | 策略直接调用 QMT API | 实现短 | 风控和审计容易被绕过，重复下单和误下单风险高 | 不推荐 |
+| QMT 接入架构 | 直接迁移到完整第三方交易平台 | 交易能力完整 | 会打散当前数据湖、研究和审计资产，迁移成本高 | 暂不采用 |
+| 初期账户范围 | 只支持普通股票现金账户 | 风控边界清楚，适合先做模拟盘和小资金实盘 | 信用、多资产能力后置 | 推荐 |
+| 初期账户范围 | 一次性支持信用、多资产、期货期权 | 覆盖面广 | 订单规则、保证金、风控和对账复杂度显著上升 | 不推荐 |
+| broker lake | 独立外置 broker lake | 交易事实与研究数据湖分层；凭据和账户数据不入仓库 | 需要新增 root、schema 和保留策略 | 推荐 |
+| broker lake | 只依赖 QMT 本地日志 | 初期简单 | 不可控、不可复盘，难以做策略级对账 | 不推荐 |
+| pre-trade risk | 硬阻断 | 风控失败时不触达 broker API | 可能错过交易机会 | 推荐 |
+| pre-trade risk | warn-only | 不影响成交 | 实盘风险不可接受 | 不推荐 |
+| 价格口径 | 研究复权口径与交易 raw 价格隔离 | 防止复权价误用于真实下单；与 CR-017 兼容 | order intent 需要多记录 metadata | 推荐 |
+| 价格口径 | 直接复用研究 feed 价格下单 | 实现简单 | qfq/hfq 价格不是真实交易价格，可能产生严重实盘错误 | 禁止 |
 
 ## 当前基线
 
@@ -54,6 +72,7 @@ real_order_authorization: false
 | 执行价边界 | 真实 VWAP、分钟、逐笔、盘口、撮合执行价当前保持 blocked | `README.md` CR-013 声明边界 |
 | 组合层能力 | 已支持 T 日收盘后信号、T+1 或之后成交、成本、现金和未成交记录 | `engine/portfolio.py`、`README.md` |
 | 数据湖事实源 | 真实行情和数据湖 root 外置，`.env` 和真实数据不入库 | `.gitignore`、CR-005 / CR-014 决策 |
+| 复权口径 | 当前代码仍以单一 `qfq` 为默认研究口径；QMT 执行必须等待 CR-017 明确 raw/qfq/hfq 边界 | CR-017 |
 | QMT 代码 | 当前仓库没有 QMT / xtquant adapter、OMS、broker lake 或真实交易节点 | `rg QMT/qmt/xtquant` 仅命中文档讨论 |
 
 ## 文档处理决策
@@ -79,6 +98,7 @@ real_order_authorization: false
 | `engine.portfolio` 回测成交 | OMS / order intent / broker order | 原文保留 + 新对象 | 回测成交不等同真实委托；真实委托必须有独立状态机和 broker lake。 |
 | CR-013 execution blocked claims | QMT pre-trade / broker lake | 原文保留 + 分层解除 | QMT 接入不自动解除真实 VWAP / minute / order-match blocked claim。 |
 | `MARKET_DATA_LAKE_ROOT` 外置数据湖 | `BROKER_LAKE_ROOT` 或等价外置 broker lake | 原文保留 + 新外置 root | 真实交易事实不写仓库 `data/**` 或 `reports/**`。 |
+| 单一 `qfq` 研究口径 | CR-017 raw/qfq/hfq 分层口径 | 原文保留 + 新 CR 扩展 | OMS 的 order intent 必须记录研究口径，但真实委托、成交和对账只允许 raw / broker price。 |
 
 ## 五维度影响分析
 
@@ -132,6 +152,7 @@ real_order_authorization: false
   - [ ] 批次内全部 Story LLD 已输出。
   - [ ] 批次内全部 Story CP5 自动预检已通过。
   - [ ] 批次 CP5 人工确认结论为 `approved`。
+  - [ ] QMT order intent schema 已显式区分 `research_adjustment_policy` 与 `execution_price_policy=raw`。
   - [ ] 任一真实 QMT API 调用、账户查询或 broker lake 写入都必须有单独授权；真实发单必须走 CR-016。
 
 ## 执行链路
@@ -162,7 +183,7 @@ real_order_authorization: false
 
 ## 处理结论
 
-- 审批结论：`approved-for-intake`
+- 审批结论：`controlled-offline-verified-pending-cp8`
 - [ ] 自动批准（低风险）
 - [ ] 待人工确认（中风险）
 - [x] 待人工审批（高风险）
@@ -174,6 +195,7 @@ real_order_authorization: false
 - 未授权把 broker lake 写入仓库 `data/**`、`reports/**` 或 Git。
 - 未授权解除 CR-013 的真实 VWAP、minute、tick、level2、order-match blocked claim。
 - 未授权引入 QMT 相关依赖；依赖变更必须等 CP5。
+- 未授权把 qfq/hfq 复权价作为真实 QMT 委托价、成交价或 broker 对账价。
 
 ## 关联对象
 
@@ -181,4 +203,5 @@ real_order_authorization: false
 |---|---|---|
 | 上游决策 | QMT-D1..D15 | 用户已接受推荐方案，作为本 CR 输入。 |
 | 下游 CR | CR-016 | 模拟盘 / 实盘发单激活、对账、监控、kill switch 和资金放大。 |
+| 关联 CR | CR-017 | 复权双视图、研究口径和 QMT raw 执行价格隔离。 |
 | 本地提交 | `2aeba1d` | 当前代码基线快照，先于本 CR 创建。 |

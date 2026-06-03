@@ -1,0 +1,109 @@
+{
+  "checkpoint_id": "CP3-CR019-DISCUSSION",
+  "change_id": "CR-019",
+  "phase": "solution-design",
+  "agent_role": "meta-se",
+  "status": "ready_for_cp3_precheck",
+  "created_at": "2026-05-30T17:16:19+08:00",
+  "updated_at": "2026-05-30T17:44:36+08:00",
+  "source_files": [
+    "process/changes/CR-019-STAGE6-MULTIFACTOR-SIMULATION-ARCHITECTURE-2026-05-30.md",
+    "checkpoints/CP2-CR019-REQUIREMENTS-BASELINE.md",
+    "process/USE-CASES.md",
+    "process/REQUIREMENTS.md",
+    "process/CLARIFICATION-LOG.md",
+    "docs/QMT-SIMULATION-LIVE-RUNBOOK.md",
+    "docs/QMT-INCIDENT-PLAYBOOK.md",
+    "process/HLD.md",
+    "process/HLD-QMT-TRADING.md",
+    "process/ARCHITECTURE-DECISION.md"
+  ],
+  "discussion_log": "process/discussions/CP3-CR019-HLD-DISCUSSION-LOG.md",
+  "processed_gray_areas": [
+    {
+      "id": "AGA-CR019-01",
+      "title": "QMT C/S 模块边界",
+      "recommendation": "local_backtest C 侧 Python client / 薄 CLI + Windows S 侧 FastAPI gateway",
+      "selected_option": "recommended",
+      "status": "resolved_recommended",
+      "when_to_switch": "Windows 服务无法安全限定来源或端口策略不允许时，降级为 signed file drop fallback；不得让 WSL 直连 xtquant。"
+    },
+    {
+      "id": "AGA-CR019-02",
+      "title": "C 侧接口形态",
+      "recommendation": "Python client / 函数调用为主 + 薄 CLI",
+      "selected_option": "recommended",
+      "status": "resolved_recommended",
+      "when_to_switch": "主要调用方转为外部脚本或多语言系统时切换 CLI-first / REST SDK；确认不需要人工 smoke / ops 时可取消 CLI。"
+    },
+    {
+      "id": "AGA-CR019-03",
+      "title": "完整 endpoint matrix 与真实运行门控",
+      "recommendation": "完整 QMT endpoint matrix + run mode / stage gate / risk gate / kill-switch / per-run authorization",
+      "selected_option": "recommended",
+      "status": "resolved_recommended",
+      "when_to_switch": "可按 Story 分批实现，但目标矩阵不退回 dry-run-only；无门控直转必须新 CR 和风险接受。"
+    },
+    {
+      "id": "AGA-CR019-04",
+      "title": "鉴权、绑定、防火墙和 fallback",
+      "recommendation": "配对式 token/HMAC 默认启用；no-auth 仅本机 debug、fixture 测试或明确配置的临时模式；fallback blocked-only 或人工 dry-run / signed file drop",
+      "selected_option": "recommended",
+      "status": "resolved_recommended",
+      "when_to_switch": "多人、跨网段或 live endpoint 默认启用时，在 pairing/HMAC 基础上增强 scope、rotation、mTLS/VPN 或 Windows ACL；不得启用自动真实 fallback。"
+    }
+  ],
+  "decision_items_for_cp3": [
+    "CP3-CR019-DQ-01",
+    "CP3-CR019-DQ-02",
+    "CP3-CR019-DQ-03",
+    "CP3-CR019-DQ-04",
+    "CP3-CR019-DQ-05",
+    "CP3-CR019-DQ-06",
+    "CP3-CR019-DQ-07"
+  ],
+  "recommended_hld_outputs": [
+    "process/HLD.md#33-cr-019-阶段六多因子-admission-与-qmt-cs-bridge-增量设计",
+    "process/HLD-QMT-TRADING.md#17-cr-019-qmt-cs-bridge-增量",
+    "process/ARCHITECTURE-DECISION.md#adr-067cr-019-阶段六-admission-采用新多因子-gate--多基准-primary-benchmark"
+  ],
+  "deferred_options": [
+    "CLI-first C 侧接口",
+    "no-auth 默认仅保留为本机 debug / fixture / 显式临时模式",
+    "静态共享 token 不作为目标基线",
+    "mTLS / VPN / Windows ACL 作为后置增强",
+    "自动真实 QMT fallback",
+    "Backtrader / Qlib / minute / Level2 提前进入阶段六 P0"
+  ],
+  "dq04_revision": {
+    "status": "user_confirmed",
+    "recommendation": "配对式 token/HMAC 默认启用",
+    "pairing_flow": [
+      "C 侧执行 pairing request，提交 server 与 client name",
+      "S 侧记录 pending request：request_id、client name、来源 IP、机器指纹摘要、创建时间、过期时间",
+      "S 侧管理员 list / approve pending request",
+      "S 侧生成 client id + secret，并显示一次性 pairing code 或短 TTL 领取窗口",
+      "C 侧 complete 后保存 client id / secret 引用",
+      "后续请求携带 X-QMT-Client-Id、X-QMT-Timestamp、X-QMT-Nonce、X-QMT-Signature",
+      "S 侧校验 approved client、timestamp 偏移、nonce replay 和 scope"
+    ],
+    "signature_recommendation": "HMAC_SHA256(secret, method + path + body_hash + timestamp + nonce)",
+    "no_auth_scope": "仅本机 debug、fixture 测试或明确配置的临时模式",
+    "gate_separation": "HMAC 通过只识别调用方，真实交易仍必须经过 run mode、stage gate、risk gate、kill-switch 和 per-run authorization"
+  },
+  "no_real_operation_assertions": {
+    "code_implementation": false,
+    "dependency_change": false,
+    "service_started": false,
+    "qmt_api_call": false,
+    "mini_qmt_call": false,
+    "xtquant_call": false,
+    "credential_read": false,
+    "provider_fetch": false,
+    "lake_write": false,
+    "publish": false,
+    "broker_lake_write": false,
+    "simulation_or_live_run": false
+  },
+  "next_step": "meta-po 可使用 process/checks/CP3-CR019-HLD-CONSISTENCY.md 与 checkpoints/CP3-CR019-HLD-REVIEW.md 正式发起 CP3 人工审查。"
+}

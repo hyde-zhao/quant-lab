@@ -2,7 +2,7 @@
 story_id: "CR014-S09-windowed-real-fetch-lake-write-run"
 title: "分时段真实抓取与 raw/manifest 写湖执行"
 story_slug: "windowed-real-fetch-lake-write-run"
-status: "partial-real-smoke-pass-full-a-prices-pending"
+status: "full-history-2015-2026-ytd-prices-adj-factor-candidate-usable-non-pit-warn"
 priority: "P0"
 wave: "CR014-W5-REAL-RUN"
 depends_on:
@@ -16,17 +16,19 @@ depends_on:
   - "CR014-S08-w3-minute-tick-level2-vwap-blocked-decision-boundary"
 cp5_batch: "CR014-REAL-RUN-BATCH-B"
 implementation_allowed: true
-real_run_authorization_status: "authorized-and-executed-partial-smoke"
+real_run_authorization_status: "authorized-and-executed-2015-2026-ytd"
 cp5_auto_precheck: "process/checks/CP5-CR014-S09-windowed-real-fetch-lake-write-run-LLD-IMPLEMENTABILITY.md"
 created_at: "2026-05-27"
-updated_at: "2026-05-27T21:33:34+08:00"
+updated_at: "2026-05-29T00:27:18+08:00"
 cp6_auto_check: "process/checks/CP6-CR014-S09-windowed-real-fetch-lake-write-run-CODING-DONE.md"
 cp6_status: "PASS"
 cp7_auto_check: "process/checks/CP7-CR014-S09-windowed-real-fetch-lake-write-run-VERIFICATION-DONE.md"
 cp7_status: "PASS"
 contract_verified: true
-real_run_smoke_check: "process/checks/REAL-TUSHARE-CR014-S09-YTD-SMOKE-2026-05-27.md"
+real_run_smoke_check: "process/checks/REAL-TUSHARE-CR014-S09-YTD-CONFIG-LAKE-VERIFY-2026-05-28.md"
 real_run_smoke_status: "PASS_PARTIAL_SCOPE"
+real_run_full_history_check: "process/checks/REAL-TUSHARE-CR014-S14-FULL-HISTORY-PRICES-ADJ-FACTOR-PULL-2026-05-29.md"
+real_run_full_history_status: "PASS_FULL_HISTORY_PRICES_ADJ_FACTOR_CANDIDATE_PULLED_PUBLISH_BLOCKED"
 verified: false
 change_id: "CR-014"
 ---
@@ -141,7 +143,12 @@ change_id: "CR-014"
 |---|---|---|
 | CP6 | PASS | `process/checks/CP6-CR014-S09-windowed-real-fetch-lake-write-run-CODING-DONE.md` |
 | CP7 | PASS | `process/checks/CP7-CR014-S09-windowed-real-fetch-lake-write-run-VERIFICATION-DONE.md` |
-| 真实 smoke | PASS_PARTIAL_SCOPE | `process/checks/REAL-TUSHARE-CR014-S09-YTD-SMOKE-2026-05-27.md` |
-| Story 状态 | partial-real-smoke-pass-full-a-prices-pending | 已完成基础真实抓取与 `000001.SZ` 行情样本；全 A prices/adj_factor 仍待批处理 runner |
-| real_run_authorized | partial smoke executed | 用户授权读取 `.env` token 后已执行真实 smoke；token 未打印、未落盘 |
-| verified | false | `verified=false` 保持到全 A prices/adj_factor 或明确缩小范围被用户接受；不得把 partial smoke 当作全量完成 |
+| 真实 smoke | PASS_PARTIAL_SCOPE | `process/checks/REAL-TUSHARE-CR014-S09-YTD-CONFIG-LAKE-VERIFY-2026-05-28.md` |
+| S10 样本可用性 | PASS_SAMPLE_USABILITY_NOT_PUBLISHABLE_SAMPLE_ONLY | `process/checks/REAL-TUSHARE-CR014-S10-2026-USABILITY-VALIDATION-2026-05-28.md` |
+| S11 full-A pull | RAW_MANIFEST_PULL_PASS_CANONICAL_PASS_QUALITY_GAP | `process/checks/REAL-TUSHARE-CR014-S11-FULL-A-2026-YTD-PULL-2026-05-28.md` |
+| S12 adj_factor denominator 重验 | PASS_ADJ_FACTOR_OBSERVED_PRICE_DENOMINATOR_PUBLISH_BLOCKED | `process/checks/REAL-TUSHARE-CR014-S12-ADJ-FACTOR-PRICES-DENOMINATOR-REVALIDATION-2026-05-28.md` |
+| S13 prices lifecycle/trade_status 重验 | PASS_PRICES_LIFECYCLE_TRADE_STATUS_DENOMINATOR_WARN_NON_PIT_PUBLISH_BLOCKED | `process/checks/REAL-TUSHARE-CR014-S13-PRICES-LIFECYCLE-TRADE-STATUS-DENOMINATOR-2026-05-28.md` |
+| S14 full-history pull | PASS_FULL_HISTORY_PRICES_ADJ_FACTOR_CANDIDATE_PULLED_PUBLISH_BLOCKED | `process/checks/REAL-TUSHARE-CR014-S14-FULL-HISTORY-PRICES-ADJ-FACTOR-PULL-2026-05-29.md` |
+| Story 状态 | full-history-2015-2026-ytd-prices-adj-factor-candidate-usable-non-pit-warn | 已完成 2015-01-05..2026-05-28 全 A `prices` / `adj_factor` raw、manifest、canonical candidate；合计 2768 个开市日、5536 条成功 manifest、`prices` 11311360 行、`adj_factor` 11823057 行；所有已观测 `prices` 交易对均有 `adj_factor` |
+| real_run_authorized | 2015-2026-ytd configured lake run executed | 用户授权读取 `.env` token 后已执行真实抓取与写湖；token 未打印、未落盘；配置 lake root 只以 `<configured-env-lake-root>` 脱敏记录 |
+| verified | false | `verified=false` 保持到 PIT universe / W3 质量缺口关闭并明确允许 publish；不得把 raw/canonical candidate 成功当作 production current truth |

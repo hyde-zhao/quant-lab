@@ -8,7 +8,7 @@ argument-hint: "可选：指定 Story ID、Story 名称或操作类型（create/
 user-invokable: true
 status: active
 ---
-<!-- myflow-managed: version=1.0.0 canonical-commit=05cbfdc generated=2026-05-18T12:11:08Z -->
+<!-- myflow-managed: version=1.0.0 canonical-commit=fe24c81 generated=2026-05-28T13:51:34Z -->
 
 ## 目标
 

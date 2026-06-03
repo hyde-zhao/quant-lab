@@ -1,21 +1,29 @@
 ---
 cr_id: "CR-012"
-status: "implemented-pending-final-review"
+status: "closed"
 impact_level: "high"
 workflow_mode_before: "standard"
 workflow_mode_after_change: "standard"
 fast_lane_upgrade_reason: "limited-window readiness audit 影响 PIT universe、available_at 语义、coverage denominator、报告声明和生产级 claim 边界，命中数据合同、审计口径和多 Story 依赖。"
 rollback_to: "solution-design"
-approval_result: "approved"
+approval_result: "approved-implemented-final-review-closed"
 created_at: "2026-05-24T00:00:00+08:00"
+updated_at: "2026-05-30T14:25:41+08:00"
 created_by: "codex"
 approved_by: "user"
 approved_at: "2026-05-24T00:00:00+08:00"
+closed: true
+closed_by: "meta-po"
+closed_at: "2026-05-30T14:25:41+08:00"
+closure_checkpoint: "checkpoints/CP8-G0-CR-STATUS-CLOSURE-2026-05-30.md"
+close_approval_text: "@meta-po 好的按照你推荐的顺序，逐步完成。"
 source: "run-exec"
 linked_issue: ""
 ---
 
 # CR-012 Limited Window Readiness 审计口径修正
+
+> 2026-05-30T14:25:41+08:00 状态更新：G0 第一批 CR 状态收口已通过 `checkpoints/CP8-G0-CR-STATUS-CLOSURE-2026-05-30.md` 人工审查，CR-012 关闭。关闭依据为定向测试 `24 passed`、最终 readiness summary `overall_status=production_strict_target_window_pass` 且 `blocking_count=0`；关闭只代表 limited-window strict 修正完成，不外推到 full-history，不授权真实 provider fetch、真实 lake 写入、凭据读取、旧 `data/**` 操作或 QMT 操作。
 
 ## 变更描述
 

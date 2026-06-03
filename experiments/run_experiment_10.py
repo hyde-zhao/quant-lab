@@ -52,6 +52,8 @@ def main() -> None:
 
     metadata = {
         **loaded.metadata,
+        "data_source_mode": "market_data_readonly" if args.market_data_lake_root else str(args.input_mode).replace("-", "_"),
+        "market_data_root": args.market_data_lake_root,
         "initial_cash": args.initial_cash,
         "requested_train_start": args.train_start,
         "requested_train_end": args.train_end,
@@ -66,6 +68,7 @@ def main() -> None:
             benchmark_kind=args.benchmark_kind,
             required=args.require_benchmark,
             allow_warn=args.allow_benchmark_warn,
+            benchmark_path=args.benchmark_path,
         ),
         metadata,
     )
@@ -125,9 +128,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--train-end", default="2020-12-31")
     parser.add_argument("--test-start", default="2021-01-01")
     parser.add_argument("--test-end", default="2025-12-31")
-    parser.add_argument("--market-data-lake-root", default=None, help="显式启用 market_data 只读 benchmark resolver。")
+    parser.add_argument("--market-data-root", "--market-data-lake-root", dest="market_data_lake_root", default=None, help="显式启用 market_data 只读 reader / benchmark resolver。")
+    parser.add_argument("--benchmark-path", default=None, help="显式本地 hs300_index benchmark fixture 路径；只读读取。")
     parser.add_argument("--benchmark-kind", default="policy_unconfirmed", choices=["price_index", "total_return_index", "adjusted_index", "policy_unconfirmed"])
     parser.add_argument("--require-benchmark", action="store_true", help="缺少 hs300_index 时返回 required_missing metadata。")
+    parser.add_argument("--allow-benchmark-unavailable", action="store_true", help="兼容参数；默认缺基准写入 unavailable metadata 并继续，--require-benchmark 返回 required_missing。")
     parser.add_argument("--allow-benchmark-warn", action="store_true", help="允许 quality warn 的 hs300_index 进入 benchmark metadata。")
     parser.add_argument("--verbose", action="store_true", help="输出结构化诊断日志。")
     return parser.parse_args()
@@ -141,13 +146,14 @@ def resolve_benchmark_for_experiment(
     benchmark_kind: str = "policy_unconfirmed",
     required: bool = False,
     allow_warn: bool = False,
+    benchmark_path: str | None = None,
 ) -> BenchmarkResult | None:
-    if not lake_root and not required:
+    if not lake_root and not benchmark_path and not required:
         return None
     policy = BenchmarkPolicy.from_config(
         {
             "benchmark_kind": benchmark_kind,
-            "confirmed": benchmark_kind != "policy_unconfirmed",
+            "confirmed": benchmark_kind != "policy_unconfirmed" or bool(benchmark_path),
             "required": required,
             "allow_warn": allow_warn,
         },
@@ -158,6 +164,7 @@ def resolve_benchmark_for_experiment(
         start_date=start_date,
         end_date=end_date,
         policy=policy,
+        benchmark_path=benchmark_path,
     )
 
 
@@ -168,13 +175,19 @@ def apply_benchmark_metadata_experiment_10(
     metadata = dict(existing_metadata)
     if result is None:
         return metadata
-    metadata["benchmark_result"] = result.to_metadata()
+    result_metadata = result.to_metadata()
+    metadata["benchmark_result"] = result_metadata
     metadata["benchmark_status"] = result.status
+    metadata["benchmark_source"] = result_metadata.get("benchmark_source")
+    metadata["benchmark_path"] = result_metadata.get("benchmark_path")
     metadata["benchmark_missing_reason"] = result.missing_reason
+    metadata["benchmark_unavailable_reason"] = result.missing_reason
+    metadata["hs300_benchmark_dataset"] = result.dataset
+    metadata["hs300_benchmark_is_proxy"] = False
     if result.available:
         metadata["benchmark_dataset"] = result.dataset
         metadata["benchmark_kind"] = "hs300"
-        metadata["hs300_index"] = result.to_metadata()
+        metadata["hs300_index"] = result_metadata
         metadata["benchmark_relative_return_enabled"] = True
     else:
         metadata["benchmark_dataset"] = "proxy_baseline"

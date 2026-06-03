@@ -1,13 +1,18 @@
 ---
 cr_id: "CR-005"
-status: "ready-for-close"
+status: "closed"
 impact_level: "high"
 rollback_to: "solution-design"
-approval_result: "approved-story-execution-verified"
+approval_result: "approved-story-execution-verified-closed"
 created_at: "2026-05-17T16:25:00+08:00"
-updated_at: "2026-05-18T20:15:21+08:00"
-closure_state: "ready-for-close-pending-post-real-data-doc-sync-and-final-static-recheck"
+updated_at: "2026-05-30T14:25:41+08:00"
+closure_state: "closed-by-g0-status-closure"
 closure_decision_required_by: "user"
+closed: true
+closed_by: "meta-po"
+closed_at: "2026-05-30T14:25:41+08:00"
+closure_checkpoint: "checkpoints/CP8-G0-CR-STATUS-CLOSURE-2026-05-30.md"
+close_approval_text: "@meta-po 好的按照你推荐的顺序，逐步完成。"
 created_by: "codex"
 approved_by: "user"
 approved_at: "2026-05-17T19:13:17+08:00"
@@ -20,6 +25,8 @@ included_scope:
 ---
 
 # CR-005：Tushare 5000 积分后的数据层整改与 Backtrader 可选后端接入
+
+> 2026-05-30T14:25:41+08:00 状态更新：G0 第一批 CR 状态收口已通过 `checkpoints/CP8-G0-CR-STATUS-CLOSURE-2026-05-30.md` 人工审查，CR-005 关闭。关闭依据为 CR005-S01..S06 已 verified，后置文档收敛静态复核 PASS；关闭不授权真实 provider fetch、真实 lake 写入、凭据读取、旧 `data/**` 操作或 QMT 操作。
 
 ## 变更描述
 

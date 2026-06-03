@@ -1,0 +1,28 @@
+{
+  "discussion_id": "CP2-CR025-SCENARIO-DISCUSSION",
+  "change_id": "CR-025",
+  "status": "desk-review-revised",
+  "created_at": "2026-05-31T22:08:28+08:00",
+  "discussion_log": "process/discussions/CP2-CR025-SCENARIO-DISCUSSION-LOG.md",
+  "source_handoff": "process/handoffs/META-PM-CR025-REQ-CLARIFICATION-2026-05-31.md",
+  "resolved_items": [
+    "SGA-025-01",
+    "SGA-025-02",
+    "SGA-025-04",
+    "SGA-025-05"
+  ],
+  "non_blocking_open_items": [
+    {
+      "id": "SGA-025-03",
+      "next_gate": "CP3",
+      "reason": "semantic diff report schema and thresholds must be frozen by HLD"
+    },
+    {
+      "id": "Q-051",
+      "next_gate": "CP3",
+      "reason": "research output to target portfolio / order intent field contract must be frozen by HLD"
+    }
+  ],
+  "blocking_items": [],
+  "cp2_ready": true
+}

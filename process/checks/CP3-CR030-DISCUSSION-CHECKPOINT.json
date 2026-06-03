@@ -1,0 +1,143 @@
+{
+  "checkpoint_id": "CP3-CR030-DISCUSSION",
+  "change_id": "CR-030",
+  "phase": "solution-design",
+  "agent_role": "meta-se",
+  "status": "PASS",
+  "created_at": "2026-06-03T07:34:00+08:00",
+  "created_by": "meta-se",
+  "discussion_log": "process/discussions/CP3-CR030-HLD-DISCUSSION-LOG.md",
+  "hld_artifact": "process/HLD.md#35-cr-030-multifactor-research-framework-reference-与研究闭环标准化",
+  "source_inputs": {
+    "use_cases": "process/USE-CASES.md v1.14",
+    "requirements": "process/REQUIREMENTS.md v1.15",
+    "cp2_manual_baseline": "checkpoints/CP2-CR030-REQUIREMENTS-BASELINE.md",
+    "cp2_discussion_log": "process/discussions/CP2-CR030-SCENARIO-DISCUSSION-LOG.md",
+    "cp2_discussion_checkpoint": "process/checks/CP2-CR030-DISCUSSION-CHECKPOINT.json",
+    "analysis_artifact": "process/research/CR030-MULTIFACTOR-FRAMEWORK-REFERENCE-ANALYSIS-2026-06-03.md",
+    "local_qlib_path": "/home/hyde/download/qlib"
+  },
+  "architecture_gray_areas": [
+    {
+      "id": "AGA-CR030-01",
+      "question": "自有多因子闭环主线还是 Qlib runner-first？",
+      "status": "resolved-by-user",
+      "selected": "CR30-A project-owned multifactor research loop",
+      "when_to_switch": "CR-030 contracts frozen and CR-026 separately approved for isolated runner Spike"
+    },
+    {
+      "id": "AGA-CR030-02",
+      "question": "外部项目如何纳入矩阵而不成为默认框架？",
+      "status": "resolved-by-user",
+      "selected": "reference matrix with reference_only / optional_spike / exclude / forbidden_migration",
+      "when_to_switch": "external project becomes required by an approved downstream Spike or CR"
+    },
+    {
+      "id": "AGA-CR030-03",
+      "question": "schema 和校验是否从零设计、复用基线还是直接采用外部对象？",
+      "status": "resolved-by-user",
+      "selected": "project-owned contracts + existing baseline reuse + external cross-check + fail-closed",
+      "when_to_switch": "CP3 review identifies missing P0 fields that require HLD revision"
+    },
+    {
+      "id": "AGA-CR030-04",
+      "question": "多因子组合默认采用可解释组合还是 optimizer / ML workflow？",
+      "status": "non-blocking-open",
+      "selected": "P0 explainable combiner; optimizer deferred to Spike",
+      "when_to_switch": "validated P0 combiner is insufficient and user approves optimizer dependency / risk model Spike"
+    },
+    {
+      "id": "AGA-CR030-05",
+      "question": "StrategyAdmissionPackage 到 QMT handoff 是否可能被误读为交易授权？",
+      "status": "resolved-by-user",
+      "selected": "draft handoff only; QMT remains not authorized",
+      "when_to_switch": "CR-020..CR-024 independently approved and Stage6 gate allows consumption"
+    }
+  ],
+  "advisor_options": [
+    {
+      "id": "CR30-A",
+      "name": "项目自有多因子研究闭环主线",
+      "recommendation": "recommended"
+    },
+    {
+      "id": "CR30-B",
+      "name": "Qlib runner-first / qrun 集成",
+      "recommendation": "not recommended for CR-030 default; deferred to CR-026 Spike"
+    },
+    {
+      "id": "CR30-C",
+      "name": "文档 / Spike-only",
+      "recommendation": "fallback if CP3 rejects contract freezing"
+    },
+    {
+      "id": "CR30-D",
+      "name": "外部框架适配层 / adapter-first",
+      "recommendation": "conditional future enhancement after internal contracts are frozen"
+    }
+  ],
+  "selected_architecture": "CR30-A",
+  "selected_architecture_summary": "项目自有多因子研究闭环；外部项目仅作为 reference matrix / optional Spike / exclude / forbidden migration；schema 采用项目自有契约、既有基线复用、外部 cross-check 和 fail-closed。",
+  "external_projects_reviewed": [
+    "Qlib",
+    "Alphalens",
+    "vectorbt",
+    "PyBroker",
+    "bt",
+    "Zipline Reloaded",
+    "QuantConnect LEAN",
+    "RQAlpha",
+    "vn.py / vnpy.alpha",
+    "Backtrader"
+  ],
+  "core_contracts": [
+    "FactorSpec",
+    "FactorRunSpec",
+    "FactorPanelContract",
+    "LabelWindowSpec",
+    "FactorEvaluationReport",
+    "MultiFactorCombiner",
+    "MultiFactorPortfolioPlan",
+    "ExperimentManifest",
+    "ResearchReportCatalog",
+    "StrategyAdmissionPackage",
+    "order_intent_draft_v1 handoff"
+  ],
+  "pending_cp3_decision_items": [
+    "DQ-CP3-CR030-01",
+    "DQ-CP3-CR030-02",
+    "DQ-CP3-CR030-03",
+    "DQ-CP3-CR030-04",
+    "DQ-CP3-CR030-05",
+    "DQ-CP3-CR030-06",
+    "DQ-CP3-CR030-07"
+  ],
+  "deferred_items": [
+    "CR-026 Qlib isolated runner / qrun",
+    "Qlib EnhancedIndexing / cvxpy optimizer",
+    "vectorbt performance Spike",
+    "PyBroker ML walk-forward / bootstrap",
+    "RQAlpha / vn.py trading ecosystem Spike"
+  ],
+  "non_authorized_items": [
+    "implementation",
+    "dependency change",
+    "external project clone/install/run",
+    "qrun",
+    "source copy or migration",
+    "provider fetch",
+    "lake write",
+    "catalog publish",
+    "reports overwrite",
+    "QMT / MiniQMT / XtQuant",
+    "simulation / live",
+    "order submit / cancel",
+    "account query",
+    "credential access"
+  ],
+  "cp3_hld_ready_for_meta_po": true,
+  "cp3_manual_review_created_by_meta_se": false,
+  "cp3_manual_review_owner": "meta-po",
+  "blocked": false,
+  "blocking_reasons": []
+}

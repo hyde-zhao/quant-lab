@@ -239,6 +239,7 @@ def run_backtest_with_backend(
     backend: str | None = "lightweight",
     backtrader_request: Any | None = None,
     backtrader_clean_feed: Any | None = None,
+    backend_selection_request: Any | None = None,
 ) -> BacktestResult | Any:
     """显式后端 wrapper；未指定时完全复用现有轻量回测。"""
 
@@ -250,8 +251,14 @@ def run_backtest_with_backend(
         BacktraderResult,
         build_backtrader_request_from_clean_feed,
         run_backtrader_backend,
+        select_research_backend,
         validate_backtrader_clean_feed,
     )
+
+    if backend_selection_request is not None:
+        selection = select_research_backend(backend_selection_request)
+        if not selection.available or selection.selected_backend != "backtrader":
+            return selection
 
     if backtrader_request is None and backtrader_clean_feed is not None:
         rejected = validate_backtrader_clean_feed(backtrader_clean_feed)

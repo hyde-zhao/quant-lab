@@ -1,0 +1,104 @@
+{
+  "discussion_id": "CP3-CR025-HLD-DISCUSSION",
+  "change_id": "CR-025",
+  "phase": "solution-design",
+  "status": "ready-for-cp3-auto-precheck",
+  "updated_at": "2026-06-01T21:53:17+08:00",
+  "owner": "meta-se",
+  "discussion_log": "process/discussions/CP3-CR025-HLD-DISCUSSION-LOG.md",
+  "source_handoff": "process/handoffs/META-SE-CR025-HLD-ADR-2026-06-01.md",
+  "source_inputs": [
+    "process/USE-CASES.md",
+    "process/REQUIREMENTS.md",
+    "checkpoints/CP2-CR025-REQUIREMENTS-BASELINE.md",
+    "process/changes/CR-025-BACKTRADER-OPTIONAL-EXECUTION-BACKEND-HARDENING-2026-05-31.md",
+    "/home/hyde/download/backtrader/LICENSE",
+    "/home/hyde/download/backtrader/setup.py",
+    "/home/hyde/download/backtrader/backtrader"
+  ],
+  "backtrader_static_analysis": {
+    "project_root": "/home/hyde/download/backtrader",
+    "license_file": "/home/hyde/download/backtrader/LICENSE",
+    "license_observed": "GNU GPL v3; setup.py marks GPLv3+",
+    "package_py_files_count": 171,
+    "tests_py_files_count": 83,
+    "samples_files_count": 86,
+    "execution_performed": false,
+    "source_copied_or_migrated": false,
+    "credentials_read": false,
+    "real_operations_triggered": false
+  },
+  "architecture_gray_areas": [
+    {
+      "id": "AGA-CR025-01",
+      "question": "Backtrader 是 optional semantic reference、adapter，还是主路径迁移候选？",
+      "status": "decision-item",
+      "recommendation": "CR25-A design reference + clean-room interface adaptation; lightweight remains default.",
+      "decision_id": "DQ-CP3-CR025-01",
+      "hld_refs": ["process/HLD.md#34-cr-025-research-execution-semantic-alignment-与-backtrader-optional-reference"],
+      "adr_refs": ["ADR-074"]
+    },
+    {
+      "id": "AGA-CR025-02",
+      "question": "哪些 Backtrader 模块可借鉴、可适配、可移植候选、必须排除？",
+      "status": "decision-item",
+      "recommendation": "Use module classification matrix; no default source-level migration candidate.",
+      "decision_id": "DQ-CP3-CR025-02",
+      "hld_refs": ["process/HLD.md#345-backtrader-本地项目模块级分析矩阵"],
+      "adr_refs": ["ADR-075"]
+    },
+    {
+      "id": "AGA-CR025-03",
+      "question": "GPLv3 对源码复制、裁剪、改写和分发的影响是什么？",
+      "status": "decision-item",
+      "recommendation": "Default no-copy clean-room adaptation; source migration requires CP3 risk acceptance and CP5 authorization.",
+      "decision_id": "DQ-CP3-CR025-03",
+      "hld_refs": ["process/HLD.md#345-backtrader-本地项目模块级分析矩阵", "process/HLD.md#3414-主要风险与应对"],
+      "adr_refs": ["ADR-076"]
+    },
+    {
+      "id": "AGA-CR025-04",
+      "question": "lightweight baseline、Backtrader semantic reference 与 QMT order intent 如何对齐？",
+      "status": "decision-item",
+      "recommendation": "Freeze clean feed gate, semantic diff schema and order_intent_draft_v1.",
+      "decision_id": "DQ-CP3-CR025-04",
+      "hld_refs": ["process/HLD.md#346-clean-feed-gate-与-semantic-diff-schema", "process/HLD.md#347-target-portfolio--order-intent-draft-边界"],
+      "adr_refs": ["ADR-077"]
+    },
+    {
+      "id": "AGA-CR025-05",
+      "question": "CR-025 与 CR-020 gateway health 的顺序和接口边界如何表达？",
+      "status": "decision-item",
+      "recommendation": "CR-025 only emits draft/evidence; CR-020..CR-024 remain independently authorized production route CRs.",
+      "decision_id": "DQ-CP3-CR025-05",
+      "hld_refs": ["process/HLD-QMT-TRADING.md#18-cr-025-order-intent-draft-消费边界"],
+      "adr_refs": ["ADR-077"]
+    }
+  ],
+  "recommended_option": "CR25-A",
+  "recommended_option_summary": "Backtrader is a design/reference-only optional semantic reference by default; implementation uses clean-room contracts and no source migration.",
+  "alternative_options": ["CR25-B optional dependency runtime after CP5", "CR25-C source migration/fork only after explicit CP3/CP5 and compliance acceptance", "CR25-D no Backtrader reference if user withdraws requirement"],
+  "decision_items": [
+    "DQ-CP3-CR025-01",
+    "DQ-CP3-CR025-02",
+    "DQ-CP3-CR025-03",
+    "DQ-CP3-CR025-04",
+    "DQ-CP3-CR025-05",
+    "DQ-CP3-CR025-06"
+  ],
+  "non_authorized_items": [
+    "implement Backtrader backend",
+    "modify pyproject.toml or uv.lock",
+    "run Backtrader",
+    "copy or migrate Backtrader source code",
+    "trigger broker/QMT/provider/lake/publish/simulation/live",
+    "read credentials"
+  ],
+  "cp3_ready": true,
+  "blocking_open_items": [],
+  "non_blocking_open_items": [
+    "CP5 后若实现 optional runtime，需要冻结 dependency version、file ownership、adapter output path 和 packaging/legal strategy。"
+  ],
+  "next_owner": "meta-po",
+  "next_action": "meta-po reviews CP3 auto precheck and, if accepted, launches checkpoints/CP3-CR025-HLD-REVIEW.md for manual confirmation."
+}

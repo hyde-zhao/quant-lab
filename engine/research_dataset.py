@@ -30,6 +30,7 @@ from market_data.benchmarks import (
     build_benchmark_policy_result,
     resolve_hs300_benchmark,
 )
+from market_data.adjustment_readers import single_policy_gate
 from market_data.contracts import (
     CR014_CLAIM_FULL_A_SINCE_INCEPTION,
     CR014_FORBIDDEN_OPERATION_COUNTERS,
@@ -44,18 +45,31 @@ from market_data.contracts import (
     DATASET_TRADE_STATUS,
     PIT_STATUS_AVAILABLE,
 )
+from market_data.dataset_groups import (
+    CLAIM_CAPACITY_TRADABLE,
+    CLAIM_CAPITAL_AMPLIFICATION,
+    CLAIM_INDUSTRY_NEUTRALIZED,
+    CLAIM_MARKET_CAP_NEUTRALIZED,
+    CLAIM_PURE_ALPHA,
+    CLAIM_SCALE_UP_READY,
+    P1_BLOCKED_CLAIMS,
+    REASON_P1_AUXILIARY_MISSING,
+)
 from market_data.readers import (
     AdjustmentAuditReaderResult,
+    CurrentReaderSmokeResult,
     DATASET_CORPORATE_ACTIONS,
     QualityPolicy,
     ReaderResult,
     ResearchInputReaderRequest,
     evaluate_corporate_action_availability,
     extract_adj_factor_lineage,
+    current_reader_smoke,
     read_dataset,
     read_adjustment_audit_inputs,
     read_research_inputs,
 )
+from market_data.release_scope import FORBIDDEN_OPERATION_COUNTER_KEYS, normalise_permission_counters
 from market_data.unsupported import (
     CR014_UNSUPPORTED_PRODUCTION_CLAIMS,
     assert_no_derived_real_vwap_claim as _assert_no_derived_real_vwap_claim,
@@ -846,6 +860,76 @@ CR014_RESEARCH_CONSUMER_FORBIDDEN_COUNTERS = {
     "docs_write": 0,
 }
 
+CR017_CONSUMER_TYPES = ("chart", "long_horizon_research", "factor_research", "qmt_order_intent")
+CR017_EXECUTION_RAW_POLICY = "raw"
+CR017_NON_RAW_EXECUTION_POLICIES = ("qfq", "hfq", "returns_adjusted")
+CR017_UNSUPPORTED_EXECUTION_FEATURES = (
+    "real_vwap_execution",
+    "minute_execution",
+    "tick_execution",
+    "level2_execution",
+    "order_match_execution",
+    "microstructure_impact_cost",
+)
+CR017_CONSUMER_FORBIDDEN_COUNTERS = {
+    "provider_fetch": 0,
+    "lake_write": 0,
+    "credential_read": 0,
+    "current_pointer_publish": 0,
+    "real_order_call": 0,
+    "real_cancel_call": 0,
+    "account_query_call": 0,
+    "dependency_change": 0,
+    "legacy_qfq_overwrite": 0,
+    "non_raw_execution_allowed": 0,
+    "production_adjustment_governance_claim_allowed": 0,
+    "scale_up_allowed": 0,
+}
+
+CR018_P1_FIELD_REQUIREMENTS_BY_CLAIM: dict[str, tuple[str, ...]] = {
+    CLAIM_INDUSTRY_NEUTRALIZED: ("industry",),
+    CLAIM_MARKET_CAP_NEUTRALIZED: ("market_cap", "float_market_cap"),
+    CLAIM_PURE_ALPHA: ("industry", "market_cap", "float_market_cap", "beta_style"),
+    CLAIM_CAPACITY_TRADABLE: ("float_market_cap", "adv", "turnover", "liquidity", "capacity", "impact_cost"),
+    CLAIM_SCALE_UP_READY: ("adv", "turnover", "liquidity", "capacity", "impact_cost"),
+    CLAIM_CAPITAL_AMPLIFICATION: ("liquidity", "capacity", "impact_cost"),
+}
+CR018_P1_CLAIM_ALLOWED_COUNT_FIELDS: dict[str, str] = {
+    CLAIM_INDUSTRY_NEUTRALIZED: "industry_neutral_allowed_count",
+    CLAIM_MARKET_CAP_NEUTRALIZED: "market_cap_neutral_allowed_count",
+    CLAIM_PURE_ALPHA: "pure_alpha_allowed_count",
+    CLAIM_CAPACITY_TRADABLE: "capacity_allowed_count",
+    CLAIM_SCALE_UP_READY: "scale_up_allowed_count",
+    CLAIM_CAPITAL_AMPLIFICATION: "capital_amplification_allowed_count",
+}
+CR018_P1_FORBIDDEN_OPERATION_COUNTERS: dict[str, int] = {
+    **{key: 0 for key in FORBIDDEN_OPERATION_COUNTER_KEYS},
+    "unpublished_lake_scan": 0,
+}
+CR018_S08_PRODUCTION_CURRENT_TRUTH_SCHEMA = "cr018_production_current_truth_dataset_v1"
+CR018_S08_STATUS_PASS = "pass"
+CR018_S08_STATUS_BLOCKED = "blocked"
+CR018_S08_REASON_CATALOG_NOT_PUBLISHED = "catalog_not_published"
+CR018_S08_REASON_CANDIDATE_INPUT_FORBIDDEN = "candidate_input_forbidden"
+CR018_S08_REASON_PROXY_INPUT_FORBIDDEN = "proxy_input_forbidden"
+CR018_S08_REASON_REQUIRED_MISSING = "required_missing"
+CR018_S08_REASON_PROVIDER_FETCH_FORBIDDEN = "provider_fetch_forbidden"
+CR018_S08_REASON_LAKE_WRITE_FORBIDDEN = "lake_write_forbidden"
+CR018_S08_REASON_CREDENTIAL_READ_FORBIDDEN = "credential_read_forbidden"
+CR018_S08_REASON_QMT_OPERATION_FORBIDDEN = "qmt_operation_forbidden"
+CR018_S08_REASON_OLD_REPORT_OVERWRITE_FORBIDDEN = "old_report_overwrite_forbidden"
+CR018_S08_REASON_DUCKDB_DEPENDENCY_CHANGE_FORBIDDEN = "duckdb_dependency_change_forbidden"
+CR018_S08_OPERATION_COUNTERS: dict[str, int] = {
+    "old_report_overwrite": 0,
+    "provider_fetch": 0,
+    "lake_write": 0,
+    "credential_read": 0,
+    "qmt_operation": 0,
+    "candidate_read_count": 0,
+    "proxy_input_allowed_count": 0,
+    "duckdb_dependency_change": 0,
+}
+
 
 @dataclass(frozen=True, slots=True)
 class ResearchConsumerRequest:
@@ -901,6 +985,70 @@ class ResearchConsumerBoundaryCheck:
             "error_codes": list(self.error_codes),
             "details": [dict(item) for item in self.details],
         }
+
+
+@dataclass(frozen=True, slots=True)
+class ConsumerGuidance:
+    """CR017-S06 研究 / QMT consumer policy 指引。"""
+
+    consumer_type: str
+    recommended_policy: str
+    allowed_policies: tuple[str, ...]
+    blocked_policies: tuple[str, ...]
+    purpose: str
+    execution_price_policy: str = ""
+    allowed_claims: tuple[str, ...] = ()
+    blocked_claims: tuple[dict[str, Any], ...] = ()
+    non_raw_execution_allowed_count: int = 0
+    adjusted_execution_price_pass_count: int = 0
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "consumer_type": self.consumer_type,
+            "recommended_policy": self.recommended_policy,
+            "allowed_policies": list(self.allowed_policies),
+            "blocked_policies": list(self.blocked_policies),
+            "purpose": self.purpose,
+            "execution_price_policy": self.execution_price_policy,
+            "allowed_claims": list(self.allowed_claims),
+            "blocked_claims": [dict(item) for item in self.blocked_claims],
+            "non_raw_execution_allowed_count": int(self.non_raw_execution_allowed_count),
+            "adjusted_execution_price_pass_count": int(self.adjusted_execution_price_pass_count),
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class AdjustmentGovernanceStatus:
+    """CR017-S06 production governance / scale-up blocked claim 输出。"""
+
+    cr017_status: str
+    stage: str
+    cr017_verified: bool
+    adjustment_governance_status: str
+    allowed_claims: tuple[str, ...] = ()
+    blocked_claims: tuple[dict[str, Any], ...] = ()
+    production_adjustment_governance_claim_allowed_count: int = 0
+    scale_up_allowed_count: int = 0
+    release_conditions: tuple[str, ...] = ()
+    operation_counts: dict[str, int] = dataclass_field(default_factory=lambda: dict(CR017_CONSUMER_FORBIDDEN_COUNTERS))
+
+    def to_dict(self) -> dict[str, Any]:
+        return metadata_to_dict(
+            {
+                "cr017_status": self.cr017_status,
+                "stage": self.stage,
+                "cr017_verified": self.cr017_verified,
+                "adjustment_governance_status": self.adjustment_governance_status,
+                "allowed_claims": list(self.allowed_claims),
+                "blocked_claims": [dict(item) for item in self.blocked_claims],
+                "production_adjustment_governance_claim_allowed_count": int(
+                    self.production_adjustment_governance_claim_allowed_count
+                ),
+                "scale_up_allowed_count": int(self.scale_up_allowed_count),
+                "release_conditions": list(self.release_conditions),
+                "operation_counts": dict(self.operation_counts),
+            }
+        )
 
 
 def build_research_dataset_from_published_truth(
@@ -1149,6 +1297,841 @@ def assert_research_consumer_forbidden_operations(
         error_codes=unique_errors,
         details=tuple(details),
     )
+
+
+def build_cr018_p1_claim_boundary(
+    p1_availability_metadata: Mapping[str, Any] | None,
+    *,
+    core_readiness: Mapping[str, Any] | None = None,
+    requested_claims: Sequence[str] | None = None,
+    permission_counters: Mapping[str, Any] | None = None,
+) -> dict[str, Any]:
+    """把 CR018 P1 availability metadata 映射为 claim boundary。
+
+    P1 缺失只阻断行业 / 市值 / pure alpha / capacity / scale_up / 资金放大
+    声明；不改变 P0 core current truth readiness 的默认语义。
+    """
+
+    fields = _cr018_p1_fields(p1_availability_metadata)
+    requested = _ordered_unique(list(requested_claims or P1_BLOCKED_CLAIMS))
+    core = dict(core_readiness or {})
+    allowed_claims = _cr018_claim_names(core.get("allowed_claims") or [])
+    blocked_claims = [
+        dict(item)
+        for item in core.get("blocked_claims") or []
+        if isinstance(item, Mapping)
+    ]
+    p1_blocked_names: set[str] = set()
+    for claim in requested:
+        missing_field = _cr018_missing_field_for_claim(claim, fields)
+        if missing_field:
+            blocked_claims.append(_cr018_p1_blocked_claim(claim, missing_field, fields.get(missing_field, {})))
+            p1_blocked_names.add(claim)
+            continue
+        allowed_claims.append(claim)
+
+    allowed_claims = [claim for claim in _ordered_unique(allowed_claims) if claim not in p1_blocked_names]
+    claim_allowed_counts = {
+        count_field: 1 if claim in allowed_claims else 0
+        for claim, count_field in CR018_P1_CLAIM_ALLOWED_COUNT_FIELDS.items()
+    }
+    counters = _cr018_p1_operation_counters(permission_counters, p1_availability_metadata)
+    p0_release_blocked = bool(core.get("release_blocked", False))
+    publish_readiness_pass = bool(core.get("publish_readiness_pass", not p0_release_blocked))
+    return metadata_to_dict(
+        {
+            "schema_name": "cr018_p1_claim_boundary_v1",
+            "core_readiness": {
+                "release_blocked": p0_release_blocked,
+                "publish_readiness_pass": publish_readiness_pass,
+                "source": core.get("source", "explicit_core_readiness"),
+            },
+            "p0_core_readiness_blocked": p0_release_blocked,
+            "core_release_blocked_by_p1": False,
+            "p1_blocks_core_release": False,
+            "p1_availability": dict(p1_availability_metadata or {}),
+            "allowed_claims": allowed_claims,
+            "blocked_claims": _dedupe_claim_payloads(blocked_claims),
+            "p1_blocked_claims": [claim for claim in requested if claim in p1_blocked_names],
+            "claim_allowed_counts": claim_allowed_counts,
+            **claim_allowed_counts,
+            "operation_counts": counters,
+            "permission_counters": counters,
+            "provider_fetch": counters.get("provider_fetch", 0),
+            "lake_write": counters.get("lake_write", 0),
+            "credential_read": counters.get("credential_read", 0),
+            "current_pointer_publish": counters.get("current_pointer_publish", 0),
+            "qmt_operation": counters.get("qmt_operation", 0),
+            "unpublished_lake_scan_count": counters.get("unpublished_lake_scan", 0),
+        }
+    )
+
+
+def _cr018_p1_fields(p1_availability_metadata: Mapping[str, Any] | None) -> dict[str, dict[str, Any]]:
+    raw = dict(p1_availability_metadata or {})
+    fields = raw.get("fields") if isinstance(raw.get("fields"), Mapping) else raw
+    return {
+        str(field_id): dict(payload)
+        for field_id, payload in dict(fields or {}).items()
+        if isinstance(payload, Mapping)
+    }
+
+
+def _cr018_claim_names(value: Sequence[Any]) -> list[str]:
+    names: list[str] = []
+    for item in value:
+        if isinstance(item, Mapping):
+            claim = item.get("claim")
+        else:
+            claim = item
+        if claim:
+            names.append(str(claim))
+    return _ordered_unique(names)
+
+
+def _cr018_missing_field_for_claim(claim: str, fields: Mapping[str, Mapping[str, Any]]) -> str:
+    for field_id in CR018_P1_FIELD_REQUIREMENTS_BY_CLAIM.get(str(claim), ()):
+        payload = fields.get(field_id, {})
+        if not bool(payload.get("available", False)):
+            return field_id
+    return ""
+
+
+def _cr018_p1_blocked_claim(claim: str, field_id: str, field_payload: Mapping[str, Any]) -> dict[str, Any]:
+    reason = str(field_payload.get("missing_reason") or f"{REASON_P1_AUXILIARY_MISSING}:{field_id}")
+    return {
+        "claim": str(claim),
+        "field_id": str(field_id),
+        "dataset_id": str(field_payload.get("dataset_id") or field_id),
+        "reason_code": REASON_P1_AUXILIARY_MISSING,
+        "reason": reason,
+        "status": "blocked",
+        "severity": "BLOCKING",
+        "source_story": "CR018-S04",
+        "release_condition": "publish explicit P1 auxiliary dataset metadata and repeat CP5/CP6/CP7 gates before allowing this claim",
+        "evidence_ref": str(field_payload.get("evidence_ref") or "explicit_metadata://cr018-p1-missing"),
+    }
+
+
+def _cr018_p1_operation_counters(
+    permission_counters: Mapping[str, Any] | None,
+    p1_availability_metadata: Mapping[str, Any] | None,
+) -> dict[str, int]:
+    counters = dict(CR018_P1_FORBIDDEN_OPERATION_COUNTERS)
+    counters.update(normalise_permission_counters(permission_counters))
+    metadata_counters = {}
+    if isinstance(p1_availability_metadata, Mapping):
+        metadata_counters = dict(p1_availability_metadata.get("permission_counters") or {})
+    for key, value in metadata_counters.items():
+        try:
+            counters[str(key)] = int(value)
+        except (TypeError, ValueError):
+            counters[str(key)] = 1
+    counters["unpublished_lake_scan"] = int(counters.get("unpublished_lake_scan") or 0)
+    return counters
+
+
+def load_production_current_truth_dataset(
+    release_id: str,
+    *,
+    release_metadata: Mapping[str, Any] | Any | None = None,
+    current_truth_metadata: Mapping[str, Any] | Any | None = None,
+    current_reader_result: CurrentReaderSmokeResult | Mapping[str, Any] | Any | None = None,
+    current_reader_metadata: Mapping[str, Any] | Any | None = None,
+    p0_dataset_ids: Sequence[str] | None = None,
+    current_pointers: Mapping[str, Any] | Sequence[Mapping[str, Any]] | None = None,
+    candidate_path: str | Path | None = None,
+    candidate_pointers: Mapping[str, Any] | Sequence[Mapping[str, Any]] | None = None,
+    proxy_input: Mapping[str, Any] | Sequence[Any] | str | None = None,
+    provider_raw_fallback: bool = False,
+    required_missing: Sequence[Mapping[str, Any] | str] | None = None,
+    permission_counters: Mapping[str, Any] | None = None,
+) -> dict[str, Any]:
+    """加载 S08 production current truth dry-run bundle。
+
+    该 loader 只消费 S07 published current reader 结果或显式 current truth
+    metadata。candidate、proxy、provider raw fallback、真实 lake 写入、凭据读取
+    和 QMT 操作都在合同层 fail closed，不读取任何外部路径。
+    """
+
+    normalized_release_id = str(release_id or "").strip()
+    release_payload = _plain_payload(release_metadata)
+    truth_payload = _plain_payload(current_truth_metadata)
+    reader_payload = _cr018_s08_current_reader_payload(
+        normalized_release_id,
+        current_reader_result=current_reader_result,
+        current_reader_metadata=current_reader_metadata,
+        current_pointers=current_pointers,
+        p0_dataset_ids=p0_dataset_ids,
+    )
+    counters = _cr018_s08_operation_counters(permission_counters, reader_payload)
+    blocked_reasons: list[dict[str, Any]] = []
+
+    if not normalized_release_id:
+        blocked_reasons.append(
+            _cr018_s08_blocked_reason(
+                "release_id_missing",
+                "release_id",
+                "production rerun 必须显式绑定 published release_id。",
+            )
+        )
+
+    if (
+        candidate_path
+        or candidate_pointers
+        or _cr018_s08_payload_has_candidate(release_payload)
+        or _cr018_s08_payload_has_candidate(truth_payload)
+        or _cr018_s08_payload_has_candidate(reader_payload)
+    ):
+        blocked_reasons.append(
+            _cr018_s08_blocked_reason(
+                CR018_S08_REASON_CANDIDATE_INPUT_FORBIDDEN,
+                "candidate",
+                "production current truth loader 不允许 candidate path / pointer / metadata 作为输入。",
+            )
+        )
+
+    if proxy_input is not None or _cr018_s08_payload_has_proxy(release_payload) or _cr018_s08_payload_has_proxy(truth_payload):
+        blocked_reasons.append(
+            _cr018_s08_blocked_reason(
+                CR018_S08_REASON_PROXY_INPUT_FORBIDDEN,
+                "proxy",
+                "production rerun 不允许 proxy baseline 作为 production input。",
+            )
+        )
+
+    if (
+        provider_raw_fallback
+        or _cr018_s08_payload_has_provider_raw(release_payload)
+        or _cr018_s08_payload_has_provider_raw(truth_payload)
+        or _cr018_s08_payload_has_provider_raw(reader_payload)
+    ):
+        blocked_reasons.append(
+            _cr018_s08_blocked_reason(
+                CR018_S08_REASON_PROVIDER_FETCH_FORBIDDEN,
+                "provider_raw_fallback",
+                "provider/raw fallback 在 S08 fixture-only rerun 中被禁止。",
+            )
+        )
+
+    if _cr018_s08_payload_explicit_unpublished(release_payload, truth_payload) or not _cr018_s08_is_published_release(
+        normalized_release_id,
+        release_payload,
+        truth_payload,
+    ):
+        blocked_reasons.append(
+            _cr018_s08_blocked_reason(
+                CR018_S08_REASON_CATALOG_NOT_PUBLISHED,
+                "release_metadata",
+                "release 必须已 published，且 catalog current pointer 已发布后才能进入 production rerun。",
+            )
+        )
+
+    if not _cr018_s08_current_reader_is_published_only(reader_payload):
+        blocked_reasons.append(
+            _cr018_s08_blocked_reason(
+                CR018_S08_REASON_CATALOG_NOT_PUBLISHED,
+                "current_reader",
+                "production current truth loader 必须消费 S07 published current pointer reader metadata。",
+            )
+        )
+
+    required_missing_items = _cr018_s08_required_missing_items(
+        required_missing,
+        release_payload,
+        truth_payload,
+        reader_payload,
+    )
+    if required_missing_items:
+        blocked_reasons.append(
+            _cr018_s08_blocked_reason(
+                CR018_S08_REASON_REQUIRED_MISSING,
+                "required_missing",
+                "P0 required_missing 存在时 production rerun 必须 blocked。",
+                {"required_missing": required_missing_items},
+            )
+        )
+
+    for reason_code in _cr018_s08_counter_reason_codes(counters):
+        blocked_reasons.append(
+            _cr018_s08_blocked_reason(
+                reason_code,
+                "operation_counts",
+                "S08 受控离线合同要求真实操作和 forbidden input 计数全部为 0。",
+                {"operation_counts": counters},
+            )
+        )
+
+    deduped_blocked = _dedupe_claim_payloads(blocked_reasons)
+    status = CR018_S08_STATUS_PASS if not deduped_blocked else CR018_S08_STATUS_BLOCKED
+    release_scope = _cr018_s08_first_mapping(
+        "release_scope",
+        "scope",
+        "dataset_scope",
+        payloads=(truth_payload, release_payload),
+    )
+    benchmark = _cr018_s08_first_mapping(
+        "benchmark",
+        "benchmark_policy",
+        "benchmark_readiness",
+        payloads=(truth_payload, release_payload),
+    )
+    pit_universe = _cr018_s08_first_mapping(
+        "pit_universe",
+        "pit",
+        "pit_readiness",
+        payloads=(truth_payload, release_payload),
+    )
+    tradability = _cr018_s08_first_mapping(
+        "tradability",
+        "tradability_readiness",
+        payloads=(truth_payload, release_payload),
+    )
+    adjustment_policy = _cr018_s08_first_value(
+        "adjustment_policy",
+        "research_adjustment_policy",
+        payloads=(truth_payload, release_payload),
+        default="",
+    )
+    blocked_claims = _dedupe_claim_payloads(
+        [
+            *list(truth_payload.get("blocked_claims") or []),
+            *list(release_payload.get("blocked_claims") or []),
+            *deduped_blocked,
+        ]
+    )
+
+    return metadata_to_dict(
+        {
+            "schema_name": CR018_S08_PRODUCTION_CURRENT_TRUTH_SCHEMA,
+            "status": status,
+            "allowed": status == CR018_S08_STATUS_PASS,
+            "allowed_count": 1 if status == CR018_S08_STATUS_PASS else 0,
+            "release_id": normalized_release_id,
+            "release_metadata": release_payload,
+            "current_truth_metadata": truth_payload,
+            "current_reader_metadata": reader_payload,
+            "read_source": "published_current_pointer",
+            "published_current_pointer_only": True,
+            "candidate_fallback_allowed": False,
+            "proxy_input_allowed": False,
+            "provider_raw_fallback_allowed": False,
+            "release_scope": release_scope,
+            "as_of_trade_date": _cr018_s08_first_value(
+                "as_of_trade_date",
+                "coverage_end",
+                "latest_closed_trade_date",
+                payloads=(truth_payload, release_payload),
+                default="",
+            ),
+            "benchmark": benchmark,
+            "pit_universe": pit_universe,
+            "tradability": tradability,
+            "adjustment_policy": adjustment_policy,
+            "required_missing": required_missing_items,
+            "blocked_claims": blocked_claims,
+            "blocked_reasons": deduped_blocked,
+            "operation_counts": counters,
+            **counters,
+        }
+    )
+
+
+def _cr018_s08_current_reader_payload(
+    release_id: str,
+    *,
+    current_reader_result: CurrentReaderSmokeResult | Mapping[str, Any] | Any | None,
+    current_reader_metadata: Mapping[str, Any] | Any | None,
+    current_pointers: Mapping[str, Any] | Sequence[Mapping[str, Any]] | None,
+    p0_dataset_ids: Sequence[str] | None,
+) -> dict[str, Any]:
+    if current_reader_result is not None:
+        if hasattr(current_reader_result, "to_dict"):
+            return dict(current_reader_result.to_dict())
+        return _plain_payload(current_reader_result)
+    if current_reader_metadata is not None:
+        payload = _plain_payload(current_reader_metadata)
+        if "policy_metadata" not in payload:
+            payload = {
+                "status": payload.get("status", payload.get("reader_status", "")),
+                "policy_metadata": payload,
+                **payload,
+            }
+        return payload
+    if current_pointers is not None:
+        return current_reader_smoke(
+            release_id,
+            p0_dataset_ids=p0_dataset_ids,
+            current_pointers=current_pointers,
+        ).to_dict()
+    return {}
+
+
+def _cr018_s08_operation_counters(
+    permission_counters: Mapping[str, Any] | None,
+    current_reader_payload: Mapping[str, Any] | None,
+) -> dict[str, int]:
+    counters = dict(CR018_S08_OPERATION_COUNTERS)
+    for source in (permission_counters or {}, dict((current_reader_payload or {}).get("operation_counts") or {})):
+        for key, value in source.items():
+            normalized = str(key)
+            if normalized in {"real_lake_write", "lake_writes"}:
+                normalized = "lake_write"
+            elif normalized in {"credential_reads"}:
+                normalized = "credential_read"
+            elif normalized in {"provider_fetches"}:
+                normalized = "provider_fetch"
+            elif normalized in {"old_report_overwrites"}:
+                normalized = "old_report_overwrite"
+            elif normalized in {"dependency_change"}:
+                normalized = "duckdb_dependency_change"
+            if normalized in counters:
+                counters[normalized] = _safe_int(value)
+    reader = dict(current_reader_payload or {})
+    counters["candidate_read_count"] = max(
+        counters["candidate_read_count"],
+        _safe_int(reader.get("candidate_read_count")),
+    )
+    counters["proxy_input_allowed_count"] = max(
+        counters["proxy_input_allowed_count"],
+        _safe_int(reader.get("proxy_input_allowed_count")),
+    )
+    return counters
+
+
+def _cr018_s08_counter_reason_codes(counters: Mapping[str, int]) -> list[str]:
+    reason_by_counter = {
+        "old_report_overwrite": CR018_S08_REASON_OLD_REPORT_OVERWRITE_FORBIDDEN,
+        "provider_fetch": CR018_S08_REASON_PROVIDER_FETCH_FORBIDDEN,
+        "lake_write": CR018_S08_REASON_LAKE_WRITE_FORBIDDEN,
+        "credential_read": CR018_S08_REASON_CREDENTIAL_READ_FORBIDDEN,
+        "qmt_operation": CR018_S08_REASON_QMT_OPERATION_FORBIDDEN,
+        "candidate_read_count": CR018_S08_REASON_CANDIDATE_INPUT_FORBIDDEN,
+        "proxy_input_allowed_count": CR018_S08_REASON_PROXY_INPUT_FORBIDDEN,
+        "duckdb_dependency_change": CR018_S08_REASON_DUCKDB_DEPENDENCY_CHANGE_FORBIDDEN,
+    }
+    return [
+        reason
+        for key, reason in reason_by_counter.items()
+        if _safe_int(counters.get(key)) != 0
+    ]
+
+
+def _cr018_s08_is_published_release(
+    release_id: str,
+    release_payload: Mapping[str, Any],
+    truth_payload: Mapping[str, Any],
+) -> bool:
+    for payload in (truth_payload, release_payload):
+        if not payload:
+            continue
+        payload_release_id = str(payload.get("release_id") or payload.get("id") or release_id).strip()
+        if payload_release_id and release_id and payload_release_id != release_id:
+            continue
+        status = str(
+            payload.get("status")
+            or payload.get("release_status")
+            or payload.get("truth_status")
+            or ""
+        ).strip().lower()
+        if bool(payload.get("published")) or status in {"published", "published_current_truth", "pass"}:
+            return True
+    return False
+
+
+def _cr018_s08_payload_explicit_unpublished(*payloads: Mapping[str, Any]) -> bool:
+    for payload in payloads:
+        if not isinstance(payload, Mapping) or not payload:
+            continue
+        if payload.get("published") is False:
+            return True
+        status = str(
+            payload.get("status")
+            or payload.get("release_status")
+            or payload.get("truth_status")
+            or ""
+        ).strip().lower()
+        if status in {"candidate_unpublished", "unpublished", "not_published", "catalog_not_published"}:
+            return True
+    return False
+
+
+def _cr018_s08_current_reader_is_published_only(reader_payload: Mapping[str, Any]) -> bool:
+    if not reader_payload:
+        return False
+    status = str(reader_payload.get("status") or "").strip().lower()
+    policy = dict(reader_payload.get("policy_metadata") or {})
+    read_source = str(policy.get("read_source") or reader_payload.get("read_source") or "").strip()
+    return (
+        status == "pass"
+        and read_source == "published_current_pointer"
+        and bool(policy.get("published_current_pointer_only", reader_payload.get("published_current_pointer_only", False)))
+        and not bool(policy.get("candidate_fallback_allowed", reader_payload.get("candidate_fallback_allowed", True)))
+    )
+
+
+def _cr018_s08_required_missing_items(
+    explicit_missing: Sequence[Mapping[str, Any] | str] | None,
+    *payloads: Mapping[str, Any],
+) -> list[dict[str, Any]]:
+    items: list[dict[str, Any]] = []
+    for item in explicit_missing or ():
+        if isinstance(item, Mapping):
+            items.append(dict(item))
+        elif str(item).strip():
+            items.append({"reason_code": CR018_S08_REASON_REQUIRED_MISSING, "field": str(item)})
+    for payload in payloads:
+        if not isinstance(payload, Mapping):
+            continue
+        for item in payload.get("required_missing") or ():
+            if isinstance(item, Mapping):
+                items.append(dict(item))
+            elif str(item).strip():
+                items.append({"reason_code": CR018_S08_REASON_REQUIRED_MISSING, "field": str(item)})
+        if _safe_int(payload.get("p0_required_missing_count")) > 0:
+            items.append(
+                {
+                    "reason_code": CR018_S08_REASON_REQUIRED_MISSING,
+                    "field": "p0_required_missing_count",
+                    "count": _safe_int(payload.get("p0_required_missing_count")),
+                }
+            )
+        readiness_status = str(payload.get("readiness_status") or payload.get("p0_readiness_status") or "").lower()
+        if readiness_status == CR018_S08_REASON_REQUIRED_MISSING:
+            items.append(
+                {
+                    "reason_code": CR018_S08_REASON_REQUIRED_MISSING,
+                    "field": "readiness_status",
+                    "status": readiness_status,
+                }
+            )
+    return _dedupe_claim_payloads(items)
+
+
+def _cr018_s08_payload_has_candidate(value: Any) -> bool:
+    return _cr018_s08_payload_has_marker(
+        value,
+        keys={"candidate_path", "candidate_paths", "candidate_pointer", "candidate_pointers", "candidate_ref"},
+        text_markers=("candidate://", "fixture://candidate", "/candidate/", "candidate_unpublished"),
+    )
+
+
+def _cr018_s08_payload_has_proxy(value: Any) -> bool:
+    return _cr018_s08_payload_has_marker(
+        value,
+        keys={"proxy_input", "proxy_baseline", "proxy_path", "proxy_ref"},
+        text_markers=("proxy://", "proxy_baseline", "proxy_input", "benchmark_proxy"),
+    )
+
+
+def _cr018_s08_payload_has_provider_raw(value: Any) -> bool:
+    return _cr018_s08_payload_has_marker(
+        value,
+        keys={"provider_raw_path", "provider_raw_fallback", "raw_provider_fallback", "provider_fetch"},
+        text_markers=("provider_raw://", "raw_provider", "provider_fallback"),
+    )
+
+
+def _cr018_s08_payload_has_marker(
+    value: Any,
+    *,
+    keys: set[str],
+    text_markers: tuple[str, ...],
+) -> bool:
+    if isinstance(value, Mapping):
+        for raw_key, raw_value in value.items():
+            key = str(raw_key).strip().lower()
+            if key in keys and bool(raw_value):
+                return True
+            if _cr018_s08_payload_has_marker(raw_value, keys=keys, text_markers=text_markers):
+                return True
+        return False
+    if isinstance(value, Sequence) and not isinstance(value, (str, bytes)):
+        return any(_cr018_s08_payload_has_marker(item, keys=keys, text_markers=text_markers) for item in value)
+    if isinstance(value, (str, Path)):
+        text = str(value).strip().lower()
+        return any(marker in text for marker in text_markers)
+    return False
+
+
+def _cr018_s08_first_mapping(
+    *keys: str,
+    payloads: Sequence[Mapping[str, Any]],
+) -> dict[str, Any]:
+    for payload in payloads:
+        for key in keys:
+            value = payload.get(key) if isinstance(payload, Mapping) else None
+            if isinstance(value, Mapping):
+                return _json_safe(dict(value))
+    return {}
+
+
+def _cr018_s08_first_value(
+    *keys: str,
+    payloads: Sequence[Mapping[str, Any]],
+    default: Any = "",
+) -> Any:
+    for payload in payloads:
+        for key in keys:
+            value = payload.get(key) if isinstance(payload, Mapping) else None
+            if value not in (None, "", [], {}):
+                return _json_safe(value)
+    return default
+
+
+def _cr018_s08_blocked_reason(
+    reason_code: str,
+    field: str,
+    message: str,
+    details: Mapping[str, Any] | None = None,
+) -> dict[str, Any]:
+    return {
+        "reason_code": str(reason_code),
+        "field": str(field),
+        "status": CR018_S08_STATUS_BLOCKED,
+        "message": str(message),
+        "severity": "BLOCKING",
+        "source_story": "CR018-S08",
+        "details": _json_safe(dict(details or {})),
+    }
+
+
+def build_consumer_guidance_matrix() -> dict[str, dict[str, Any]]:
+    """构建 CR017-S06 consumer guidance matrix，不执行任何外部操作。"""
+
+    rows = (
+        ConsumerGuidance(
+            consumer_type="chart",
+            recommended_policy="qfq",
+            allowed_policies=("qfq", "raw"),
+            blocked_policies=(),
+            purpose="Price charts may display qfq when the chart labels the adjustment policy explicitly.",
+            allowed_claims=("chart_qfq_display",),
+        ),
+        ConsumerGuidance(
+            consumer_type="long_horizon_research",
+            recommended_policy="hfq_or_returns_adjusted",
+            allowed_policies=("hfq", "returns_adjusted", "qfq"),
+            blocked_policies=("raw_execution_claim",),
+            purpose="Long-horizon research should prefer hfq price continuity or returns_adjusted return series.",
+            allowed_claims=("long_horizon_adjusted_research",),
+        ),
+        ConsumerGuidance(
+            consumer_type="factor_research",
+            recommended_policy="returns_adjusted",
+            allowed_policies=("returns_adjusted", "qfq", "hfq"),
+            blocked_policies=("mixed_policy_in_one_run",),
+            purpose="Factor research should use returns_adjusted by default and keep one policy per run.",
+            allowed_claims=("factor_research_adjustment_metadata",),
+        ),
+        ConsumerGuidance(
+            consumer_type="qmt_order_intent",
+            recommended_policy=CR017_EXECUTION_RAW_POLICY,
+            allowed_policies=(CR017_EXECUTION_RAW_POLICY,),
+            blocked_policies=CR017_NON_RAW_EXECUTION_POLICIES,
+            purpose="QMT order intent may carry research metadata, but execution price must stay raw / broker reference.",
+            execution_price_policy=CR017_EXECUTION_RAW_POLICY,
+            blocked_claims=(
+                {
+                    "claim": "qmt_execution_non_raw_policy",
+                    "reason_code": "execution_requires_raw",
+                    "blocked_policies": list(CR017_NON_RAW_EXECUTION_POLICIES),
+                    "release_condition": "No release inside CR017-S06; execution remains raw / broker reference only.",
+                    "severity": "BLOCKING",
+                },
+            ),
+            non_raw_execution_allowed_count=0,
+            adjusted_execution_price_pass_count=0,
+        ),
+    )
+    return {row.consumer_type: row.to_dict() for row in rows}
+
+
+def build_adjustment_blocked_claims(
+    cr017_status: str = "not_verified",
+    stage: str = "research",
+    *,
+    allow_production_claim_after_verified: bool = False,
+    allow_scale_up_after_verified: bool = False,
+) -> dict[str, Any]:
+    """构建 CR017 production governance / scale_up blocked claims。
+
+    verified 只表示 CR017 证据可进入后续 gate；生产治理完成声明和 scale_up
+    默认仍不自动放行，必须由后续 Story / CP gate 显式授权。
+    """
+
+    normalized_status = _normalize_cr017_status(cr017_status)
+    normalized_stage = str(stage or "research").strip() or "research"
+    verified = _cr017_status_verified(normalized_status)
+    production_allowed = bool(verified and allow_production_claim_after_verified)
+    scale_up_allowed = bool(verified and allow_scale_up_after_verified)
+    blocked: list[dict[str, Any]] = []
+    if not production_allowed:
+        blocked.append(
+            {
+                "claim": "production_adjustment_governance",
+                "reason_code": "cr017_not_verified" if not verified else "production_claim_requires_downstream_gate",
+                "stage": normalized_stage,
+                "release_condition": "CR017 S01-S06 CP7 PASS plus explicit downstream production governance gate.",
+                "severity": "BLOCKING",
+            }
+        )
+    if not scale_up_allowed:
+        blocked.append(
+            {
+                "claim": "scale_up",
+                "reason_code": "cr017_not_verified" if not verified else "scale_up_requires_cr016_gate",
+                "stage": normalized_stage,
+                "release_condition": "CR017 verified plus CR016 scale_up gate and explicit user authorization.",
+                "severity": "BLOCKING",
+            }
+        )
+    allowed = []
+    if production_allowed:
+        allowed.append("production_adjustment_governance")
+    if scale_up_allowed:
+        allowed.append("scale_up")
+
+    status = "allowed_by_explicit_downstream_gate" if production_allowed or scale_up_allowed else "blocked_until_verified_and_gated"
+    result = AdjustmentGovernanceStatus(
+        cr017_status=normalized_status,
+        stage=normalized_stage,
+        cr017_verified=verified,
+        adjustment_governance_status=status,
+        allowed_claims=tuple(allowed),
+        blocked_claims=tuple(blocked),
+        production_adjustment_governance_claim_allowed_count=1 if production_allowed else 0,
+        scale_up_allowed_count=1 if scale_up_allowed else 0,
+        release_conditions=(
+            "CR017-S06 is not itself CR017 verification.",
+            "CR017未 verified 时 production adjustment governance claim allowed count 必须为 0。",
+            "CR017未 verified 时 scale_up allowed count 必须为 0。",
+            "真实 QMT、真实发单、撤单、账户查询、真实抓取、真实写湖和 publish 不在本 Story 授权范围内。",
+        ),
+        operation_counts=dict(CR017_CONSUMER_FORBIDDEN_COUNTERS),
+    )
+    return result.to_dict()
+
+
+def research_dataset_policy_metadata(
+    cr017_status: str = "not_verified",
+    stage: str = "research",
+    *,
+    research_adjustment_policy: str = "qfq",
+) -> dict[str, Any]:
+    """输出 CR017-S06 consumer / governance metadata，供文档和后续 gate 消费。"""
+
+    consumer_matrix = build_consumer_guidance_matrix()
+    governance = build_adjustment_blocked_claims(cr017_status=cr017_status, stage=stage)
+    qmt_guidance = consumer_matrix["qmt_order_intent"]
+    blocked_claims = _dedupe_claim_payloads(
+        [
+            *list(governance.get("blocked_claims") or []),
+            *list(qmt_guidance.get("blocked_claims") or []),
+        ]
+    )
+    allowed_claims = [
+        claim
+        for claim in _ordered_unique(
+            [
+                "chart_qfq_display",
+                "long_horizon_adjusted_research",
+                "factor_research_adjustment_metadata",
+                *list(governance.get("allowed_claims") or []),
+            ]
+        )
+        if claim not in _blocked_claim_names(blocked_claims)
+    ]
+    return metadata_to_dict(
+        {
+            "schema_name": "cr017_research_qmt_consumer_boundary_v1",
+            "research_adjustment_policy": str(research_adjustment_policy or "qfq"),
+            "allowed_research_adjustment_policies": ["qfq", "hfq", "returns_adjusted"],
+            "execution_price_policy": CR017_EXECUTION_RAW_POLICY,
+            "qmt_execution_raw_only": True,
+            "qmt_non_raw_execution_allowed_count": int(qmt_guidance["non_raw_execution_allowed_count"]),
+            "adjusted_execution_price_pass_count": int(qmt_guidance["adjusted_execution_price_pass_count"]),
+            "consumer_guidance_matrix": consumer_matrix,
+            "adjustment_governance_status": governance["adjustment_governance_status"],
+            "cr017_verified": governance["cr017_verified"],
+            "production_adjustment_governance_claim_allowed_count": int(
+                governance["production_adjustment_governance_claim_allowed_count"]
+            ),
+            "scale_up_allowed_count": int(governance["scale_up_allowed_count"]),
+            "allowed_claims": allowed_claims,
+            "blocked_claims": blocked_claims,
+            "migration_contract": {
+                "legacy_qfq_baseline_preserved": True,
+                "legacy_qfq_compatibility_entry": "legacy_qfq_readonly",
+                "old_report_overwrite_allowed": False,
+                "new_prices_qfq_replaces_legacy_qfq": False,
+            },
+            "unsupported_execution_features": list(CR017_UNSUPPORTED_EXECUTION_FEATURES),
+            "unsupported_execution_feature_allowed_count": 0,
+            "operation_counts": dict(CR017_CONSUMER_FORBIDDEN_COUNTERS),
+        }
+    )
+
+
+def render_migration_guide_sections() -> dict[str, str]:
+    """渲染 CR017-S06 文档片段，供离线文档测试复核。"""
+
+    matrix = build_consumer_guidance_matrix()
+    metadata = research_dataset_policy_metadata(cr017_status="not_verified", stage="scale_up")
+    matrix_lines = [
+        "## Consumer Guidance Matrix",
+        "",
+        "| Consumer | Recommended policy | Allowed policies | Execution policy | Blocked policies |",
+        "|---|---|---|---|---|",
+    ]
+    for consumer_type in CR017_CONSUMER_TYPES:
+        row = matrix[consumer_type]
+        matrix_lines.append(
+            "| {consumer} | `{recommended}` | `{allowed}` | `{execution}` | `{blocked}` |".format(
+                consumer=row["consumer_type"],
+                recommended=row["recommended_policy"],
+                allowed=", ".join(row["allowed_policies"]),
+                execution=row["execution_price_policy"] or "N/A",
+                blocked=", ".join(row["blocked_policies"]) or "none",
+            )
+        )
+    governance_lines = [
+        "## Governance And Scale-Up Boundary",
+        "",
+        f"- QMT execution raw-only: `{str(metadata['qmt_execution_raw_only']).lower()}`.",
+        f"- Non-raw execution allowed count: `{metadata['qmt_non_raw_execution_allowed_count']}`.",
+        "- Production adjustment governance claim allowed count before CR017 verified: "
+        f"`{metadata['production_adjustment_governance_claim_allowed_count']}`.",
+        f"- Scale_up allowed count before CR017 verified: `{metadata['scale_up_allowed_count']}`.",
+    ]
+    unsupported_lines = [
+        "## Unsupported Execution Features",
+        "",
+        "| Feature | Status |",
+        "|---|---|",
+        *[f"| `{feature}` | unsupported / blocked |" for feature in CR017_UNSUPPORTED_EXECUTION_FEATURES],
+    ]
+    legacy_lines = [
+        "## Legacy QFQ Preservation",
+        "",
+        "- Legacy qfq remains `legacy_qfq_readonly`.",
+        "- Old reports overwrite allowed: `false`.",
+        "- New `prices_qfq` does not replace or overwrite legacy qfq evidence.",
+    ]
+    return {
+        "consumer_guidance": "\n".join(matrix_lines),
+        "governance": "\n".join(governance_lines),
+        "unsupported_execution_features": "\n".join(unsupported_lines),
+        "legacy_qfq": "\n".join(legacy_lines),
+    }
+
+
+def _normalize_cr017_status(status: str) -> str:
+    return str(status or "not_verified").strip().lower().replace(" ", "_").replace("-", "_")
+
+
+def _cr017_status_verified(status: str) -> bool:
+    return _normalize_cr017_status(status) in {"verified", "cp7_pass", "pass_verified"}
 
 
 def _coerce_research_consumer_request(request: ResearchConsumerRequest | Mapping[str, Any]) -> ResearchConsumerRequest:
@@ -3784,19 +4767,28 @@ def extract_adjustment_policies(
     sources: list[str] = []
     if prices is not None:
         row_count = int(len(prices))
-        if "adjustment_policy" in prices.columns:
-            series = prices["adjustment_policy"]
-            text_values = series.dropna().astype(str).str.strip()
-            values.update(item for item in text_values.tolist() if item)
-            missing_sample_count = int(series.isna().sum() + (series.astype(str).str.strip() == "").sum())
-            sources.append("prices.adjustment_policy")
+        policy_columns = [
+            column
+            for column in ("research_adjustment_policy", "adjustment_policy", "policy")
+            if column in prices.columns
+        ]
+        if policy_columns:
+            has_policy = pd.Series(False, index=prices.index)
+            for column in policy_columns:
+                series = prices[column]
+                text_values = series.fillna("").astype(str).str.strip()
+                values.update(item for item in text_values.tolist() if item)
+                has_policy = has_policy | text_values.ne("")
+                sources.append(f"prices.{column}")
+            missing_sample_count = int((~has_policy).sum())
         else:
             missing_sample_count = int(len(prices))
 
-        attr_policy = _normalize_policy_value(prices.attrs.get("adjustment_policy"))
-        if attr_policy:
-            values.add(attr_policy)
-            sources.append("prices.attrs.adjustment_policy")
+        for attr_name in ("research_adjustment_policy", "adjustment_policy", "policy"):
+            attr_policy = _normalize_policy_value(prices.attrs.get(attr_name))
+            if attr_policy:
+                values.add(attr_policy)
+                sources.append(f"prices.attrs.{attr_name}")
 
     metadata_values = _adjustment_values_from_metadata(metadata)
     if metadata_values:
@@ -3875,6 +4867,16 @@ def evaluate_adjustment_gate(
         "sources": extracted["sources"],
         "adjustment_status": "available" if status == "pass" else "failed",
     }
+    policy_gate_input: Mapping[str, Any] | pd.DataFrame | None = metadata
+    if prices is not None:
+        policy_gate_input = prices.copy(deep=False)
+        if metadata:
+            policy_gate_input.attrs.update(metadata_to_dict(metadata))
+    policy_gate = single_policy_gate(policy_gate_input, requested)
+    metadata_payload["single_policy_gate_status"] = (
+        "pass" if status == "pass" and policy_gate.passed else "blocked"
+    )
+    metadata_payload["single_policy_gate_reason"] = "" if status == "pass" else code
     return {
         "check": _gate_check(
             "adjustment_gate",
@@ -5241,6 +6243,12 @@ def _merge_s04_metadata(
         or adjustment.get("request_policy")
         or metadata.get("adjustment_policy")
     )
+    metadata["policy"] = metadata["adjustment_policy"]
+    metadata["research_adjustment_policy"] = metadata["adjustment_policy"]
+    metadata["single_policy_gate_status"] = adjustment.get(
+        "single_policy_gate_status",
+        metadata.get("single_policy_gate_status", "blocked"),
+    )
     metadata["label_window"] = {**dict(metadata.get("label_window") or {}), **dict(label_window)}
     if "label_available_end" in label_window:
         metadata["label_available_end"] = label_window.get("label_available_end")
@@ -5291,13 +6299,17 @@ def _adjustment_values_from_metadata(metadata: Mapping[str, Any] | None) -> set[
     adjustment = metadata.get("adjustment")
     values: set[str] = set()
     if isinstance(adjustment, Mapping):
-        for key in ("adjustment_policy", "policy", "data_adjustment_policy"):
+        for key in ("research_adjustment_policy", "adjustment_policy", "policy", "data_adjustment_policy"):
             value = _normalize_policy_value(adjustment.get(key))
             if value:
                 values.add(value)
         raw_seen = adjustment.get("policies_seen")
         if isinstance(raw_seen, Sequence) and not isinstance(raw_seen, (str, bytes)):
             values.update(value for value in (_normalize_policy_value(item) for item in raw_seen) if value)
+    for key in ("research_adjustment_policy", "adjustment_policy", "policy", "data_adjustment_policy"):
+        value = _normalize_policy_value(metadata.get(key))
+        if value:
+            values.add(value)
     return values
 
 
@@ -5305,13 +6317,13 @@ def _adjustment_values_from_catalog_entry(entry: Any) -> set[str]:
     if entry is None:
         return set()
     values: set[str] = set()
-    for key in ("adjustment_policy", "policy", "data_adjustment_policy"):
+    for key in ("research_adjustment_policy", "adjustment_policy", "policy", "data_adjustment_policy"):
         value = _normalize_policy_value(getattr(entry, key, None))
         if value:
             values.add(value)
     coverage = getattr(entry, "coverage", None)
     if isinstance(coverage, Mapping):
-        for key in ("adjustment_policy", "policy", "data_adjustment_policy"):
+        for key in ("research_adjustment_policy", "adjustment_policy", "policy", "data_adjustment_policy"):
             value = _normalize_policy_value(coverage.get(key))
             if value:
                 values.add(value)
@@ -6939,9 +7951,11 @@ def _json_safe(value: Any, key: str = "") -> Any:
 
 __all__ = (
     "AdjustmentAuditResult",
+    "AdjustmentGovernanceStatus",
     "AllowedClaimsResult",
     "AuxiliaryAvailabilityEntry",
     "AuxiliaryAvailabilityMatrix",
+    "ConsumerGuidance",
     "ExecutionPolicyRequest",
     "ExecutionPolicyResult",
     "ExposureAvailabilityEntry",
@@ -6951,6 +7965,19 @@ __all__ = (
     "LEGACY_REPORT_POLICY",
     "CR013_PERMISSION_COUNTERS",
     "CR014_RESEARCH_CONSUMER_FORBIDDEN_COUNTERS",
+    "CR017_CONSUMER_FORBIDDEN_COUNTERS",
+    "CR017_UNSUPPORTED_EXECUTION_FEATURES",
+    "CR018_P1_CLAIM_ALLOWED_COUNT_FIELDS",
+    "CR018_P1_FIELD_REQUIREMENTS_BY_CLAIM",
+    "CR018_P1_FORBIDDEN_OPERATION_COUNTERS",
+    "CR018_S08_OPERATION_COUNTERS",
+    "CR018_S08_PRODUCTION_CURRENT_TRUTH_SCHEMA",
+    "CR018_S08_REASON_CANDIDATE_INPUT_FORBIDDEN",
+    "CR018_S08_REASON_CATALOG_NOT_PUBLISHED",
+    "CR018_S08_REASON_PROXY_INPUT_FORBIDDEN",
+    "CR018_S08_REASON_REQUIRED_MISSING",
+    "CR018_S08_STATUS_BLOCKED",
+    "CR018_S08_STATUS_PASS",
     "DuckDbEvidenceRef",
     "NeutralizationClaimGateResult",
     "RESEARCH_INPUT_REQUIRED_FIELDS",
@@ -6975,10 +8002,12 @@ __all__ = (
     "assert_no_derived_real_vwap_claim",
     "benchmark_metadata_from_result",
     "build_auxiliary_availability",
+    "build_cr018_p1_claim_boundary",
     "build_exposure_availability_matrix",
     "build_liquidity_capacity_inputs",
     "build_research_dataset",
     "build_research_dataset_from_published_truth",
+    "load_production_current_truth_dataset",
     "build_research_input_metadata",
     "build_tradability_gate_matrix",
     "evaluate_adjustment_gate",
@@ -7002,5 +8031,9 @@ __all__ = (
     "resolve_execution_claim_boundary",
     "resolve_execution_price_policy",
     "assert_research_consumer_forbidden_operations",
+    "build_adjustment_blocked_claims",
     "validate_research_input_metadata",
+    "build_consumer_guidance_matrix",
+    "render_migration_guide_sections",
+    "research_dataset_policy_metadata",
 )

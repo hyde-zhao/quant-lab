@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
-from dataclasses import asdict, dataclass, field, fields
+from dataclasses import asdict, dataclass, field, fields, is_dataclass
+from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, Mapping, Sequence
 
 from .contracts import (
     DATASET_ADJ_FACTOR,
@@ -136,6 +138,111 @@ class ReadOnlyPathValidationResult:
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
+
+
+CR018_ROLLBACK_SCOPE_RELEASE = "release"
+CR018_ROLLBACK_SCOPE_DATASET = "dataset"
+CR018_ROLLBACK_DATASET_ONLY_BLOCKED = "dataset_only_rollback_blocked"
+CR018_ROLLBACK_TARGET_REQUIRED = "release_rollback_target_required"
+CR018_ROLLBACK_PERMISSION_COUNTER_VIOLATION = "rollback_permission_counter_violation"
+CR018_ROLLBACK_OPERATION_COUNTERS: dict[str, int] = {
+    "provider_fetch": 0,
+    "lake_write": 0,
+    "real_lake_write": 0,
+    "credential_read": 0,
+    "current_pointer_publish": 0,
+    "catalog_current_pointer_publish": 0,
+    "qmt_operation": 0,
+    "duckdb_dependency_change": 0,
+}
+CR018_ROLLBACK_HISTORICAL_EVIDENCE_DELETE_COUNTS: dict[str, int] = {
+    "raw": 0,
+    "manifest": 0,
+    "candidate": 0,
+    "quality": 0,
+    "release_history": 0,
+}
+CR018_CURRENT_POINTER_PLAN_SCHEMA = "cr018.current_pointer_update_plan.v1"
+CR018_PUBLISH_EVIDENCE_SCHEMA = "cr018.publish_evidence.v1"
+CR018_CURRENT_POINTER_PLAN_PLANNED = "planned"
+CR018_CURRENT_POINTER_PLAN_BLOCKED = "blocked"
+
+
+@dataclass(frozen=True, slots=True)
+class ReleaseRollbackContractResult:
+    allowed: bool
+    scope: str
+    from_release: str
+    to_release: str
+    rollback_target: dict[str, Any]
+    event: dict[str, Any]
+    error_codes: tuple[str, ...] = ()
+    details: tuple[dict[str, Any], ...] = ()
+    dataset_level_rollback_only_allowed_count: int = 0
+    current_pointer_publish_count: int = 0
+    historical_evidence_delete_counts: dict[str, int] = field(
+        default_factory=lambda: dict(CR018_ROLLBACK_HISTORICAL_EVIDENCE_DELETE_COUNTS)
+    )
+    operation_counts: dict[str, int] = field(default_factory=lambda: dict(CR018_ROLLBACK_OPERATION_COUNTERS))
+
+    def to_dict(self) -> dict[str, Any]:
+        return asdict(self)
+
+
+@dataclass(frozen=True, slots=True)
+class CurrentPointerUpdatePlan:
+    """CR018 release-level current pointer 更新计划；不执行真实 publish。"""
+
+    status: str
+    release_id: str
+    pointer_updates: tuple[dict[str, Any], ...] = ()
+    blocked_reasons: tuple[dict[str, Any], ...] = ()
+    current_pointer_update_planned_count: int = 0
+    current_pointer_publish_count: int = 0
+    catalog_current_pointer_publish_count: int = 0
+    operation_counts: dict[str, int] = field(default_factory=lambda: dict(CR018_ROLLBACK_OPERATION_COUNTERS))
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "schema_name": CR018_CURRENT_POINTER_PLAN_SCHEMA,
+            "status": self.status,
+            "release_id": self.release_id,
+            "pointer_updates": [dict(item) for item in self.pointer_updates],
+            "blocked_reasons": [dict(item) for item in self.blocked_reasons],
+            "current_pointer_update_planned_count": self.current_pointer_update_planned_count,
+            "current_pointer_publish_count": self.current_pointer_publish_count,
+            "catalog_current_pointer_publish_count": self.catalog_current_pointer_publish_count,
+            "operation_counts": dict(self.operation_counts),
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class PublishEvidenceRecord:
+    """CR018 release publish evidence；只承载可审计 metadata。"""
+
+    release_id: str
+    release_summary: dict[str, Any]
+    dataset_details: tuple[dict[str, Any], ...]
+    quality_digest: dict[str, Any]
+    readiness_digest: dict[str, Any]
+    rollback_target: dict[str, Any]
+    approval: dict[str, Any]
+    checksum: str
+    operation_counts: dict[str, int] = field(default_factory=lambda: dict(CR018_ROLLBACK_OPERATION_COUNTERS))
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "schema_name": CR018_PUBLISH_EVIDENCE_SCHEMA,
+            "release_id": self.release_id,
+            "release_summary": dict(self.release_summary),
+            "dataset_details": [dict(item) for item in self.dataset_details],
+            "quality_digest": dict(self.quality_digest),
+            "readiness_digest": dict(self.readiness_digest),
+            "rollback_target": dict(self.rollback_target),
+            "approval": dict(self.approval),
+            "checksum": self.checksum,
+            "operation_counts": dict(self.operation_counts),
+        }
 
 
 def _missing_pointer_value(value: Any) -> bool:
@@ -628,23 +735,299 @@ def build_production_readiness_report(
     }
 
 
+def _cr018_metadata_payload(value: Any) -> dict[str, Any]:
+    if value is None:
+        return {}
+    to_dict = getattr(value, "to_dict", None)
+    if callable(to_dict):
+        return dict(to_dict())
+    if is_dataclass(value):
+        return asdict(value)
+    if isinstance(value, dict):
+        return dict(value)
+    raise CatalogError(f"CR018 metadata 不是 JSON-ready mapping: {type(value).__name__}")
+
+
+def build_cr018_release_contract_metadata(
+    *,
+    release_scope_summary: Any,
+    dataset_group_summary: Any,
+    base_metadata: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """构造 CR018 S01 只读 metadata；不写 catalog，不 publish current pointer。"""
+
+    metadata = dict(base_metadata or {})
+    metadata["cr018_release_scope"] = _cr018_metadata_payload(release_scope_summary)
+    metadata["cr018_dataset_group_summary"] = _cr018_metadata_payload(dataset_group_summary)
+    metadata["current_pointer_publish_allowed"] = False
+    metadata["current_pointer_publish_count"] = 0
+    return metadata
+
+
+def build_cr018_release_rollback_contract(
+    from_release: str,
+    to_release: str | None = None,
+    *,
+    previous_release_id: str | None = None,
+    scope: str = CR018_ROLLBACK_SCOPE_RELEASE,
+    dataset_id: str | None = None,
+    reason: str = "",
+    operator: str = "",
+    event_time: str | None = None,
+    smoke_result: Mapping[str, Any] | None = None,
+    evidence_refs: Mapping[str, Any] | Sequence[str] | None = None,
+    permission_counters: Mapping[str, Any] | None = None,
+) -> ReleaseRollbackContractResult:
+    """构造 release-level rollback 合同；dataset-only rollback 一律 fail-closed。"""
+
+    source_release = str(from_release or "")
+    target_release = str(to_release or previous_release_id or "")
+    scope_text = str(scope or "").strip().lower() or CR018_ROLLBACK_SCOPE_RELEASE
+    counters = _cr018_rollback_operation_counts(permission_counters)
+    error_codes: list[str] = []
+    details: list[dict[str, Any]] = []
+
+    if scope_text != CR018_ROLLBACK_SCOPE_RELEASE or dataset_id:
+        error_codes.append(CR018_ROLLBACK_DATASET_ONLY_BLOCKED)
+        details.append(
+            {
+                "code": CR018_ROLLBACK_DATASET_ONLY_BLOCKED,
+                "scope": scope_text,
+                "dataset_id": str(dataset_id or ""),
+                "reason": "rollback contract 必须以 release 为单位，禁止 dataset-only rollback",
+            }
+        )
+    if not source_release.strip() or not target_release.strip():
+        error_codes.append(CR018_ROLLBACK_TARGET_REQUIRED)
+        details.append(
+            {
+                "code": CR018_ROLLBACK_TARGET_REQUIRED,
+                "from_release": source_release,
+                "to_release": target_release,
+            }
+        )
+    if any(value != 0 for value in counters.values()):
+        error_codes.append(CR018_ROLLBACK_PERMISSION_COUNTER_VIOLATION)
+        details.append(
+            {
+                "code": CR018_ROLLBACK_PERMISSION_COUNTER_VIOLATION,
+                "operation_counts": dict(counters),
+            }
+        )
+
+    refs = _cr018_rollback_evidence_refs(evidence_refs)
+    allowed = not error_codes
+    event = {
+        "event_type": "release_rollback_contract",
+        "status": "candidate_allowed" if allowed else "blocked",
+        "scope": CR018_ROLLBACK_SCOPE_RELEASE if allowed else scope_text,
+        "from_release": source_release,
+        "to_release": target_release,
+        "reason": str(reason or ""),
+        "operator": str(operator or ""),
+        "event_time": event_time or datetime.now(timezone.utc).isoformat(),
+        "smoke_result": dict(smoke_result or {"status": "not_executed", "dry_run": True}),
+        "evidence_refs": refs,
+        "current_pointer_publish_count": 0,
+    }
+    rollback_target = {
+        "scope": CR018_ROLLBACK_SCOPE_RELEASE,
+        "from_release": source_release,
+        "to_release": target_release,
+        "release_level": allowed,
+        "dataset_only_rollback_allowed": False,
+        "dataset_level_rollback_only_allowed_count": 0,
+        "evidence_refs": refs,
+    }
+    return ReleaseRollbackContractResult(
+        allowed=allowed,
+        scope=scope_text,
+        from_release=source_release,
+        to_release=target_release,
+        rollback_target=rollback_target,
+        event=event,
+        error_codes=tuple(dict.fromkeys(error_codes)),
+        details=tuple(details),
+        operation_counts=counters,
+    )
+
+
+def build_cr018_current_pointer_update_plan(
+    release_id: str,
+    dataset_details: Sequence[Mapping[str, Any]] | None = None,
+    *,
+    rollback_target: Mapping[str, Any] | None = None,
+    blocked_reasons: Sequence[Mapping[str, Any]] | None = None,
+    permission_counters: Mapping[str, Any] | None = None,
+) -> CurrentPointerUpdatePlan:
+    """构造 release-level current pointer 更新计划；只返回计划，不写 catalog。"""
+
+    counters = _cr018_rollback_operation_counts(permission_counters)
+    reasons = tuple(dict(item) for item in blocked_reasons or ())
+    datasets = _cr018_pointer_dataset_details(dataset_details)
+    rollback_payload = dict(rollback_target or {})
+    target_release = str(
+        rollback_payload.get("target_release_id")
+        or rollback_payload.get("to_release")
+        or rollback_payload.get("previous_release_id")
+        or rollback_payload.get("rollback_target")
+        or ""
+    )
+    if reasons or not target_release.strip() or any(value != 0 for value in counters.values()):
+        return CurrentPointerUpdatePlan(
+            status=CR018_CURRENT_POINTER_PLAN_BLOCKED,
+            release_id=str(release_id),
+            blocked_reasons=reasons,
+            operation_counts=counters,
+        )
+
+    updates = tuple(
+        {
+            "release_id": str(release_id),
+            "dataset_id": str(row.get("dataset_id") or row.get("dataset") or row.get("view_id") or ""),
+            "pointer_action": "plan_current_pointer_update",
+            "release_level": True,
+            "published_current_pointer_only": True,
+            "real_publish_executed": False,
+            "current_pointer_publish_count": 0,
+            "catalog_current_pointer_publish_count": 0,
+            "rollback_target_release_id": target_release,
+            **(
+                {"lineage_checksum": row.get("lineage_checksum")}
+                if _cr018_catalog_non_empty(row.get("lineage_checksum"))
+                else {}
+            ),
+        }
+        for row in datasets
+    )
+    return CurrentPointerUpdatePlan(
+        status=CR018_CURRENT_POINTER_PLAN_PLANNED,
+        release_id=str(release_id),
+        pointer_updates=updates,
+        current_pointer_update_planned_count=len(updates),
+        current_pointer_publish_count=0,
+        catalog_current_pointer_publish_count=0,
+        operation_counts=counters,
+    )
+
+
+def build_cr018_publish_evidence_record(
+    release_id: str,
+    *,
+    release_summary: Mapping[str, Any] | None = None,
+    dataset_details: Sequence[Mapping[str, Any]] | None = None,
+    quality_digest: Mapping[str, Any] | None = None,
+    readiness_digest: Mapping[str, Any] | None = None,
+    rollback_target: Mapping[str, Any] | None = None,
+    approval: Mapping[str, Any] | None = None,
+    checksum: str | None = None,
+    permission_counters: Mapping[str, Any] | None = None,
+) -> PublishEvidenceRecord:
+    """构造 CR018 publish evidence record；fixture-only，不写真实 release history。"""
+
+    counters = _cr018_rollback_operation_counts(permission_counters)
+    summary = dict(release_summary or {"release_id": str(release_id)})
+    datasets = _cr018_pointer_dataset_details(dataset_details)
+    quality = dict(quality_digest or {})
+    readiness = dict(readiness_digest or {})
+    rollback = dict(rollback_target or {})
+    approval_payload = dict(approval or {})
+    checksum_payload = {
+        "release_id": str(release_id),
+        "release_summary": summary,
+        "dataset_details": datasets,
+        "quality_digest": quality,
+        "readiness_digest": readiness,
+        "rollback_target": rollback,
+        "approval": approval_payload,
+    }
+    return PublishEvidenceRecord(
+        release_id=str(release_id),
+        release_summary=summary,
+        dataset_details=tuple(datasets),
+        quality_digest=quality,
+        readiness_digest=readiness,
+        rollback_target=rollback,
+        approval=approval_payload,
+        checksum=checksum or _cr018_release_checksum(checksum_payload),
+        operation_counts=counters,
+    )
+
+
+def _cr018_pointer_dataset_details(
+    dataset_details: Sequence[Mapping[str, Any]] | None,
+) -> tuple[dict[str, Any], ...]:
+    return tuple(dict(item) for item in dataset_details or ())
+
+
+def _cr018_catalog_non_empty(value: Any) -> bool:
+    if value is None:
+        return False
+    if isinstance(value, str):
+        return bool(value.strip())
+    return True
+
+
+def _cr018_release_checksum(payload: Mapping[str, Any]) -> str:
+    data = json.dumps(payload, ensure_ascii=False, sort_keys=True, default=str).encode("utf-8")
+    return "sha256:" + hashlib.sha256(data).hexdigest()
+
+
+def _cr018_rollback_operation_counts(counters: Mapping[str, Any] | None) -> dict[str, int]:
+    normalised = dict(CR018_ROLLBACK_OPERATION_COUNTERS)
+    for key, value in dict(counters or {}).items():
+        try:
+            normalised[str(key)] = int(value)
+        except (TypeError, ValueError):
+            normalised[str(key)] = 1
+    return normalised
+
+
+def _cr018_rollback_evidence_refs(evidence_refs: Mapping[str, Any] | Sequence[str] | None) -> list[str]:
+    if isinstance(evidence_refs, Mapping):
+        return [
+            str(value)
+            for key, value in evidence_refs.items()
+            if key != "delete_counts" and value is not None and str(value).strip()
+        ]
+    return [str(item) for item in (evidence_refs or ()) if item is not None and str(item).strip()]
+
+
 __all__ = [
     "CATALOG_POINTER_DENOMINATOR_INVALID",
     "CATALOG_POINTER_INCOMPLETE",
     "CR014_CATALOG_POINTER_REQUIRED_FIELDS",
+    "CR018_ROLLBACK_DATASET_ONLY_BLOCKED",
+    "CR018_ROLLBACK_HISTORICAL_EVIDENCE_DELETE_COUNTS",
+    "CR018_ROLLBACK_OPERATION_COUNTERS",
+    "CR018_ROLLBACK_PERMISSION_COUNTER_VIOLATION",
+    "CR018_ROLLBACK_SCOPE_DATASET",
+    "CR018_ROLLBACK_SCOPE_RELEASE",
+    "CR018_ROLLBACK_TARGET_REQUIRED",
+    "CR018_CURRENT_POINTER_PLAN_BLOCKED",
+    "CR018_CURRENT_POINTER_PLAN_PLANNED",
+    "CR018_CURRENT_POINTER_PLAN_SCHEMA",
+    "CR018_PUBLISH_EVIDENCE_SCHEMA",
     "CatalogEntry",
     "CatalogError",
     "CatalogPointer",
     "CatalogPointerValidationResult",
     "CatalogStore",
+    "CurrentPointerUpdatePlan",
     "DUCKDB_GLOB_NOT_ALLOWED",
     "DUCKDB_READ_PATH_NOT_WHITELISTED",
     "LEGACY_REPORT_POLICY",
     "P0_DATASETS",
     "PRODUCTION_STRICT_DATASETS",
+    "PublishEvidenceRecord",
     "ReadOnlyPathValidationResult",
+    "ReleaseRollbackContractResult",
     "W3_REQUIRED_DATASETS",
     "build_catalog_coverage_report",
+    "build_cr018_current_pointer_update_plan",
+    "build_cr018_publish_evidence_record",
+    "build_cr018_release_contract_metadata",
+    "build_cr018_release_rollback_contract",
     "build_production_readiness_report",
     "catalog_pointer_from_entry",
     "validate_catalog_pointer",

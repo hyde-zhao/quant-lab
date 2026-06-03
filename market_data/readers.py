@@ -9,8 +9,31 @@ from typing import Any, Mapping, Sequence
 
 import pandas as pd
 
+from .adjustment_readers import (
+    AdjustedViewMetadata,
+    AdjustedViewResult,
+    QmtPolicyHandoff,
+    SinglePolicyGateResult,
+    assert_published_view_only,
+    build_qmt_policy_handoff,
+    read_adjusted_view,
+    single_policy_gate,
+)
+from .adjustment_policy import (
+    EXECUTION_REQUIRES_RAW,
+    LEGACY_QFQ_BASELINE_REQUIRED,
+    CR018_ADJUSTMENT_REQUIRED_VIEW_IDS,
+    ConsumerCategory,
+    build_legacy_qfq_migration_summary,
+    cr018_adjustment_operation_counts,
+    evaluate_consumer_policy,
+)
 from .catalog import CatalogEntry, CatalogError, CatalogStore
 from .contracts import (
+    ADJUSTMENT_POLICY_HFQ,
+    ADJUSTMENT_POLICY_QFQ,
+    ADJUSTMENT_POLICY_RAW,
+    ADJUSTMENT_POLICY_RETURNS_ADJUSTED,
     DATASETS,
     DATASET_SCHEMA_REGISTRY,
     DATASET_ADJ_FACTOR,
@@ -24,11 +47,22 @@ from .contracts import (
     PIT_STATUS_FAILED,
     PIT_STATUS_INCOMPLETE,
     PIT_STATUS_NON_PIT_SNAPSHOT,
+    CR018_FORBIDDEN_OPERATION_COUNTERS,
+    CR018_PIT_READINESS_DATASET_ID,
+    CR018_REASON_PERMISSION_COUNTER_VIOLATION,
+    CR018_REASON_UNPUBLISHED_READINESS_SOURCE,
+    CR017_VIEW_ADJ_FACTOR,
+    CR017_VIEW_PRICES_HFQ,
+    CR017_VIEW_PRICES_QFQ,
+    CR017_VIEW_PRICES_RAW,
+    CR017_VIEW_RETURNS_ADJUSTED,
     READINESS_STATUS_AVAILABLE,
     SCHEMA_VERSION,
 )
 from .contracts import DATASET_INDEX_MEMBERS, DATASET_TRADE_CALENDAR
+from .dataset_groups import PRIORITY_P0, list_dataset_groups
 from .lake_layout import LakeLayout
+from .release_scope import default_permission_counters, normalise_permission_counters
 from .validation import validate_adjustment_consistency, validate_pit_asof
 
 
@@ -37,6 +71,20 @@ class ReaderBoundaryError(RuntimeError):
 
 
 DATASET_CORPORATE_ACTIONS = "corporate_actions"
+CURRENT_READER_CATALOG_NOT_PUBLISHED = "catalog_not_published"
+CURRENT_READER_CANDIDATE_READ_FORBIDDEN = "candidate_read_forbidden"
+CURRENT_READER_PERMISSION_COUNTER_VIOLATION = "permission_counter_violation"
+CURRENT_READER_STATUS_PASS = "pass"
+_CR018_CURRENT_READER_OPERATION_COUNTS: dict[str, int] = {
+    "provider_fetch": 0,
+    "lake_write": 0,
+    "real_lake_write": 0,
+    "credential_read": 0,
+    "current_pointer_publish": 0,
+    "catalog_current_pointer_publish": 0,
+    "qmt_operation": 0,
+    "duckdb_dependency_change": 0,
+}
 
 
 @dataclass(frozen=True, slots=True)
@@ -56,6 +104,47 @@ class ReaderResult:
     @property
     def available(self) -> bool:
         return self.status == "available"
+
+
+@dataclass(frozen=True, slots=True)
+class CurrentReaderSmokeResult:
+    """CR018-S07 current reader smoke 结果；只读 published current pointer。"""
+
+    status: str
+    release_id: str
+    dataset_group: str
+    datasets: tuple[str, ...]
+    covered_datasets: tuple[str, ...] = ()
+    row_counts: dict[str, int] = field(default_factory=dict)
+    policy_metadata: dict[str, Any] = field(default_factory=dict)
+    issues: tuple[dict[str, Any], ...] = ()
+    candidate_fallback_blocked: bool = False
+    candidate_fallback_blocked_count: int = 0
+    candidate_read_count: int = 0
+    unpublished_lake_scan_count: int = 0
+    operation_counts: dict[str, int] = field(default_factory=lambda: dict(_CR018_CURRENT_READER_OPERATION_COUNTS))
+
+    @property
+    def passed(self) -> bool:
+        return self.status == CURRENT_READER_STATUS_PASS
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "schema_name": "cr018.current_reader_smoke.v1",
+            "status": self.status,
+            "release_id": self.release_id,
+            "dataset_group": self.dataset_group,
+            "datasets": list(self.datasets),
+            "covered_datasets": list(self.covered_datasets),
+            "row_counts": dict(self.row_counts),
+            "policy_metadata": dict(self.policy_metadata),
+            "issues": [dict(item) for item in self.issues],
+            "candidate_fallback_blocked": self.candidate_fallback_blocked,
+            "candidate_fallback_blocked_count": self.candidate_fallback_blocked_count,
+            "candidate_read_count": self.candidate_read_count,
+            "unpublished_lake_scan_count": self.unpublished_lake_scan_count,
+            "operation_counts": dict(self.operation_counts),
+        }
 
 
 @dataclass(frozen=True, slots=True)
@@ -535,6 +624,65 @@ _EXPOSURE_REQUIRED_COLUMNS = {
     ),
 }
 
+CR018_P1_AUXILIARY_FIELD_DEFINITIONS: dict[str, dict[str, Any]] = {
+    "industry": {
+        "dataset_id": "industry_classification",
+        "label": "industry",
+        "aliases": ("industry_classification", "industry_code", "industry_name"),
+        "required_for_claims": ("industry_neutralized", "pure_alpha"),
+    },
+    "market_cap": {
+        "dataset_id": "market_cap_total",
+        "label": "market_cap",
+        "aliases": ("market_cap_total", "market_cap", "total_market_cap"),
+        "required_for_claims": ("market_cap_neutralized", "pure_alpha"),
+    },
+    "float_market_cap": {
+        "dataset_id": "market_cap_float",
+        "label": "float_market_cap",
+        "aliases": ("market_cap_float", "float_market_cap", "free_float_market_cap"),
+        "required_for_claims": ("market_cap_neutralized", "capacity_tradable"),
+    },
+    "beta_style": {
+        "dataset_id": "beta_style_factors",
+        "label": "beta/style",
+        "aliases": ("beta_style_factors", "beta", "style", "style_exposure"),
+        "required_for_claims": ("pure_alpha",),
+    },
+    "adv": {
+        "dataset_id": "adv",
+        "label": "ADV",
+        "aliases": ("adv", "adv20", "average_daily_amount", "average_daily_volume"),
+        "required_for_claims": ("capacity_tradable", "scale_up_ready"),
+    },
+    "turnover": {
+        "dataset_id": "turnover_rate",
+        "label": "turnover",
+        "aliases": ("turnover", "turnover_rate", "portfolio_turnover"),
+        "required_for_claims": ("capacity_tradable", "scale_up_ready"),
+    },
+    "liquidity": {
+        "dataset_id": "liquidity_capacity",
+        "label": "liquidity",
+        "aliases": ("liquidity", "liquidity_capacity", "liquidity_score"),
+        "required_for_claims": ("capacity_tradable", "scale_up_ready", "capital_amplification"),
+    },
+    "capacity": {
+        "dataset_id": "liquidity_capacity",
+        "label": "capacity",
+        "aliases": ("capacity", "capacity_inputs", "liquidity_capacity"),
+        "required_for_claims": ("capacity_tradable", "scale_up_ready", "capital_amplification"),
+    },
+    "impact_cost": {
+        "dataset_id": "market_impact_cost",
+        "label": "impact_cost",
+        "aliases": ("impact_cost", "market_impact_cost", "cost_impact"),
+        "required_for_claims": ("capacity_tradable", "scale_up_ready", "capital_amplification"),
+    },
+}
+CR018_P1_AUXILIARY_FIELD_IDS: tuple[str, ...] = tuple(CR018_P1_AUXILIARY_FIELD_DEFINITIONS)
+_CR018_P1_AVAILABLE_STATUSES = frozenset({"available", "pass", "published", "ready", "ok"})
+
 
 def read_auxiliary_inputs(
     request: AuxiliaryInputRequest | Mapping[str, Any],
@@ -587,6 +735,560 @@ def read_auxiliary_inputs(
             remediation_spec={**(result.remediation_spec or {}), **_auxiliary_remediation(capability, dataset)},
         )
     return results
+
+
+def build_cr018_p1_auxiliary_availability_metadata(
+    release_id: str,
+    dataset_availability: Mapping[str, Any] | None = None,
+    *,
+    release_metadata: Mapping[str, Any] | None = None,
+    permission_counters: Mapping[str, Any] | None = None,
+) -> dict[str, Any]:
+    """标准化 CR018-S04 P1 auxiliary availability metadata。
+
+    该 helper 只消费调用方显式传入的 metadata，不解析 lake root、不读取
+    catalog、不扫描 unpublished candidate，也不触发 provider / write / QMT。
+    """
+
+    explicit = _cr018_p1_explicit_metadata(dataset_availability, release_metadata)
+    fields: dict[str, dict[str, Any]] = {}
+    missing_reasons: dict[str, str] = {}
+    for field_id, definition in CR018_P1_AUXILIARY_FIELD_DEFINITIONS.items():
+        payload = _cr018_p1_field_payload(explicit, field_id, definition)
+        status = _cr018_p1_status(payload)
+        available = status in _CR018_P1_AVAILABLE_STATUSES
+        missing_reason = "" if available else _cr018_p1_missing_reason(field_id, payload)
+        row = {
+            "field_id": field_id,
+            "dataset_id": definition["dataset_id"],
+            "label": definition["label"],
+            "aliases": list(definition["aliases"]),
+            "status": status,
+            "available": bool(available),
+            "required_for_claims": list(definition["required_for_claims"]),
+            "missing_reason": missing_reason,
+            "evidence_ref": str(payload.get("evidence_ref") or payload.get("evidence_path") or ""),
+        }
+        fields[field_id] = {key: value for key, value in row.items() if value not in ("", [], {})}
+        if not available:
+            missing_reasons[field_id] = missing_reason
+
+    counters = normalise_permission_counters(permission_counters or default_permission_counters())
+    return {
+        "schema_name": "cr018_p1_auxiliary_availability_v1",
+        "release_id": str(release_id),
+        "source": "explicit_metadata",
+        "explicit_metadata_only": True,
+        "release_metadata": dict(release_metadata or {}),
+        "fields": fields,
+        "missing_reasons": missing_reasons,
+        "field_ids": list(CR018_P1_AUXILIARY_FIELD_IDS),
+        "all_p1_available": all(item["available"] for item in fields.values()),
+        "p1_blocks_core_release": False,
+        "p0_core_readiness_impact": "none",
+        "reader_policy": {
+            "consume_explicit_metadata_only": True,
+            "scan_unpublished_lake": False,
+            "auto_discover_candidate_lake": False,
+        },
+        "unpublished_lake_scan_count": 0,
+        "permission_counters": counters,
+    }
+
+
+def format_readiness_blocked_reason(
+    issue: Mapping[str, Any],
+    *,
+    default_dataset_id: str = CR018_PIT_READINESS_DATASET_ID,
+) -> dict[str, Any]:
+    """把 readiness issue 标准化为 JSON-ready blocked reason。"""
+
+    dataset_id = str(issue.get("dataset_id") or issue.get("dataset") or default_dataset_id)
+    reason_code = str(issue.get("reason_code") or issue.get("code") or "")
+    return {
+        "dataset_id": dataset_id,
+        "field": str(issue.get("field") or ""),
+        "reason_code": reason_code,
+        "severity": str(issue.get("severity") or "BLOCKING"),
+        "claim_impact": list(issue.get("claim_impact") or ()),
+        "evidence_ref": str(
+            issue.get("evidence_ref")
+            or issue.get("evidence_path")
+            or issue.get("fixture_source")
+            or ""
+        ),
+    }
+
+
+def read_pit_tradability_readiness(
+    release_id: str,
+    dataset_group: str = "p0",
+    *,
+    readiness_results: Sequence[Any] | None = None,
+    release_metadata: Mapping[str, Any] | None = None,
+    published_only: bool = True,
+    permission_counters: Mapping[str, Any] | None = None,
+) -> dict[str, Any]:
+    """暴露 PIT / lifecycle / tradability readiness blocked reason。
+
+    默认只接受已发布 release 的显式 metadata 和调用方传入的 readiness result。
+    本 helper 不解析 lake root、不扫描 candidate/unpublished lake、不触发 provider。
+    """
+
+    counters = normalise_permission_counters(permission_counters or CR018_FORBIDDEN_OPERATION_COUNTERS)
+    blocked_reasons: list[dict[str, Any]] = []
+    if published_only and not _cr018_release_is_published(release_metadata):
+        blocked_reasons.append(
+            format_readiness_blocked_reason(
+                {
+                    "dataset_id": dataset_group,
+                    "field": "release_metadata",
+                    "reason_code": CR018_REASON_UNPUBLISHED_READINESS_SOURCE,
+                    "claim_impact": ["production_current_truth_scoped_release", "production_publish"],
+                    "evidence_ref": f"release_id:{release_id}",
+                },
+                default_dataset_id=dataset_group,
+            )
+        )
+    if any(value != 0 for value in counters.values()):
+        blocked_reasons.append(
+            format_readiness_blocked_reason(
+                {
+                    "dataset_id": dataset_group,
+                    "field": "operation_counts",
+                    "reason_code": CR018_REASON_PERMISSION_COUNTER_VIOLATION,
+                    "claim_impact": ["production_current_truth_scoped_release", "production_publish"],
+                },
+                default_dataset_id=dataset_group,
+            )
+        )
+
+    result_payloads = [_cr018_readiness_payload(item) for item in readiness_results or ()]
+    for payload in result_payloads:
+        for issue in payload.get("issues", ()):
+            if isinstance(issue, Mapping):
+                blocked_reasons.append(
+                    format_readiness_blocked_reason(
+                        issue,
+                        default_dataset_id=str(payload.get("dataset_id") or dataset_group),
+                    )
+                )
+
+    all_results_passed = bool(result_payloads) and all(bool(item.get("passed")) for item in result_payloads)
+    return {
+        "schema_name": "cr018_pit_lifecycle_tradability_readiness_v1",
+        "release_id": str(release_id),
+        "dataset_group": str(dataset_group),
+        "published_only": bool(published_only),
+        "explicit_metadata_only": True,
+        "scan_unpublished_lake": False,
+        "unpublished_lake_scan_count": 0,
+        "provider_fetch": 0,
+        "lake_write": 0,
+        "credential_read": 0,
+        "current_pointer_publish": 0,
+        "qmt_operation": 0,
+        "duckdb_dependency_change": 0,
+        "permission_counters": counters,
+        "readiness_results": result_payloads,
+        "blocked_reasons": _dedupe_readiness_reasons(blocked_reasons),
+        "production_publish_allowed_count": 1 if all_results_passed and not blocked_reasons else 0,
+    }
+
+
+def current_reader_smoke(
+    release_id: str,
+    *,
+    p0_dataset_ids: Sequence[str] | None = None,
+    current_pointers: Mapping[str, Any] | Sequence[Mapping[str, Any]] | None = None,
+    candidate_pointers: Mapping[str, Any] | Sequence[Mapping[str, Any]] | None = None,
+    row_counts: Mapping[str, Any] | None = None,
+    dataset_group: str = PRIORITY_P0,
+    permission_counters: Mapping[str, Any] | None = None,
+) -> CurrentReaderSmokeResult:
+    """验证 P0 dataset group 只读 published current pointer，不回退 candidate。"""
+
+    datasets = tuple(p0_dataset_ids or (entry.dataset_id for entry in list_dataset_groups(PRIORITY_P0)))
+    current_index = _cr018_current_pointer_index(current_pointers)
+    candidate_index = _cr018_current_pointer_index(candidate_pointers)
+    counters = _cr018_current_reader_counters(permission_counters)
+    rows = {str(key): _cr018_reader_int(value) for key, value in dict(row_counts or {}).items()}
+    covered: list[str] = []
+    issues: list[dict[str, Any]] = []
+
+    for dataset_id in datasets:
+        pointer = current_index.get(dataset_id)
+        candidate_pointer = candidate_index.get(dataset_id)
+        if not pointer or not _cr018_release_is_published(pointer):
+            issues.append(
+                {
+                    "code": CURRENT_READER_CATALOG_NOT_PUBLISHED,
+                    "dataset_id": dataset_id,
+                    "release_id": str(release_id),
+                }
+            )
+            if candidate_pointer:
+                issues.append(
+                    {
+                        "code": CURRENT_READER_CANDIDATE_READ_FORBIDDEN,
+                        "dataset_id": dataset_id,
+                        "release_id": str(release_id),
+                        "candidate_present": True,
+                    }
+                )
+            continue
+        if _cr018_pointer_looks_candidate(pointer):
+            issues.append(
+                {
+                    "code": CURRENT_READER_CANDIDATE_READ_FORBIDDEN,
+                    "dataset_id": dataset_id,
+                    "release_id": str(release_id),
+                    "candidate_present": True,
+                }
+            )
+            continue
+        covered.append(dataset_id)
+        if dataset_id not in rows:
+            rows[dataset_id] = _cr018_reader_int(pointer.get("row_count"))
+
+    if any(value != 0 for value in counters.values()):
+        issues.append(
+            {
+                "code": CURRENT_READER_PERMISSION_COUNTER_VIOLATION,
+                "field": "operation_counts",
+                "operation_counts": dict(counters),
+            }
+        )
+
+    candidate_block_count = sum(
+        1 for issue in issues if issue.get("code") == CURRENT_READER_CANDIDATE_READ_FORBIDDEN
+    )
+    issue_codes = {str(issue.get("code")) for issue in issues}
+    if CURRENT_READER_PERMISSION_COUNTER_VIOLATION in issue_codes:
+        status = CURRENT_READER_PERMISSION_COUNTER_VIOLATION
+    elif CURRENT_READER_CATALOG_NOT_PUBLISHED in issue_codes:
+        status = CURRENT_READER_CATALOG_NOT_PUBLISHED
+    elif CURRENT_READER_CANDIDATE_READ_FORBIDDEN in issue_codes:
+        status = CURRENT_READER_CANDIDATE_READ_FORBIDDEN
+    else:
+        status = CURRENT_READER_STATUS_PASS
+
+    return CurrentReaderSmokeResult(
+        status=status,
+        release_id=str(release_id),
+        dataset_group=str(dataset_group),
+        datasets=datasets,
+        covered_datasets=tuple(covered),
+        row_counts=rows,
+        policy_metadata={
+            "read_source": "published_current_pointer",
+            "published_current_pointer_only": True,
+            "candidate_fallback_allowed": False,
+            "p0_dataset_group_covered": set(covered) == set(datasets),
+        },
+        issues=tuple(issues),
+        candidate_fallback_blocked=bool(candidate_block_count),
+        candidate_fallback_blocked_count=candidate_block_count,
+        candidate_read_count=0,
+        unpublished_lake_scan_count=0,
+        operation_counts=counters,
+    )
+
+
+def build_cr018_adjustment_reader_policy_metadata(
+    release_id: str,
+    view_id: str,
+    *,
+    consumer_kind: str = ConsumerCategory.LONG_HORIZON_RESEARCH.value,
+    adjustment_policy: str | None = None,
+    legacy_qfq_baseline_ref: str | None = None,
+    readiness: Mapping[str, Any] | object | None = None,
+    permission_counters: Mapping[str, Any] | None = None,
+) -> dict[str, Any]:
+    """暴露 CR018-S05 adjusted view reader policy metadata。
+
+    本 helper 只消费显式 metadata，不解析 lake root、不扫描 candidate lake、
+    不读取凭据、不触发 provider / publish / QMT。
+    """
+
+    normalized_view_id = _cr018_adjustment_view_id(view_id)
+    policy = str(adjustment_policy or _cr018_adjustment_policy_for_view(normalized_view_id))
+    view_kind = _cr018_adjustment_view_kind(normalized_view_id)
+    counters = _cr018_adjustment_reader_counters(permission_counters)
+    migration = build_legacy_qfq_migration_summary(legacy_qfq_baseline_ref)
+    consumer_value = consumer_kind.value if isinstance(consumer_kind, ConsumerCategory) else str(consumer_kind)
+    decision = evaluate_consumer_policy(consumer_value, policy)
+    blocked_reason = ""
+    if consumer_value == ConsumerCategory.QMT_EXECUTION.value and normalized_view_id != CR017_VIEW_PRICES_RAW:
+        blocked_reason = EXECUTION_REQUIRES_RAW
+    elif not decision.allowed:
+        blocked_reason = decision.blocked_reason
+    elif not migration.legacy_qfq_baseline_preserved:
+        blocked_reason = LEGACY_QFQ_BASELINE_REQUIRED
+
+    readiness_payload = _cr018_reader_metadata_payload(readiness)
+    if not blocked_reason and readiness_payload:
+        readiness_passed = bool(
+            readiness_payload.get("passed")
+            or readiness_payload.get("publish_allowed")
+            or readiness_payload.get("production_publish_allowed_count") == 1
+        )
+        if not readiness_passed:
+            blocked_reason = _cr018_reader_first_blocked_reason(readiness_payload)
+
+    allowed = not blocked_reason
+    return {
+        "schema_name": "cr018_adjustment_reader_policy_metadata_v1",
+        "release_id": str(release_id),
+        "view_id": normalized_view_id,
+        "view_kind": view_kind,
+        "adjustment_policy": policy,
+        "research_adjustment_policy": policy if policy != ADJUSTMENT_POLICY_RAW else "",
+        "consumer_kind": consumer_value,
+        "policy_allowed": allowed,
+        "allowed": allowed,
+        "blocked_reason": blocked_reason,
+        "execution_price_policy": ADJUSTMENT_POLICY_RAW,
+        "qmt_adjusted_execution_allowed_count": 0,
+        "legacy_qfq_baseline_preserved": migration.legacy_qfq_baseline_preserved,
+        "legacy_qfq_baseline_ref": migration.legacy_qfq_baseline_ref,
+        "legacy_qfq_baseline_overwrite_count": 0,
+        "legacy_qfq_compatibility_entry": migration.compatibility_entry,
+        "required_view_ids": list(CR018_ADJUSTMENT_REQUIRED_VIEW_IDS),
+        "explicit_metadata_only": True,
+        "scan_unpublished_lake": False,
+        "unpublished_lake_scan_count": 0,
+        "provider_fetch": 0,
+        "lake_write": 0,
+        "credential_read": 0,
+        "current_pointer_publish": 0,
+        "qmt_operation": 0,
+        "duckdb_dependency_change": 0,
+        "operation_counts": counters,
+    }
+
+
+def _cr018_adjustment_view_id(view_id: str) -> str:
+    aliases = {
+        DATASET_PRICES: CR017_VIEW_PRICES_RAW,
+        "raw": CR017_VIEW_PRICES_RAW,
+        "qfq": CR017_VIEW_PRICES_QFQ,
+        "hfq": CR017_VIEW_PRICES_HFQ,
+    }
+    value = str(view_id or "").strip()
+    return aliases.get(value, value)
+
+
+def _cr018_adjustment_policy_for_view(view_id: str) -> str:
+    return {
+        CR017_VIEW_PRICES_RAW: ADJUSTMENT_POLICY_RAW,
+        CR017_VIEW_ADJ_FACTOR: ADJUSTMENT_POLICY_RAW,
+        CR017_VIEW_PRICES_QFQ: ADJUSTMENT_POLICY_QFQ,
+        CR017_VIEW_PRICES_HFQ: ADJUSTMENT_POLICY_HFQ,
+        CR017_VIEW_RETURNS_ADJUSTED: ADJUSTMENT_POLICY_RETURNS_ADJUSTED,
+    }.get(view_id, "")
+
+
+def _cr018_adjustment_view_kind(view_id: str) -> str:
+    if view_id == CR017_VIEW_PRICES_RAW:
+        return "raw_fact"
+    if view_id == CR017_VIEW_ADJ_FACTOR:
+        return "adj_factor_fact"
+    if view_id in {CR017_VIEW_PRICES_QFQ, CR017_VIEW_PRICES_HFQ, CR017_VIEW_RETURNS_ADJUSTED}:
+        return "derived_adjusted_view"
+    return "unknown"
+
+
+def _cr018_adjustment_reader_counters(counters: Mapping[str, Any] | None) -> dict[str, int]:
+    normalised = cr018_adjustment_operation_counts()
+    for key, value in dict(counters or {}).items():
+        try:
+            normalised[str(key)] = int(value)
+        except (TypeError, ValueError):
+            normalised[str(key)] = 1
+    return normalised
+
+
+def _cr018_reader_first_blocked_reason(payload: Mapping[str, Any]) -> str:
+    for key in ("blocked_reason", "reason_code"):
+        value = str(payload.get(key) or "").strip()
+        if value:
+            return value
+    for key in ("blocked_reasons", "issues"):
+        rows = payload.get(key)
+        if isinstance(rows, Sequence) and not isinstance(rows, (str, bytes, bytearray)):
+            for item in rows:
+                if isinstance(item, Mapping):
+                    reason = str(item.get("reason_code") or item.get("code") or item.get("blocked_reason") or "").strip()
+                    if reason:
+                        return reason
+    return ""
+
+
+def _cr018_reader_metadata_payload(value: Mapping[str, Any] | object | None) -> dict[str, Any]:
+    if value is None:
+        return {}
+    if isinstance(value, Mapping):
+        return dict(value)
+    to_dict = getattr(value, "to_dict", None)
+    if callable(to_dict):
+        return dict(to_dict())
+    if hasattr(value, "__dict__"):
+        return dict(vars(value))
+    return {}
+
+
+def _cr018_release_is_published(release_metadata: Mapping[str, Any] | None) -> bool:
+    metadata = dict(release_metadata or {})
+    if bool(metadata.get("published")):
+        return True
+    status = str(metadata.get("status") or metadata.get("publish_status") or "").strip().lower()
+    return status in {"published", "current", "current_truth"}
+
+
+def _cr018_current_pointer_index(
+    pointers: Mapping[str, Any] | Sequence[Mapping[str, Any]] | None,
+) -> dict[str, dict[str, Any]]:
+    if not pointers:
+        return {}
+    if isinstance(pointers, Mapping):
+        if "dataset_id" in pointers or "dataset" in pointers:
+            payload = dict(pointers)
+            dataset_id = str(payload.get("dataset_id") or payload.get("dataset") or "")
+            return {dataset_id: payload} if dataset_id else {}
+        output: dict[str, dict[str, Any]] = {}
+        for key, value in pointers.items():
+            if isinstance(value, Mapping):
+                payload = dict(value)
+                payload.setdefault("dataset_id", str(key))
+                output[str(key)] = payload
+        return output
+    output = {}
+    for value in pointers:
+        payload = dict(value)
+        dataset_id = str(payload.get("dataset_id") or payload.get("dataset") or "")
+        if dataset_id:
+            output[dataset_id] = payload
+    return output
+
+
+def _cr018_pointer_looks_candidate(pointer: Mapping[str, Any]) -> bool:
+    status = str(pointer.get("publish_status") or pointer.get("status") or "").strip().lower()
+    if status in {"candidate", "candidate_unpublished", "unpublished"}:
+        return True
+    for key in ("path", "published_path", "current_pointer_path", "canonical_path"):
+        value = str(pointer.get(key) or "")
+        if "/candidate/" in value or value.startswith("fixture://candidate"):
+            return True
+    return False
+
+
+def _cr018_current_reader_counters(counters: Mapping[str, Any] | None) -> dict[str, int]:
+    normalised = dict(_CR018_CURRENT_READER_OPERATION_COUNTS)
+    for key, value in dict(counters or {}).items():
+        try:
+            normalised[str(key)] = int(value)
+        except (TypeError, ValueError):
+            normalised[str(key)] = 1
+    return normalised
+
+
+def _cr018_reader_int(value: Any) -> int:
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return 0
+
+
+def _cr018_readiness_payload(result: Any) -> dict[str, Any]:
+    if result is None:
+        return {}
+    if isinstance(result, Mapping):
+        return dict(result)
+    to_dict = getattr(result, "to_dict", None)
+    if callable(to_dict):
+        return dict(to_dict())
+    return dict(getattr(result, "__dict__", {}) or {})
+
+
+def _dedupe_readiness_reasons(reasons: Sequence[Mapping[str, Any]]) -> list[dict[str, Any]]:
+    seen: set[tuple[str, str, str]] = set()
+    output: list[dict[str, Any]] = []
+    for reason in reasons:
+        payload = dict(reason)
+        key = (
+            str(payload.get("dataset_id") or ""),
+            str(payload.get("field") or ""),
+            str(payload.get("reason_code") or ""),
+        )
+        if key in seen:
+            continue
+        seen.add(key)
+        output.append(payload)
+    return output
+
+
+def _cr018_p1_explicit_metadata(
+    dataset_availability: Mapping[str, Any] | None,
+    release_metadata: Mapping[str, Any] | None,
+) -> dict[str, Any]:
+    if dataset_availability:
+        return dict(dataset_availability)
+    metadata = dict(release_metadata or {})
+    for key in ("p1_availability", "auxiliary_availability", "dataset_availability", "fields"):
+        value = metadata.get(key)
+        if isinstance(value, Mapping):
+            return dict(value)
+    return {}
+
+
+def _cr018_p1_field_payload(
+    explicit: Mapping[str, Any],
+    field_id: str,
+    definition: Mapping[str, Any],
+) -> dict[str, Any]:
+    lookup_keys = (field_id, str(definition["dataset_id"]), *tuple(definition.get("aliases") or ()))
+    for key in lookup_keys:
+        if key in explicit:
+            return _cr018_p1_payload(explicit[key])
+    return {}
+
+
+def _cr018_p1_payload(value: Any) -> dict[str, Any]:
+    if value is None:
+        return {}
+    if isinstance(value, Mapping):
+        return dict(value)
+    to_dict = getattr(value, "to_dict", None)
+    if callable(to_dict):
+        return dict(to_dict())
+    status = str(value)
+    return {"status": status}
+
+
+def _cr018_p1_status(payload: Mapping[str, Any]) -> str:
+    if not payload:
+        return "required_missing"
+    if "available" in payload:
+        return "available" if bool(payload.get("available")) else "required_missing"
+    status = str(
+        payload.get("status")
+        or payload.get("readiness_status")
+        or payload.get("availability_status")
+        or payload.get("publish_status")
+        or ""
+    ).strip()
+    return status or "required_missing"
+
+
+def _cr018_p1_missing_reason(field_id: str, payload: Mapping[str, Any]) -> str:
+    reason = str(
+        payload.get("missing_reason")
+        or payload.get("reason")
+        or payload.get("reason_code")
+        or ""
+    ).strip()
+    return reason or f"p1_auxiliary_missing:{field_id}"
 
 
 def _coerce_auxiliary_input_request(request: AuxiliaryInputRequest | Mapping[str, Any]) -> AuxiliaryInputRequest:
@@ -2453,21 +3155,39 @@ def read_factor_panel(
 
 
 __all__ = [
+    "AdjustedViewMetadata",
+    "AdjustedViewResult",
     "AdjustmentAuditReaderResult",
     "AdjustmentAuditRequest",
     "AuxiliaryInputRequest",
     "BacktraderCleanFeedBundle",
     "BacktraderCleanFeedRequest",
+    "CR018_P1_AUXILIARY_FIELD_DEFINITIONS",
+    "CR018_P1_AUXILIARY_FIELD_IDS",
+    "CURRENT_READER_CANDIDATE_READ_FORBIDDEN",
+    "CURRENT_READER_CATALOG_NOT_PUBLISHED",
+    "CURRENT_READER_PERMISSION_COUNTER_VIOLATION",
+    "CURRENT_READER_STATUS_PASS",
+    "CurrentReaderSmokeResult",
     "DATASET_CORPORATE_ACTIONS",
     "ExecutionFeedRequest",
     "ExposureInputRequest",
     "LightweightInputRequest",
     "LightweightInputResult",
+    "QmtPolicyHandoff",
     "QualityPolicy",
     "ReaderBoundaryError",
     "ReaderResult",
     "ResearchInputReaderRequest",
+    "SinglePolicyGateResult",
     "TradabilityInputRequest",
+    "assert_published_view_only",
+    "build_qmt_policy_handoff",
+    "build_cr018_adjustment_reader_policy_metadata",
+    "build_cr018_p1_auxiliary_availability_metadata",
+    "current_reader_smoke",
+    "format_readiness_blocked_reason",
+    "read_pit_tradability_readiness",
     "read_canonical",
     "read_backtrader_clean_feed",
     "read_auxiliary_inputs",
@@ -2475,12 +3195,14 @@ __all__ = [
     "read_execution_feed",
     "read_exposure_inputs",
     "read_adjustment_audit_inputs",
+    "read_adjusted_view",
     "read_factor_panel",
     "read_index_universe",
     "read_lightweight_input",
     "read_research_inputs",
     "read_stock_lifecycle",
     "read_tradability_inputs",
+    "single_policy_gate",
     "evaluate_corporate_action_availability",
     "extract_adj_factor_lineage",
 ]

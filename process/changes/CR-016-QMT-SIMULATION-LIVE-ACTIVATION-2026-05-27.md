@@ -1,12 +1,12 @@
 ---
 cr_id: "CR-016"
-status: "open"
+status: "controlled-offline-verified-s05-s06-later-gated-pending-cp8"
 impact_level: "high"
 workflow_mode_before: "standard"
 workflow_mode_after_change: "standard"
 fast_lane_upgrade_reason: "QMT 模拟盘 / 实盘激活涉及真实 broker API 发单、撤单、账户查询、对账、监控、kill switch、人工审批、小资金实盘和资金放大，命中高风险权限、外部接口、安全边界和运行治理，必须走 standard。"
 rollback_to: "requirement-clarification"
-approval_result: "approved-for-intake"
+approval_result: "controlled-offline-verified-s05-s06-later-gated-pending-cp8"
 created_at: "2026-05-27T22:22:05+08:00"
 created_by: "meta-po"
 approved_by: "user"
@@ -17,6 +17,7 @@ linked_issue: ""
 implementation_authorization: false
 real_order_authorization: false
 depends_on: "CR-015"
+updated_at: "2026-05-31T21:43:48+08:00"
 ---
 
 # CR-016 QMT 模拟盘 / 实盘激活与运行治理
@@ -50,6 +51,23 @@ depends_on: "CR-015"
 | QMT-D20 | 实验注册 | 模拟盘前冻结策略版本、参数和成功 / 失败标准 | 防止边跑边改导致结果不可解释。 |
 | QMT-D21 | PIT 财务 / 基本面 | 当前量价主线不强制，使用前再补 | 聚焦交易链路；基本面策略后置。 |
 | QMT-D22 | 资金放大 | 阶段放大 | 避免模拟盘通过后一次性扩大资金。 |
+| QMT-D24 | 复权口径准入 | 真实策略激活前必须声明研究复权口径，交易执行必须使用 raw / broker price | CR-017 未完成前，可做技术链路模拟，但不得把结果声明为已完成复权口径治理的生产策略。 |
+
+## 备选方案与优劣摘要
+
+| 决策组 | 方案 | 优点 | 缺点 | 推荐 |
+|---|---|---|---|---|
+| 激活路径 | shadow -> 模拟盘 -> 实盘只读 -> 小资金实盘 -> 放大资金 | 每一步有验收、回滚和责任边界 | 周期更长 | 推荐 |
+| 激活路径 | 模拟盘通过后直接实盘 | 速度快 | 缺少只读核对、小资金风险隔离和异常演练 | 不推荐 |
+| 激活路径 | 长期只做 shadow / 模拟盘 | 风险最低 | 无法验证真实账户、成交、对账和运行压力 | 仅作降级 |
+| 执行策略 | T 日收盘后信号，T+1 限价 / 保护价 | 避免使用未形成数据，控制追单和滑点 | 成交率可能下降 | 推荐 |
+| 执行策略 | T 日盘中即时信号即时下单 | 更及时 | 当前分钟/tick/level2 和执行模型不足，容易未来数据或可成交性错误 | 不推荐 |
+| 对账 | 盘前、盘中、盘后对账 | 能及时发现持仓、委托、成交和资金差异 | 运维成本较高 | 推荐 |
+| 对账 | 只做盘后对账 | 实现简单 | 盘中错误发现太晚 | 不推荐 |
+| kill switch | 必须具备停止新单、撤可撤单、冻结策略、人工接管 | 实盘风险可控 | 需要更多运行状态和权限设计 | 推荐 |
+| kill switch | 只靠人工停止程序 | 简单 | 事故时不稳定、不可审计 | 不推荐 |
+| 复权准入 | CR-017 完成后才允许生产策略声明复权口径治理完成 | 研究信号、绩效和交易价格边界清楚 | 会延后生产级声明 | 推荐 |
+| 复权准入 | 不等待 CR-017，沿用 qfq 默认 | 推进快 | 无法支持后复权研究，也容易混淆复权价和交易价 | 不推荐 |
 
 ## 当前基线
 
@@ -59,6 +77,7 @@ depends_on: "CR-015"
 | 实盘边界 | 当前项目不是完整实盘交易系统 | `README.md` 项目定位 |
 | 执行价边界 | 真实 VWAP / minute / tick / level2 / order-match 当前 blocked | `README.md`、`docs/DATA-LAKE-FULL-HISTORY-BACKFILL-ROADMAP.md` |
 | 研究数据 | 全历史 production strict 仍受 CR-014 / S09 后续全量抓取和 publish gate 约束 | `process/STATE.md`、CR-014 |
+| 复权口径 | 前复权 / 后复权 / 原始交易价隔离尚需 CR-017；未完成前不得声明生产策略已完成复权口径治理 | CR-017 |
 | 操作流程 | 尚无 QMT 模拟盘 / 实盘 runbook、kill switch、对账和资金放大准入 | 当前仓库无 QMT 运行治理文档 |
 
 ## 文档处理决策
@@ -83,6 +102,7 @@ depends_on: "CR-015"
 | CR-013 blocked execution claims | QMT activation gate | 原文保留 + 条件解除 | QMT 发单能力不自动解除真实 VWAP / 微观结构 blocked claim。 |
 | CR-014 full-history data lake | QMT live signal data readiness | 原文保留 + 依赖声明 | 全历史 production strict 未完成时，只能限制模拟盘 / 小资金范围和声明口径。 |
 | CR-015 broker foundation | CR-016 simulation / live activation | CR-015 作为前置 | 没有 adapter / OMS / broker lake / risk gate，不得进入 CR-016 真实发单。 |
+| CR-017 adjustment dual-view | QMT production strategy activation gate | CR-017 作为口径前置 | 没有 raw/qfq/hfq 和研究/交易价格隔离，不得声明生产策略复权口径治理完成。 |
 | 现有回测报告 | 实盘运行报告 / reconciliation report | 原文保留 + 新报告 | 回测收益不等同模拟盘或实盘收益。 |
 
 ## 五维度影响分析
@@ -139,6 +159,7 @@ depends_on: "CR-015"
   - [ ] 批次内全部 Story LLD 已输出。
   - [ ] 批次内全部 Story CP5 自动预检已通过。
   - [ ] 批次 CP5 人工确认结论为 `approved`。
+  - [ ] 涉及真实策略激活、绩效归因或生产级声明时，CR-017 至少已完成口径设计并明确研究复权口径与交易 raw 价格隔离；资金放大前必须完成对应实现和验证。
   - [ ] 每次真实 QMT 发单必须另有 per-run 显式授权，覆盖账户、模式、策略、日期、资金上限和回滚策略。
 
 ## 执行链路
@@ -169,7 +190,7 @@ depends_on: "CR-015"
 
 ## 处理结论
 
-- 审批结论：`approved-for-intake`
+- 审批结论：`controlled-offline-verified-s05-s06-later-gated-pending-cp8`
 - [ ] 自动批准（低风险）
 - [ ] 待人工确认（中风险）
 - [x] 待人工审批（高风险）
@@ -181,11 +202,14 @@ depends_on: "CR-015"
 - 未授权把模拟盘或实盘 broker lake 写入仓库 `data/**`、`reports/**` 或 Git。
 - 未授权解除真实 VWAP、minute、tick、level2、order-match blocked claim。
 - 未授权跳过 CR-015 foundation、CP2/CP3/CP4/CP5/CP6/CP7/CP8 门控。
+- 未授权用未声明复权口径的研究结果作为模拟盘 / 实盘准入依据。
+- 未授权把 qfq/hfq 复权价作为真实 QMT 委托价、成交价或 broker 对账价。
 
 ## 关联对象
 
 | 类型 | 标识 | 说明 |
 |---|---|---|
 | 上游 CR | CR-015 | QMT adapter / OMS / risk / broker lake foundation。 |
+| 关联 CR | CR-017 | 复权双视图、研究口径和 QMT raw 执行价格隔离；生产策略声明与资金放大前置。 |
 | 上游决策 | QMT-D4、QMT-D10、QMT-D12、QMT-D13、QMT-D15..D22 | 用户已接受推荐方案，作为本 CR 输入。 |
 | 本地提交 | `2aeba1d` | 当前代码基线快照，先于本 CR 创建。 |

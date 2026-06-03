@@ -1,15 +1,16 @@
 ---
 cr_id: "CR-004"
-status: "open-cp5-batch-d-approved"
+status: "batch-d-g1-verified-pending-total-close-decision"
 impact_level: "high"
 rollback_to: "solution-design"
-approval_result: "cp5-batch-d-approved-implementation-queue"
+approval_result: "batch-d-g1-verified-pending-total-close-decision"
 created_at: "2026-05-17T12:01:04+08:00"
 created_by: "meta-po"
 approved_by: "user"
 approved_at: "2026-05-17T12:01:04+08:00"
 source: "user"
 linked_issue: ""
+updated_at: "2026-05-31T21:43:48+08:00"
 ---
 
 # CR-004：可移植市场数据获取组件
@@ -146,6 +147,18 @@ linked_issue: ""
 4. STORY-018 只允许修改 `market_data/benchmarks.py`、两个实验脚本和专用测试。
 5. `quality_status=fail` / `dataset_status=fail` 不得通过 Data Loader 放行；Markdown 质量报告仍为 human-only。
 
+## CP6 / CP7 批次 D 验证结果
+
+2026-05-30，CR-004 Batch D / G1 已完成 STORY-004 与 STORY-018 的实现、编码完成检查和独立验证，结论为 `PASS`。
+
+| 对象 | CP6 | CP7 | 结论 | 说明 |
+|---|---|---|---|---|
+| STORY-004 Data Loader first / no real fetch | `process/checks/CP6-STORY-004-cr004-batch-d-dataloader-CODING-DONE.md` | `process/checks/CP7-STORY-004-cr004-batch-d-dataloader-VERIFICATION-DONE.md` | PASS | 默认 warn 阻断、`allow_warn` 仅放行 warn、fail / `dataset_status=fail` 不放行、quality CSV 必需字段、manifest fail fast、Markdown human-only、metadata 决策字段和 non-PIT 警示均通过。 |
+| STORY-018 实验十/十二只读接入 | `process/checks/CP6-STORY-018-cr004-experiment-readonly-benchmark-CODING-DONE.md` | `process/checks/CP7-STORY-018-cr004-experiment-readonly-benchmark-VERIFICATION-DONE.md` | PASS | `--market-data-root` alias、`--benchmark-path` 本地只读、缺 benchmark 结构化 `unavailable/required_missing`、不静默 proxy 成 `hs300_index`、CR007 proxy_baseline 兼容均通过。 |
+| G1 聚合回归 | 不适用 | `process/checks/CP7-CR004-BATCH-D-VERIFICATION-SUMMARY-2026-05-30.md` | PASS | 聚合命令 `48 passed in 3.28s`，py_compile、diff check、forbidden import / no network、no real side effect 均通过。 |
+
+本批次未授权且未执行真实 provider fetch、真实 lake 写入、current pointer publish、凭据读取、真实 QMT / MiniQMT / XtQuant 操作、真实发单 / 撤单 / 账户查询、真实 broker lake 写入或 simulation run。CR-004 总体仍保持 `open`，本次只收敛 Batch D / G1 缺口，不代表真实沪深 300 全面 available 或 production current truth 已补齐。
+
 ## 执行链路
 
 | 顺序 | 责任角色 | 动作 | 输入 | 输出 | 门控 | 完成后下一步 |
@@ -183,10 +196,11 @@ linked_issue: ""
 
 ## 处理结论
 
-- 审批结论：`cp5-batch-d-approved-implementation-queue`
+- 审批结论：`batch-d-g1-verified-pending-total-close-decision`
 - [ ] 自动批准（低风险）
 - [ ] 待人工确认（中风险）
 - [x] CP5 Batch D 已人工通过，允许后续按 LLD 限定范围进入实现；仍不得真实联网抓数或写真实数据/报告/交付目录
+- [x] CP6 / CP7 Batch D 已通过，STORY-004 与 STORY-018 的 G1 范围 verified；CR-004 总 CR 等待后续关闭决策，仍不得把缺失真实沪深 300 口径视为已授权补抓或 publish
 
 ## 关联对象
 

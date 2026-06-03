@@ -1,14 +1,14 @@
 ---
-status: "confirmed-with-cr014"
-version: "0.6"
+status: "draft-pending-cp3-cr018"
+version: "0.8"
 complexity: "standard"
 split_from: "process/HLD.md#cr-010-拆分判定"
-source_change: "CR-014"
+source_change: "CR-018"
 created_at: "2026-05-22T09:11:39+08:00"
 created_by: "meta-se"
-confirmed: true
-confirmed_by: "user"
-confirmed_at: "2026-05-22T15:09:54+08:00"
+confirmed: false
+confirmed_by: ""
+confirmed_at: ""
 companion_of: "process/HLD.md"
 manual_checkpoint: "checkpoints/CP3-CR010-DATA-LAKE-HLD-REVIEW.md"
 cr011_revision_status: "confirmed-pending-lld-cp5"
@@ -26,6 +26,14 @@ cr014_confirmed_by: "user"
 cr014_confirmed_at: "2026-05-26T23:58:12+08:00"
 cr014_manual_checkpoint: "checkpoints/CP3-CR014-A-SHARE-SINCE-INCEPTION-DATA-LAKE-HLD-REVIEW-R2.md"
 cr014_change_file: "process/changes/CR-014-A-SHARE-SINCE-INCEPTION-PRODUCTION-DATA-LAKE-2026-05-26.md"
+cr017_revision_status: "draft-pending-cp3"
+cr017_confirmed: false
+cr017_change_file: "process/changes/CR-017-ADJUSTMENT-POLICY-DUAL-VIEW-SUPPORT-2026-05-27.md"
+cr018_revision_status: "draft-pending-cp3"
+cr018_confirmed: false
+cr018_change_file: "process/changes/CR-018-PRODUCTION-DATA-LAKE-CLOSURE-2026-05-29.md"
+related_companion_hld:
+  - "process/HLD-QMT-TRADING.md"
 ---
 
 # 高层设计（HLD）：CR-010 生产级市场数据湖
@@ -42,6 +50,8 @@ cr014_change_file: "process/changes/CR-014-A-SHARE-SINCE-INCEPTION-PRODUCTION-DA
 | 0.4 | 2026-05-25 | meta-se | 按 CR-013 追加 §16：定义 2020-2024 full-history readiness gap、execution/VWAP blocked、unsupported register excluded denominator、旧证据保留和未来 backfill 权限边界的数据湖审计合同 |
 | 0.5 | 2026-05-26 | meta-se | 按 CR-014 追加 §17：定义全 A since-inception current truth、证券生命周期 / 退市 / 代码变更、P0 dataset 分层、catalog current pointer、增量刷新 / replay、DuckDB 只读 query/audit/feature extraction 候选、权限边界、claim boundary、NFR、风险和分阶段落地；本增量待 CP3 人工确认 |
 | 0.6 | 2026-05-26 | meta-se | 按 CP3 R2 修改意见补强 §17.7.1 和 §17.7.2：明确 DuckDB 只读时数据由 lake production pipeline 在 CP5 + 用户显式授权后写入，区分 raw/manifest/run metadata、canonical/gold/quality candidate、validate audit evidence 与 explicit publish current pointer；补充可行性、易用性和扩展性讨论，继续推荐 CR14-A |
+| 0.7 | 2026-05-27 | meta-se | 按 CR-017 追加 §18：冻结 `prices_raw` + `adj_factor` 事实源、`prices_qfq` / `prices_hfq` / `returns_adjusted` 独立派生、qfq `as_of_trade_date`、旧 qfq 兼容、QMT raw 执行价隔离和 Q-030 / Q-031 CP3 决策输入；本增量待 CP3 人工确认，不授权真实抓取、写湖、publish、迁移或依赖修改 |
+| 0.8 | 2026-05-29 | meta-se | 按 CR-018 追加 §19：以 CR014 S14 candidate 为输入，定义 `2015-01-05..latest_closed_trade_date` scoped release、P0/P1 dataset group、四类 benchmark、Explicit Publish Gate、release 级 rollback、publish 后研究重跑和 QMT 后置；本增量待 CP3 人工确认，不授权 provider fetch、真实 lake 写入、publish current pointer、凭据读取、DuckDB 事实源写入或 QMT 操作 |
 
 ## 1. 问题定义
 
@@ -764,3 +774,443 @@ flowchart TB
 | CR14-Q4 | 是否接受 P0 dataset 沿用 7 类正式 dataset 并把 lifecycle/code-change 作为必需能力，W3/minute/tick/Level2 继续保持单独 blocked / unsupported 边界 | OPEN | 默认接受；W3 和微观结构不并入本 CR P0 current truth | 范围、后续 Story | 用户 / meta-se |
 | CR14-Q5 | 是否接受本 HLD 只授权设计，不授权 provider fetch、真实 lake 写入、凭据读取、旧 `data/**` 操作、旧 reports 覆盖或 DuckDB 依赖修改 | OPEN | 默认接受；真实执行必须后续 CP5 + 用户显式授权 | 安全、执行门控 | 用户 |
 | CR14-Q6 | 是否接受“DuckDB 只读”与“lake pipeline 写入”并存：写入由 Provider Adapter / Run Gate、Normalize / Replay、Validate、Publish Gate 分阶段完成，DuckDB 只读 published 或受控 candidate audit | OPEN | 默认接受；DuckDB 输出不得反向成为事实源或触发 publish | 可行性、易用性、扩展性、后续实现边界 | 用户 |
+
+## 18. CR-017 复权双视图与 QMT 原始交易价隔离
+
+> 本节是 CR-017 的数据湖生产与派生视图 HLD 增量。它拥有 `prices_raw`、`adj_factor`、`prices_qfq`、`prices_hfq`、`returns_adjusted`、qfq `as_of_trade_date`、旧 qfq 兼容和 quality / lineage gate。QMT adapter、OMS、pre-trade risk、broker lake 和 stage gate 由 `process/HLD-QMT-TRADING.md` 拥有；主 HLD 只消费本节输出的 view metadata。本节不授权真实抓取、真实写湖、publish current pointer、批量重算 / 覆盖旧 qfq、代码修改或依赖修改。
+
+### 18.1 问题定义
+
+**问题陈述**：现有数据湖和研究文档以单一 `qfq` 研究口径为历史基线。CR-017 要同时支持前复权、后复权和 raw 交易价，并让 QMT 委托、成交、成交核算和 broker 对账只使用 raw / broker price。如果不把 raw 事实源、复权因子、派生视图和执行价边界拆开，后续实现容易把 qfq/hfq 误当真实交易价，或在未来复权因子变化时让历史 qfq 价格漂移不可解释。
+
+**价值**：把复权支持从“单一成品价格”升级为“raw + adj_factor 事实源 + 可重放派生视图 + 单 run 口径 gate”。研究、图表、长期收益、因子和 QMT 执行各自拥有明确价格入口，既保留旧 qfq 报告追溯，又降低实盘价格风险。
+
+| 优先级 | 目标 | 可度量成功标准 |
+|---|---|---|
+| P0 | raw 与复权事实源分离 | `prices_raw`、`adj_factor` 100% 保留 source/interface/run_id/batch_id/available_at/lineage/quality metadata；只存 qfq/hfq 成品表的发布次数为 0 |
+| P0 | qfq/hfq/returns 独立派生 | `prices_qfq`、`prices_hfq`、`returns_adjusted` 均有独立 view_id、schema_version、derivation_version、source_run_id 和 quality_status |
+| P0 | qfq as-of 可追溯 | qfq 物化 metadata 100% 写入 `as_of_trade_date`、input_snapshot_id 和 derivation_version |
+| P0 | 单 run 口径 gate | 同一研究 run 混用 raw/qfq/hfq/returns_adjusted 时 fail fast；混用通过次数为 0 |
+| P0 | QMT raw 执行价隔离 | QMT order intent / 委托 / 成交 / 对账使用 qfq/hfq 作为执行价次数为 0 |
+
+### 18.2 约束、非目标、假设与缺失信息
+
+| 类型 | 内容 | 状态 |
+|---|---|---|
+| 约束 | CR-017 CP2 已批准 raw + adj_factor 事实源、独立 qfq/hfq/returns_adjusted 派生和 QMT raw 执行价隔离 | RESOLVED |
+| 约束 | CR-014 的 Parquet lake + manifest/catalog source of truth 继续有效；DuckDB 仍只读候选，不成为复权事实源 | RESOLVED |
+| 非目标 | 不声明完整公司行动链路可审计；`adj_factor` 只能证明使用复权因子，不能替代分红、送转、配股等事件链路 | IN_SCOPE_BOUNDARY |
+| 非目标 | 不覆盖旧 qfq 数据或旧报告；旧基线只读保留并写 migration / compatibility summary | IN_SCOPE_BOUNDARY |
+| 假设 | provider 的 `adj_factor` 语义可在 LLD / 实现前用样例与官方 / provider 字段说明复核；CP3 先冻结公式方向和校验规则 | REQUIRED_FOR_CP3 |
+| 缺失信息 | 真实 provider 字段细节、旧 qfq 实际路径、真实 lake root 和凭据 | NON_BLOCKING；CP3 不访问真实数据或凭据，后续 CP5 单独授权 |
+
+### 18.3 候选架构方案对比
+
+| 方案 | 描述 | 优点 | 缺点 | 复杂度 / 成本 | 扩展性 | 风险 | 适用前提 |
+|---|---|---|---|---|---|---|---|
+| CR17-A：raw + adj_factor 事实源，独立派生 view（推荐） | `prices_raw` 保留未复权 OHLCV；`adj_factor` 保留因子；qfq/hfq/returns_adjusted 由可重放 derivation 生成 | 源头可追溯；支持 qfq/hfq 并存；QMT raw 执行价清晰；与 catalog/publish gate 兼容 | 需要新增 schema、quality、reader 和迁移声明 | high / 中高 | 高 | provider 因子方向写反会污染派生视图 | 接受先冻结公式和质量 gate，再实现 |
+| CR17-B：只保存 qfq/hfq 成品表 | 直接存储两个成品价格表，reader 选择其一 | 读取简单；实现起步快 | raw 与因子链路弱；无法解释重算；QMT 对账仍需另找 raw | medium / 中 | 中 | 历史漂移和执行价误用风险高 | 仅适合一次性离线展示，不适合生产数据湖 |
+| CR17-C：单 `prices` 表用 `adjustment_policy` 分区混存 | 同一 dataset 内保存 raw/qfq/hfq，不同 policy 由字段过滤 | 路径数量少；查询看似统一 | 消费方容易混用；破坏现有单口径 gate；QMT 风险高 | medium / 低起步高维护 | 中 | frame 级误读、报告口径漂移 | 仅当 reader 能 100% 强制 exact policy 且无交易消费 |
+
+**推荐**：CR17-A。它让事实源、派生口径、研究消费和交易执行边界同时可审计；代价是新增派生视图和质量门，但这正是 CR-017 的风险所在。
+
+### 18.4 推荐架构与系统图
+
+```mermaid
+flowchart LR
+  subgraph User["User / Research"]
+    U[Research run]
+  end
+  subgraph App["Application"]
+    R[Reader / Research Builder]
+    QMT[QMT Companion HLD]
+  end
+  subgraph Service["Data Lake Service"]
+    RAW[prices_raw]
+    AF[adj_factor]
+    DER[Adjustment Derivation]
+    VAL[Quality / Single-policy Gate]
+  end
+  subgraph Data["Data"]
+    QFQ[prices_qfq]
+    HFQ[prices_hfq]
+    RET[returns_adjusted]
+    CAT[catalog / lineage]
+  end
+  subgraph Infra["Infrastructure"]
+    LAKE[External Parquet Lake]
+  end
+  RAW --> DER
+  AF --> DER
+  DER --> QFQ
+  DER --> HFQ
+  DER --> RET
+  QFQ --> VAL
+  HFQ --> VAL
+  RET --> VAL
+  VAL --> CAT
+  CAT --> R
+  U --> R
+  R -->|target portfolio + research policy metadata| QMT
+  QMT -->|execution_price_policy=raw only| RAW
+  RAW --> LAKE
+  AF --> LAKE
+```
+
+### 18.5 Dataset / View 合同
+
+| 对象 | 类型 | 必需字段 / metadata | 失败行为 |
+|---|---|---|---|
+| `prices_raw` | source-of-truth dataset | `trade_date`、`symbol`、`open/high/low/close/volume/amount`、`source`、`source_interface`、`source_run_id`、`batch_id`、`available_at`、`available_at_rule`、`lineage_checksum`、`quality_status` | OHLC 非法、close<=0 非缺失、source lineage 缺失时 fail；不得由 qfq/hfq 覆盖 |
+| `adj_factor` | source-of-truth dataset | `trade_date`、`symbol`、`adj_factor`、`provider_factor_direction`、`factor_base_date_policy`、`source_run_id`、`available_at`、`as_of_trade_date` 或可推导 as-of、`quality_status` | 因子方向未确认时 derivation fail；不得声明完整公司行动审计 |
+| `prices_qfq` | derived view | `view_id=prices_qfq`、`research_adjustment_policy=qfq`、raw OHLCV key、adjusted OHLC、`as_of_trade_date`、`input_snapshot_id`、`derivation_version`、`source_run_id`、`lineage_checksum` | 缺 as-of 或输入 snapshot 时 fail；不得无声覆盖旧 qfq |
+| `prices_hfq` | derived view | `view_id=prices_hfq`、`research_adjustment_policy=hfq`、adjusted OHLC、`derivation_version`、`source_run_id`、`lineage_checksum` | 因子方向或 raw 缺失时 fail |
+| `returns_adjusted` | derived view | `view_id=returns_adjusted`、`return_type`、`research_adjustment_policy`、`start_price_ref`、`end_price_ref`、`derivation_version` | 输入价格混用、label window 不足或 quality fail 时 fail / structured truncate |
+| `legacy_qfq_baseline` | compatibility evidence | `legacy_qfq_baseline_preserved=true`、旧基线路径或引用、migration_status、禁止覆盖声明、CP5 前置条件 | 未能定位旧基线时输出 `required_missing`，不得覆盖旧报告 |
+
+### 18.6 公式和质量校验
+
+CP3 推荐冻结以下公式口径，LLD / 实现前必须用 provider 字段说明和样例数据再做 exact 复核：
+
+| 派生对象 | 推荐公式口径 | 质量校验 |
+|---|---|---|
+| `prices_qfq` | 以 `adj_factor` 把历史价格缩放到 `as_of_trade_date` 的前复权锚点；推荐表达为 `raw_price * adj_factor(trade_date) / adj_factor(as_of_trade_date)`，若 provider 因子方向相反则通过 `provider_factor_direction` 显式映射，禁止隐式猜测 | 同一 symbol 的 as-of 因子存在；qfq 输出 close>0；同一 as-of 重算 deterministic；不同 as-of 价格漂移必须有 lineage |
+| `prices_hfq` | 以首个有效因子或 provider 指定基准日作为后复权锚点；推荐表达为 `raw_price * adj_factor(trade_date) / adj_factor(base_date)`，其中 `base_date` 写入 metadata | base_date 可追溯；hfq 与 raw 的收益率方向一致；极端跳变进入 warning / fail |
+| `returns_adjusted` | 优先从同一复权视图或 raw+factor 计算收益率，不把 qfq/hfq 价格绝对缩放作为研究结论 | `return_type`、窗口、缺失处理和 label availability 可追溯 |
+
+异常价格解释：
+
+| 异常 | 处理 |
+|---|---|
+| raw OHLC 非法或 close<=0 | `quality_status=fail`，不得派生 |
+| adj_factor 缺失 | 派生视图 `required_missing`，不得前填作为事实；可在 CP5 后按 provider 规则设计补齐 |
+| qfq/hfq 单日跳变超过阈值 | 输出 `adjustment_jump_warning`，要求 lineage 指向因子变化；无法解释时 fail |
+| qfq 与 hfq 收益率方向不一致 | derivation fail，阻断 publish |
+
+### 18.7 关键流程
+
+1. **Scope freeze**：读取已确认 `REQ-098..104` 和 Q-030 / Q-031，冻结 raw、adj_factor、派生 view、旧 qfq 兼容和 QMT raw 执行价边界。
+2. **Raw / factor contract**：定义 `prices_raw` 与 `adj_factor` 字段、metadata、provider 因子方向和可用时间；CP3 不触发真实抓取或写入。
+3. **Derivation plan**：按公式生成 qfq/hfq/returns_adjusted 候选派生计划；输出 derivation_version、input_snapshot_id 和 quality gate。
+4. **Single-policy validation**：reader / research builder 只允许单一 `research_adjustment_policy`；混用时 fail fast。
+5. **Legacy compatibility**：旧 qfq 报告和旧 qfq 数据只读保留；迁移摘要说明新 view 与旧入口关系，不覆盖旧产物。
+6. **QMT boundary handoff**：向 QMT companion HLD 输出 `execution_price_policy=raw`，qfq/hfq 只能作为 research metadata。
+
+### 18.8 前置校验与失败路径
+
+| 阶段 | 前置条件 | 失败行为 | 回退 / 降级 |
+|---|---|---|---|
+| CP3 | CP2 approved，REQ-098..104、Q-030、Q-031 可读 | CP3 自动预检 `BLOCKED` | 回退 requirement-clarification |
+| derivation design | provider 因子方向、可用时间和公式已冻结 | 若方向不可确认，ADR-053 不批准实现 | 保持旧 qfq 只读基线 |
+| reader gate | view_id、policy、schema_version、quality_status 可读 | 返回 structured blocked reason | 用户选择单一 policy 或补齐 view |
+| QMT handoff | raw / broker price 可用，order intent 写 `execution_price_policy=raw` | qfq/hfq 执行价 hard block | 只允许 shadow report，不进入 adapter |
+
+### 18.9 非功能需求设计
+
+| 质量特征 | 设计目标 | 实现手段 | 验证方式 |
+|---|---|---|---|
+| 可追溯性 | 每个派生 view 能追溯 raw、adj_factor、as-of、derivation_version | lineage checksum、input_snapshot_id、source_run_id | TS-017-01 / TS-017-02 |
+| 安全性 | 复权价不得进入 QMT 执行价 | execution_price_policy hard gate；QMT companion 二次 risk check | TS-017-03 / TS-015-02 |
+| 可维护性 | raw/factor/source-of-truth 与派生 view 分离 | 独立 dataset/view id 与 schema_version | schema review / migration summary |
+| 可扩展性 | 后续可增加 dividend/corporate action 审计但不混淆当前 claim | `corporate_action_status` 与 `adj_factor_lineage` 分层 | report claim boundary |
+| 性能 | 派生和验证按 dataset/date/symbol 分区执行 | 沿用 CR-014 Parquet 分区和可选 DuckDB 只读 audit | 后续 CP7 性能 smoke |
+
+### 18.10 主要风险与应对
+
+| 风险 | 概率 | 影响 | 应对 |
+|---|---|---|---|
+| provider 因子方向误读 | 中 | qfq/hfq 全量方向错误，污染研究 | ADR-053 强制 `provider_factor_direction` 和样例 parity；方向不明时禁止实现 |
+| qfq as-of 缺失 | 中 | 历史价格漂移不可解释 | qfq 缺 `as_of_trade_date` 时 quality fail |
+| 旧 qfq 被覆盖 | 中 | 旧报告不可追溯 | ADR-054 强制 legacy baseline preserved；迁移只写摘要 |
+| qfq/hfq 误入 QMT 执行价 | 高 | 真实委托价格错误 | ADR-055/057/059 联合 hard block；QMT HLD 二次校验 |
+| `adj_factor` 被过度声明为公司行动审计 | 中 | 用户误信完整分红送转链路 | 报告只允许“使用复权因子”，完整公司行动另起 CR |
+
+### 18.11 ADR 候选决策点
+
+| ADR | 决策 | 回写对象 |
+|---|---|---|
+| ADR-053 | CR-017 复权公式、provider 因子方向、as-of 和异常价格解释 | §18.5、§18.6、Q-030 |
+| ADR-054 | CR-017 dataset / view schema、旧 qfq 兼容入口和迁移策略 | §18.5、§18.7、Q-031 |
+
+### 18.12 分阶段落地建议与工作量粗估
+
+> 下表是 HLD 级阶段建议，不是 Story Plan。CP3 人工确认前不得写 `STORY-BACKLOG.md`、`DEVELOPMENT-PLAN.yaml` 或 `process/stories/**`。
+
+| 阶段 | 目标 | 主要输出 | 粗估 |
+|---|---|---|---|
+| Phase A：公式与 schema freeze | 冻结 Q-030 / Q-031、raw/factor/view schema、legacy qfq 兼容 | formula spec、schema contract、migration summary | M |
+| Phase B：派生与 quality gate | 设计 qfq/hfq/returns derivation、as-of、quality parity | derivation plan、quality matrix | L |
+| Phase C：reader / research gate | 设计 single-policy reader 和研究报告 metadata | reader contract、blocked reason enum | M |
+| Phase D：QMT handoff | 向 QMT HLD 输出 raw 执行价边界和 order intent metadata | execution price boundary、handoff contract | S |
+
+### 18.13 CP3 Decision Brief 输入
+
+| ID | 推荐方案 | 备选方案 A | 备选方案 B | 接受影响 | 不接受影响 | 风险 / 后续影响 |
+|---|---|---|---|---|---|---|
+| Q-030 | 冻结 raw + adj_factor 事实源；qfq 以 `as_of_trade_date` 为锚点，hfq 以 provider/base date 为锚点；`provider_factor_direction` 必填；异常价格进入 quality fail/warn | 先只支持 qfq，hfq 后置 | 只保存 provider 成品 qfq/hfq，不冻结公式 | 后续实现可验证公式方向、as-of 和异常解释；QMT raw 价隔离清晰 | 公式方向可能写反，qfq 漂移不可追溯，CP5 Story 无法安全实现 | 影响 ADR-053、派生 normalization、quality parity、reader gate |
+| Q-031 | 独立 `prices_raw`、`adj_factor`、`prices_qfq`、`prices_hfq`、`returns_adjusted` view；旧 qfq 只读保留，兼容入口输出 migration summary | 单 `prices` 表按 `adjustment_policy` 分区混存 | 完全迁移旧 qfq 为新 view 并覆盖旧入口 | 单口径 gate 清晰，旧报告可追溯，QMT 不误读复权价 | 消费方容易混用，旧报告可能丢追溯，迁移风险高 | 影响 ADR-054、schema_version、reader API、migration docs |
+
+### 18.14 Gotchas
+
+| Gotcha | 规避方式 |
+|---|---|
+| 把 `adj_factor` 当作完整公司行动链路 | 报告只声明“使用复权因子”；公司行动审计另起数据合同 |
+| qfq 永远用最新因子覆盖 | qfq 物化必须写 `as_of_trade_date` 和 input snapshot |
+| 同一个 DataFrame 同时放 raw/qfq/hfq | 独立 view_id；reader single-policy gate fail fast |
+| 用复权价格发 QMT 委托 | QMT 只消费 raw / broker price；qfq/hfq 只写 research metadata |
+| DuckDB view 作为复权事实源 | DuckDB 仍只读候选；source of truth 保持 Parquet + catalog / manifest |
+
+### 18.15 待确认问题
+
+| ID | 问题 | 状态 | 默认处理 | 影响范围 | 决策人 |
+|---|---|---|---|---|---|
+| Q-030 | 是否接受推荐复权公式、provider 因子方向字段、as-of 语义和异常价格处理 | OPEN | 默认接受 CR17-A；方向不明时禁止实现 | 派生 view、quality、reader、报告 | 用户 / meta-po |
+| Q-031 | 是否接受独立 dataset/view schema、旧 qfq 只读保留和 migration summary | OPEN | 默认接受；不覆盖旧 qfq | schema、reader、迁移、文档 | 用户 / meta-po |
+
+## 19. CR-018 数据湖 production current truth closure
+
+> 本节是 CR-018 的数据湖生产闭环 HLD 增量。它承接 CR-014 S14 已形成的 `prices` / `adj_factor` candidate，但明确 candidate、validate PASS、parity PASS 均不等于 published current truth。CR-018 的生产事实由 release readiness、Explicit Publish Gate、catalog current pointer、rollback、published release 研究重跑共同闭环。本节不授权新增 provider fetch、真实 lake 写入、current pointer publish、凭据读取、DuckDB 持久事实源写入或 QMT simulation / live 操作。
+
+### 19.1 问题定义
+
+**问题陈述**：CR-014 S14 已形成 `2015-01-05..2026-05-28` 全 A `prices` / `adj_factor` candidate，并有 raw、manifest、canonical candidate 和 smoke 证据；但 catalog current pointer 仍未 publish，PIT universe、lifecycle/code-change、trade_status、prices_limit/ST/suspend、benchmark 行情 / 成分 / 权重、复权派生 readiness 和 rollback 证据尚未形成 release 级闭环。如果直接把 candidate 称为 production current truth，研究层会继续携带幸存者偏差、假可交易、proxy benchmark 或不可回滚的 current pointer 风险。
+
+**核心价值**：CR-018 将“已有大规模 candidate”升级为“可审计、可发布、可回滚、可研究重跑、可阻断 QMT 的 production current truth”。它优先解决数据湖生产事实，而不是提前解禁 QMT simulation，避免把在 proxy / fixed snapshot 下成立的策略接入交易链路。
+
+| 优先级 | 目标 | 可度量成功标准 |
+|---|---|---|
+| P0 | scoped release 范围冻结 | release readiness 100% 输出 `release_scope=2015-01-05..latest_closed_trade_date`、`as_of_trade_date`、calendar source、2015 前 `blocked/future_backfill` |
+| P0 | P0 dataset group 闭环 | P0 group 中每个 dataset 都有 raw / manifest / canonical / gold 或 view / quality / catalog lineage；任一缺口输出 `required_missing` 和 blocked claim |
+| P0 | Explicit Publish Gate | current pointer 只由 publish gate 更新；validate/parity 自动更新次数为 0；release summary 字段覆盖率 100% |
+| P0 | release 级 rollback | rollback event 100% 记录 reason、operator、time、from_release、to_release、smoke result，且 raw/manifest/candidate/history release 删除次数为 0 |
+| P0 | publish 后研究重跑 | QMT admission 前必须存在 release-bound research rerun report，且记录 release_id、benchmark、PIT、tradability、adjustment_policy、blocked claims 和 pass/fail |
+| P1 | 行业 / 市值 / 风格 / 流动性 / 容量声明边界 | P1 缺失时 pure alpha、行业 / 市值中性、容量可交易和 scale_up ready allowed claim 输出次数为 0 |
+
+### 19.2 约束、非目标、假设与缺失信息
+
+| 类型 | 内容 | 状态 |
+|---|---|---|
+| 约束 | CR-018 CP2 已 approved，D1-D6 推荐方案已由用户批准；HLD 不重复要求用户重新决策 D1-D6 | RESOLVED_BY_CP2 |
+| 约束 | CR014 S14 candidate 是输入事实，不得自动 publish；publish 仍需 CP5、单次授权和 Explicit Publish Gate | ACTIVE |
+| 约束 | QMT simulation / live_readonly / small_live / scale_up 在 publish + production research rerun PASS 前保持 blocked | ACTIVE |
+| 非目标 | 不补 2015 前 since-inception；2015 前历史列为 blocked/future backfill，除非用户另起 CR 或切换 D1 备选 | IN_SCOPE_BOUNDARY |
+| 非目标 | 不把行业 / 市值 / 风格 / 流动性 / 容量升为 P0；它们为 P1，但阻断对应研究和资金放大声明 | IN_SCOPE_BOUNDARY |
+| 非目标 | 不把 DuckDB `.duckdb`、临时 SQL view、quality report 或 parity report 作为 source of truth | IN_SCOPE_BOUNDARY |
+| 假设 | `latest_closed_trade_date` 由已发布或待发布 trade_calendar 中最近已闭市 open trading day 决定 | REQUIRED_FOR_LLD |
+| 缺失信息 | 真实 provider 接口可用性、真实 lake root、凭据、publish approver、release_id 命名最终格式 | NON_BLOCKING_FOR_HLD；后续 Story / CP5 / per-run 授权处理 |
+
+### 19.3 Architecture Gray Areas 与方案形成记录
+
+**CP3 讨论日志**：`process/discussions/CP3-CR018-HLD-DISCUSSION-LOG.md`
+**CP3 讨论恢复点**：`process/checks/CP3-CR018-DISCUSSION-CHECKPOINT.json`
+
+| 灰区 ID | 关键问题 | 为什么会影响架构 | 影响面 | 推荐讨论顺序 | canonical refs | 状态 |
+|---|---|---|---|---|---|---|
+| AGA-CR018-01 | 第一版 release scope 是 scoped release、since-inception 还是 2026 YTD | 决定 denominator、release summary、blocked claims 和 Story 范围 | 范围 / 数据 / 文档 / 研究声明 | 1 | D1、REQ-124、A-036、UC-13 | selected：CP2 已批准 scoped release |
+| AGA-CR018-02 | P0/P1 dataset group 如何划分 | 决定模块边界、并行回补、quality gate 和哪些声明可以解除 | 数据 / 模块 / 验证 / 研究声明 | 2 | D2、D3、D4、REQ-126..129、REQ-135..136 | selected：P0 核心 + P1 声明阻断 |
+| AGA-CR018-03 | publish 粒度和 rollback 单位 | 决定 current pointer 一致性、回滚复杂度和审计模型 | catalog / 发布 / 安全 / 运维 | 3 | D5、REQ-131..132、RA-045 | selected：release-level 总门 + dataset-level 明细 |
+| AGA-CR018-04 | 研究重跑与 QMT 后置关系 | 决定是否允许技术 simulation 先行，以及 QMT stage gate 的前置依赖 | 研究 / QMT / 安全 / 运行治理 | 4 | D6、REQ-123、REQ-133..134、UC-14 | selected：publish + rerun PASS 后再申请 QMT |
+
+### 19.4 Advisor Table
+
+| Option | Pros | Cons | Impact Surface | Recommendation | Assumptions / When to switch |
+|---|---|---|---|---|---|
+| CR18-A：scoped production release + P0 core group + release-level publish/rollback + rerun-before-QMT | 复用 CR014 S14 candidate；范围可审计；PIT/W3/benchmark 不缺席；rollback 一致；QMT 不提前消费不稳定研究结论 | Story 数量较多；provider 限流和质量门较重；QMT simulation 推迟 | 数据湖 production、research rerun、QMT stage gate、文档声明 | 推荐 | CP2 已批准 D1-D6；若用户要求 2015 前完整历史或 QMT 技术 smoke 先行，需另起 CR 或切换备选 |
+| CR18-B：core-only 快速 publish | 仅发布 prices_raw / adj_factor / trade_calendar，最快形成 current pointer | PIT/W3/benchmark 缺失，严肃研究和 QMT admission 仍需 blocked；容易被误读为生产完成 | catalog、reader、研究声明 | 不推荐，作为降级 | 当 provider 权限不足且用户只需要 candidate reader 时切换；必须保留 blocked claims |
+| CR18-C：data-rich 一次性把行业 / 市值 / 流动性升 P0 | 研究解释最完整；可更早解除中性化、容量和资金放大声明 | 周期长、接口风险高、publish 延迟明显 | 数据回补、研究、QMT scale_up | 条件推荐 | 当用户把行业中性、纯 alpha、容量或 scale_up 作为近期目标时切换 |
+| CR18-D：QMT technical simulation 先行 | 可早测 Windows/QMT 技术链路 | 容易让策略层误读为可运行；违反当前 D6 优先级；需要额外授权和清晰 no-strategy claim | QMT / 安全 / runbook | 不推荐，治理备选 | 仅在用户明确要求“无策略含义 adapter smoke”且另行授权时作为独立 Spike |
+
+### 19.5 候选架构方案对比
+
+| 维度 | 方案 A：CR18-A 推荐方案 | 方案 B：core-only 快速 publish | 方案 C：data-rich 全量 P0 |
+|---|---|---|---|
+| 核心思路 | 发布 scoped release，P0 覆盖 PIT/W3/benchmark/复权派生，P1 辅助数据阻断对应声明；publish / rollback release 级 | 只把已有 candidate 最小发布为 reader 可见 | 把行业 / 市值 / 风格 / 流动性 / 容量也升为 publish P0 |
+| 优点 | 生产 truth、研究可信度和 QMT 安全边界平衡最好 | 上线最快、实现面最小 | 研究解释和资金放大前置最完整 |
+| 缺点 | 需要补齐多类 P0 数据和质量审计 | 不足以支持严肃 benchmark、PIT 和 QMT admission | provider 和质量风险最大，publish 可能长期延迟 |
+| 复杂度 / 成本 | high / 中高 | medium / 中 | very high / 高 |
+| 可扩展性 | 高，后续可把 P1 数据升 P0 或补 2015 前 | 中，后续仍需大规模返工 | 高，但初始耦合更大 |
+| 风险 | P0 缺口导致 publish 阻断；release gate 较重 | 误声明 production complete | 一次性交付失败率高 |
+| 适用前提 | 用户接受 D1-D6，优先数据湖 truth，再 QMT | 用户接受大量 blocked claims | 用户近期需要中性化 / 容量 / scale_up 声明 |
+
+**推荐方案**：CR18-A。它严格区分 candidate 与 published current truth，维持 CR-014 / CR-017 source-of-truth 设计，并把 QMT 后置落成可验证 stage gate。
+
+### 19.6 推荐架构总览与系统架构图
+
+**关键架构风格**：分层数据湖 + release-gated catalog + claim boundary + research admission gate。
+
+**核心能力边界**：
+- 做：定义 CR018 release scope、P0/P1 dataset group、readiness matrix、publish/rollback、research rerun、QMT blocked/admission contract。
+- 不做：不执行真实抓取、写湖、publish、QMT、凭据读取；不把 P1 缺失数据包装成已支持声明。
+
+```mermaid
+flowchart TD
+  U[User / meta-po approval] --> APP[market_data CLI / release workflow]
+  APP --> PLAN[Release Scope & Dataset Group Planner]
+  PLAN --> CAND[CR014 S14 Candidate<br/>prices_raw + adj_factor]
+  PLAN --> P0[P0 Backfill / Readiness Candidates<br/>PIT lifecycle trade_status limits benchmark adjustment]
+  PLAN --> P1[P1 Auxiliary Candidates<br/>industry market cap style liquidity capacity]
+  CAND --> Q[Production Quality / Readiness Gate]
+  P0 --> Q
+  P1 --> CLAIM[Blocked Claims Builder]
+  Q -->|pass| PUB[Explicit Publish Gate]
+  Q -->|fail|required_missing[Required Missing / Gap Register]
+  PUB --> CAT[Catalog Current Pointer]
+  PUB --> REL[Release Summary<br/>release_id scope as_of datasets rollback target]
+  CAT --> RDR[Production Readers / Audit Query]
+  REL --> RB[Rollback Gate]
+  RDR --> RES[Research Rerun<br/>stage 3-5 published truth]
+  RES --> QMT[QMT Stage Gate<br/>simulation/live blocked until rerun PASS]
+  required_missing --> CLAIM
+  CLAIM --> DOC[README / USER-MANUAL / Reports claim boundary]
+```
+
+### 19.7 高层模块、职责与集成契约
+
+| 模块 | 职责 | 调用方向 | 输入契约 | 输出契约 | 失败 / 降级 | 调用方需同步修改 |
+|---|---|---|---|---|---|---|
+| Release Scope Planner | 固化 scoped release、latest closed trade date、2015 前 blocked/future backfill | CLI / story job -> planner | CR014 S14 candidate summary、trade_calendar、D1 scope | `release_scope`、`as_of_trade_date`、denominator policy | 缺 calendar 时 `release_scope_unresolved`，不得 publish | catalog / readiness / docs |
+| Dataset Group Registry | 维护 P0/P1 group、优先级、claim impact | planner / quality -> registry | D2-D4、REQ-126..136 | dataset group matrix、P1 blocked claims | P0 缺失阻断 release；P1 缺失阻断声明 | quality gate、research rerun、QMT gate |
+| P0 Readiness Gate | 计算 PIT/W3/benchmark/adjustment readiness | validate -> readiness gate | canonical/gold/view candidates、manifest、lineage | readiness matrix、gap register、quality status | 任一 P0 fail 时 release blocked | publish gate、docs、reports |
+| Explicit Publish Gate | 唯一更新 current pointer 的入口 | release approver -> publish gate -> catalog | release candidate、quality summary、rollback target、approver | catalog pointer、release summary、checksum | 输入不完整时 current pointer 保持旧值 | reader、DuckDB audit、research builder |
+| Rollback Gate | 以 release 为单位恢复上一 current pointer | operator -> rollback gate -> catalog | from_release、to_release、reason、smoke policy | rollback event、smoke result | rollback smoke fail 时进入 manual_review | ops docs、incident report |
+| Research Rerun Gate | 使用 published release 重跑阶段三到阶段五核心研究 | research builder -> readers -> reports | release_id、research config、benchmark / PIT / tradability | rerun report、allowed/blocked claims、pass/fail | 缺 release 或 rerun fail 时 QMT blocked | QMT admission、README、USER-MANUAL |
+| QMT Admission Adapter | 将数据湖 / 研究状态转成 QMT stage gate 输入 | QMT HLD -> admission adapter | release status、rerun status、foundation status、authorization status | `blocked_by_data_lake_production_truth` 或 admission candidate | 未 publish / 未 rerun pass 时真实 QMT 操作计数 0 | `HLD-QMT-TRADING.md` stage gate |
+
+### 19.8 技术选型与理由
+
+| 选型 | 决策 | 理由 | When to switch |
+|---|---|---|---|
+| Source of truth | 继续 Parquet lake + manifest + catalog current pointer | 延续 ADR-048/052；release 与 rollback 可基于 manifest / checksum 审计 | 并发写、多团队运维或 ACID 需求显著提升时另起 CR 评估 external catalog |
+| Publish 粒度 | release-level 总门 + dataset-level 明细 | 保证跨 P0 dataset 一致性；rollback 可操作；避免多 current pointer 漂移 | 某 dataset 更新频率极端不同且有独立消费需求时增加 sub-release，但仍由总门协调 |
+| Benchmark group | HS300、ZZ500、ZZ1000、中证全指行情 / 成分 / 权重列 P0 | 支撑真实超额、指数增强、大小盘暴露与 tracking error | 若接口不可用，可临时只保留行情并把成分 / 权重 `required_missing` |
+| P1 auxiliary | 行业 / 市值 / 风格 / 流动性 / 容量列 P1 | 保持核心 truth publish 可达，同时阻断中性化 / 容量 / scale_up 过度声明 | 用户要求近期解除这些声明时升 P0 |
+| QMT 后置 | publish + research rerun PASS 后才申请 QMT | 防止 proxy/fixed snapshot 结论进入交易链路 | 仅技术 adapter smoke 可另起无策略含义 Spike |
+
+### 19.9 关键流程
+
+1. **Scope freeze**：读取 CP2 approved D1-D6、REQ-123..137、CR014 S14 candidate summary，冻结 scoped release 与 blocked/future backfill。
+2. **Dataset group planning**：生成 P0 / P1 matrix；P0 缺口阻断 release，P1 缺口只阻断对应声明。
+3. **P0 backfill/readiness**：对 PIT universe、lifecycle/code-change、trade_status、prices_limit/ST/suspend、benchmark 行情 / 成分 / 权重、qfq/hfq/returns_adjusted 执行 readiness。
+4. **Quality gate**：覆盖 coverage、重复键、字段缺失、价格异常、收益尖峰、复权异常、停牌填充、future leakage、manifest lineage、current pointer 一致性。
+5. **Explicit Publish Gate**：只有 release candidate 字段完整、quality/readiness pass、rollback target 可用、approver 和 approved_at 已记录时更新 catalog current pointer。
+6. **Rollback smoke**：发布后读 current pointer、release summary 和上一 release target；rollback smoke 只切换 pointer，不删除 raw/manifest/candidate。
+7. **Published truth research rerun**：以 release_id 重跑阶段三到阶段五核心研究，输出低波 / 因子主线是否仍成立、旧 proxy/fixed-snapshot 对比和 blocked claims。
+8. **QMT admission**：未 publish、未 rerun、rerun fail 时返回 blocked；rerun pass 后只允许进入下一轮 QMT stage gate 审批，不自动授权真实操作。
+
+### 19.10 前置校验与失败路径
+
+| 阶段 | 前置条件 | 失败行为 | 回退 / 降级 |
+|---|---|---|---|
+| CP3 | CP2 approved，HLD / ADR 增量可读，Architecture Gray Areas 已记录 | CP3 自动预检 `BLOCKED` | 回退 requirement-clarification 或重新处理灰区 |
+| Release planning | trade_calendar 与 release scope 可计算 | `release_scope_unresolved`，publish 禁止 | 回退 S01 / calendar contract |
+| P0 readiness | P0 group 每项有 source/interface 或 required_missing | release status `blocked` | 输出 gap register，不触发 publish |
+| Publish | quality/readiness pass、rollback target、approver 字段完整 | current pointer 保持旧值；candidate 仍为 unpublished | 回退 readiness / release summary |
+| Rollback | previous release 可读且 smoke policy 可执行 | rollback 进入 manual_review，不删除任何历史 evidence | 回退 catalog pointer 审计 |
+| Research rerun | published release 可读，research config 锁定 release_id | QMT admission blocked | 回退 research report 或 release gate |
+| QMT admission | release + rerun PASS，CR015/016/017 foundation/gates 可读 | QMT operation count=0，返回 blocked reason | 回退 QMT stage gate，不触发真实 QMT |
+
+### 19.11 非功能需求设计
+
+| 质量特征 | 设计目标 | 实现手段 | 验证方式 |
+|---|---|---|---|
+| 可审计性 | release、dataset、quality、rollback、research rerun 均可追溯 | release_id、source_run_ids、lineage checksum、evidence_paths | TS-018-02 / TS-018-03 / TS-018-05 |
+| 安全性 | 设计阶段真实操作为 0；publish 与 QMT 均需独立授权 | permission counters、authorization_id、forbidden paths | TS-018-01 / TS-018-06 |
+| 可用性 | rollback 不破坏 raw/manifest/candidate，旧 release 可恢复 | release-level pointer、rollback smoke | TS-018-03 |
+| 可维护性 | P0/P1 声明边界由 registry 和 ADR 固化 | dataset group registry、ADR-062..066 | CP3 / CP4 检查 |
+| 性能 | release readiness 支持按 dataset/date/symbol 分区检查 | 沿用 Parquet partition、manifest resume、可选只读 audit | 后续 CP7 性能 smoke |
+
+### 19.12 主要风险与应对
+
+| 风险 | 概率 | 影响 | 应对 |
+|---|---|---|---|
+| candidate 被误称 production current truth | 高 | 研究和 QMT 误用未发布数据 | ADR-062/065；reader 未 publish 返回 `catalog_not_published` |
+| PIT / tradability 缺口未阻断 | 高 | 幸存者偏差和假成交 | P0 readiness gate；REQ-126/127 fail 时 release blocked |
+| benchmark group 不完整 | 中高 | 超额收益、指数增强、tracking error 失真 | ADR-064；四类 benchmark 缺失进入 blocked_claims |
+| 多 dataset 独立 publish 导致 pointer 漂移 | 中 | rollback 与研究重跑不可复现 | ADR-065；release-level 总门和 rollback |
+| P1 数据被误读为可选无影响 | 中 | 中性化、纯 alpha、容量声明失真 | ADR-063；P1 缺失阻断对应 allowed claims |
+| QMT foundation 技术可用被误解为 simulation 解禁 | 中高 | 未验证策略进入交易链路 | ADR-066；publish + rerun PASS 前 QMT blocked |
+
+### 19.13 ADR 候选决策点
+
+| ADR | 决策 | 回写对象 |
+|---|---|---|
+| ADR-062 | CR018 current truth release scope：`2015-01-05..latest_closed_trade_date` scoped release，2015 前 future backfill | §19.1、§19.2、S01 |
+| ADR-063 | CR018 P0/P1 dataset group 和声明边界 | §19.3、§19.7、S01/S04 |
+| ADR-064 | CR018 benchmark group：HS300、ZZ500、ZZ1000、中证全指行情 / 成分 / 权重为 P0 | §19.7、§19.8、S03 |
+| ADR-065 | CR018 Explicit Publish Gate：release-level 总门 + dataset-level 明细，rollback 以 release 为单位 | §19.8、§19.9、S06/S07 |
+| ADR-066 | CR018 published truth research rerun 与 QMT 后置 | §19.9、§19.10、S08/S09 |
+
+### 19.14 分阶段落地建议与工作量粗估
+
+| 阶段 | 目标 | 主要输出 | 粗估 |
+|---|---|---|---|
+| Phase A：release scope 与 dataset group | 冻结 scoped release、P0/P1 group、claim matrix | release policy、dataset group registry、blocked/future backfill | M |
+| Phase B：P0 readiness closure | 补齐或阻断 PIT/W3/benchmark/adjustment readiness | readiness matrix、gap register、quality policies | XL |
+| Phase C：publish / rollback | 实现 release summary、Explicit Publish Gate、current pointer smoke、rollback smoke | publish gate、release summary、rollback event | L |
+| Phase D：research rerun | 使用 published release 重跑阶段三到阶段五核心研究 | release-bound reports、pass/fail、claim diff | L |
+| Phase E：QMT admission boundary | 把 release/rerun 状态接入 QMT stage gate | admission result、blocked reason、docs refresh | M |
+
+### 19.15 Use Case -> Architecture Traceability
+
+| Use Case | 支撑模块 / 组件 | 关键流程 | 异常 / 失败路径 | 验证方式 | 备注 |
+|---|---|---|---|---|---|
+| UC-13 | Release Scope Planner、Dataset Group Registry、P0 Readiness Gate、Explicit Publish Gate、Rollback Gate | §19.9 第 1-6 步 | P0 缺口、quality fail、publish 输入缺失、rollback smoke fail | TS-018-01 至 TS-018-04 | candidate 与 published current truth 隔离是主线 |
+| UC-14 | Research Rerun Gate、QMT Admission Adapter、Claim Boundary Builder | §19.9 第 7-8 步 | 未 publish、未 rerun、rerun fail、QMT 授权缺失 | TS-018-05、TS-018-06 | QMT 后置不等于取消 QMT foundation |
+
+### 19.16 关键场景模拟
+
+| 场景 | 输入 | 推荐架构结果 | 结论 |
+|---|---|---|---|
+| S-1：只有 CR014 S14 candidate，无 publish | `prices_raw` / `adj_factor` candidate、无 release summary | reader / QMT admission 返回 `catalog_not_published` / `blocked_by_data_lake_production_truth`；allowed_claims 不含 production current truth | 通过 |
+| S-2：PIT 或 benchmark P0 缺失 | candidate + 缺 lifecycle 或 benchmark weights | readiness matrix 输出 `required_missing`，publish gate 拒绝更新 current pointer，docs 写 blocked claims | 通过 |
+| S-3：publish 后研究重跑失败 | published release + rerun report fail | QMT simulation/live_readonly/small_live/scale_up 保持 blocked；旧 proxy/fixed-snapshot 结论不得进入 admission | 通过 |
+| S-4：publish 后发现质量异常 | 当前 release + previous release 可读 | rollback gate 回退 current pointer 到上一 release，保留 raw/manifest/candidate/history release | 通过 |
+
+### 19.17 适用性矩阵
+
+| 适用性维度 | 当前项目判断 | 推荐方案如何适配 | 不适配信号 | When to switch |
+|---|---|---|---|---|
+| 用户目标 | 先 production data lake truth，再 QMT | CR18-A 把 publish/rerun 作为 QMT 前置 | 用户改为只做 QMT 技术 smoke | 另起 no-strategy QMT Spike |
+| 项目成熟度 | 已有 CR014 candidate、CR015/16/17 离线验证，但 current truth 未发布 | 保留既有分层与 CP 门控，不重写架构 | catalog / manifest 无法支撑 release consistency | 评估 external catalog / lakeFS |
+| 认知负担 | candidate / published truth / blocked claims 易混淆 | release summary、readiness matrix、claim boundary 三件套 | 用户只接受单一“是否可用”布尔值 | 缩小 scope，只做 core-only 并明确 blocked |
+| 验证条件 | 有 TS-018-01..06，后续可用 smoke / report 验证 | publish、rollback、rerun、QMT gate 均可机器检查 | provider 不可用或质量报告不可复现 | 保持 candidate，不 publish |
+| 回退成本 | release-level rollback 可控 | rollback 不删除 evidence，只切 pointer | 多入口 publish 已发生 | 暂停 publish，先做 catalog repair Story |
+
+### 19.18 CP3 Decision Brief 输入
+
+| 决策项 | 状态 | 推荐方案 | 备选方案 | 影响 / 风险 | 回退 / 切换条件 |
+|---|---|---|---|---|---|
+| D1-D6 | 已由 CP2 approved | 继续按 CP2 D1-D6 推荐方案形成 HLD / ADR / Story Plan | 见 CP2 Decision Brief 各 D 项 | 不重复要求用户决策；CP3 只审查设计是否正确落实 | 若 CP3 不接受，回退到对应 D 项重新澄清 |
+| CP3-CR018-DQ-01 | 待 CP3 确认 | 接受 CR18-A HLD / ADR 增量，作为后续 Story / LLD 输入 | A. core-only 快速 publish；B. data-rich 全量 P0 | 推荐方案平衡速度、研究可信度和 QMT 安全；备选分别牺牲声明能力或交付速度 | CP3 修改或 reject 时回退 §19.3 灰区 |
+| CP3-CR018-DQ-02 | 待 CP3 确认 | 接受 CR018-S01..S09 Story 规划在 CP3 approve 后进入 CP4 / CP5 队列 | A. 先只做 S01/S06/S07 发布链路；B. 延后 S08/S09 | 全量 Story 让 QMT 后置闭环可验证；缩小范围会推迟研究和 QMT admission | provider / 时间压力过高时缩小范围 |
+| CP3-CR018-DQ-03 | 待 CP3 确认 | 接受本阶段仍不授权真实 fetch、写湖、publish、凭据读取、QMT 操作 | A. CP3 同步授权 publish dry-run；B. CP3 同步授权 QMT technical smoke | 推荐方案权限最小；备选增加安全和审计风险 | 用户另行给出 per-run authorization_id 后再切换 |
+
+### 19.19 Gotchas
+
+| Gotcha | 规避方式 |
+|---|---|
+| 把 CR014 S14 candidate 称为 production current truth | reader 和 docs 必须输出 `candidate_unpublished`，直到 publish gate 写 current pointer |
+| P1 行业 / 市值 / 流动性缺失但报告写纯 alpha 或 scale_up ready | Claim Boundary Builder 必须把 P1 缺口映射为 blocked claims |
+| benchmark 只有指数行情，没有历史成分 / 权重 | 可以计算指数收益，但不得声明真实指数增强或 tracking error 完整 |
+| publish 多个 dataset 指针，rollback 只回退其中一个 | 采用 release-level 总门和 release-level rollback |
+| 研究重跑通过后自动启动 QMT | rerun pass 只允许申请 QMT stage gate，不自动授权真实或模拟操作 |
+
+### 19.20 待确认问题与自审
+
+| ID | 问题 | 状态 | 默认处理 | 影响范围 | 决策人 |
+|---|---|---|---|---|---|
+| CR18-Q1 | 是否接受 CR18-A HLD / ADR 增量作为 CP3 推荐方案 | OPEN_FOR_CP3 | 默认接受；D1-D6 已由 CP2 approve | HLD、ADR、Story Plan | user / meta-po |
+| CR18-Q2 | 是否接受 Story Plan 仅为规划，不授权真实 fetch / lake write / publish / QMT | OPEN_FOR_CP3 | 默认接受；真实操作需 CP5 + per-run authorization | CP4、CP5、运行安全 | user / meta-po |
+| CR18-Q3 | 是否需要把 P1 行业 / 市值 / 流动性升 P0 | RESOLVED_BY_CP2_DEFAULT | 默认不升，阻断对应声明 | 研究声明、scale_up | user 可后续 CR 切换 |
+
+**HLD 自审记录**：
+
+| 检查项 | 结果 | 证据 |
+|---|---|---|
+| 问题定义、目标、约束、非目标、假设完整 | PASS | §19.1、§19.2 |
+| 候选方案至少 2 个且有真实取舍 | PASS | §19.4、§19.5 |
+| Architecture Gray Areas 前置并有 advisor table | PASS | §19.3、§19.4，讨论证据写入 CP3 log / checkpoint |
+| Use Case Traceability 与场景模拟 | PASS | §19.15、§19.16 |
+| NFR、风险、失败路径和 rollback | PASS | §19.10、§19.11、§19.12 |
+| ADR 与 Story 可追溯 | PASS | §19.13、§19.14、后续 ADR-062..066 / CR018-S01..S09 |
+| 安全边界 | PASS | 本节不授权 provider fetch、真实 lake 写入、publish current pointer、凭据读取或 QMT 操作 |

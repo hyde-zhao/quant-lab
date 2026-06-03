@@ -1,0 +1,84 @@
+{
+  "checkpoint_id": "CP2-CR030-DISCUSSION",
+  "change_id": "CR-030",
+  "status": "PASS",
+  "created_at": "2026-06-03T00:06:23+08:00",
+  "created_by": "meta-po",
+  "discussion_log": "process/discussions/CP2-CR030-SCENARIO-DISCUSSION-LOG.md",
+  "analysis_artifact": "process/research/CR030-MULTIFACTOR-FRAMEWORK-REFERENCE-ANALYSIS-2026-06-03.md",
+  "local_qlib_path": "/home/hyde/download/qlib",
+  "inputs": {
+    "local_qlib_static_analysis": "complete",
+    "external_project_web_research": "complete",
+    "meta_pm_cp2_recommendation": "complete"
+  },
+  "external_projects_reviewed": [
+    "Qlib",
+    "Alphalens",
+    "vectorbt",
+    "PyBroker",
+    "bt",
+    "Zipline Reloaded",
+    "QuantConnect LEAN",
+    "RQAlpha",
+    "vn.py / vnpy.alpha",
+    "Backtrader"
+  ],
+  "recommended_mainline": "project-owned multifactor research loop; external projects are static references or optional spikes",
+  "recommended_cr026_disposition": "deferred Qlib isolated runner Spike candidate; do not start in parallel before CR-030 contracts are frozen",
+  "recommended_use_cases": [
+    "UC-20",
+    "UC-21",
+    "UC-22",
+    "UC-23",
+    "UC-24",
+    "UC-25",
+    "UC-26",
+    "UC-27"
+  ],
+  "recommended_requirements": [
+    "REQ-174",
+    "REQ-175",
+    "REQ-176",
+    "REQ-177",
+    "REQ-178",
+    "REQ-179",
+    "REQ-180",
+    "REQ-181",
+    "REQ-182",
+    "REQ-183",
+    "REQ-184",
+    "REQ-185"
+  ],
+  "pending_human_decisions": [
+    "DQ-CP2-CR030-01",
+    "DQ-CP2-CR030-02",
+    "DQ-CP2-CR030-03",
+    "DQ-CP2-CR030-04",
+    "DQ-CP2-CR030-05",
+    "DQ-CP2-CR030-06",
+    "DQ-CP2-CR030-07",
+    "DQ-CP2-CR030-08",
+    "DQ-CP2-CR030-09"
+  ],
+  "cp2_discussion_ready": true,
+  "cp2_human_gate_ready": false,
+  "remaining_before_cp2_gate": [
+    "append CR-030 incremental UC baseline to process/USE-CASES.md",
+    "append CR-030 incremental requirements baseline to process/REQUIREMENTS.md",
+    "write CP1 and CP2 auto precheck files",
+    "write CP2 manual Decision Brief checkpoint",
+    "validate launch message if human gate script is available"
+  ],
+  "non_authorized_items": [
+    "implementation",
+    "dependency change",
+    "external project clone/install/run",
+    "source copy or migration",
+    "provider fetch",
+    "lake write",
+    "catalog publish",
+    "QMT / simulation / live",
+    "credential access"
+  ]
+}

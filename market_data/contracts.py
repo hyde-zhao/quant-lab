@@ -36,6 +36,148 @@ DATASETS: tuple[str, ...] = (
     DATASET_EVENTS,
 )
 
+CR018_BENCHMARK_HS300 = "HS300"
+CR018_BENCHMARK_ZZ500 = "ZZ500"
+CR018_BENCHMARK_ZZ1000 = "ZZ1000"
+CR018_BENCHMARK_CSI_ALL_SHARE = "CSI_ALL_SHARE"
+CR018_BENCHMARK_IDS: tuple[str, ...] = (
+    CR018_BENCHMARK_HS300,
+    CR018_BENCHMARK_ZZ500,
+    CR018_BENCHMARK_ZZ1000,
+    CR018_BENCHMARK_CSI_ALL_SHARE,
+)
+CR018_BENCHMARK_INDEX_CODES: dict[str, str] = {
+    CR018_BENCHMARK_HS300: "399300.SZ",
+    CR018_BENCHMARK_ZZ500: "000905.SH",
+    CR018_BENCHMARK_ZZ1000: "000852.SH",
+    CR018_BENCHMARK_CSI_ALL_SHARE: "000985.SH",
+}
+CR018_BENCHMARK_DATASET_PRICES = "prices"
+CR018_BENCHMARK_DATASET_COMPONENTS = "components"
+CR018_BENCHMARK_DATASET_WEIGHTS = "weights"
+CR018_BENCHMARK_DATASET_TYPES: tuple[str, ...] = (
+    CR018_BENCHMARK_DATASET_PRICES,
+    CR018_BENCHMARK_DATASET_COMPONENTS,
+    CR018_BENCHMARK_DATASET_WEIGHTS,
+)
+CR018_BENCHMARK_REQUIRED_FOR_PUBLISH = True
+CR018_BENCHMARK_CLAIM_PRODUCTION_EXCESS_RETURN = "production_excess_return"
+CR018_BENCHMARK_CLAIM_INDEX_ENHANCEMENT = "index_enhancement"
+CR018_BENCHMARK_CLAIM_TRACKING_ERROR = "tracking_error"
+CR018_BENCHMARK_BLOCKED_CLAIMS: tuple[str, ...] = (
+    CR018_BENCHMARK_CLAIM_PRODUCTION_EXCESS_RETURN,
+    CR018_BENCHMARK_CLAIM_INDEX_ENHANCEMENT,
+    CR018_BENCHMARK_CLAIM_TRACKING_ERROR,
+)
+CR018_BENCHMARK_REASON_REQUIREMENT_MISSING = "benchmark_requirement_missing"
+CR018_BENCHMARK_REASON_PRICES_MISSING = "benchmark_prices_missing"
+CR018_BENCHMARK_REASON_COMPONENTS_MISSING = "benchmark_components_missing"
+CR018_BENCHMARK_REASON_WEIGHTS_MISSING = "benchmark_weights_missing"
+CR018_BENCHMARK_REASON_COMPONENT_CURRENT_SNAPSHOT_NOT_PIT = (
+    "benchmark_component_current_snapshot_not_pit"
+)
+CR018_BENCHMARK_REASON_WEIGHT_MEMBERSHIP_MISMATCH = "benchmark_weight_membership_mismatch"
+CR018_BENCHMARK_REASON_PROXY_USED_AS_REAL = "proxy_benchmark_used_as_real"
+CR018_BENCHMARK_REASON_TRADE_CALENDAR_DENOMINATOR_MISSING = (
+    "trade_calendar_denominator_missing"
+)
+CR018_BENCHMARK_REASON_PERMISSION_COUNTER_VIOLATION = "benchmark_permission_counter_violation"
+CR018_BENCHMARK_REASON_BY_DATASET_TYPE: dict[str, str] = {
+    CR018_BENCHMARK_DATASET_PRICES: CR018_BENCHMARK_REASON_PRICES_MISSING,
+    CR018_BENCHMARK_DATASET_COMPONENTS: CR018_BENCHMARK_REASON_COMPONENTS_MISSING,
+    CR018_BENCHMARK_DATASET_WEIGHTS: CR018_BENCHMARK_REASON_WEIGHTS_MISSING,
+}
+CR018_BENCHMARK_READINESS_ROW_FIELDS: tuple[str, ...] = (
+    "benchmark_id",
+    "index_code",
+    "dataset_type",
+    "required_for_publish",
+    "readiness_status",
+    "coverage_denominator",
+    "reason_code",
+    "claim_impact",
+)
+CR018_BENCHMARK_COMPONENT_PIT_FIELDS: tuple[str, ...] = (
+    "effective_date",
+    "available_at",
+    "symbol",
+    "is_member",
+)
+CR018_BENCHMARK_WEIGHT_PIT_FIELDS: tuple[str, ...] = (
+    "effective_date",
+    "available_at",
+    "symbol",
+    "weight",
+)
+CR018_BENCHMARK_FORBIDDEN_OPERATION_COUNTERS: dict[str, int] = {
+    "provider_fetch": 0,
+    "lake_write": 0,
+    "credential_read": 0,
+    "current_pointer_publish": 0,
+    "qmt_operation": 0,
+}
+
+CR018_PIT_READINESS_DATASET_ID = "pit_universe"
+CR018_LIFECYCLE_READINESS_DATASET_ID = "lifecycle_code_change"
+CR018_TRADABILITY_READINESS_DATASET_ID = "prices_limit_st_suspend"
+CR018_PIT_REQUIRED_FIELDS: tuple[str, ...] = (
+    "effective_date",
+    "available_date",
+    "available_at",
+)
+CR018_LIFECYCLE_REQUIRED_FIELDS: tuple[str, ...] = (
+    "symbol",
+    "list_date",
+    "delist_date",
+)
+CR018_CODE_CHANGE_EVIDENCE_FIELDS: tuple[str, ...] = (
+    "code_change_mapping",
+    "code_change_ref",
+    "predecessor_id",
+    "successor_id",
+)
+CR018_TRADE_STATUS_REQUIRED_FIELDS: tuple[str, ...] = (
+    "trade_date",
+    "symbol",
+    "is_tradable",
+)
+CR018_ST_SUSPEND_REQUIRED_FIELDS: tuple[str, ...] = (
+    "is_st",
+    "is_suspended",
+)
+CR018_PRICES_LIMIT_REQUIRED_FIELDS: tuple[str, ...] = (
+    "trade_date",
+    "symbol",
+    "limit_up",
+    "limit_down",
+)
+CR018_REASON_PIT_AVAILABLE_FIELD_MISSING = "pit_available_field_missing"
+CR018_REASON_AS_OF_JOIN_VIOLATION = "as_of_join_violation"
+CR018_REASON_CURRENT_SNAPSHOT_NOT_PIT = "current_snapshot_not_pit"
+CR018_REASON_LIFECYCLE_FIELD_MISSING = "lifecycle_field_missing"
+CR018_REASON_CODE_CHANGE_REQUIRED_MISSING = "code_change_required_missing"
+CR018_REASON_ACTIVE_DENOMINATOR_MISSING = "active_denominator_missing"
+CR018_REASON_TRADE_STATUS_REQUIRED_MISSING = "trade_status_required_missing"
+CR018_REASON_PRICES_LIMIT_REQUIRED_MISSING = "prices_limit_required_missing"
+CR018_REASON_ST_SUSPEND_REQUIRED_MISSING = "st_suspend_required_missing"
+CR018_REASON_LIMIT_TRADE_ASSUMPTION_BLOCKED = "limit_trade_assumption_blocked"
+CR018_REASON_UNPUBLISHED_READINESS_SOURCE = "unpublished_readiness_source"
+CR018_REASON_PERMISSION_COUNTER_VIOLATION = "permission_counter_violation"
+CR018_P0_READINESS_BLOCKED_CLAIMS: tuple[str, ...] = (
+    "production_current_truth_scoped_release",
+    "production_publish",
+    "real_tradable_execution",
+    "tradability_screened",
+)
+CR018_FORBIDDEN_OPERATION_COUNTERS: dict[str, int] = {
+    "provider_fetch": 0,
+    "lake_write": 0,
+    "credential_read": 0,
+    "current_pointer_publish": 0,
+    "qmt_operation": 0,
+    "duckdb_dependency_change": 0,
+}
+
 CANONICAL_PRICES_REQUIRED_COLUMNS: tuple[str, ...] = (
     "trade_date",
     "symbol",
@@ -59,6 +201,8 @@ CR005_CANONICAL_PRICES_COLUMNS: tuple[str, ...] = (
     "high",
     "low",
     "close",
+    "volume",
+    "amount",
     "adj_factor",
     "adjusted_open",
     "adjusted_high",
@@ -466,6 +610,132 @@ DATASET_SCHEMA_REGISTRY: dict[str, dict[str, tuple[str, ...]]] = {
     },
 }
 
+ADJUSTMENT_POLICY_RAW = "raw"
+ADJUSTMENT_POLICY_QFQ = "qfq"
+ADJUSTMENT_POLICY_HFQ = "hfq"
+ADJUSTMENT_POLICY_RETURNS_ADJUSTED = "returns_adjusted"
+ADJUSTMENT_POLICY_VALUES: tuple[str, ...] = (
+    ADJUSTMENT_POLICY_RAW,
+    ADJUSTMENT_POLICY_QFQ,
+    ADJUSTMENT_POLICY_HFQ,
+    ADJUSTMENT_POLICY_RETURNS_ADJUSTED,
+)
+
+CR017_VIEW_PRICES_RAW = "prices_raw"
+CR017_VIEW_ADJ_FACTOR = DATASET_ADJ_FACTOR
+CR017_VIEW_PRICES_QFQ = "prices_qfq"
+CR017_VIEW_PRICES_HFQ = "prices_hfq"
+CR017_VIEW_RETURNS_ADJUSTED = "returns_adjusted"
+CR017_VIEW_IDS: tuple[str, ...] = (
+    CR017_VIEW_PRICES_RAW,
+    CR017_VIEW_ADJ_FACTOR,
+    CR017_VIEW_PRICES_QFQ,
+    CR017_VIEW_PRICES_HFQ,
+    CR017_VIEW_RETURNS_ADJUSTED,
+)
+CR017_DERIVED_VIEW_IDS: tuple[str, ...] = (
+    CR017_VIEW_PRICES_QFQ,
+    CR017_VIEW_PRICES_HFQ,
+    CR017_VIEW_RETURNS_ADJUSTED,
+)
+CR017_SCHEMA_VERSION = "1.0"
+CR017_DERIVATION_VERSION = "cr017.derived.v1"
+
+CR017_PRICES_RAW_REQUIRED_FIELDS: tuple[str, ...] = (
+    "trade_date",
+    "symbol",
+    "open",
+    "high",
+    "low",
+    "close",
+    "volume",
+    "amount",
+    "source",
+    "source_interface",
+    "source_run_id",
+    "batch_id",
+    "available_at",
+    "available_at_rule",
+    "lineage_checksum",
+    "quality_status",
+)
+CR017_ADJ_FACTOR_REQUIRED_FIELDS: tuple[str, ...] = (
+    "trade_date",
+    "symbol",
+    "adj_factor",
+    "provider_factor_direction",
+    "factor_base_date_policy",
+    "source_run_id",
+    "batch_id",
+    "available_at",
+    "as_of_trade_date",
+    "lineage_checksum",
+    "quality_status",
+)
+CR017_SOURCE_LINEAGE_REQUIRED_FIELDS: tuple[str, ...] = (
+    "source_run_id",
+    "batch_id",
+    "lineage_checksum",
+)
+CR017_DERIVED_COMMON_REQUIRED_FIELDS: tuple[str, ...] = (
+    "view_id",
+    "schema_version",
+    "derivation_version",
+    "source_run_id",
+    "lineage_checksum",
+    "quality_status",
+)
+CR017_PRICES_QFQ_REQUIRED_FIELDS: tuple[str, ...] = (
+    *CR017_DERIVED_COMMON_REQUIRED_FIELDS,
+    "trade_date",
+    "symbol",
+    "research_adjustment_policy",
+    "adjusted_open",
+    "adjusted_high",
+    "adjusted_low",
+    "adjusted_close",
+    "as_of_trade_date",
+    "input_snapshot_id",
+)
+CR017_PRICES_HFQ_REQUIRED_FIELDS: tuple[str, ...] = (
+    *CR017_DERIVED_COMMON_REQUIRED_FIELDS,
+    "trade_date",
+    "symbol",
+    "research_adjustment_policy",
+    "adjusted_open",
+    "adjusted_high",
+    "adjusted_low",
+    "adjusted_close",
+    "base_trade_date",
+    "factor_base_date_policy",
+)
+CR017_RETURNS_ADJUSTED_REQUIRED_FIELDS: tuple[str, ...] = (
+    *CR017_DERIVED_COMMON_REQUIRED_FIELDS,
+    "trade_date",
+    "symbol",
+    "research_adjustment_policy",
+    "return_type",
+    "adjusted_return",
+    "start_price_ref",
+    "end_price_ref",
+    "input_snapshot_id",
+)
+CR017_REQUIRED_FIELD_SETS: dict[str, tuple[str, ...]] = {
+    CR017_VIEW_PRICES_RAW: CR017_PRICES_RAW_REQUIRED_FIELDS,
+    CR017_VIEW_ADJ_FACTOR: CR017_ADJ_FACTOR_REQUIRED_FIELDS,
+    CR017_VIEW_PRICES_QFQ: CR017_PRICES_QFQ_REQUIRED_FIELDS,
+    CR017_VIEW_PRICES_HFQ: CR017_PRICES_HFQ_REQUIRED_FIELDS,
+    CR017_VIEW_RETURNS_ADJUSTED: CR017_RETURNS_ADJUSTED_REQUIRED_FIELDS,
+}
+CR017_FORBIDDEN_OPERATION_COUNTERS: dict[str, int] = {
+    "provider_fetch": 0,
+    "lake_write": 0,
+    "credential_read": 0,
+    "current_pointer_publish": 0,
+    "dependency_change": 0,
+    "legacy_qfq_overwrite": 0,
+}
+
 CR014_UNIVERSE_SCOPE_ALL_A_SHARE = "all_a_share"
 CR014_COVERAGE_START_POLICY_SECURITY_INCEPTION = "security_inception_or_list_date"
 CR014_CURRENT_TRADE_DATE_POLICY_LAST_CLOSED = "last_closed_open_trade_date"
@@ -571,6 +841,58 @@ __all__ = [
     "DATASET_PRICES_LIMIT",
     "DATASET_EVENTS",
     "DATASETS",
+    "CR018_BENCHMARK_HS300",
+    "CR018_BENCHMARK_ZZ500",
+    "CR018_BENCHMARK_ZZ1000",
+    "CR018_BENCHMARK_CSI_ALL_SHARE",
+    "CR018_BENCHMARK_IDS",
+    "CR018_BENCHMARK_INDEX_CODES",
+    "CR018_BENCHMARK_DATASET_PRICES",
+    "CR018_BENCHMARK_DATASET_COMPONENTS",
+    "CR018_BENCHMARK_DATASET_WEIGHTS",
+    "CR018_BENCHMARK_DATASET_TYPES",
+    "CR018_BENCHMARK_REQUIRED_FOR_PUBLISH",
+    "CR018_BENCHMARK_CLAIM_PRODUCTION_EXCESS_RETURN",
+    "CR018_BENCHMARK_CLAIM_INDEX_ENHANCEMENT",
+    "CR018_BENCHMARK_CLAIM_TRACKING_ERROR",
+    "CR018_BENCHMARK_BLOCKED_CLAIMS",
+    "CR018_BENCHMARK_REASON_REQUIREMENT_MISSING",
+    "CR018_BENCHMARK_REASON_PRICES_MISSING",
+    "CR018_BENCHMARK_REASON_COMPONENTS_MISSING",
+    "CR018_BENCHMARK_REASON_WEIGHTS_MISSING",
+    "CR018_BENCHMARK_REASON_COMPONENT_CURRENT_SNAPSHOT_NOT_PIT",
+    "CR018_BENCHMARK_REASON_WEIGHT_MEMBERSHIP_MISMATCH",
+    "CR018_BENCHMARK_REASON_PROXY_USED_AS_REAL",
+    "CR018_BENCHMARK_REASON_TRADE_CALENDAR_DENOMINATOR_MISSING",
+    "CR018_BENCHMARK_REASON_PERMISSION_COUNTER_VIOLATION",
+    "CR018_BENCHMARK_REASON_BY_DATASET_TYPE",
+    "CR018_BENCHMARK_READINESS_ROW_FIELDS",
+    "CR018_BENCHMARK_COMPONENT_PIT_FIELDS",
+    "CR018_BENCHMARK_WEIGHT_PIT_FIELDS",
+    "CR018_BENCHMARK_FORBIDDEN_OPERATION_COUNTERS",
+    "CR018_PIT_READINESS_DATASET_ID",
+    "CR018_LIFECYCLE_READINESS_DATASET_ID",
+    "CR018_TRADABILITY_READINESS_DATASET_ID",
+    "CR018_PIT_REQUIRED_FIELDS",
+    "CR018_LIFECYCLE_REQUIRED_FIELDS",
+    "CR018_CODE_CHANGE_EVIDENCE_FIELDS",
+    "CR018_TRADE_STATUS_REQUIRED_FIELDS",
+    "CR018_ST_SUSPEND_REQUIRED_FIELDS",
+    "CR018_PRICES_LIMIT_REQUIRED_FIELDS",
+    "CR018_REASON_PIT_AVAILABLE_FIELD_MISSING",
+    "CR018_REASON_AS_OF_JOIN_VIOLATION",
+    "CR018_REASON_CURRENT_SNAPSHOT_NOT_PIT",
+    "CR018_REASON_LIFECYCLE_FIELD_MISSING",
+    "CR018_REASON_CODE_CHANGE_REQUIRED_MISSING",
+    "CR018_REASON_ACTIVE_DENOMINATOR_MISSING",
+    "CR018_REASON_TRADE_STATUS_REQUIRED_MISSING",
+    "CR018_REASON_PRICES_LIMIT_REQUIRED_MISSING",
+    "CR018_REASON_ST_SUSPEND_REQUIRED_MISSING",
+    "CR018_REASON_LIMIT_TRADE_ASSUMPTION_BLOCKED",
+    "CR018_REASON_UNPUBLISHED_READINESS_SOURCE",
+    "CR018_REASON_PERMISSION_COUNTER_VIOLATION",
+    "CR018_P0_READINESS_BLOCKED_CLAIMS",
+    "CR018_FORBIDDEN_OPERATION_COUNTERS",
     "DATASET_KEY_COLUMNS",
     "DATASET_PIT_FIELDS",
     "DATASET_SCHEMA_REGISTRY",
@@ -608,6 +930,29 @@ __all__ = [
     "CANONICAL_TRADE_STATUS_COLUMNS",
     "CANONICAL_PRICES_LIMIT_COLUMNS",
     "CANONICAL_EVENTS_COLUMNS",
+    "ADJUSTMENT_POLICY_RAW",
+    "ADJUSTMENT_POLICY_QFQ",
+    "ADJUSTMENT_POLICY_HFQ",
+    "ADJUSTMENT_POLICY_RETURNS_ADJUSTED",
+    "ADJUSTMENT_POLICY_VALUES",
+    "CR017_VIEW_PRICES_RAW",
+    "CR017_VIEW_ADJ_FACTOR",
+    "CR017_VIEW_PRICES_QFQ",
+    "CR017_VIEW_PRICES_HFQ",
+    "CR017_VIEW_RETURNS_ADJUSTED",
+    "CR017_VIEW_IDS",
+    "CR017_DERIVED_VIEW_IDS",
+    "CR017_SCHEMA_VERSION",
+    "CR017_DERIVATION_VERSION",
+    "CR017_PRICES_RAW_REQUIRED_FIELDS",
+    "CR017_ADJ_FACTOR_REQUIRED_FIELDS",
+    "CR017_SOURCE_LINEAGE_REQUIRED_FIELDS",
+    "CR017_DERIVED_COMMON_REQUIRED_FIELDS",
+    "CR017_PRICES_QFQ_REQUIRED_FIELDS",
+    "CR017_PRICES_HFQ_REQUIRED_FIELDS",
+    "CR017_RETURNS_ADJUSTED_REQUIRED_FIELDS",
+    "CR017_REQUIRED_FIELD_SETS",
+    "CR017_FORBIDDEN_OPERATION_COUNTERS",
     "MANIFEST_REQUIRED_FIELDS",
     "MANIFEST_STATUS_VALUES",
     "TERMINAL_MANIFEST_STATUS_VALUES",

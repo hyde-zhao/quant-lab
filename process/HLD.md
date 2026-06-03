@@ -1,21 +1,22 @@
 ---
-status: "confirmed-with-cr014"
-version: "2.4"
+status: "confirmed-cp3-cr030"
+version: "2.9"
 complexity: "standard"
 selected_option: "A - 分层轻量本地日频回测层 + 独立数据准备管道；CR-004 增量采用独立 market_data 可迁移数据组件"
 confirmed: true
 confirmed_by: "user"
-confirmed_at: "2026-05-14"
-source_use_cases_version: "1.6"
-source_requirements_version: "1.7"
+confirmed_at: "2026-06-03T07:45:10+08:00"
+source_use_cases_version: "1.14"
+source_requirements_version: "1.15"
 source_handoff: "process/handoffs/META-SE-HLD-2026-05-14.md"
-review_policy: "light"
+review_policy: "strict"
 created_at: "2026-05-14"
 created_by: "meta-se"
 companion_hld:
   - "process/HLD-DATA-LAKE.md"
-active_change: "CR-014"
-secondary_change: "CR-010"
+  - "process/HLD-QMT-TRADING.md"
+active_change: "CR-030"
+secondary_change: "CR-019"
 cr004_revision_status: "draft-pending-cp3-cp4"
 cr004_confirmed: false
 cr005_revision_status: "draft-pending-cp3-cp4-rerun"
@@ -45,6 +46,29 @@ cr014_confirmed_by: "user"
 cr014_confirmed_at: "2026-05-26T23:58:12+08:00"
 cr014_manual_checkpoint: "checkpoints/CP3-CR014-A-SHARE-SINCE-INCEPTION-DATA-LAKE-HLD-REVIEW-R2.md"
 cr014_change_file: "process/changes/CR-014-A-SHARE-SINCE-INCEPTION-PRODUCTION-DATA-LAKE-2026-05-26.md"
+cr015_revision_status: "draft-pending-cp3"
+cr015_confirmed: false
+cr015_change_file: "process/changes/CR-015-QMT-TRADING-FOUNDATION-2026-05-27.md"
+cr016_revision_status: "draft-pending-cp3"
+cr016_confirmed: false
+cr016_change_file: "process/changes/CR-016-QMT-SIMULATION-LIVE-ACTIVATION-2026-05-27.md"
+cr017_revision_status: "draft-pending-cp3"
+cr017_confirmed: false
+cr017_change_file: "process/changes/CR-017-ADJUSTMENT-POLICY-DUAL-VIEW-SUPPORT-2026-05-27.md"
+cr018_revision_status: "draft-pending-cp3"
+cr018_confirmed: false
+cr018_change_file: "process/changes/CR-018-PRODUCTION-DATA-LAKE-CLOSURE-2026-05-29.md"
+cr019_revision_status: "draft-pending-cp3"
+cr019_confirmed: false
+cr019_change_file: "process/changes/CR-019-STAGE6-MULTIFACTOR-SIMULATION-ARCHITECTURE-2026-05-30.md"
+cr025_revision_status: "draft-pending-cp3"
+cr025_confirmed: false
+cr025_change_file: "process/changes/CR-025-BACKTRADER-OPTIONAL-EXECUTION-BACKEND-HARDENING-2026-05-31.md"
+cr030_revision_status: "confirmed-pending-cp4"
+cr030_confirmed: true
+cr030_confirmed_by: "user"
+cr030_confirmed_at: "2026-06-03T07:45:10+08:00"
+cr030_change_file: "process/changes/CR-030-MULTIFACTOR-RESEARCH-FRAMEWORK-REFERENCE-AND-RESEARCH-LOOP-STANDARDIZATION-2026-06-02.md"
 ---
 
 # 高层设计（HLD）：本地日频组合回测层
@@ -73,6 +97,13 @@ cr014_change_file: "process/changes/CR-014-A-SHARE-SINCE-INCEPTION-PRODUCTION-DA
 | 2.2 | 2026-05-25 | meta-se | 按 CR-013 追加 §29：把 2020-2024 full-history 不得外推、真实 VWAP / 分钟执行价 blocked、unsupported register 声明边界、证据保留和权限边界收敛为研究消费侧 HLD 增量；规划 CR013-S01..S04，不生成 LLD 或实现 |
 | 2.3 | 2026-05-26 | meta-se | 按 CR-014 追加 §30：同步全 A since-inception 数据湖 current truth 对研究消费层的输入合同和声明边界影响；明确研究消费层不得直接触发 provider、lake、credential、旧 data、旧 reports 或 DuckDB 事实源操作 |
 | 2.4 | 2026-05-26 | meta-se | 按 CR-014 CP3 R2 修改意见补强 §30.3：明确研究消费层不得通过 DuckDB 直接写入、发布或绕过 catalog；DuckDB audit/parity 结果只能作为证据，不反向成为 current truth |
+| 2.5 | 2026-05-27 | meta-se | 按 CR-015 / CR-016 / CR-017 执行 HLD 拆分判断：新增 companion HLD `process/HLD-QMT-TRADING.md` 拥有 QMT adapter / OMS / risk / broker lake / activation / ops 设计；CR-017 复权派生层进入 `process/HLD-DATA-LAKE.md` §18；主 HLD 追加 §31，仅同步研究消费、order intent 和 QMT raw 执行价边界；新增 ADR-053..061，Story Plan / LLD / 实现仍禁止 |
+| 2.6 | 2026-05-29 | meta-se | 按 CR-018 追加 §32：主 HLD 只同步数据湖 published current truth 对研究消费、阶段三到阶段五重跑、allowed/blocked claims 和 QMT admission 的影响；生产 release、publish、rollback 由 `process/HLD-DATA-LAKE.md` §19 拥有；新增 ADR-062..066 和 CR018-S01..S09 规划输入 |
+| 2.7 | 2026-05-30 | meta-se | 按 CR-019 追加 §33：冻结阶段六多因子 admission、QMT 独立 C/S 模块、local_backtest C 侧 Python client / 薄 CLI、Windows S 侧 FastAPI gateway、完整 QMT endpoint matrix 与运行门控分离、局域网无应用层鉴权 / 可选 token-HMAC、fallback 和后置能力边界；同步 ADR-067..073；本增量不授权代码实现、依赖变更、真实 QMT / provider / lake / broker 操作或 simulation / live run |
+| 2.7.1 | 2026-05-30 | meta-se | 按 CR-019 CP3 DQ-04 用户修订，将鉴权推荐方案从“局域网默认无鉴权、可选 token/HMAC”改为“配对式 token/HMAC 默认启用”；no-auth 仅保留为本机 debug / fixture / 显式临时模式；补充 pairing request / approve / complete 与 HMAC 请求头，不改变运行门控或真实操作授权边界 |
+| 2.8 | 2026-06-01 | meta-se | 按 CR-025 追加 §34：冻结 production-grade research-to-execution 三条主线中的回测 / 模拟一致性设计；Backtrader 默认定位为 optional semantic reference / design reference，不替代 lightweight 主路径；补充 clean feed gate、semantic diff schema、target portfolio / order intent draft、Backtrader 本地 GPLv3 项目模块级矩阵、源码级移植治理和 CP3 决策项；本增量不授权实现、依赖变更、Backtrader 运行、源码复制 / 移植、真实 broker / QMT / provider / lake / publish / simulation / live 或凭据读取 |
+| 2.8.1 | 2026-06-02 | meta-se | 按 CR-025 CP5 前定位澄清修订 §34：确认本系统核心定位是多因子策略研究和回测；Backtrader 不作为多因子研究主框架，只作为 lightweight execution engine 的执行语义参考；FactorSpec、FactorRunSpec、IC / RankIC、分层收益、多因子组合、实验追踪和策略准入包另起后续 CR，参考 Qlib / Alphalens / vnpy.alpha，不并入 CR-025；保持 6 Story / 4 Wave / 1 LLD batch 不变 |
+| 2.9 | 2026-06-03 | meta-se | 按 CR-030 追加 §35：冻结项目自有多因子研究闭环 HLD；外部项目仅作为 reference matrix / optional Spike / exclude / forbidden migration；以 `research_input_v1`、实验 17-21 `FactorDefinition`、CR-011 factor panel audit、label window gate 和 Stage6 admission gate 为 schema 基线，并用 Qlib / Alphalens / Zipline / LEAN cross-check；定义 FactorSpec、FactorRunSpec、FactorPanelContract、LabelWindowSpec、FactorEvaluationReport、MultiFactorCombiner、ExperimentManifest、ResearchReportCatalog、StrategyAdmissionPackage 与 `order_intent_draft_v1` handoff；本增量不授权实现、依赖变更、外部项目运行、源码迁移、provider/lake/publish、QMT/simulation/live 或凭据读取 |
 
 ## HLD 拆分判定
 
@@ -158,6 +189,17 @@ cr014_change_file: "process/changes/CR-014-A-SHARE-SINCE-INCEPTION-PRODUCTION-DA
 | ADR 分簇 | 两个职责簇，统一 CR-011 决策链 | ADR-036..040 主要约束 benchmark/PIT/tradability/execution/adjustment；ADR-041..043 约束 exposure/capacity/factor panel validation，均通过研究消费合同闭环 |
 | 交付顺序 | 数据合同先行，研究和验证后置 | S01..S06 冻结数据与消费合同，S07 扩展容量成本敏感性，S08 在全部合同冻结后输出 factor panel audit 与 robust validation |
 | 结论 | 不新建 companion HLD；双 HLD 同步增量 | `process/HLD.md` 追加 §27 作为研究消费 HLD，`process/HLD-DATA-LAKE.md` 追加 §14 作为数据生产 HLD；CP3 必须同时审查两份 HLD 与 ADR-036..043 |
+
+### CR-015 / CR-016 / CR-017 拆分判定
+
+| 判定项 | 结论 | 理由 |
+|---|---|---|
+| 核心产物数量 | 3 个既有 / 新增产物面 | CR-017 修改生产数据湖复权事实源与派生视图；CR-015/016 新增 QMT 交易接入与运行治理层；主 HLD 继续拥有研究消费和报告声明，不应接管交易节点实现细节 |
+| 职责跨层 | 明显跨数据生产、研究消费、交易执行与运行治理 | 数据湖 HLD 拥有 `prices_raw`、`adj_factor`、`prices_qfq`、`prices_hfq`、`returns_adjusted`、publish / quality / lineage；QMT HLD 拥有 Windows QMT 节点、OMS、adapter、pre-trade risk、broker lake、stage gate、runbook、对账和 kill switch；主 HLD 只拥有研究消费侧口径和 order intent metadata |
+| Story 数量信号 | 超过单份 HLD 可读阈值 | 三张 CR 的候选 Story 合计明显超过 5，且能按“数据湖复权派生”和“QMT 交易 / 运行治理”分组；继续压入主 HLD 会让 Story 文件所有权和 CP5 批次失真 |
+| ADR 分簇 | 两个清晰决策簇 | ADR-053/054 属于复权事实源、公式、schema、迁移；ADR-055..061 属于 QMT 接入、broker lake、OMS、risk、stage gate、限价 / 保护价、对账、kill switch 与跨节点通信 |
+| 交付顺序 | 可独立设计、按门控集成 | CR-017 需先冻结 raw/qfq/hfq 与 QMT raw 执行价边界；CR-015 foundation 可并行设计；CR-016 activation 后置，且真实操作仍需 per-run 授权 |
+| 结论 | 新建 QMT companion HLD，数据湖 companion 同步增量 | 新增 `process/HLD-QMT-TRADING.md` 作为 QMT 交易层 HLD；`process/HLD-DATA-LAKE.md` 追加 §18 承载 CR-017；本 HLD 追加 §31 仅保留研究消费与三份 HLD 的关系说明 |
 
 ## 1. 问题定义
 
@@ -2413,3 +2455,1175 @@ DuckDB 在 CR-014 中只属于数据湖侧只读 query / audit / feature extract
 | 关键取舍 | 复杂度低、维护成本低、安全风险低；代价是需要维护双 HLD 引用。可验证性通过 forbidden import、claim boundary 和 evidence path 保证 |
 | 用户需决策点 | 是否接受研究消费层不直接触发 provider/lake/credential/old data/DuckDB source-of-truth 操作，只消费 published current truth 或 blocked/missing 声明 |
 | 回退点 | 若 CP3 不通过，回退到 CR-014 主问题定义，重新决定数据生产与研究消费是否继续拆分 |
+
+## 31. CR-015 / CR-016 / CR-017 对研究消费层和 HLD 边界的影响
+
+> 本节只同步 CR-015 / CR-016 / CR-017 对主 HLD 研究消费面的合同影响。CR-017 的复权事实源、派生视图、公式、schema、quality 和迁移策略由 `process/HLD-DATA-LAKE.md` §18 拥有；CR-015 / CR-016 的 QMT adapter、OMS、pre-trade risk、broker lake、stage gate、runbook、对账、kill switch 和跨节点部署由 `process/HLD-QMT-TRADING.md` 拥有。本节不授权 Story Plan、LLD、代码实现、真实抓取、真实写湖、QMT API 调用、发单、撤单、账户查询或凭据读取。
+
+### 31.1 问题与边界
+
+CR-015 / CR-016 / CR-017 将本项目从“本地研究 / 数据湖”扩展到“研究信号可安全进入 QMT 模拟盘 / 实盘链路”的设计范围。主 HLD 的新增责任不是成为交易系统，而是保证研究消费层输出的信号、报告和 order intent metadata 能明确区分研究复权口径与真实执行价格口径。
+
+| 类型 | 内容 | 可度量边界 |
+|---|---|---|
+| 目标 | 研究 run 选择唯一 `research_adjustment_policy`，并把该 policy 作为 order intent metadata 传给 OMS | 同一研究 run 混用 raw/qfq/hfq/returns_adjusted 次数为 0 |
+| 目标 | QMT order intent、委托、成交和 broker 对账只使用 `execution_price_policy=raw` | qfq/hfq 作为执行价进入 adapter 的次数为 0 |
+| 输入 | `prices_raw`、`prices_qfq`、`prices_hfq`、`returns_adjusted` 的 published view metadata，或 structured missing / blocked claim | 研究报告 100% 记录 view_id、source_run_id、quality_status、lineage 和 single-policy gate |
+| 非目标 | 主 HLD 不设计 QMT adapter 实现、broker lake schema、阶段准入阈值或跨节点通信协议 | 这些职责 100% 指向 `process/HLD-QMT-TRADING.md` |
+| 相邻边界 | CR-013 的真实 VWAP / minute / tick / level2 / order-match blocked claim 继续有效 | QMT 接入不得自动解除任何微观结构执行价声明 |
+
+### 31.2 研究消费集成契约
+
+| 调用方向 | 调用时机 | 输入契约 | 输出契约 | 错误 / 降级 | 后续衔接 |
+|---|---|---|---|---|---|
+| research builder -> data lake readers | 构建研究输入时 | `research_adjustment_policy=qfq|hfq|returns_adjusted|raw`、view_id、date range、quality policy | research data bundle、view metadata、single_policy_gate_status | 未指定单一口径或混用时 fail fast | 数据湖 §18 处理 schema / view / migration |
+| strategy -> OMS boundary | T 日收盘后生成目标组合时 | strategy_id、run_id、signal_date、target_trade_date、target weights、research policy metadata、data lineage | target portfolio / order intent draft，不包含 qfq/hfq 执行价 | policy 缺失时不得交给 QMT HLD 的 OMS | QMT HLD 接管 order intent、risk 和 adapter |
+| reports -> claim boundary | 研究、模拟盘或实盘报告生成前 | research policy、execution_price_policy、CR-017 gate、CR-013 blocked claims、QMT stage gate | allowed_claims、blocked_claims、required_missing | CR-017 未实现验证时不得声明生产策略复权治理完成；资金放大 gate blocked | QMT HLD §运行治理决定 stage gate |
+| optional backend -> trading handoff | 需要形成交易计划时 | clean feed、T 日信号、T+1 target_trade_date、execution boundary | 仅输出研究侧目标组合和 metadata | 不直接调用 QMT / XtQuant；不读取账户或凭据 | QMT HLD 的 OMS / pre-trade risk 是唯一 broker 触达入口 |
+
+### 31.3 关键流程
+
+```mermaid
+sequenceDiagram
+  participant R as Research Builder
+  participant DL as Data Lake Reader
+  participant S as Strategy
+  participant OMS as QMT Companion OMS
+  participant A as QMT Adapter
+  R->>DL: read(view_id, research_adjustment_policy)
+  DL-->>R: data bundle + lineage + single-policy gate
+  R->>S: research input + policy metadata
+  S-->>OMS: target portfolio + research policy + execution_price_policy=raw
+  OMS->>OMS: order intent + pre-trade hard risk
+  OMS-->>A: only if risk pass and authorized stage
+```
+
+异常路径：
+
+| 异常 | 主 HLD 行为 | 交给 companion 的事项 |
+|---|---|---|
+| 研究输入混用 raw/qfq/hfq | research builder fail fast，报告写 blocked reason | 数据湖 HLD §18 修正 view / reader gate |
+| strategy 输出缺少 `research_adjustment_policy` | 不生成交易 handoff | QMT HLD 不接收无 policy intent |
+| qfq/hfq 价格进入执行价字段 | 主 HLD 标记 claim blocked；不得提交 OMS | QMT HLD pre-trade risk 二次 hard block |
+| CR-017 仅设计未实现验证 | 允许技术模拟盘声明，但禁止生产策略复权治理完成和资金放大声明 | QMT HLD stage gate 继续阻断 scale_up |
+
+### 31.4 非功能与风险
+
+| 维度 / 风险 | 设计约束 | 验收口径 |
+|---|---|---|
+| 安全 | 主 HLD 不读取 `.env`、token、QMT 账户、session、cookie、交易密码或真实私有路径 | credential_reads=0；报告仅允许脱敏账户标签或 env var 名称 |
+| 可追溯 | order intent metadata 必须保留 research policy、execution policy、view_id、source_run_id 和 run_id | 交易相关报告字段覆盖率 100% |
+| 可维护 | 研究消费、数据湖生产和 QMT 交易执行三份 HLD 单向衔接，不双写实现细节 | 数据湖生产职责在主 HLD 新增数为 0；QMT adapter 职责在主 HLD 新增数为 0 |
+| 风险：复权价误下单 | 主 HLD 只允许输出 target portfolio，不输出 qfq/hfq 执行价 | execution_price_policy 非 raw 时提交 OMS 次数为 0 |
+| 风险：研究结论被实盘收益包装 | 报告必须区分 backtest、simulation、live_readonly、small_live 和 scale_up | stage 与 allowed_claims 不一致时 fail |
+
+### 31.5 CP3 多角色讨论输入
+
+| 字段 | 内容 |
+|---|---|
+| 推荐方案 | 采用三 HLD 分工：主 HLD 负责研究消费和 order intent metadata；`HLD-DATA-LAKE.md` §18 负责 CR-017 复权派生；`HLD-QMT-TRADING.md` 负责 CR-015 / CR-016 交易接入和运行治理 |
+| 备选方案 | 备选 A：全部写入主 HLD，优点是集中，缺点是会混写数据生产、研究消费和交易执行，Story 文件所有权失真；备选 B：只更新数据湖 HLD，不新建 QMT HLD，优点是文件少，缺点是 QMT adapter / OMS / runbook 缺独立问题定义和风险矩阵 |
+| 关键取舍 | 复杂度增加一份 companion HLD，但降低交易安全风险和评审负担；可验证性通过三份 HLD 的职责表、ADR-053..061 和 CP3 自动检查保证 |
+| 用户需决策点 | Q-030 至 Q-038 的推荐方案、备选方案、接受 / 不接受影响是否可作为 CP3 决策基线；是否接受 QMT 交易层独立 companion HLD |
+| 回退点 | 若 CP3 不通过，回退到 CR-015 / CR-016 / CR-017 问题定义：重新确认是否拆分 QMT HLD、复权派生是否继续归入数据湖 HLD，以及 QMT raw 执行价边界是否需要更严格冻结 |
+
+## 32. CR-018 published current truth 对研究消费与 QMT admission 的影响
+
+> 本节只同步 CR-018 对主 HLD 研究消费、报告声明和 QMT admission 的合同影响。CR-018 的 release scope、P0/P1 dataset group、quality/readiness、Explicit Publish Gate、rollback 和 catalog current pointer 由 `process/HLD-DATA-LAKE.md` §19 拥有；QMT adapter、OMS、risk、broker lake 和运行治理仍由 `process/HLD-QMT-TRADING.md` 拥有。本节不授权 Story 实现、provider fetch、真实 lake 写入、publish current pointer、QMT API、发单、撤单、账户查询或凭据读取。
+
+### 32.1 问题与边界
+
+CR-018 将最高优先级从 QMT simulation 调整为数据湖 production current truth。主 HLD 的新增责任不是接管数据湖生产，而是保证研究层和交易准入层只消费 published release 或结构化 blocked claims：未 publish 时不得把 CR014 S14 candidate 当作研究事实，publish 后必须先用 release-bound 输入重跑阶段三到阶段五核心研究，研究未通过时不得进入 QMT simulation / live_readonly / small_live / scale_up。
+
+| 类型 | 内容 | 可度量边界 |
+|---|---|---|
+| 目标 | 研究输入必须绑定 `release_id` 和 catalog current pointer | 生产口径研究报告中 `release_id`、`release_scope`、`as_of_trade_date` 字段覆盖率 100% |
+| 目标 | 阶段三到阶段五核心研究必须在 publish 后重跑 | QMT admission 前缺 research rerun report 时 blocked 次数为 100% |
+| 目标 | QMT simulation / live_readonly / small_live / scale_up 必须后置 | 未 publish 或 rerun fail 时真实 / 模拟 QMT 操作计数为 0 |
+| 输入 | `process/HLD-DATA-LAKE.md` §19 输出的 release summary、readiness matrix、allowed_claims / blocked_claims、rollback smoke | 主 HLD 不读取 provider raw、未发布 candidate 或真实 lake 私有路径 |
+| 非目标 | 主 HLD 不设计 publish gate、rollback gate、provider adapter、catalog 写入者或真实运行授权 | 这些职责 100% 指向数据湖 companion HLD 和后续 Story |
+
+### 32.2 候选方案与推荐
+
+| 方案 | 思路 | 优点 | 缺点 | 结论 |
+|---|---|---|---|---|
+| CR18-M-A：研究消费只读 published release，QMT admission 消费 rerun pass/fail（推荐） | research builder、reports、QMT admission 均只读 release summary 和 published reader | 与 CR010/014/017 边界一致；安全；可验证；不扩大主 HLD职责 | 需要等待数据湖 publish 和重跑，QMT 推迟 | 推荐 |
+| CR18-M-B：研究层可直接读取 candidate 先重跑 | 未 publish 前允许指定 candidate path 做研究 | 可提前发现问题 | 容易污染报告声明；candidate 与 current truth 混淆；QMT admission 难以解释 | 不推荐 |
+| CR18-M-C：QMT 技术 simulation 不等待 published research | 把策略意义与 adapter smoke 拆开 | 可早测技术链路 | 与 D6 默认冲突；需要额外 no-strategy 授权和强声明 | 仅后续独立 Spike |
+
+### 32.3 研究消费集成契约
+
+| 调用方向 | 调用时机 | 输入契约 | 输出契约 | 错误 / 降级 | 后续衔接 |
+|---|---|---|---|---|---|
+| research builder -> data lake reader | 生产口径研究重跑开始前 | `release_id`、dataset group、quality policy、research adjustment policy、benchmark policy | release-bound research data bundle、lineage、quality/readiness、blocked claims | release 不存在或 P0 required_missing 时返回 `required_missing` | 不触发 provider / publish；回到数据湖 Story |
+| reports -> claim boundary | 任一生产口径报告生成前 | release summary、readiness matrix、P1 auxiliary status、old proxy/fixed baseline | allowed_claims、blocked_claims、旧结论对比 | P1 缺失阻断中性化、纯 alpha、容量和 scale_up 声明 | README / USER-MANUAL / TEST-STRATEGY 后续刷新 |
+| research rerun -> QMT admission | 用户请求 simulation 或更高阶段时 | rerun report、pass/fail、release_id、CR015/016/017 foundation status | admission candidate 或 `blocked_by_data_lake_production_truth` | rerun fail 或缺失时 QMT 操作计数 0 | QMT HLD stage gate 继续判断 runbook / authorization |
+| optional backend -> trading handoff | 需要生成目标组合时 | published clean feed、single-policy gate、tradability gate、blocked claims | target portfolio metadata，含 release_id 和 research policy | 任一 gate fail 不生成 QMT handoff | OMS / risk 只接收 raw execution policy |
+
+### 32.4 关键流程
+
+```mermaid
+sequenceDiagram
+  participant DL as Data Lake Release
+  participant R as Research Builder
+  participant REP as Research Report
+  participant Q as QMT Admission
+  participant OMS as QMT Companion
+
+  DL-->>R: release_id + current pointer + readiness matrix
+  R->>DL: read published datasets only
+  DL-->>R: data bundle + lineage + blocked claims
+  R->>REP: rerun stage 3-5 with release_id
+  REP-->>Q: pass/fail + claims + evidence paths
+  Q->>Q: block if no publish or rerun fail
+  Q-->>OMS: admission candidate only after rerun PASS
+```
+
+异常路径：
+
+| 异常 | 主 HLD 行为 | 交给 companion 的事项 |
+|---|---|---|
+| release 未 publish | research builder 返回 `catalog_not_published`，QMT admission blocked | 数据湖 §19 publish gate 处理 |
+| P0 PIT/W3/benchmark 缺失 | report 写 `required_missing` 和 blocked claims，不生成 production_strict allowed claim | 数据湖 S02/S03/S06 处理 |
+| P1 行业 / 市值 / 流动性缺失 | 可继续核心 release rerun，但阻断中性化、纯 alpha、容量、scale_up | 数据湖 S04 / 后续 CR 升 P0 |
+| rerun fail 或推翻旧结论 | QMT admission blocked，旧 proxy/fixed-snapshot 只能作为历史基线 | 研究 Story S08 输出差异报告 |
+| 用户请求 QMT technical smoke | 本节不自动放行；必须另起 no-strategy Spike 或 per-run 授权 | QMT HLD stage gate 判断 |
+
+### 32.5 NFR、风险与 Gotchas
+
+| 维度 / 风险 | 设计约束 | 验收口径 |
+|---|---|---|
+| 安全 | 研究消费层不读 `.env`、token、provider raw、未发布 candidate 或真实私有 lake 路径 | credential_reads=0；candidate direct reads=0 |
+| 可追溯 | 每个 production report 必须引用 release_id、source_run_ids、quality report 和 blocked claims | evidence_paths 字段覆盖率 100% |
+| 可维护 | 主 HLD 只同步 consumption/admission；生产和 QMT 细节留在 companion HLD | 数据湖 publish 职责在本节新增数为 0；QMT API 职责新增数为 0 |
+| 风险：candidate 研究报告被当作生产结论 | 未发布 candidate 只能生成 audit evidence，不写 production allowed claim | `candidate=production` 模糊表达为 0 |
+| 风险：QMT foundation 已验证后绕过数据湖 | Admission 必须同时检查 release + rerun；foundation pass 不等于 simulation approve | 缺 release/rerun 时 QMT gate blocked |
+
+### 32.6 CP3 多角色讨论输入
+
+| 字段 | 内容 |
+|---|---|
+| 推荐方案 | 主 HLD 采用 CR18-M-A：研究消费只读 published release，QMT admission 消费 rerun pass/fail；数据生产细节继续由 `HLD-DATA-LAKE.md` §19 拥有 |
+| 备选方案 | 备选 A：允许研究层直接读 candidate，优点是可提前重跑，缺点是 current truth 混淆；备选 B：QMT technical simulation 先行，优点是早测 adapter，缺点是需要独立无策略授权 |
+| 关键取舍 | 牺牲 QMT simulation 速度，换取 published truth、研究重跑和交易准入边界一致；维护成本通过双 HLD 职责分离控制 |
+| 用户需决策点 | D1-D6 已由 CP2 approved；CP3 仅需确认 HLD / ADR 是否正确落实 D1-D6，以及是否接受 CR018-S01..S09 Story Plan 作为后续 LLD 输入 |
+| 回退点 | 若 CP3 不通过，回退到 CR018 AGA-CR018-01..04：重新界定 release scope、dataset group、publish/rollback 或 QMT 后置策略 |
+
+## 33. CR-019 阶段六多因子 admission 与 QMT C/S bridge 增量设计
+
+> 本节只定义 CR-019 的 HLD / ADR 增量。`process/HLD-QMT-TRADING.md` 拥有 QMT adapter、OMS、risk、broker lake、stage gate、runbook、对账、kill switch 和 Windows gateway 运行合同；本主 HLD 负责把阶段六多因子 admission、研究消费、QMT C/S bridge 调用边界和声明门控接入既有研究工具。本节不授权 Story Plan、LLD、代码实现、依赖变更、服务启动、真实 QMT / MiniQMT / XtQuant 调用、凭据读取、真实 provider fetch、真实 lake / broker lake 写入、publish、simulation 或 live run。
+
+### 33.1 问题定义与边界
+
+CR-019 的问题不是“把旧失败策略包装进模拟盘”，而是建立阶段六 A 股多因子策略从 production current truth 研究输入到可申请 QMT simulation 的 admission 链路，并把 local_backtest 与 Windows QMT 节点之间的通信从 CR-015/016/017 已批准的 signed file drop 默认方案更新为独立 QMT C/S 模块。
+
+| 类型 | 内容 | 可度量边界 |
+|---|---|---|
+| 目标 | 阶段六 admission package 覆盖实验 49-66 的数据、因子、组合、交易现实性、成本、benchmark、稳健性、消融、冻结、pre-sim 和连续 5 个真实交易日 dry-run gate | 任一 P0 gate 未过时 `admission_status=blocked`；旧失败策略被标记为 simulation ready 的次数为 0 |
+| 目标 | QMT 模块拆分为 C/S 两侧：C 侧位于 local_backtest，S 侧部署在 Windows QMT 节点 | C 侧直接导入 / 调用 `xtquant` 次数为 0；S 侧是唯一 REST -> QMT / XtQuant 转换边界 |
+| 目标 | Gateway endpoint matrix 覆盖完整 QMT 功能类别，但真实转发由运行门控控制 | 未满足 run mode / stage gate / risk gate / kill switch / per-run authorization 时真实 QMT API 调用计数为 0 |
+| 输入 | UC-15 至 UC-18、REQ-138 至 REQ-160、CP2 approved DQ-01 至 DQ-07、Q-039 至 Q-044、CR-015/016/017 runbook 和 incident playbook | discussion log：`process/discussions/CP3-CR019-HLD-DISCUSSION-LOG.md`；checkpoint：`process/checks/CP3-CR019-DISCUSSION-CHECKPOINT.json` |
+| 非目标 | 不在 CP3 做 FastAPI 实现、依赖变更、真实服务部署、真实 QMT / provider / lake / broker 操作或 Story 拆解 | `dependency_changes=0`、`qmt_api_call=0`、`provider_fetch=0`、`lake_write=0`、`broker_lake_write=0` |
+
+**成功标准**：
+
+- CR-019 HLD / ADR 明确完整 QMT endpoint matrix，且逐项说明接口可见不等于真实操作授权。
+- C 侧默认接口冻结为 Python client / 函数调用为主，薄 CLI 只复用同一 client 做人工 smoke、运维检查和脚本集成。
+- S 侧冻结为 Windows 可运行 / 可安装 FastAPI gateway，通过 REST 转换为 QMT / XtQuant 调用并访问 QMT 服务端。
+- 默认启用轻量配对式 token/HMAC；no-auth 仅允许本机 debug、fixture 测试或显式配置的临时模式，且鉴权通过仍必须继续执行 run mode、stage gate、risk gate、kill switch 和 per-run authorization。
+- FastAPI fallback 只允许 blocked-only 或人工 dry-run / signed file drop，不自动真实发单、撤单、账户查询或写 broker lake。
+- Backtrader、Qlib、分钟数据和 Level2 均保持后置触发，不进入阶段六 P0。
+
+### 33.2 Architecture Gray Areas 与方案形成记录
+
+本轮 Architecture Gray Areas 已前置记录到 `process/discussions/CP3-CR019-HLD-DISCUSSION-LOG.md`，恢复点记录到 `process/checks/CP3-CR019-DISCUSSION-CHECKPOINT.json`。本轮不伪造独立 reviewer lane；advisor table 基于已批准 CP2 决策、CR-019 交接和 meta-se 架构自审形成，供 meta-po 发起 CP3 时作为 Decision Brief 输入。
+
+| Gray Area | 推荐方案 | 备选方案 | 影响面 | When to switch |
+|---|---|---|---|---|
+| AGA-CR019-01：QMT 模块边界 | 独立 C/S：local_backtest C 侧 client + Windows S 侧 FastAPI gateway | signed file drop 主路径；gateway 嵌入回测主进程 | 模块边界、部署、安全、测试、文档 | 若 Windows 端口 / 防火墙无法安全限定，运行路径降级为 signed file drop fallback；不得回到 WSL 直连 xtquant |
+| AGA-CR019-02：C 侧接口形态 | Python client / 函数调用为主 + 薄 CLI | CLI-first；纯 Python-only | 策略 / OMS 调用、mock、错误处理、运维入口 | 若主要调用方变成外部脚本或多语言系统，可切换 CLI-first / REST SDK；若无人工运维入口需求，可取消 CLI |
+| AGA-CR019-03：完整 endpoint 与真实授权 | endpoint matrix 完整，真实转发由 run mode / stage gate / risk gate / kill switch / per-run authorization 控制 | dry-run-only；局域网内无门控直转 | API、QA、runbook、incident、安全 | 可按 Story 分批实现，但目标矩阵不退回 dry-run-only；无门控直转必须新 CR + 风险接受 |
+| AGA-CR019-04：鉴权、绑定与 fallback | 配对式 token/HMAC 默认启用；no-auth 仅 debug / fixture / 显式临时；fallback blocked-only 或人工 dry-run file | no-auth 默认；mTLS/VPN；自动真实 fallback | 部署、安全、日志、可用性 | 多人 / 跨网段 / live endpoint 默认启用时升级 scope / rotation / 更强鉴权；不得启用自动真实 fallback |
+
+### 33.3 候选架构方案对比
+
+| 方案 | 核心思路 | 优点 | 缺点 | 复杂度 / 成本 | 扩展性 | 主要风险 | 适用前提 |
+|---|---|---|---|---|---|---|---|
+| CR19-A：QMT 独立 C/S + 完整 endpoint + 运行门控（推荐） | C 侧 Python client / 薄 CLI 在 local_backtest；S 侧 Windows FastAPI gateway 转换 REST 到 QMT / XtQuant；完整 endpoint 可见，真实转发被 gate 控制 | 满足用户纠偏；模块边界清晰；利于 heartbeat、capabilities、审计和 mock；不让 WSL 直连 xtquant | API / 部署 / 测试矩阵更大；需要 Windows 安装命令和安全边界 | high / 中高 | 高 | gateway 被误当成真实授权；鉴权或日志不当 | CP3 接受接口完整与运行门控分离；后续 CP5 才能实现 |
+| CR19-B：signed file drop 主路径 + API 后置 | 保留 CR-015/016/017 的文件投递默认，FastAPI 只作为后续升级 | 最小安全风险；无需端口和服务生命周期 | 不符合用户 D7；可观测性和交互性弱；完整 QMT 功能无法自然暴露 | medium / 低 | 中 | 手工文件流程长期成为瓶颈 | 仅当 Windows 网络服务无法安全部署时作为 fallback |
+| CR19-C：CLI-first / gateway 嵌入回测主进程 | local_backtest 通过 CLI 或同进程服务直接封装 QMT 请求 | 人工直观；文件少 | 内部策略 / OMS 需进程调用或与服务耦合；mock 和错误契约变重；容易污染回测主进程 | medium / 中 | 低中 | 模块边界漂移、测试成本上升 | 仅当主要使用模式是人工命令，不要求内部类型化调用时采用 |
+
+**推荐方案**：CR19-A。它是唯一同时满足用户“QMT 独立 C/S 模块”“完整 QMT endpoint matrix”“C 侧 Python client 主接口 + 薄 CLI”“真实操作仍受运行门控”的方案。
+
+### 33.4 推荐方案总览
+
+| 设计面 | 冻结值 | 说明 |
+|---|---|---|
+| 架构风格 | C/S boundary + adapter gateway + gate-driven operations | C 侧不导入 xtquant；S 侧拥有 REST -> QMT / XtQuant 转换 |
+| C 侧 | `local_backtest` 内 Python client / 函数调用为主，薄 CLI 为辅 | Python client 面向策略、OMS、admission dry-run 和测试；CLI 只做参数解析、输出格式和退出码 |
+| S 侧 | Windows QMT FastAPI gateway，可运行 / 可安装命令 | 命令、配置路径、bind host / port、防火墙、heartbeat 和日志脱敏由 QMT companion HLD / LLD 固化 |
+| Endpoint 范围 | 完整 QMT 功能类别 | health/capabilities、validate/dry-run、行情、账户、持仓、委托、成交、simulation submit/cancel、live-readonly、live submit/cancel、reconciliation、kill-switch |
+| 运行门控 | endpoint 可见与真实转发分离 | 真实转发必须满足 run mode、CR016 stage gate、risk gate、kill switch、per-run authorization 和 raw execution policy |
+| 鉴权策略 | 配对式 token/HMAC 默认启用；no-auth 仅 debug / fixture / 显式临时 | 鉴权只识别调用方，不替代运行门控，不削减 QMT 功能接口 |
+| fallback | blocked-only 或人工 dry-run / signed file drop | fallback 不自动触达真实 QMT，不写真实 broker lake |
+| admission benchmark | 多基准看板 + primary benchmark | 同时输出 HS300、ZZ500、ZZ1000、中证全指；按策略 universe / 风格选择 primary |
+
+### 33.5 适用性矩阵
+
+| 维度 | 推荐方案适配度 | 适用条件 | 不适用 / 切换条件 |
+|---|---|---|---|
+| 用户目标 | 高 | 用户需要完整 QMT simulation / live / account / cancel / query 能力通过 gateway 暴露 | 若目标回退为仅 dry-run 审计，可降级 file drop |
+| 项目成熟度 | 中高 | 已有 CR-015/016/017 foundation、runbook、risk、stage gate 和 raw execution policy | 若这些 gate 被移除，不得启用真实 endpoint |
+| 认知负担 | 中高 | 需要接受“接口完整”和“授权未开”两个不同概念 | 若用户要求最小手工流程，使用 signed file dry-run |
+| 验证条件 | 高 | 可以用 contract / mock / fixture 验证 endpoint、blocked reason、redaction 和 forbidden operation 计数 | 真实 QMT 验证必须另行 per-run authorization |
+| 回退成本 | 中 | C 侧 client 可保留，transport 从 REST 降级到 file drop dry-run | 已产生真实 broker state 后不能无审计回退 |
+
+### 33.6 Use Case -> Architecture Traceability
+
+| Use Case | 架构落点 | 关键约束 | 验证口径 |
+|---|---|---|---|
+| UC-15 阶段六多因子 admission | Admission gate、benchmark policy、blocked claims、5 日 dry-run evidence | 旧失败策略不得包装；simulation 申请前必须 shadow + 5 日 dry-run | TS-019-02、TS-019-04 |
+| UC-16 QMT C/S 模块 | C-side client、S-side gateway、REST boundary、Windows command、deployment contract | C 侧不导入 xtquant；S 侧可运行 / 可安装；signed file drop 仅 fallback | TS-019-06、TS-019-07 |
+| UC-17 完整 endpoint 与运行门控 | Endpoint matrix、run mode、stage gate、risk gate、kill switch、redaction | endpoint 可见不等于真实 QMT 操作授权 | TS-019-03、TS-019-04、TS-019-05 |
+| UC-18 后置能力 | Deferred Ideas、Backtrader W6、Qlib W7、minute / Level2 Spike | 后置能力不进入阶段六 P0，不新增默认依赖 | TS-019-08、TS-019-09 |
+
+### 33.7 关键场景模拟
+
+| 场景 | 推荐架构执行结果 | 结论 |
+|---|---|---|
+| S1：用户请求查看 gateway capabilities | C 侧 Python client 调用 S 侧 `/capabilities`；S 侧只返回 endpoint 类别、版本、heartbeat 和脱敏状态，不返回凭据或账户敏感值 | 通过；接口可见但不授权真实操作 |
+| S2：未满足 simulation gate 时请求 simulation submit | C 侧提交 order intent；S 侧检查 run mode、stage gate、risk gate、kill switch、per-run authorization 和 raw policy；缺项时返回 `blocked`，真实 QMT adapter call count 为 0 | 通过；完整 endpoint 与运行门控分离 |
+| S3：FastAPI 不可达、未完成 pairing 或 HMAC 校验失败 | C 侧返回 typed transport error / auth error；fallback policy 只允许 blocked 或人工 dry-run file；不得自动走真实 QMT | 通过；fail closed |
+| S4：用户提出提前使用 Qlib 或 Level2 | 进入 Deferred Ideas；只有 factor panel / report catalog / isolated runner 或微观结构主要风险证据满足后，另起 CR / Spike | 通过；不阻断日频 admission |
+
+### 33.8 系统架构图
+
+```mermaid
+graph TD
+  subgraph User["User / Operator"]
+    U1[阶段六研究负责人]
+    U2[QMT 运行负责人]
+    U3[per-run 审批人]
+  end
+  subgraph App["Application: local_backtest / WSL"]
+    R[Research Builder / Strategy]
+    ADM[Stage6 Admission Gate]
+    C[QMT C-side Python Client]
+    CLI[Thin CLI Wrapper]
+  end
+  subgraph Service["Windows Service Layer"]
+    GW[QMT FastAPI Gateway]
+    RG[Run Mode / Stage / Risk Gate]
+    ADP[QMT / XtQuant Adapter]
+    KS[Reconciliation / Kill Switch]
+  end
+  subgraph Data["Data / Evidence"]
+    DL[Published Current Truth / Research Metadata]
+    BR[Broker Lake Plan / Facts]
+    LOG[Redacted Audit Log]
+    AUTH[Per-run Authorization Evidence]
+  end
+  subgraph Infra["Infrastructure"]
+    WSL[WSL / Linux Research Node]
+    WIN[Windows QMT Node]
+    QMT[QMT / MiniQMT / XtQuant / QMT Service]
+  end
+  U1 --> R
+  U2 --> GW
+  U3 --> AUTH
+  R --> ADM
+  DL --> ADM
+  ADM --> C
+  CLI --> C
+  C -->|REST with run_id / intent_id / mode| GW
+  GW --> RG
+  AUTH --> RG
+  RG -->|pass only| ADP
+  ADP --> QMT
+  GW --> LOG
+  KS --> BR
+  ADP --> BR
+  WSL --> C
+  WIN --> GW
+```
+
+### 33.9 高层模块与职责划分
+
+| 模块 | 归属 | 职责 | 输入 | 输出 | 禁止项 |
+|---|---|---|---|---|---|
+| Stage6 Admission Gate | 主 HLD / research | 汇总实验 49-66 gate、多基准、primary benchmark、blocked claims 和 5 日 dry-run | release-bound research results、benchmark policy、dry-run evidence | admission package / blocked result | 不授权 simulation |
+| QMT C-side Python Client | local_backtest C 侧 | 类型化调用 health、capabilities、query、order intent、simulation/live 请求和 blocked result | Python object / dict / dataclass、run_id、mode、stage context | typed response、blocked reason、redacted audit reference | 不导入 xtquant；不读取凭据 |
+| Thin CLI Wrapper | local_backtest C 侧 | 人工 smoke、运维检查、脚本集成；复用同一 Python client | CLI args | JSON / text summary、exit code | 不复制业务逻辑；不绕过 client |
+| QMT FastAPI Gateway | Windows S 侧 | 接收 REST，请求校验，转换为 QMT / XtQuant adapter 调用 | REST request、mode、stage、client_id、timestamp、nonce、signature、authorization label | response、blocked reason、redacted log | 不默认公网暴露；不记录 secret / token / pairing code |
+| Run Gate | QMT companion service | 检查 run mode、CR016 stage gate、risk gate、kill switch、per-run authorization、raw execution policy | request context、authorization evidence、risk result | pass / blocked | 鉴权不能替代 gate |
+| Fallback Handler | C/S 双侧合同 | 在 gateway 不可达、鉴权失败、heartbeat fail 时 fail closed | transport / auth / heartbeat error | blocked 或人工 dry-run file | 不自动真实 QMT |
+| Deferred Capability Register | HLD / roadmap | 管理 Backtrader、Qlib、minute、Level2 触发条件 | 用户请求、实验证据、权限状态 | Deferred / Spike candidate | 不默认新增依赖 |
+
+### 33.10 技术选型与理由
+
+| 选型 | 推荐 | 备选 | 理由 | 风险控制 |
+|---|---|---|---|---|
+| C/S 通信 | HTTP REST over Windows FastAPI gateway | signed file drop fallback；CLI-only | 满足完整 endpoint、heartbeat、capabilities、blocked reason 和跨节点可观测性 | bind / firewall / redaction / run gate / fallback fail-closed |
+| C 侧接口 | Python client / 函数调用 + thin CLI | CLI-first；Python-only | 内部策略、OMS、测试可类型化调用，CLI 保留人工检查 | CLI 不复制业务逻辑；错误响应结构化 |
+| S 侧运行 | Windows 可运行 / 可安装 gateway 命令 | 嵌入回测主进程 | QMT / MiniQMT / XtQuant 位于 Windows，服务生命周期与研究进程分离 | 安装 / 启停 / 心跳 / incident 进入 companion HLD |
+| 鉴权 | 配对式 token/HMAC 默认启用 | no-auth debug / fixture / 显式临时；mTLS / VPN / Windows ACL | 比 no-auth 更能防误调用，复杂度仍低于重型安全栈；配对流程保留人工批准 | 组织化多人访问、跨网段或 live 默认开放时增加 scope、secret rotation 或更强鉴权 |
+
+### 33.10.1 配对式 token/HMAC 流程
+
+| 步骤 | 动作 | 输出 / 约束 |
+|---|---|---|
+| 1 | C 侧执行 `local-backtest qmt pair request --server http://<windows-host>:<port> --client-name <name>` | 生成 pairing request，不读取真实 QMT 凭据 |
+| 2 | S 侧 Windows gateway 记录 pending request | 字段包含 `request_id`、client name、来源 IP、机器指纹摘要、创建时间和过期时间 |
+| 3 | S 侧管理员执行 `qmt-gateway pair list` | 只展示 pending request 摘要，不展示 secret |
+| 4 | S 侧管理员执行 `qmt-gateway pair approve <request_id>` | 批准后生成 client id + secret，并显示一次性 pairing code 或短 TTL 领取窗口 |
+| 5 | C 侧执行 `local-backtest qmt pair complete --request-id <id> --code <code>` | 完成 client id / secret 领取；secret 不写日志、不入库仓库、不进入 review 文档 |
+| 6 | 后续请求携带 `X-QMT-Client-Id`、`X-QMT-Timestamp`、`X-QMT-Nonce`、`X-QMT-Signature` | 签名建议为 `HMAC_SHA256(secret, method + path + body_hash + timestamp + nonce)` |
+| 7 | S 侧校验 approved client、timestamp 偏移、nonce replay 和 scope | HMAC 失败、过期、重放或 scope 不足时 hard block，QMT adapter call count 为 0 |
+| 8 | HMAC 通过后继续执行 run gate、risk gate、kill switch 和 per-run authorization | 鉴权通过不等于 simulation / live / account / cancel 授权 |
+| 后置能力 | Backtrader W6、Qlib W7、minute/Level2 Spike | 提前引入 | 不污染阶段六 P0 admission 主线 | 后续按触发条件另起 CR / CP |
+
+### 33.11 完整 QMT Endpoint Matrix 与运行门控
+
+| Endpoint 类别 | C 侧接口形态 | S 侧 gateway 职责 | 默认可见性 | 真实转发门控 | 未满足门控时行为 |
+|---|---|---|---|---|---|
+| health / heartbeat | `client.health()`；`qmt-client health` | 返回服务存活、版本、时间、heartbeat、脱敏状态 | 可见 | 无真实 QMT 操作；不得返回敏感值 | 返回 unhealthy / blocked reason |
+| capabilities | `client.capabilities()` | 返回支持的 endpoint 类别、schema 版本、stage 支持矩阵 | 可见 | capability 可见不授权操作 | 仍可返回接口类别和缺失 gate |
+| intent validate | `client.validate_intent(intent)` | 校验 schema、raw execution policy、幂等 key、risk context | 可见 | 不触达真实 QMT | 返回 validation blocked |
+| dry-run / mock | `client.dry_run(intent)` | 生成 dry-run ack / mock broker event | 可见 | adapter_mode=shadow/dry_run/mock | 返回 dry-run blocked，不真实调用 |
+| market query | `client.query_market(request)` | 通过 Windows adapter 查询 QMT 行情能力或字段覆盖 | 接口可见 | mode 允许、source policy 允许；不得写研究 lake | 返回 blocked；provider/lake write=0 |
+| account snapshot | `client.query_account(request)` | 查询账户摘要 / 资产类别 | 接口可见，later-gated | live_readonly 或更高 stage + per-run authorization + redaction | blocked；account_query=0 |
+| positions | `client.query_positions(request)` | 查询持仓 | 接口可见，later-gated | live_readonly 或更高 stage + authorization | blocked；account_query=0 |
+| orders / trades | `client.query_orders()` / `client.query_trades()` | 查询委托 / 成交，用于对账 | 接口可见，later-gated | stage gate + reconciliation context | blocked；adapter_call=0 |
+| simulation submit | `client.submit_simulation(intent)` | 转换为 QMT simulation order | 接口可见，later-gated | simulation stage PASS + risk PASS + kill switch clear + per-run authorization | hard blocked；real_order=0 |
+| simulation cancel | `client.cancel_simulation(order_ref)` | 转换为 simulation cancel | 接口可见，later-gated | simulation stage + cancel policy + authorization | hard blocked；real_cancel=0 |
+| live-readonly | `client.live_readonly_snapshot()` | 只读实盘账户 / 持仓 / 委托状态 | 接口可见，later-gated | live_readonly stage PASS + authorization | blocked；account_query=0 |
+| live submit / cancel | `client.submit_live()` / `client.cancel_live()` | 小资金实盘发单 / 撤单 | 接口可见，later-gated | small_live / scale_up stage PASS + risk PASS + kill switch clear + authorization | hard blocked；real_order/real_cancel=0 |
+| reconciliation | `client.reconcile(run_id)` | 汇总 broker facts、OMS state、账户 / 委托 / 成交差异 | 接口可见，later-gated | stage + authorization + redaction | blocked；不写真实 broker lake |
+| kill-switch | `client.kill_switch(reason)` | 停止新单、冻结策略、按规则撤可撤单 | 接口可见，later-gated | kill-switch policy + authorized operator；撤单仍受 stage / mode | 若未授权，仅记录 blocked incident |
+
+### 33.12 关键流程
+
+1. 阶段六 research 使用 published current truth 和多基准 policy 生成 candidate strategy。
+2. Admission Gate 检查数据、因子、组合、成本、benchmark、稳健性、消融、冻结、pre-sim 和 5 日 dry-run gate。
+3. 未通过时输出 blocked package，不进入 QMT C/S client。
+4. 通过后，C 侧 Python client 生成 typed request，包含 `run_id`、`intent_id`、`stage`、`mode`、`authorization_ref`、`execution_price_policy=raw`、`client_id`、timestamp、nonce、HMAC signature 和 redaction label。
+5. S 侧 gateway 先执行 endpoint schema、pairing token/HMAC、timestamp、nonce replay、scope、bind/source、redaction 和 heartbeat 检查。
+6. 请求若涉及真实 QMT 操作，必须经过 run mode、CR016 stage gate、pre-trade risk、kill switch 和 per-run authorization。
+7. 任一检查失败时返回 typed `blocked`，真实 QMT / broker / lake 调用计数为 0。
+8. gateway 不可达或鉴权失败时 fallback 只返回 blocked 或生成人工 dry-run file，不自动真实 QMT。
+
+### 33.13 非功能需求设计
+
+| 质量特征 | 设计目标 | 设计手段 | 验收口径 |
+|---|---|---|---|
+| 安全性 | 未授权真实 QMT 操作为 0 | run gate、stage gate、per-run authorization、redaction、fail-closed fallback | `qmt_api_call=0`、`real_order=0`、`account_query=0` |
+| 可维护性 | QMT gateway 与回测主进程分离 | C/S 模块、Python client 主接口、S 侧 Windows 命令 | C 侧无 xtquant import；S 侧拥有 adapter boundary |
+| 可验证性 | 完整 endpoint 可用 mock / contract 验证 | endpoint matrix、typed blocked result、fixture-only gate | 每类 endpoint 至少有 allowed/blocked contract case |
+| 可观测性 | 每次请求可追踪且不泄露敏感值 | run_id、intent_id、endpoint、latency、blocked reason、redaction status | 日志中 token / 账户号 / session / `.env` 出现次数为 0 |
+| 可用性 | gateway 故障时不 fail-open | heartbeat、transport error、fallback policy | gateway 不可达时真实 QMT 调用为 0 |
+| 平台兼容 | WSL 研究节点和 Windows QMT 节点职责清晰 | REST boundary、bind / firewall、Windows service command | 公网 / 不受控局域网暴露 blocked |
+
+### 33.14 主要风险、应对与 Gotchas
+
+| 风险 / Gotcha | 影响 | 应对 | 触发信号 |
+|---|---|---|---|
+| 把 endpoint 可见误读为 simulation 授权 | 高 | ADR-070；endpoint matrix 每行写 gate；缺 gate 时 adapter call=0 | capabilities 中出现 simulation endpoint 后直接提交 |
+| no-auth 临时模式被误设为默认 | 高 | ADR-071；配对式 token/HMAC 默认启用；no-auth 仅 debug / fixture / 显式临时，且仍走运行门控 | 配置中 `auth_mode=no-auth` 且非本机 debug / fixture 场景 |
+| fallback 自动绕过 gateway | 高 | ADR-072；fallback 仅 blocked / 人工 dry-run file | FastAPI 不可达后出现真实 order/cancel/query |
+| C 侧 CLI-first 污染内部调用 | 中 | ADR-069；Python client 主接口，CLI 只薄包装 | 策略 / OMS 通过 shell 解析文本 |
+| QMT 文档能力被当成当前授权 | 高 | 文档只作为 capability background；真实权限另行授权 | HLD / docs 写“已可用 Level2 / simulation” |
+| 后置能力范围膨胀 | 中 | ADR-073；Backtrader/Qlib/minute/Level2 均 Deferred | Story 把 Qlib / Level2 放入 P0 |
+| 旧失败策略被包装 | 高 | ADR-067；admission 必须记录旧失败证据和 blocked claims | production rerun fail 仍生成 ready claim |
+
+### 33.15 ADR 候选决策点
+
+| ADR | 决策 | 回写对象 |
+|---|---|---|
+| ADR-067 | 阶段六 admission 采用新多因子 gate + 多基准看板 + primary benchmark，不包装旧失败策略 | REQ-138、REQ-154、Q-040、§33.1、§33.4 |
+| ADR-068 | QMT C/S bridge 主选：local_backtest C 侧 client + Windows S 侧 FastAPI gateway | REQ-145、REQ-149、REQ-159、§33.3、`process/HLD-QMT-TRADING.md` |
+| ADR-069 | C 侧接口采用 Python client / 函数调用为主 + 薄 CLI | REQ-160、Q-044、§33.4、§33.9 |
+| ADR-070 | 完整 endpoint matrix 与运行门控分离 | REQ-146、REQ-147、Q-041、§33.11 |
+| ADR-071 | 鉴权策略采用配对式 token/HMAC 默认启用；no-auth 仅 debug / fixture / 显式临时 | REQ-148、REQ-151、Q-039、§33.10 |
+| ADR-072 | fallback 采用 blocked-only 或人工 dry-run / signed file drop，不自动真实 QMT | REQ-145、REQ-150、Q-042、§33.12 |
+| ADR-073 | Backtrader、Qlib、minute、Level2 后置触发 | REQ-139..143、REQ-155..158、Q-043、§33.14 |
+
+### 33.16 分阶段落地建议
+
+> 本节是 HLD 级阶段建议，不是 Story Plan。CP3 approve 前不得拆 Story、写 LLD 或实现。
+
+| 阶段 | 目标 | 前置条件 | 退出条件 |
+|---|---|---|---|
+| H0：设计冻结 | HLD / ADR / CP3 Decision Brief 冻结 CR-019 关键边界 | CP2 approved | CP3 manual approved |
+| H1：Admission contract | 定义实验 49-66 gate、多基准、primary benchmark、blocked claims 和 5 日 dry-run summary | H0 | CP4/CP5 后续 Story 可设计 LLD |
+| H2：C/S API contract | 定义 C 侧 Python client、薄 CLI、S 侧 gateway、endpoint matrix、typed blocked result | H0 | 所有 endpoint contract 可 fixture 验证 |
+| H3：Windows deployment contract | 定义 Windows 可安装 / 可运行命令、bind、firewall、heartbeat、日志脱敏和 incident | H2 | 不启动真实服务，仅形成 LLD 输入 |
+| H4：Simulation / live later-gated interfaces | 分批实现 simulation/live/account/cancel/recon/kill-switch endpoint 的门控路径 | H2/H3 + CP5 | 真实转发仍需 per-run authorization |
+| H5：Deferred capabilities | 按触发条件引入 Backtrader、Qlib、minute、Level2 Spike | admission 主线稳定 | 单独 CR / CP 门控 |
+
+### 33.17 工作量粗估
+
+| 范围 | 候选 Story 数 | 预计 Wave 数 | 粗估 |
+|---|---:|---:|---|
+| 阶段六 admission 与 benchmark contract | 1-2 | 1 | M |
+| QMT C/S bridge API / endpoint / run gate | 4-5 | 2-3 | L |
+| Windows deployment / installable command / ops docs | 2-3 | 1-2 | M |
+| 后置能力 ADR / roadmap | 1 | 1 | S |
+| 合计 | 8-11 | 4-6 | XL |
+
+### 33.18 待确认问题
+
+| ID | 问题 | 状态 | 推荐处理 | 影响范围 | 决策人 |
+|---|---|---|---|---|---|
+| CR19-Q1 | 是否接受 QMT C/S bridge 主选替代 signed file drop 默认通信 | OPEN_FOR_CP3 | 接受；signed file drop 仅 fallback | C/S 架构、HLD-QMT、ADR-068 | 用户 / meta-po |
+| CR19-Q2 | 是否接受 C 侧 Python client / 函数调用为主 + 薄 CLI | OPEN_FOR_CP3 | 接受；CLI 不复制业务逻辑 | C 侧 API、测试、运维 | 用户 / meta-po |
+| CR19-Q3 | 是否接受完整 endpoint matrix 与运行门控分离 | OPEN_FOR_CP3 | 接受；接口目标完整但真实转发 gate-controlled | API、QA、runbook、安全 | 用户 / meta-po |
+| CR19-Q4 | 是否接受配对式 token/HMAC 默认启用，no-auth 仅 debug / fixture / 显式临时 | OPEN_FOR_CP3 | 接受；HMAC 通过后仍继续执行运行门控 | 安全、部署、日志、pairing 流程 | 用户 / meta-po |
+| CR19-Q5 | 是否接受 fallback 只 blocked-only 或人工 dry-run file | OPEN_FOR_CP3 | 接受；禁止自动真实 QMT fallback | incident、可用性、安全 | 用户 / meta-po |
+| CR19-Q6 | 是否接受 Backtrader/Qlib/minute/Level2 后置 | OPEN_FOR_CP3 | 接受；不进入阶段六 P0 | 依赖、数据工程、roadmap | 用户 / meta-po |
+| CR19-Q7 | 是否接受阶段六 admission 采用新多因子 gate + 多基准看板 + primary benchmark，且旧失败策略只作 blocked evidence | OPEN_FOR_CP3 | 接受；Q-040 已在 CP2 确认，CP3 复核 HLD / ADR 落地 | admission package、benchmark、freeze fields | 用户 / meta-po |
+
+### 33.19 HLD 自审记录
+
+| 检查项 | 结论 | 证据 |
+|---|---|---|
+| 问题定义、目标、约束、非目标、假设完整 | PASS | §33.1 |
+| 至少 2 个候选方案比较 | PASS | §33.3 包含 CR19-A/B/C |
+| Architecture Gray Areas 与 advisor table 前置 | PASS | §33.2；`process/discussions/CP3-CR019-HLD-DISCUSSION-LOG.md` |
+| Use Case -> Architecture Traceability | PASS | §33.6 |
+| 关键场景模拟 | PASS | §33.7，4 个场景均可通过推荐架构 |
+| Mermaid 图覆盖 User / Application / Service / Data / Infrastructure | PASS | §33.8 |
+| 完整 QMT endpoint matrix 与运行门控分离 | PASS | §33.11 |
+| 运行门控与授权边界明确 | PASS | §33.11、§33.12、§33.13 |
+| ADR 候选和待确认问题完整 | PASS | §33.15、§33.18 |
+| HLD 拆分判断 | PASS | QMT 交易细节保持在 companion `process/HLD-QMT-TRADING.md`，主 HLD 只同步研究消费 / C 侧调用边界；不新增第三份 HLD |
+| 禁止真实操作声明 | PASS | 本节导语、§33.1、§33.13 |
+
+## 34. CR-025 Research Execution Semantic Alignment 与 Backtrader optional reference
+
+> 本节是 CR-025 的 CP3 HLD 草案输入。它只冻结研究执行语义对照、Backtrader 本地项目模块级取舍、clean feed、semantic diff 和 target portfolio / order intent draft 边界；不生成 Story Plan、LLD 或实现；不授权新增依赖、运行 Backtrader、复制 / 移植 GPLv3 源码、真实 broker、QMT / MiniQMT / XtQuant、provider fetch、lake write、broker lake write、catalog publish、simulation、live 或凭据读取。
+
+**Post-CP3 / CP5 前定位澄清（2026-06-02）**：本系统核心定位是多因子策略研究和回测。CR-025 只解决 research-to-execution 链路中的执行语义对齐、semantic diff、`order_intent_draft_v1` 和 no-copy / no-real-operation 边界；Backtrader 不作为多因子研究主框架，也不承担 FactorSpec、FactorRunSpec、IC / RankIC、分层收益、多因子组合、实验追踪或策略准入包能力。多因子研究闭环另起后续 CR 评审，参考 Qlib / Alphalens / vnpy.alpha 等研究型框架；该后续 CR 不继承 CR-025 的依赖、运行、provider、lake、publish、QMT 或 broker 授权。
+
+### 34.1 问题定义
+
+| 字段 | 内容 |
+|---|---|
+| 问题陈述 | 用户目标已从“是否开发 Backtrader 后端”澄清为 production-grade research-to-execution 路线：研究结果需要能解释执行语义差异，并能形成可进入后续 QMT OMS 评审的 target portfolio / order intent draft。当前 lightweight engine 透明、稳定、适合作为默认研究与回测主路径中的执行层 baseline，但缺少与成熟事件驱动框架的语义对照和模块级借鉴记录。CP5 前进一步澄清：多因子研究闭环才是系统核心长期主线，Backtrader 不能被误读为该主线的研究框架。 |
+| 价值 | 在不替换默认引擎、不引入 GPLv3 源码风险、不触发真实运行的前提下，把 Backtrader 作为 optional semantic reference，帮助识别成交、现金、滑点、成本、订单状态、仓位和报告语义差异，并把研究输出收敛成后续生产执行链路可审查的接口草案；同时把 FactorSpec / IC / RankIC / 分层收益等多因子研究能力从 CR-025 中剥离，避免执行语义 CR 膨胀成研究平台 CR。 |
+| 目标 | 1. 默认 lightweight 主路径保持不变，Backtrader 只在显式选择时作为 semantic reference；2. HLD 记录 `/home/hyde/download/backtrader` 的 license、模块结构和模块级取舍；3. 冻结 clean feed gate、semantic diff schema 和 target portfolio / order intent draft 字段；4. 将源码级移植默认设为不推荐，任何例外必须进入 CP3 决策和 CP5 实现授权；5. 明确多因子研究闭环另起后续 CR，CR-025 不实现 FactorSpec、FactorRunSpec、IC / RankIC、分层收益、多因子组合、实验追踪或策略准入包。 |
+| 成功标准 | HLD 覆盖 5 个 Architecture Gray Areas；Backtrader 模块矩阵覆盖至少 12 个模块族；semantic diff 字段不少于 10 类；order intent draft 字段不少于 11 个；真实 broker/QMT/provider/lake/publish/credential 计数目标均为 0；FactorSpec、FactorRunSpec、IC / RankIC、分层收益、多因子组合、实验追踪和策略准入包在 CR-025 中的实现项均为 0；CP3 自动预检阻断项为 0。 |
+| 约束 | CP5 前不得改 `pyproject.toml` / `uv.lock`；不得实现代码、运行 Backtrader、复制 / 移植源码、读取凭据或触发真实操作；Backtrader 输入必须来自本地 clean feed，不能生成 PIT、复权、benchmark、tradability 或 quality truth。 |
+| 非目标 | 不开发完整事件驱动交易平台；不把 Backtrader 升级为默认框架、production truth 或多因子研究主框架；不接入 Backtrader live store / broker；不启动 QMT gateway、simulation、live-readonly、small-live 或 scale-up；不覆盖 README/docs 用户文档；不实现 FactorSpec、FactorRunSpec、IC / RankIC、分层收益、多因子组合、实验追踪、策略准入包或 Qlib / Alphalens / vnpy.alpha 集成。 |
+| 关键假设 | 既有 `market_data` / ResearchDataset / quality gate 继续提供研究事实源；lightweight engine 是默认 baseline；QMT production route 继续由 CR-020..CR-024 独立授权；本地 Backtrader license 以 `/home/hyde/download/backtrader/LICENSE` 和 `setup.py` 为准，显示 GNU GPL v3 / GPLv3+；多因子研究闭环将由后续 CR 独立冻结边界、指标、实验追踪和准入包。 |
+| 缺失信息 | 无阻断 CP3 的缺失信息。后续若 CP5 进入实现，仍需冻结 optional dependency 版本、feed adapter 物理文件 owner、semantic diff 落盘格式和法律 / 分发策略。 |
+
+### 34.2 Architecture Gray Areas 与 advisor table-first 记录
+
+| AGA | 问题 | 推荐结论 | 证据 / 落点 |
+|---|---|---|---|
+| AGA-CR025-01 | Backtrader 是 optional semantic reference、adapter，还是主路径迁移候选？ | 采用 optional semantic reference + design reference；主路径仍为 lightweight。 | REQ-161、SM-33、CP2 DQ-01、ADR-074。 |
+| AGA-CR025-02 | 本地 Backtrader 哪些模块可借鉴、可适配、可移植候选、必须排除？ | 形成模块矩阵；默认无源码级移植推荐，采用 clean-room interface adaptation。 | §34.5、ADR-075。 |
+| AGA-CR025-03 | GPLv3 对源码复制、裁剪、改写和分发的影响是什么？ | GPLv3 源码不进入本项目默认实现；源码级移植需 CP3 风险接受 + CP5 授权 + 法务/开源合规确认。 | `/home/hyde/download/backtrader/LICENSE`、`setup.py`、ADR-076。 |
+| AGA-CR025-04 | lightweight baseline、Backtrader semantic reference 与 QMT order intent 如何对齐？ | 冻结 clean feed gate、semantic diff schema、target portfolio / order intent draft；QMT 只消费 draft，不由 CR-025 触发真实 gateway。 | §34.6、§34.7、`process/HLD-QMT-TRADING.md` §18。 |
+| AGA-CR025-05 | CR-025 与 CR-020 gateway health 的顺序和接口边界如何表达？ | CR-025 只提供 order intent draft 与 semantic diff evidence；CR-020 可后续独立启动 gateway health，不继承运行授权。 | REQ-171、§34.3、ADR-077。 |
+
+| Option | Pros | Cons | Impact Surface | Recommendation | Assumptions / When to switch |
+|---|---|---|---|---|---|
+| CR25-A：Design reference + clean-room interface adaptation | 保留 lightweight 稳定性；最大限度降低 GPLv3 源码污染；便于用模块矩阵指导 LLD；CP5 前无需依赖变更 | 不能直接获得 Backtrader 运行时能力；后续 adapter 需自行实现接口层 | HLD、ADR、clean feed、semantic diff、order intent draft、QA 合同 | 推荐默认 | 适用于当前 CP3；若后续必须运行真实 Backtrader 对照，可在 CP5 后切到 CR25-B。 |
+| CR25-B：Optional dependency runtime integration，不复制源码 | 可使用已安装 Backtrader 运行对照；仍不复制 GPLv3 源码到仓库 | CP5 前不能做；依赖隔离、版本、测试和 GPL 组合分发边界需更严 | pyproject / uv.lock、optional extra、adapter、测试矩阵、文档 | 条件备选 | 仅在 CP5 批准实现、legal/package 策略明确、未安装环境回归稳定时采用。 |
+| CR25-C：源码级 fork / 移植 Backtrader 模块 | 可深度控制事件循环或订单模型 | GPLv3/copyleft、维护和回归成本高；可能迫使项目进入 GPL 分发义务；会偏离 production route | 许可证、代码所有权、依赖图、QA、发布、用户文档 | 不推荐默认；需单独 CP3/CP5 决策 | 只有 lightweight 与 optional dependency 均无法满足已量化场景，且用户接受 GPLv3 风险时另起 CR。 |
+| CR25-D：完全不参考 Backtrader | 风险最低，文档最少 | 无法满足用户要求的本地 Backtrader 项目分析；缺少成熟框架对照 | HLD 完整性、用户信任、后续 LLD 输入 | 不采用 | 仅当用户撤回 Backtrader 分析要求时切换。 |
+
+**方案形成输入记录**：`process/discussions/CP3-CR025-HLD-DISCUSSION-LOG.md` 与 `process/checks/CP3-CR025-DISCUSSION-CHECKPOINT.json`。本轮未伪造 reviewer subagent；advisor 表来自 CP2 已确认约束、用户本轮明确指令和 meta-se 静态架构分析。
+
+### 34.3 候选架构方案对比
+
+| 方案 | 核心思路 | 优点 | 缺点 | 复杂度 | 成本 | 扩展性 | 风险 | 适用前提 |
+|---|---|---|---|---|---|---|---|---|
+| CR25-A Design Reference / Interface Adaptation（推荐） | 只把 Backtrader 当作语义参考；在本项目内以 clean-room 合同定义 feed、diff、order intent | license 风险最低；不改依赖；主路径稳定；可审计 | 后续若要运行 Backtrader，还需 adapter Story | 中 | 中 | 高 | GPLv3 解读错误、接口过抽象 | 用户接受“借鉴设计，不复制源码”。 |
+| CR25-B Optional Dependency Runtime | CP5 后用 optional extra + lazy import 调用外部 Backtrader 包，输出对照报告 | 可获得真实 Backtrader 行为对照；不用复制源码 | 需依赖、版本和测试矩阵；未安装路径要稳定 | 中高 | 中高 | 中 | 依赖泄漏、结果被误称 truth | CP5 approved，且依赖隔离设计通过。 |
+| CR25-C Source Migration / Fork | 复制、裁剪或 fork 部分 Backtrader 模块进入项目 | 可深改事件循环或订单模型 | GPLv3/copyleft、维护、回归和发布成本最高 | 高 | 高 | 低到中 | 许可证和长期维护风险高 | 仅在另起 CR、用户接受 GPL 风险、CP5 授权后评估。 |
+
+**推荐方案**：CR25-A。Backtrader 对当前项目最大的价值是成熟事件驱动架构和模块边界的语义参照，而不是默认运行时、源码来源或多因子研究框架。CR25-A 同时满足 REQ-161、REQ-172、REQ-173，并把 CR-020 真实 QMT 路线和后续多因子研究闭环留在独立门控内。
+
+**备选方案**：CR25-B 是后续 CP5 可选实现路线；CR25-C 只作为治理备选，不进入默认实现。
+
+### 34.4 推荐方案总览与适用性矩阵
+
+| 维度 | 推荐设计 |
+|---|---|
+| 系统思路 | 以 lightweight result 为 baseline，以 Backtrader module inventory 作为 execution semantic reference，把两者对齐到 clean feed 和 target portfolio / order intent draft，不让 optional backend、GPLv3 源码或 Backtrader 指标 / 策略体系接管研究事实源。 |
+| 架构风格 | 分层 contract-first：Data Lake / ResearchDataset 提供 clean feed；lightweight engine 提供 baseline；Backtrader reference 只提供执行语义对照；QMT OMS later-gated 消费 order intent draft；多因子研究闭环在后续 CR 中独立设计。 |
+| 核心能力边界 | clean feed gate、semantic diff schema、Backtrader module classification、order intent draft、license governance、no-real-op counters；不包含 FactorSpec、FactorRunSpec、IC / RankIC、分层收益、多因子组合、实验追踪或策略准入包。 |
+| 关键依赖 | `process/USE-CASES.md` UC-19、`process/REQUIREMENTS.md` REQ-161..REQ-173、Backtrader local tree、QMT companion HLD。 |
+| 适用条件 | 需要比较执行语义、生成生产执行接口草案，但仍处于 CP3/CP5 门控阶段且不能改依赖或运行真实后端；多因子研究框架能力不在本 CR 中交付。 |
+| 切换条件 | 若 CP5 后用户要真实运行 Backtrader 对照，切换到 CR25-B；若用户要求复制源码或 fork，必须切换到 CR25-C 并重新发起 CP3/CP5 风险接受；若用户要求 FactorSpec、IC / RankIC、分层收益或多因子组合，启动后续多因子研究 CR，而不是扩大 CR-025。 |
+
+| 用户目标 | 项目成熟度 | 认知负担 | 验证条件 | 回退成本 | 推荐适配性 |
+|---|---|---|---|---|---|
+| 生产级 research-to-execution | 已有数据湖、lightweight engine、QMT companion | 中 | semantic diff + order intent 字段完整 | 低 | 高 |
+| 框架级 Backtrader 迁移 | 当前未授权 | 高 | 需完整回归和 GPL 治理 | 高 | 低 |
+| 多因子研究闭环 / 因子评价平台 | 后续 CR 候选 | 中高 | FactorSpec / FactorRunSpec、IC / RankIC、分层收益、多因子组合和实验追踪独立冻结 | 中 | CR-025 不适用 |
+| 真实 QMT simulation / live | 当前 CR 不授权 | 高 | 需 CR-020..CR-024 | 中高 | 不适用 |
+
+### 34.5 Backtrader 本地项目模块级分析矩阵
+
+本轮静态读取 `/home/hyde/download/backtrader`：`LICENSE` 为 GNU GPL v3；`setup.py` 标记 `GPLv3+`；`backtrader/` 下约 171 个 Python 文件，`tests/` 约 83 个测试文件，`samples/` 约 86 个样例文件。下表只做执行语义、模块职责、设计借鉴和治理判断，不复制源码，不把 Backtrader 指标 / Strategy / analyzer 体系提升为多因子研究主框架。
+
+| 模块 | 职责 | 可借鉴点 | 适配可能 | 源码级移植候选 | 禁止移植项 | license 风险 | 维护成本 | 验证策略 | 是否需要 CP3/CP5 决策 |
+|---|---|---|---|---|---|---|---|---|---|
+| `LICENSE` / `setup.py` / 包元数据 | 声明 GPLv3 / GPLv3+ 许可和包发布元信息 | 把 license 风险前置到 ADR 与模块矩阵 | 仅作为合规输入 | 否 | 不得复制 license 覆盖关系不清的源码到本项目默认代码 | 高：源码复制 / 改写 / 分发可能触发 GPLv3/copyleft 义务 | 中：需后续 legal/package 决策 | CP3 检查 license 已记录；CP5 前禁止源码移植 | CP3 需确认默认不源码移植；源码例外需 CP5 授权 |
+| `cerebro.py` | 事件编排、strategy/broker/data/analyzer/observer/writer 接入、runonce/runnext、resample/replay、optimization | 编排边界、组件注册、生命周期、通知队列 | 可借鉴接口分层和生命周期术语；不复制事件循环 | 否；完整 Cerebro 不进入本项目 | `Cerebro` 运行时、run loop、optimization engine 源码 | 高 | 高：约 1700 行核心编排，耦合 lines/metabase/broker | 以 HLD 场景模拟和后续 contract test 验证生命周期字段 | CP3 确认 reference-only；任何移植需新 CR |
+| `broker.py` / `brokers/bbroker.py` | Broker 抽象、回测 broker、订单提交、现金、滑点、成交尝试、fund mode | broker boundary、slippage/filler、order notification | 可适配为 semantic diff 字段：cash、value、fill、slippage、commission | 否 | `BackBroker` 撮合和 broker 状态机源码；真实 broker 子类 | 高 | 高：撮合语义复杂且与订单/line 深耦合 | 后续用 fixture 对比 lightweight cash/fill/cost 字段，不跑真实 broker | CP3 确认不移植；CP5 若运行 optional dependency 才授权 |
+| `brokers/ibbroker.py`、`oandabroker.py`、`vcbroker.py` | 外部 broker 适配 | 只用于识别 live broker 风险边界 | 不适配 | 否 | 全部 live broker / store / 外部账户接入 | 极高：license + 真实 broker 权限风险 | 高 | 安全扫描和 HLD 禁止项；真实调用计数目标为 0 | CP3/CP5 默认排除；真实 broker 另起 CR |
+| `order.py` / `trade.py` / `position.py` | order execution bits、order status、exec types、trade lifecycle、position update | 状态词表、partial/completed/rejected/margin/expired、trade history 思路 | 可 clean-room 映射到 order intent / semantic diff；不复制类 | 否；可作为概念参照 | `OrderBase`、`OrderData`、`Trade`、`Position` 源码 | 中高 | 中：状态模型较有价值但需重写成项目合同 | 后续对照状态枚举覆盖 partial/rejected/expired/margin/unfilled | CP3 确认 clean-room mapping；源码移植需 CP5 |
+| `feed.py` / `feeds/` / `dataseries.py` / `linebuffer.py` / `lineseries.py` | OHLCV line、datetime line、CSV/Pandas feed、resample/replay、stack/buffer | clean feed 必填字段、Pandas feed 映射、timeframe/compression、data notification | 可适配为本项目 clean feed schema 和 adapter 输入校验 | 否；不移植 line engine | line buffer、metaclass line 系统、CSV/Yahoo/IB/Oanda data feed 源码 | 高 | 高：line 系统侵入性强，且很多 feed 会触发外部源风险 | CP5 后只用本地 clean feed fixture；字段 gate 覆盖 PIT/available_at/policy | CP3 确认字段；CP5 才能实现 adapter |
+| `comminfo.py` / `sizer.py` / `sizers/` / `fillers.py` | 佣金、保证金、size 计算、成交量填充假设 | commission/slippage/filler 作为可解释语义差异维度 | 可 clean-room 定义 `cost_config_ref`、sizer policy 和 fill assumption | 否 | CommissionInfo/Sizer/Filler 具体实现源码 | 中高 | 中 | semantic diff 必须输出 commission、slippage、fill assumption、cash impact | CP3 确认字段；CP5 实现自研合同 |
+| `analyzer.py` / `analyzers/` | returns、drawdown、Sharpe、transactions、positions、trade analyzer | 指标类别、transactions 输出和 time-return 结构 | 可借鉴指标目录；不复制公式实现 | 否 | analyzers 源码、pyfolio 适配源码 | 中 | 中 | 本项目报告字段与 analyzer 类别逐项 trace；指标公式沿本项目既有口径 | CP3 不需源码决策；CP5 若新增指标需 Story |
+| `observer.py` / `observers/` | broker/value/drawdown/trades/buy-sell/log-return observation | observer 作为运行轨迹和 semantic diff timeline 的设计参照 | 可适配为 diff timeline / trace event schema | 否 | Observer line 体系和 plot 联动源码 | 中 | 中 | 后续检查 diff artifact 是否记录 per-date cash/value/order/trade event | CP3 确认 trace 字段 |
+| `indicator.py` / `indicators/` / `talib.py` | 指标体系、line operation、SMA/EMA/RSI/MACD 等 | 不把指标库迁移成目标；只借鉴 indicator 与 signal 分离边界 | 低：本项目研究因子 / signal 继续走纯函数或 ResearchDataset | 否 | 指标库源码、TA-Lib bridge、line operation | 高 | 高：指标库庞大且与 line system 绑定 | forbidden scope 检查；后续策略结果不依赖迁移指标库 | CP3 确认 exclude / reference-only |
+| `strategy.py` / `signal.py` / `strategies/` | Strategy 生命周期、buy/sell/target order、SignalStrategy、样例 SMA crossover | target order API 概念、strategy lifecycle、signal/strategy 分离 | 可把 `order_target_percent/size/value` 概念映射到 target portfolio draft | 否 | Strategy 类、buy/sell/order_target 源码、样例策略源码 | 高 | 高：会把策略纯函数改造成框架继承模型 | contract review：策略层仍输出 target portfolio，不继承 Backtrader Strategy | CP3 确认不迁移策略接口 |
+| `store.py` / `stores/` | Store singleton、IB/Oanda/VisualChart store、data/broker factory、notifications | 只用于识别 live integration 边界和 fail-closed 需求 | 不适配到 CR-025 | 否 | 全部 live store 和外部 broker store 源码 | 极高：真实 broker / live 风险 + GPL | 高 | 安全计数：real_broker_calls=0；HLD forbid list | CP3/CP5 默认排除；真实接入另起 CR |
+| `plot/` / `writer.py` | 图形输出、writer、CSV/text 输出 | writer 输出结构可作为报告可解释性参照 | 可借鉴 writer/result separation；不采用 plot 体系 | 否 | plot/writer 源码、matplotlib 联动 | 中 | 低到中 | 后续 semantic diff 输出 schema 固定；不要求迁移 plot | CP3 不需源码决策 |
+| `samples/` / `tests/` / `datas/` / `tools/` | 样例、行为测试、fixture 数据、CLI 工具 | 用于理解行为类别：order、position、analyzer、resample、writer | 仅作为阅读参考；不得复制测试数据或样例源码 | 否 | 样例策略、测试源码、datas fixture、工具脚本 | 中高 | 中 | 后续自建 fixture，引用行为类别而非复制数据 | CP3 确认 no-copy；CP5 建立自有 fixtures |
+| `metabase.py` / `lineiterator.py` / `utils/` | 参数元类、owner 查找、line iterator、日期工具 | 参数/生命周期的架构风格可参考 | 不适配；本项目不引入 Backtrader metaclass runtime | 否 | metaclass/line iterator/utils 源码 | 高 | 高 | LLD 禁止引入兼容层或复制 metaclass | CP3 确认 exclude |
+
+**推荐分类汇总**：
+
+| 分类 | 模块 | 结论 |
+|---|---|---|
+| `reference_only` | `cerebro.py`、broker、order/trade/position、analyzer/observer、strategy/signal、plot/writer、samples/tests | 只作为语义和模块边界参考，不复制实现。 |
+| `adapt_interface` | clean feed、semantic diff、commission/sizer/fill assumption、target order 概念 | 用本项目代码 clean-room 定义接口和字段，后续 CP5 才能实现。 |
+| `migration_candidate` | 无默认推荐 | 若用户要求源码级移植，必须另列 CP3 决策、GPLv3 风险接受和 CP5 授权。 |
+| `exclude` | live broker/store、外部 feeds、line/metaclass runtime、指标库迁移、样例/测试数据复制 | 默认禁止进入 CR-025。 |
+
+### 34.6 Clean Feed Gate 与 semantic diff schema
+
+本节只定义 lightweight baseline 与 Backtrader-style execution semantic reference 的差异合同，不定义因子研究评价合同。FactorSpec、FactorRunSpec、IC / RankIC、分层收益、多因子组合、实验追踪和策略准入包字段均不属于 CR-025 semantic diff schema。
+
+| Gate | 必填 / 目标 | 失败行为 |
+|---|---|---|
+| PIT / `available_at` | 100% 决策输入满足 `available_at <= decision_time` | 返回 `blocked_clean_feed_pit`，不进入 optional reference。 |
+| 单一复权口径 | 单 run 仅一个 `research_adjustment_policy` | 返回 `blocked_adjustment_policy_mixed`。 |
+| OHLCV / calendar | `datetime`、`open`、`high`、`low`、`close`、`volume`、calendar coverage 可审计 | 返回 `backend_unavailable` 或 `data_required_missing`。 |
+| Benchmark | `hs300_index` 或策略指定 benchmark status 明确 | 缺 required benchmark 时 blocked，不自动补数。 |
+| Tradability / cost | 停牌、涨跌停、ST、无成交、成本配置和降级原因可审计 | 缺 P0 tradability 时 blocked 或 explicit limitation。 |
+| Quality / lineage | quality pass/warn/fail、source run、release / candidate lineage 明确 | `quality_fail` 阻断；warn 允许但进入 limitations。 |
+
+| semantic diff 字段 | 说明 | 是否进入 order intent draft |
+|---|---|---|
+| `baseline_engine` | 固定为 lightweight baseline 或版本标签 | 否 |
+| `reference_engine` | Backtrader optional semantic reference / unavailable reason | 否 |
+| `strategy_id` / `run_id` | 研究 run 标识 | 是 |
+| `signal_date` / `target_trade_date` | T 日信号与 T+1 或指定目标交易日 | 是 |
+| `symbol` | 证券代码 | 是 |
+| `target_weight` / `target_qty` | 目标权重或目标数量，至少一类存在 | 是 |
+| `rebalance_date` | 调仓日期差异 | 否 |
+| `fill_price_policy` | close/open/limit/protective/raw reference 等 | 部分进入 `execution_price_policy` |
+| `cash_before` / `cash_after` | 现金处理差异 | 可作为 snapshot ref |
+| `commission` / `tax` / `slippage` | 成本拆分 | 通过 `cost_config_ref` 进入 |
+| `unfilled_reason` / `missing_reason` | 未成交、缺价、质量问题 | 进入 `limitations` |
+| `nav` / `returns` / `drawdown` | 净值和指标差异 | 否 |
+| `diff_reason` | 成交日、价格、成本、仓位、现金、数据 gate 等原因枚举 | 进入 limitations 摘要 |
+
+### 34.7 Target Portfolio / Order Intent Draft 边界
+
+CR-025 只生成 draft 合同，后续真实消费由 QMT companion HLD 和 CR-020..CR-024 独立授权。
+
+| 字段 | 必填 | 说明 | QMT 边界 |
+|---|---|---|---|
+| `schema_version` | 是 | 推荐 `order_intent_draft_v1` | 只作为 draft，不代表 adapter 可提交。 |
+| `strategy_id` | 是 | 策略 / 研究对象 | OMS 后续校验。 |
+| `run_id` | 是 | 研究 run 或 semantic diff run | 审计追溯。 |
+| `signal_date` | 是 | 信号日期 | 不得未来函数。 |
+| `target_trade_date` | 是 | 目标执行日期 | 默认 T+1 或后续明确策略。 |
+| `symbol` | 是 | 标的 | 后续 risk / tradability 校验。 |
+| `side` | 条件必填 | buy/sell/hold/rebalance | 可由目标仓位推导但需可审计。 |
+| `target_weight` / `target_qty` | 至少一项 | 目标权重或数量 | 缺失时不得进入 OMS。 |
+| `research_adjustment_policy` | 是 | qfq/hfq/raw/returns_adjusted 等研究口径 | 只作为 metadata。 |
+| `execution_price_policy` | 是 | 默认 `raw`，不得是 qfq/hfq | 非 raw 时 QMT risk hard block。 |
+| `cost_config_ref` | 是 | 手续费、税费、滑点配置引用 | 后续 risk / diff 解释。 |
+| `data_lineage_ref` | 是 | release_id/source_run/quality report 引用 | 数据不可追溯时 blocked。 |
+| `limitations` | 是 | blocked claims、unavailable、降级原因 | 不得隐式省略。 |
+
+### 34.8 Use Case -> Architecture Traceability
+
+| Use Case / Metric / Requirement | 架构落点 | 验证 / 检查口径 |
+|---|---|---|
+| UC-19 | §34 全节 | HLD 包含三条主线、module matrix、semantic diff、order intent。 |
+| SM-33 / REQ-161 | §34.3、§34.4 | 默认 lightweight，不把 Backtrader 写成主路径。 |
+| SM-34 / REQ-162 | §34.11、ADR-074 | CP5 前依赖文件不变；后续 optional lazy import。 |
+| SM-35 / REQ-163 | §34.6 | clean feed gate 覆盖 PIT、available_at、quality、benchmark、tradability。 |
+| SM-36 / REQ-164 | §34.6 | semantic diff 字段覆盖成交、现金、成本、净值和差异原因。 |
+| SM-37 / REQ-165 | §34.13 | 真实 broker/QMT/provider/lake/publish/credential 计数目标为 0。 |
+| SM-38 / REQ-170 | §34.1、§34.4 | 三条主线映射可见。 |
+| SM-39 / REQ-169 | §34.7 | order intent draft 字段完整。 |
+| SM-40 / REQ-172 | §34.5、§34.14 | 默认无源码级移植；完整事件驱动框架为非目标。 |
+| SM-41 / REQ-173 | §34.5 | Backtrader 模块矩阵覆盖最低范围。 |
+| Post-CP3 多因子定位澄清 | §34.1、§34.4、§34.6、§34.14、ADR-078 | FactorSpec、FactorRunSpec、IC / RankIC、分层收益、多因子组合、实验追踪和策略准入包不进入 CR-025；后续 CR 可参考 Qlib / Alphalens / vnpy.alpha。 |
+
+### 34.9 关键场景模拟
+
+| 场景 | 输入 | 推荐架构处理 | 结果 |
+|---|---|---|---|
+| S1：未安装 Backtrader，默认研究运行 | 用户未选择 optional reference；lightweight 数据可用 | 直接走 lightweight baseline；Backtrader availability 为 `not_selected` 或 `backend_unavailable` | 默认结果不变，Backtrader import error 为 0。 |
+| S2：用户要求对照同一策略的执行语义 | clean feed、候选策略、成本配置满足 gate；CP5 后才可运行 | HLD 只冻结 schema；后续 CP5 若批准，输出 semantic diff，不覆盖 baseline | 对照可解释，结果标记为 research comparison。 |
+| S3：feed 缺 PIT 或复权混用 | `available_at` 缺失或 qfq/raw 混用 | clean feed gate fail，返回 blocked reason | 不进入 Backtrader，不生成 order intent draft。 |
+| S4：研究结果要接到 QMT 路线 | lightweight / optional diff 输出 target portfolio | 生成 `order_intent_draft_v1`，含 raw execution policy 和 limitations | 可供 QMT HLD / CR-020 审查；不触发 gateway。 |
+| S5：有人建议复制 Backtrader `Order` / `Cerebro` 源码 | 模块矩阵显示高 license / 维护风险 | 标记为 CR25-C，不推荐；需要 CP3 决策 + CP5 授权 + legal review | 本轮阻断源码级移植。 |
+| S6：用户要求 FactorSpec / IC / RankIC / 分层收益 / 多因子组合 | 目标转为多因子研究闭环 | CR-025 不扩展；登记为后续多因子研究 CR 候选，参考 Qlib / Alphalens / vnpy.alpha 评估 | 当前 6 Story / 4 Wave / 1 LLD batch 不变；CP5 brief 需声明本范围排除。 |
+
+### 34.10 系统架构图
+
+```mermaid
+flowchart TB
+  U[User / Researcher]
+  subgraph Application["Application Layer"]
+    EXP[Research experiments]
+    LW[Lightweight baseline engine]
+    REF[Backtrader semantic reference selector]
+    DIFF[Semantic diff builder]
+    INTENT[Target portfolio / order intent draft]
+  end
+  subgraph Service["Service / Contract Layer"]
+    CFG[Backend selection contract]
+    GATE[Clean feed gate]
+    LIC[GPLv3 governance gate]
+    NOOP[No-real-op authorization gate]
+  end
+  subgraph Data["Data Layer"]
+    LAKE[Published / candidate research data]
+    FEED[Clean OHLCV / factor / score feed]
+    REPORT[Diff report / limitations]
+  end
+  subgraph Infra["Infrastructure / External Boundary"]
+    BTREF[Local Backtrader source tree as read-only reference]
+    QMT[QMT route: CR-020..CR-024 only]
+    MFCR[Future multi-factor research CR: Qlib / Alphalens / vnpy.alpha reference]
+  end
+
+  U --> EXP
+  EXP --> LW
+  EXP --> CFG
+  CFG --> REF
+  LAKE --> GATE
+  GATE --> FEED
+  FEED --> LW
+  FEED --> REF
+  BTREF --> LIC
+  LIC --> REF
+  LW --> DIFF
+  REF --> DIFF
+  DIFF --> REPORT
+  DIFF --> INTENT
+  NOOP --> REF
+  INTENT -.draft only.-> QMT
+  EXP -.future CR only.-> MFCR
+```
+
+### 34.11 高层模块与职责划分
+
+| 模块 | 归属 | 职责 | 输入 | 输出 | 禁止项 |
+|---|---|---|---|---|---|
+| Backend Selection Contract | research application | 明确 lightweight default、Backtrader optional reference、unavailable reason | user config、dependency status | `backend_selected` / `backend_unavailable` | 不默认导入 Backtrader。 |
+| Clean Feed Gate | service contract | 校验 PIT、available_at、复权、benchmark、tradability、quality | ResearchDataset / lake readers | clean feed 或 blocked reason | 不补数、不写湖、不生成事实。 |
+| Semantic Reference Adapter Contract | optional layer | 后续 CP5 可把 clean feed 适配给外部 Backtrader runtime | clean feed、strategy shim、cost config | reference result / unavailable | CP3 不实现、不运行。 |
+| Semantic Diff Builder | research reporting | 比较 lightweight 和 optional reference 语义 | baseline result、reference result | diff report、limitations | 不把 reference 覆盖 baseline。 |
+| Order Intent Draft Builder | research-to-execution boundary | 把研究目标组合转为 draft 字段 | target portfolio、policy、lineage | `order_intent_draft_v1` | 不触发 QMT gateway / broker。 |
+| GPLv3 Governance Gate | architecture / compliance | 阻断源码级复制、移植或 fork 默认化 | module matrix、license evidence | decision item / blocked reason | 不把源码复制写成默认实现。 |
+| Future Multi-factor Research CR Boundary | roadmap / architecture governance | 承接 FactorSpec、FactorRunSpec、IC / RankIC、分层收益、多因子组合、实验追踪和策略准入包 | 后续用户启动的研究框架 CR | 独立 HLD / Story / CP 批次 | 不并入 CR-025；不继承 CR-025 runtime / dependency / provider / lake 授权。 |
+
+### 34.12 技术选型与理由
+
+| 选型 | 推荐 | 备选 | 理由 | 风险控制 |
+|---|---|---|---|---|
+| Backtrader 定位 | optional semantic reference / design reference | 默认 backend；主路径迁移 | 满足用户分析要求，同时保留 lightweight 透明性 | CP3 决策项 + ADR-074。 |
+| 源码处理 | no-copy clean-room adaptation | source fork / direct migration | 降低 GPLv3/copyleft 与维护风险 | ADR-076；CP5 前禁止源码级移植。 |
+| Feed 输入 | 本地 clean feed | Backtrader feed 自己补数或清洗 | 保持事实源在数据湖和 quality gate | §34.6 gate。 |
+| 多因子研究参考 | 后续 CR 参考 Qlib / Alphalens / vnpy.alpha | 用 Backtrader 承接 FactorSpec / IC / RankIC / 分层收益 | Backtrader 聚焦执行语义，研究评价框架需要独立数据模型、指标和实验追踪 | ADR-078；当前 CR-025 不新增 Story。 |
+| 输出声明 | research comparison | production truth / QMT admission pass | 防止误用对照结果 | metadata 和 docs 后续 CP8 检查。 |
+| QMT 衔接 | order intent draft | CR-025 直接调用 QMT | 符合 companion HLD 和 staged activation | CR-020..CR-024 独立授权。 |
+
+### 34.13 非功能需求设计
+
+| 质量特征 | 设计目标 | 设计手段 | 验收口径 |
+|---|---|---|---|
+| 安全性 | 真实运行计数全部为 0 | no-real-op gate、禁用 live store、QMT 独立 CR | `real_broker_calls=0`、`qmt_api_call=0`、`credential_read=0`。 |
+| 合规性 | GPLv3 源码不进入默认实现 | module matrix、ADR-076、CP3/CP5 决策 | 源码复制 / 移植项为 0。 |
+| 可维护性 | optional reference 与 lightweight 解耦 | backend selector + clean feed contract | 未安装 Backtrader 时默认路径不失败。 |
+| 可验证性 | 语义差异可解释 | semantic diff schema | 至少 10 类 diff 字段有输出或 unavailable reason。 |
+| 可扩展性 | 后续可切到 optional runtime | CR25-B 切换条件 | CP5 后可加 optional extra，不影响主路径。 |
+| 可观测性 | report 和 intent 可追溯 | lineage、limitations、data quality refs | 每个 draft intent 有 lineage 和 limitations。 |
+
+### 34.14 主要风险与应对
+
+| 风险 / Gotcha | 影响 | 应对 | 触发信号 |
+|---|---|---|---|
+| GPLv3 源码被复制或改写后进入项目 | 可能引发 copyleft、源码公开、分发和许可证继承风险 | 默认 no-copy；源码级移植需新决策和 CP5 授权 | LLD / Story 出现复制类名、源码片段、fork 计划。 |
+| Backtrader 被写成默认主路径 | 默认回归和用户认知漂移 | ADR-074 固定 lightweight default | 配置默认值或文档写 `backend=backtrader`。 |
+| clean feed gate 被绕过 | PIT、复权、benchmark、quality 风险 | §34.6 gate fail-fast | adapter 自行补数、生成 PIT 或读取 provider。 |
+| semantic diff 被当成 truth | 用户误以为对照结果可交易 | 输出标记 research comparison 和 limitations | report 声明 simulation-ready / admission pass。 |
+| order intent draft 被当成真实授权 | 可能触发 QMT gateway 误用 | QMT companion §18 只消费 draft，真实路线另起 CR | CR-025 产物出现 service start / submit / account query。 |
+| 指标库 / strategy 接口迁移膨胀 | 变成框架工程 | indicators / Strategy 设为 exclude/reference-only | Story 要求迁移指标库或继承 Backtrader Strategy。 |
+| Backtrader 被误当作多因子研究主框架 | 因子研究能力被错误塞入执行语义 CR，造成 LLD 和 CP5 范围漂移 | ADR-078 固定多因子研究闭环另起后续 CR；S02/S04/S06 文案暴露排除范围 | LLD 出现 FactorSpec、FactorRunSpec、IC / RankIC、分层收益、多因子组合、实验追踪或策略准入包实现项。 |
+
+### 34.15 ADR 候选决策点
+
+| ADR | 决策 | 回写对象 |
+|---|---|---|
+| ADR-074 | CR-025 Backtrader 默认定位为 optional semantic reference，不替代 lightweight 主路径 | REQ-161、§34.3、§34.4 |
+| ADR-075 | Backtrader 模块处理采用 `reference_only` / `adapt_interface` / `migration_candidate` / `exclude` 分类，默认无源码级移植推荐 | REQ-173、§34.5 |
+| ADR-076 | GPLv3 源码级移植治理：默认 no-copy；例外需 CP3 风险接受、CP5 实现授权和合规确认 | REQ-172、RA-066、§34.5、§34.14 |
+| ADR-077 | CR-025 只冻结 order intent draft 与 QMT 消费边界，不授权 CR-020 gateway、simulation 或 live | REQ-169、REQ-171、§34.7、`HLD-QMT-TRADING.md` §18 |
+| ADR-078 | CR-025 不承接多因子研究闭环；FactorSpec、FactorRunSpec、IC / RankIC、分层收益、多因子组合、实验追踪和策略准入包另起后续 CR | §34.1、§34.4、§34.6、§34.14、CR025-S02/S04/S06 |
+
+### 34.16 分阶段落地建议
+
+> 本节是 HLD 级阶段建议，不是 Story Plan。CP3 approve 前不得拆 Story、写 LLD 或实现。
+
+| 阶段 | 目标 | 前置条件 | 退出条件 |
+|---|---|---|---|
+| H0：CP3 设计冻结 | HLD / ADR / CP3 Decision Brief 确认 Backtrader 定位、模块矩阵、license 治理和 draft 合同 | CP2 approved | CP3 manual approved |
+| H1：Contract Story Plan | 后续 CP4 冻结 clean feed、semantic diff、order intent 和 no-copy guardrail Story | H0 | CP4 auto precheck PASS |
+| H2：LLD batch | 全量 Story LLD 定义文件 owner、adapter 失败路径和回归矩阵 | CP4 PASS | CP5 manual approved |
+| H3：Optional runtime implementation | 若 CP5 批准，采用 optional dependency + lazy import；仍不复制源码 | H2 | CP6/CP7 后续通过 |
+| H4：QMT route handoff | 若用户另行启动 CR-020，消费 order intent draft 进行 gateway health | CR-020 CP2/CP3 | 不继承 CR-025 运行授权 |
+| H5：多因子研究闭环后续 CR | 若用户启动 FactorSpec / IC / RankIC / 分层收益 / 多因子组合 / 实验追踪 / 策略准入包路线，单独参考 Qlib / Alphalens / vnpy.alpha 设计 | CR-025 CP5 brief 已声明排除范围 | 新 CR 的 CP2/CP3/CP5 独立确认 |
+
+### 34.17 工作量粗估
+
+| 范围 | 候选 Story 数 | 预计 Wave 数 | 粗估 |
+|---|---:|---:|---|
+| clean feed gate / backend selector / unavailable result | 1-2 | 1 | M |
+| semantic diff report / baseline comparison | 1-2 | 1 | M |
+| target portfolio / order intent draft | 1 | 1 | M |
+| license guardrail / module classification docs | 1 | 1 | S |
+| optional Backtrader runtime adapter（CP5 后条件实现） | 1-2 | 1 | M-L |
+| 多因子研究闭环（后续 CR，不计入 CR-025） | 不计入 | 不计入 | 另估 |
+| 合计 | 5-8 | 3-4 | L |
+
+### 34.18 待确认问题
+
+| ID | 问题 | 状态 | 推荐处理 | 影响范围 | 决策人 |
+|---|---|---|---|---|---|
+| CR25-Q1 | 是否接受 Backtrader 默认只作为 optional semantic reference / design reference，不替代 lightweight 主路径 | OPEN_FOR_CP3 | 接受 CR25-A | HLD、ADR-074、后续 Story | 用户 / meta-po |
+| CR25-Q2 | 是否接受模块矩阵分类和“默认无源码级移植推荐” | OPEN_FOR_CP3 | 接受 reference/adapt/exclude 分类；migration_candidate 为空 | ADR-075、license 风险 | 用户 / meta-po |
+| CR25-Q3 | 是否接受 GPLv3 源码级移植治理条件 | OPEN_FOR_CP3 | 默认 no-copy；例外需 CP3/CP5 + legal/package 策略 | ADR-076、CP5 授权 | 用户 / meta-po |
+| CR25-Q4 | 是否接受 clean feed gate 与 semantic diff schema | OPEN_FOR_CP3 | 接受 §34.6 字段；后续 LLD 可细化格式 | adapter、报告、QA | 用户 / meta-po |
+| CR25-Q5 | 是否接受 order intent draft 字段和 QMT 边界 | OPEN_FOR_CP3 | 接受 §34.7；CR-025 不触发 gateway | QMT companion、CR-020 | 用户 / meta-po |
+| CR25-Q6 | 是否确认 CP3 不授权实现、依赖变更、Backtrader 运行、源码迁移或真实操作 | OPEN_FOR_CP3 | 确认不授权 | runtime authorization、安全 | 用户 / meta-po |
+| CR25-Q7 | 是否确认多因子研究闭环另起后续 CR，不并入 CR-025 CP5 | OPEN_FOR_CP5_REFRESH | 确认；CR-025 只保留执行语义对齐和 draft 边界，后续 CR 参考 Qlib / Alphalens / vnpy.alpha | CP5 Decision Brief、S02/S04/S06 LLD 修订、后续研究路线 | 用户 / meta-po |
+
+### 34.19 HLD 自审记录
+
+| 检查项 | 结论 | 证据 |
+|---|---|---|
+| 问题定义、目标、约束、非目标、假设完整 | PASS | §34.1 |
+| 至少 2 个候选方案比较 | PASS | §34.3 包含 CR25-A/B/C |
+| Architecture Gray Areas 与 advisor table 前置 | PASS | §34.2；`process/discussions/CP3-CR025-HLD-DISCUSSION-LOG.md` |
+| Use Case -> Architecture Traceability | PASS | §34.8 |
+| 关键场景模拟 | PASS | §34.9，5 个场景均可通过推荐架构或被安全阻断 |
+| Mermaid 图覆盖 User / Application / Service / Data / Infrastructure | PASS | §34.10 |
+| Backtrader 本地项目模块级分析 | PASS | §34.5，覆盖 license、Cerebro、broker/order/feed/analyzer/observer/indicator/store/plot/samples/tests 等模块族 |
+| GPLv3 风险与源码移植治理 | PASS | §34.5、§34.14、ADR-076 |
+| order intent 与 QMT 边界明确 | PASS | §34.7、`process/HLD-QMT-TRADING.md` §18 |
+| 多因子研究闭环边界明确 | PASS | §34 Post-CP3 澄清、§34.1、§34.4、§34.6、§34.14、ADR-078；CR-025 不承接 FactorSpec / IC / RankIC 等能力 |
+| HLD 拆分判断 | PASS | CR-025 仍属于主 HLD 研究消费 / optional reference 增量；QMT companion 只同步 draft 消费边界，不新建第三份 HLD |
+| 禁止真实操作声明 | PASS | 本节导语、§34.1、§34.13、§34.18 |
+
+## 35. CR-030 Multifactor Research Framework Reference 与研究闭环标准化
+
+> 本节是 CR-030 的 CP3 HLD 草案输入。它只冻结项目自有多因子研究闭环、外部项目借鉴矩阵、schema provenance、校验策略、报告 / manifest / catalog / admission package 边界和 CP3 待决策项；不生成 Story Plan、LLD 或实现；不授权新增依赖、运行 Qlib / Alphalens / vectorbt / PyBroker / bt / Zipline Reloaded / QuantConnect LEAN / RQAlpha / vn.py / Backtrader，不授权源码复制 / 迁移、provider fetch、lake write、catalog publish、QMT / MiniQMT / XtQuant、simulation、live、account query、order submit、cancel 或凭据读取。
+
+### 35.1 问题定义
+
+| 维度 | 内容 |
+|---|---|
+| 问题陈述 | 阶段六多因子路线已经有数据湖、`research_input_v1`、实验 17-21、CR-011 factor panel audit、label window gate、Stage6 admission gate 和 CR-025 `order_intent_draft_v1` 等基线，但这些能力仍散落在脚本、报告和阶段 gate 中；如果直接引入 Qlib 或其他外部框架，会产生双 truth、依赖扩散、provider / runner 越权和许可证风险。CR-030 需要把多因子研究对象、评价、组合、追踪和准入证据收敛为本项目自有闭环。 |
+| 核心价值 | 让多因子研究从“脚本级实验”升级为可审计、可复跑、可解释、可进入 Stage6 admission 的研究闭环，同时保留外部项目成熟经验作为 cross-check，而不把外部 runtime 设为默认框架。 |
+| 目标 | 1. 明确推荐架构为项目自有多因子研究闭环；2. 覆盖 10 类外部项目的 reference matrix；3. 冻结 `FactorSpec`、`FactorRunSpec`、`FactorPanelContract`、`LabelWindowSpec`、`FactorEvaluationReport`、`MultiFactorCombiner`、`ExperimentManifest`、`ResearchReportCatalog`、`StrategyAdmissionPackage` 和 `order_intent_draft_v1` handoff 的 HLD 合同；4. 说明 schema 不是从零设计，而是基线复用 + 外部 cross-check + fail-closed；5. 保持 CR-026 Qlib isolated runner 为后续 Spike candidate。 |
+| 成功标准 | `SM-42` 至 `SM-49` 均可由 HLD 追溯；外部项目矩阵覆盖 10 类项目；核心合同字段表覆盖 10 个对象；错误码覆盖不少于 10 类 fail-closed 场景；UC-20 至 UC-27、REQ-174 至 REQ-185 均有架构映射；真实运行和权限计数目标均为 0。 |
+| 约束 | 只消费 `process/USE-CASES.md` v1.14、`process/REQUIREMENTS.md` v1.15、CP2 baseline、CR030 analysis artifact、CP2 discussion / checks、本地 Qlib 静态路径；不修改业务代码、测试、依赖、数据、reports 或 delivery。 |
+| 非目标 | 不把 Qlib 或任何外部项目设为默认 framework / truth / provider / runner / optimizer / report truth；不实现因子框架；不新增依赖；不运行 qrun / Notebook / 外部样例；不执行 provider / lake / publish；不触达 QMT / simulation / live；不读取凭据；不复制外部源码。 |
+| 关键假设 | CP2 已批准 DQ-CP2-CR030-01 至 DQ-CP2-CR030-09；现有 `research_input_v1`、实验 17-21、CR-011、Stage6 gate 是有效基线；静态调研足以支撑 CP3 架构选择，运行层细节若成为阻塞则另起 Spike。 |
+| 缺失信息 | 无 BLOCKING 缺失信息。Qlib runner I/O、optimizer、ML workflow、vectorbt 性能对标、PyBroker ML walk-forward、RQAlpha / vn.py 实盘生态均为 non-blocking-open / deferred，不能阻断 CP3 HLD。 |
+
+### 35.2 Architecture Gray Areas 与 advisor table-first 记录
+
+**CP3 讨论日志**：`process/discussions/CP3-CR030-HLD-DISCUSSION-LOG.md`
+**CP3 讨论恢复点**：`process/checks/CP3-CR030-DISCUSSION-CHECKPOINT.json`
+
+| 灰区 ID | 关键问题 | 为什么会影响架构 | 影响面 | 推荐讨论顺序 | canonical refs | 状态 |
+|---|---|---|---|---:|---|---|
+| AGA-CR030-01 | 自有多因子闭环主线还是 Qlib runner-first？ | 决定事实源、入口、依赖、provider、report truth、Story 边界和 CR-026 是否并行。 | 范围 / 模块 / 数据 / 运行授权 / 依赖 / 验证 | 1 | UC-20, UC-21, REQ-174, REQ-184, DQ-CP2-CR030-01/03 | resolved-by-user；推荐 CR30-A |
+| AGA-CR030-02 | 外部项目如何纳入矩阵而不成为默认框架？ | 决定许可证风险、依赖策略、后续 Spike 队列和禁止迁移边界。 | 许可证 / 依赖 / 文档 / 安全 / 维护 | 2 | UC-21, REQ-175, A-065, A-069, SM-42 | resolved-by-user；矩阵覆盖 10 类项目 |
+| AGA-CR030-03 | schema 和校验是否从零设计、复用基线还是直接采用外部对象？ | 决定字段字典、错误码、fail-closed 策略、测试 fixture 和双 truth 风险。 | 数据合同 / 模块 / 测试 / 防泄漏 / 维护 | 3 | UC-22, UC-23, REQ-176, REQ-177, REQ-183, DQ-CP2-CR030-04 | resolved-by-user；项目自有契约 + 基线复用 + cross-check |
+| AGA-CR030-04 | 多因子组合默认采用可解释组合还是 optimizer / ML workflow？ | 决定是否引入 cvxpy、风险模型、ML 训练、benchmark exposure 和组合优化 Story。 | 组合 / 依赖 / 可解释性 / 性能 / 验证 | 4 | UC-25, REQ-179, SGA-030-07, DEF-030-02 | non-blocking-open；P0 采用可解释组合，optimizer 后置 |
+| AGA-CR030-05 | StrategyAdmissionPackage 到 QMT handoff 是否可能被误读为交易授权？ | 决定运行授权、QMT route、order intent 字段和 CP3 不授权项表达。 | 安全 / QMT / 风险接受 / 文档 / gate | 5 | UC-27, REQ-181, REQ-182, A-068, A-070, DQ-CP2-CR030-08 | resolved-by-user；仅 draft handoff，真实 QMT 另起 CR |
+
+#### Advisor Table
+
+| Option | Pros | Cons | Impact Surface | Recommendation | Assumptions / When to switch |
+|---|---|---|---|---|---|
+| CR30-A：项目自有多因子研究闭环主线 | 与 `research_input_v1`、实验 17-21、CR-011、Stage6 gate 和 CR-025 order intent 边界一致；可 fail-closed；不引入默认外部依赖；可解释性和审计性最高。 | 需要把散落脚本 / 报告能力标准化为正式合同；短期不会获得 Qlib qrun / optimizer 的完整 runtime 能力。 | `engine/research_dataset.py`、实验 17-21、factor panel、label gate、报告、manifest/catalog、admission package、docs、QA fixture。 | 推荐。作为 CR-030 CP3 主选方案。 | 适用于当前未授权依赖 / 外部运行 / provider / QMT 的状态；若后续证明自有 runner 无法表达批量研究或性能瓶颈明显，再以 CR-026 / Spike 接入 isolated runner。 |
+| CR30-B：Qlib runner-first / qrun 集成 | 成熟 workflow、DataHandler、Recorder、SigAnaRecord、PortAnaRecord 和 EnhancedIndexing 生态完整；后续 ML 因子 / 模型训练空间大。 | 会引入 `provider_uri`、`qlib.init`、`.bin` 数据格式、MLflow/pickle recorder、LightGBM/cvxpy 等依赖；冲击本项目 data lake / catalog truth；当前未授权运行或改依赖。 | 依赖、数据入口、runner、provider、报告 truth、权限、安全、维护、CR-026。 | 不推荐作为 CR-030 默认方案；保留为 CR-026 后续 Spike。 | 仅在 FactorPanel / LabelWindow / ReportCatalog / runner I/O 合同冻结，且用户单独批准依赖隔离、provider 禁用、运行授权和回归范围后切换。 |
+| CR30-C：文档 / Spike-only，不冻结自有合同 | 交付成本最低；可继续调研而不触碰实现；许可证风险低。 | 无法为 CP4/CP5 提供可执行 Story 输入；schema、leakage、evaluation、admission 仍无统一合同；Stage6 仍不可审计。 | 文档、Decision Brief、后续 CR backlog。 | 不推荐作为主线；可作为 CP3 不通过时的回退。 | 若用户不接受任何合同冻结，或外部项目 license / 依赖风险需要先独立法务 / Spike 评估，则回退到此方案。 |
+| CR30-D：外部框架适配层 / adapter-first | 可在未来把 Qlib / Alphalens / Zipline 等对象转换为内部对象，保留扩展性。 | 适配层过早会固化外部语义；当前内部合同还未冻结，容易产生空转抽象和双 truth。 | 接口、映射、错误码、测试、维护。 | 条件推荐为后续增强，不进入 P0。 | 当 CR30-A 的内部合同稳定并出现明确外部 runner / analyzer 导入需求时，再作为 bounded adapter Story。 |
+
+#### 方案形成输入与事后审查区分
+
+| 类型 | 来源 | 影响章节 | 处理结果 | 说明 |
+|---|---|---|---|---|
+| 方案形成输入 | `checkpoints/CP2-CR030-REQUIREMENTS-BASELINE.md` DQ-CP2-CR030-01..09 | §35.2, §35.3, §35.6, §35.8, §35.16 | adopted | CP2 已确认自有闭环、外部矩阵、schema 基线、CR-026 分流和不授权边界。 |
+| 方案形成输入 | `process/research/CR030-MULTIFACTOR-FRAMEWORK-REFERENCE-ANALYSIS-2026-06-03.md` | §35.4, §35.6, §35.7 | adopted | 作为 Qlib 本地静态分析、外部项目矩阵和现有能力映射来源。 |
+| 方案形成输入 | 本地 Qlib 静态读取 `/home/hyde/download/qlib` | §35.4, §35.7 | adopted | 只读 `LICENSE`、`pyproject.toml`、docs / examples / qlib paths；未安装、未 import、未运行。 |
+| HLD 后评审意见 | CP3 人工审查 | 待 meta-po 生成 `checkpoints/CP3-CR030-HLD-REVIEW.md` 后填写 | pending | 本节不伪造 CP3 reviewer lane，也不发起人工确认。 |
+
+### 35.3 候选架构方案对比
+
+| 维度 | 方案 A：项目自有多因子研究闭环 | 方案 B：Qlib runner-first | 方案 C：文档 / Spike-only 或外部适配层后置 |
+|---|---|---|---|
+| 核心思路 | 用本项目合同冻结因子定义、面板、标签、评价、组合、manifest/catalog 和 admission package；外部项目只 cross-check。 | 以 Qlib qrun / DataHandler / Recorder / strategy 作为主运行入口，逐步适配本项目数据。 | 暂不冻结执行合同，只沉淀调研矩阵或等待后续 Spike。 |
+| 优点 | 与现有数据湖、CR-011、Stage6 gate 一致；最小权限；可审计；可 fail-closed。 | 工作流成熟；指标和 recorder 生态较全；未来 ML workflow 扩展性强。 | 最低短期成本；许可证 / 依赖风险低。 |
+| 缺点 | 需要设计自有字段和校验；短期没有完整外部 runner 能力。 | 数据 truth 冲突、依赖重、provider / runtime 越权风险高。 | 无法支撑 CP4/CP5 和后续实现；无法关闭用户“准确、合理、易分析”的目标。 |
+| 复杂度 | standard | complex | simple-to-standard |
+| 成本 | 中：合同标准化 + fixture / report 设计 | 高：依赖隔离 + runner I/O + provider 禁用 + 回归 | 低到中：文档和 Spike planning |
+| 可扩展性 | 高：可逐步接入 runner / optimizer / adapter | 高但绑定 Qlib 生态 | 中：取决于后续 CR |
+| 风险 | 字段遗漏、旧脚本兼容、报告声明误用 | 双 truth、依赖污染、许可证 / provider /运行授权越界 | 目标无法落地、重复调研 |
+| 适用前提 | CP2 已确认自有闭环和基线复用；当前不授权运行 | 用户单独授权 CR-026，且合同已冻结 | CP3 不通过或用户只要研究报告 |
+| 结论 | 推荐 | 不推荐为默认；后续 Spike | 不推荐主线；治理回退 |
+
+### 35.4 外部项目矩阵
+
+| 项目 | License / 状态口径 | Dependency / Provider / Runtime Boundary | 可借鉴点 | 不可直接采用点 | Recommendation |
+|---|---|---|---|---|---|
+| Qlib | 本地 `LICENSE` 为 MIT；`pyproject.toml` 显示依赖含 MLflow、LightGBM、cvxpy、Redis、Mongo、Jupyter 等；存在 Cython/C++ 扩展。 | 当前只允许静态读取 `/home/hyde/download/qlib`；不运行 `qrun`、不调用 `qlib.init`、不使用 `provider_uri`、不下载数据、不复制源码。 | qrun/task shape、DataHandler / Processor / Dataset 分层、Recorder / SignalRecord / SigAnaRecord / PortAnaRecord、IC / RankIC / long-short / turnover、TopkDropout、EnhancedIndexing 约束表达。 | `.bin` 数据格式、provider_uri、MLflow / pickle artifact、官方数据下载、online serving、EnhancedIndexing 默认 optimizer。 | `reference_only` + `optional_spike`。CR-026 保留为 isolated runner Spike；CR-030 不设默认依赖或 runner。 |
+| Alphalens | CP2 analysis artifact 口径：Apache-2.0；原 Quantopian 包偏静态，reloaded 生态可作为参考。 | 不默认安装；不把 `factor_data` 作为内部 truth；只映射指标和清洗口径。 | clean factor data、forward returns、IC / RankIC、分位数组合收益、turnover、grouped analysis、tear sheet。 | Notebook / pyfolio 旧生态、外部对象字段直接替换本项目 `FactorPanelContract`。 | `reference_only`。用于单因子评价 cross-check。 |
+| vectorbt | CP2 analysis artifact 口径：Apache 2.0 with Commons Clause；需许可证复核。 | 不默认依赖；不作为 backtesting engine 或 optimizer；不运行样例。 | 向量化批量实验、broadcasting、Portfolio stats、参数网格形状。 | 许可证 / 商业限制风险、完整 engine 抽象过大、交易记录 truth 与本项目不同。 | `optional_spike`。仅在性能瓶颈有量化证据时评估。 |
+| PyBroker | CP2 analysis artifact 口径：Apache 2.0 with Commons Clause / 非商业免费口径；需独立复核。 | 不默认依赖；不接外部 data/broker；不运行 ML workflow。 | ML walk-forward、bootstrap metrics、ranking、position sizing、缓存思路。 | 非商业 / 外部 broker/data 入口、ML workflow 过早引入。 | `optional_spike`。ML 因子进入后续 CR 时再评估。 |
+| bt | CP2 analysis artifact 口径：MIT。 | 不默认依赖；不作为因子诊断核心；不替代 lightweight engine。 | AlgoStack、组合权重、rebalance、结果比较、策略树。 | IC / factor decay / 暴露 / leakage 需自建；不提供本项目数据 gate。 | `reference_only`。借鉴组合 DSL 和约束表达。 |
+| Zipline Reloaded | CP2 analysis artifact 口径：Apache-2.0。 | 不引入 bundle / calendar / asset metadata runtime；不作为 runner。 | Pipeline API、Factor / Filter / Classifier、CustomFactor、rank/top/mask/groupby、横截面筛选。 | 美股语境、bundle 数据、资产元数据和交易日历适配成本；外部对象不能替代 `FactorSpec`。 | `reference_only`。用于因子 DAG / 横截面筛选 cross-check。 |
+| QuantConnect LEAN | CP2 analysis artifact 口径：Apache-2.0；大型 C# 引擎。 | 不引入 CLI / Docker / cloud data / C# runtime；不作为执行引擎。 | Universe Selection、Alpha Model、Portfolio Construction、Risk Management、Execution 分层。 | 规模过大、运行栈不匹配、执行模型会绕开 QMT route gate。 | `reference_only`。用于 StrategyAdmissionPackage 分层 cross-check。 |
+| RQAlpha | CP2 analysis artifact 口径：公开信息存在非商业限制，按限制性 / 需授权处理。 | 不默认依赖；不接 broker；不运行 A 股事件回测；许可证需独立复核。 | A 股事件驱动、scheduler、订单 API、撮合 / 模拟 broker、Mod 扩展。 | 许可证 / 商业授权风险、交易接口和 broker 语义会扩大 CR-030 范围。 | `optional_spike` / `exclude by default`。只做后续 A 股约束设计 Spike。 |
+| vn.py / vnpy.alpha | CP2 analysis artifact 口径：vn.py MIT；`vnpy.alpha` 可做流程对标。 | 不接 gateway / 事件引擎 / GUI / 实盘接口；不替代 QMT C/S route。 | dataset、Alpha158 / Alpha101、表达式函数、预处理、模型训练、信号、策略回测、实盘衔接流程。 | 主框架过重，gateway / event engine / live trading 与当前不授权冲突。 | `optional_spike`。`vnpy.alpha` 做流程参考，主框架 exclude。 |
+| Backtrader | CR-025 已确认本地项目 GPLv3；仅 optional execution semantic reference。 | 不默认依赖、不运行、不复制源码、不接 live broker / store；CR-030 不扩大 CR-025 授权。 | 执行语义、订单生命周期、semantic diff、no-copy guardrail、target portfolio / order intent draft 衔接。 | 不适合作多因子研究主框架，不承担 FactorSpec / IC / RankIC / manifest / admission package。 | `reference_only` / `forbidden_migration`。只继承 CR-025 边界。 |
+
+### 35.5 推荐方案总览与适用性矩阵
+
+**推荐方案**：CR30-A，项目自有多因子研究闭环。
+
+| 架构层 | 设计选择 | 理由 |
+|---|---|---|
+| 核心风格 | 分层管道 + 合同优先 + fail-closed gate | 多因子研究需要从定义、面板、标签、评价、组合、追踪到准入逐层证明，任何缺失必须阻断声明。 |
+| 数据事实源 | 本项目 data lake / `research_input_v1` / CR-011 gate / Stage6 gate | 不允许外部 provider / bundle / `.bin` 数据接管 truth。 |
+| 外部项目 | reference matrix / optional Spike / exclude / forbidden migration | 复用成熟经验，不引入运行授权和依赖风险。 |
+| 默认组合 | 可解释规则权重 / 轻量线性组合，optimizer 后置 | P0 优先解释性和验证性，避免 cvxpy / 风险模型前置。 |
+| 准入边界 | `StrategyAdmissionPackage` + `order_intent_draft_v1` draft；真实 QMT 另行授权 | 防止研究报告被误读为 simulation/live 授权。 |
+
+| 适用性维度 | 当前项目判断 | 推荐方案如何适配 | 不适配信号 | When to switch |
+|---|---|---|---|---|
+| 用户目标 | 要建设准确、合理、易分析的本地多因子研究 / 回测 / 准入框架 | 合同冻结 + 指标标准化 + manifest/catalog + admission package | 用户要求立即运行 Qlib / ML workflow / optimizer | 启动 CR-026 或组合优化 Spike |
+| 项目成熟度 | 已有数据湖、CR-011、CR-019、CR-025 基线 | 复用基线，避免重建平行 truth | 既有对象无法表达必要字段且兼容成本过高 | 增量 schema Story 或 adapter Spike |
+| 认知负担 | 维护者熟悉本项目 gate 和报告 | 对象命名与现有模块一致，外部项目只做映射 | 研究者需要外部框架原生生态 | 后续提供 import/export adapter |
+| 验证条件 | 当前只授权静态设计，不授权运行 | HLD 输出 fixture matrix 和 fail-closed 策略，CP5 后再验证 | 静态 cross-check 无法判断关键 runtime 语义 | bounded Spike，不污染主路径 |
+| 回退成本 | 设计回退成本低，依赖回退成本高 | 当前不改依赖、不实现、不运行，回退只改 HLD / Decision Brief | CP3 通过后直接改依赖或引入外部 runner | 阻断并回退 CP3 / CP5 授权 |
+
+### 35.6 高层模块与职责划分
+
+| 模块 / 合同 | 职责 | 输入 | 输出 | 失败策略 | 外部映射 |
+|---|---|---|---|---|---|
+| `FactorSpec` | 定义因子身份、版本、方向、输入字段、窗口、参数、预处理、universe、可用性和 blocked claims。 | 现有实验 17-21 `FactorDefinition`、数据字段、辅助数据要求。 | 可版本化因子定义。 | 必填字段缺失、方向未知、lineage 不明时 `blocked_factor_spec`。 | Qlib Alpha158 / Zipline Factor / vnpy.alpha factor config 只 cross-check。 |
+| `FactorRunSpec` | 冻结一次研究运行的 run_id、factor versions、date range、dataset release、benchmark、label window、cost、seed、code version、config hash 和 output root。 | `FactorSpec`、data release、研究配置。 | 可复跑运行规格。 | 数据 release 未发布、配置哈希缺失或权限计数不为 0 时 `blocked_run_spec`。 | Qlib qrun/task / Recorder config shape。 |
+| `FactorPanelContract` | 约束因子面板索引、字段、raw/directional/winsorized/zscore 四层、available_at、quality、preprocessing metadata 和 coverage。 | 因子计算输出、`research_input_v1`、CR-011 panel audit。 | 可评价 / 可组合的因子面板。 | 前视、缺 lineage、缺四层、复权混用时 fail-closed。 | Qlib DataHandler / Processor，Alphalens clean factor data。 |
+| `LabelWindowSpec` | 定义收益标签窗口、可用时间、收益 / 复权 / benchmark / 成本口径和 overlap 校验。 | price / returns、calendar、label horizon、decision_time。 | label contract 和 leakage audit。 | `label_available_at > decision_time`、窗口重叠、收益口径不明时 blocked。 | Alphalens forward returns、Qlib label config。 |
+| `FactorEvaluationReport` | 输出单因子 coverage、IC、RankIC、ICIR、分层收益、多空收益、turnover、成本敏感性、暴露、年度 / rolling / regime 分层和 claims。 | panel + label + benchmark + cost + exposure。 | 机器可读 JSON/CSV/Markdown 报告和状态。 | 输入 gate 失败时只输出 `blocked` / `research_limited`。 | Alphalens tear sheet、Qlib SigAnaRecord / analysis_model。 |
+| `MultiFactorCombiner` | 组合多个因子，定义标准化、winsorization、中性化、正交化、权重、缺失值、约束、成本、容量、调仓和冻结策略。 | 多个 evaluation reports、组合配置、constraints。 | `MultiFactorPortfolioPlan` 草稿。 | 任一 P0 输入或约束缺失时 blocked；optimizer 需求转 Spike。 | Qlib TopkDropout / EnhancedIndexing、bt AlgoStack、LEAN Portfolio Construction。 |
+| `MultiFactorPortfolioPlan` | 表达目标权重 / 数量、benchmark 偏离、成本、容量、调仓日、限制项和 freeze version。 | combiner 输出、portfolio constraints。 | target portfolio / plan artifact。 | 超出容量、成本缺失、benchmark 未通过时 blocked。 | LEAN Portfolio / Risk split、bt weights。 |
+| `ExperimentManifest` | 记录 run_id、strategy_id、config_hash、dataset release、factor versions、label window、benchmark、cost、seed、code version、artifact list、exceptions、claims。 | run spec、报告路径、结果摘要。 | 可复跑 manifest。 | 缺 P0 字段不得进入 catalog / admission。 | Qlib Recorder。 |
+| `ResearchReportCatalog` | 将报告和 manifest 登记为可查询、可追溯、可分流的 catalog entry。 | manifest、evaluation reports、portfolio plan、claims。 | report_id、lineage、状态、admission candidate。 | 输入未发布或 blocked claims 未声明时拒绝登记为可准入。 | Qlib Recorder / report catalog shape。 |
+| `StrategyAdmissionPackage` | 汇总数据、因子、组合、回测、成本、benchmark、稳健性、消融、冻结、pre-sim、5 日 dry-run 前置状态和 blocked reasons。 | catalog、Stage6 gate、portfolio plan。 | admission_status、blocked reasons、解除条件、draft handoff。 | 任一 P0 gate 未通过或无 QMT CR 时 `admission_status=blocked`。 | LEAN 分层契约、`engine/stage6_admission.py`。 |
+| `order_intent_draft_v1` handoff | 把研究结果限制为可审查草稿，不生成真实 order。 | admission package、portfolio plan、CR-025 draft 字段。 | strategy_id、run_id、signal_date、target_trade_date、symbol、target_weight/qty、price policy、lineage、limitations。 | 缺字段或 QMT 未授权时 not-authorized；真实 QMT 调用计数必须为 0。 | CR-025 semantic diff / order intent draft；QMT companion HLD 后续消费。 |
+
+### 35.7 Schema 与校验方案
+
+#### 35.7.1 “不是从零设计”的解决方式
+
+CR-030 不从零发明 schema，也不直接采用 Qlib / Alphalens / Zipline / LEAN 对象作为内部 truth。字段来源按以下优先级合成：
+
+| 来源层 | 基线 | 用途 | 不足时处理 |
+|---|---|---|---|
+| 项目事实源基线 | `research_input_v1`、数据 lake release、quality / adjustment / label / PIT / tradability / exposure / capacity gate | 数据事实、可用时点、质量、辅助数据和安全计数。 | 增量字段补齐，不能用外部 provider 替代。 |
+| 既有实验基线 | 实验 17-21 `FactorDefinition`、raw factor matrices、preprocess、forward returns、IC、group returns、monotonicity、factor correlations、multifactor score | 因子定义、评价指标、组合雏形。 | 上移为正式合同，保留旧报告为追溯基线。 |
+| CR-011 验证基线 | factor panel audit、raw/directional/winsorized/zscore 四层、robust validation 五视图、label window gate | 面板审计、防泄漏和稳健性验证。 | 缺层级或缺 leakage 证据时 fail-closed。 |
+| Stage6 admission 基线 | `engine/stage6_admission.py` gate、blocked claims、forbidden counters、QMT admission 阻断 | 策略准入与不授权边界。 | 缺 P0 gate 时 admission blocked。 |
+| 外部 cross-check | Qlib、Alphalens、Zipline、LEAN；必要时参考 bt / vnpy.alpha / Backtrader | 校验字段是否覆盖成熟框架常见对象，不产生 truth。 | 只生成 mapping / gap，不直接引入对象。 |
+
+#### 35.7.2 核心字段字典
+
+| 合同 | 必填字段 | 条件字段 | 说明 |
+|---|---|---|---|
+| `FactorSpec` | `factor_id`, `name`, `version`, `direction`, `input_fields`, `window`, `params`, `preprocessing`, `universe`, `availability_policy`, `data_lineage`, `blocked_claims`, `failure_policy` | `auxiliary_requirements`, `neutralization_hint`, `expected_frequency` | 同一 factor_id + version 必须不可变；direction 只允许显式枚举。 |
+| `FactorRunSpec` | `run_id`, `factor_id`, `factor_version`, `date_range`, `dataset_release`, `benchmark`, `label_window`, `cost_config`, `seed`, `code_version`, `config_hash`, `output_root`, `permission_counters`, `failure_policy` | `strategy_id`, `experiment_group`, `rerun_of` | `config_hash` 覆盖因子、数据、标签、成本、组合配置。 |
+| `FactorPanelContract` | `trade_date`, `symbol`, `factor_id`, `factor_version`, `raw_value`, `directional_value`, `winsorized_value`, `zscore_value`, `available_at`, `decision_time`, `source_dataset`, `quality_status`, `preprocessing_metadata`, `data_lineage` | `halt_flag`, `limit_flag`, `st_flag`, `exclusion_reason` | 每行必须能证明 `available_at <= decision_time`。 |
+| `LabelWindowSpec` | `label_id`, `trade_date`, `symbol`, `decision_time`, `label_window_start`, `label_window_end`, `label_available_at`, `return_kind`, `adjustment_policy`, `cost_policy`, `benchmark_policy`, `data_lineage` | `industry_neutral_policy`, `market_regime`, `capacity_policy` | `label_window_start` 必须晚于 decision point，且 `label_available_at` 不得被用作更早信号。 |
+| `FactorEvaluationReport` | `report_id`, `run_id`, `factor_id`, `coverage`, `IC`, `RankIC`, `ICIR`, `quantile_returns`, `long_short_returns`, `turnover`, `cost_sensitivity`, `exposure_summary`, `annual_breakdown`, `rolling_breakdown`, `status`, `allowed_claims`, `blocked_claims`, `evidence_refs` | `regime_breakdown`, `autocorr`, `capacity_summary` | 单一全样本指标不得独立形成 production claim。 |
+| `MultiFactorCombiner` | `combiner_id`, `factor_inputs`, `normalization`, `winsorization`, `neutralization`, `orthogonalization`, `weighting_policy`, `missing_policy`, `constraints`, `rebalance_frequency`, `turnover_cap`, `cost_config`, `benchmark`, `freeze_policy`, `blocked_reason` | `optimizer_policy`, `risk_model_ref` | `optimizer_policy` 默认 disabled；启用需后续 Spike。 |
+| `ExperimentManifest` | `run_id`, `strategy_id`, `config_hash`, `dataset_release`, `factor_versions`, `label_window`, `benchmark`, `cost_config`, `evaluation_window`, `seed`, `code_version`, `report_paths`, `allowed_claims`, `blocked_claims`, `limitations`, `evidence_refs` | `parent_run_id`, `rerun_reason` | 缺任一 P0 字段不得进入 admission package。 |
+| `ResearchReportCatalog` | `catalog_entry_id`, `report_id`, `run_id`, `factor_ids`, `artifact_paths`, `created_at`, `source_lineage`, `status`, `admission_candidate`, `allowed_claims`, `blocked_claims` | `comparison_group`, `supersedes` | 只登记可追溯 artifact，不把图表或 Notebook 当唯一证据。 |
+| `StrategyAdmissionPackage` | `package_id`, `strategy_id`, `run_id`, `data_gate_status`, `factor_gate_status`, `portfolio_gate_status`, `backtest_gate_status`, `cost_gate_status`, `benchmark_gate_status`, `robustness_gate_status`, `ablation_status`, `freeze_status`, `pre_sim_status`, `dry_run_5d_status`, `admission_status`, `blocked_reasons`, `release_conditions`, `order_intent_draft_v1_ref`, `forbidden_counters` | `qmt_route_recommendation`, `follow_up_cr` | 任一 P0 gate fail 或 QMT CR 缺失时 admission_status=blocked。 |
+
+#### 35.7.3 校验规则与错误码
+
+| 错误码 | 触发条件 | 阻断层级 | Failure policy | 证据 / 修复方向 |
+|---|---|---|---|---|
+| `MF_SCHEMA_REQUIRED_FIELD_MISSING` | 任一合同 P0 必填字段缺失 | 当前合同及下游全部阻断 | fail-closed | 输出缺失字段、对象 ID、来源 run。 |
+| `MF_LINEAGE_MISSING` | `data_lineage`、source dataset、release 或 evidence ref 不完整 | panel / report / manifest / admission | fail-closed | 补齐 release、run_id、checksum 或 artifact ref。 |
+| `MF_AVAILABLE_AT_VIOLATION` | `available_at > decision_time` | panel / signal / combo | fail-closed | 标记前视风险，禁止评价和组合。 |
+| `MF_LABEL_OVERLAP_RISK` | label window 与决策 / 持仓窗口重叠或 label availability 不可证明 | label / evaluation / admission | fail-closed | 调整 label horizon 或补齐 calendar proof。 |
+| `MF_ADJUSTMENT_POLICY_MIXED` | 同一 run 混用 raw/qfq/hfq/returns_adjusted 或口径不明 | panel / label / report | fail-closed | 明确单一 research_adjustment_policy。 |
+| `MF_PANEL_LAYER_INCOMPLETE` | raw / directional / winsorized / zscore 四层缺失 | panel / evaluation | fail-closed | 复用 CR-011 audit 补齐层级。 |
+| `MF_QUALITY_GATE_FAILED` | PIT、tradability、benchmark、cost、exposure、capacity 或 quality gate 失败 | report / combo / admission | blocked | 输出 gate result 和 blocked claims。 |
+| `MF_EXTERNAL_RUNTIME_NOT_AUTHORIZED` | 尝试运行、安装、导入或依赖外部项目 | 全局 | fail-closed | 停止并转 runtime authorization / Spike。 |
+| `MF_PROVIDER_OR_LAKE_NOT_AUTHORIZED` | provider fetch、lake write、catalog publish 或 credential read 非 0 | 全局 | fail-closed | 停止并要求独立授权。 |
+| `MF_QMT_NOT_AUTHORIZED` | 试图提交真实 order、account query、cancel、simulation/live 调用 | handoff / admission | fail-closed | admission blocked；转 CR-020..CR-024。 |
+| `MF_OPTIMIZER_DEFERRED` | 需要 cvxpy、风险模型、EnhancedIndexing 或外部 optimizer | combo | blocked / converted-to-spike | 保留可解释组合，optimizer 后置。 |
+| `MF_REPORT_CLAIM_UNSUPPORTED` | 报告声明超出证据，如 production alpha、QMT-ready、simulation-ready | report / admission | fail-closed | 改写 allowed / blocked claims。 |
+
+#### 35.7.4 外部项目 cross-check 表
+
+| 内部合同 | Qlib cross-check | Alphalens cross-check | Zipline cross-check | LEAN cross-check | 结论 |
+|---|---|---|---|---|---|
+| `FactorSpec` | Alpha158 / Alpha360 feature config、handler | factor name / group context | Pipeline Factor / Filter / Classifier | Alpha Model signal boundary | 字段采用内部 truth，外部只补充表达维度。 |
+| `FactorRunSpec` | qrun task、provider_uri、record list | tear sheet input context | bundle / pipeline date context | algorithm config | 必须替换 provider / bundle 为本项目 dataset_release。 |
+| `FactorPanelContract` | DataHandler / Processor / Dataset | clean factor data | Pipeline output | Insight source | 必须保留 CR-011 四层审计和 available_at。 |
+| `LabelWindowSpec` | label config / DropnaLabel | forward returns | before_trading_start / pipeline timing | Alpha -> Portfolio timing | label availability 必须由本项目 calendar 和 data lineage 证明。 |
+| `FactorEvaluationReport` | SigAnaRecord / analysis_model | IC / RankIC / quantile / turnover | pipeline factor evaluation 可参考 | Alpha performance / risk split | 指标集合采用 Alphalens + Qlib，输出格式采用本项目 artifact。 |
+| `MultiFactorCombiner` | TopkDropout / EnhancedIndexing | 多因子不作为核心 | rank / mask / groupby | Portfolio Construction / Risk | P0 可解释组合；optimizer 后置。 |
+| `StrategyAdmissionPackage` | PortAnaRecord / risk analysis | 不适用 | execution/backtest context | Universe -> Alpha -> Portfolio -> Risk -> Execution | 借鉴分层，不引入执行授权。 |
+
+### 35.8 核心流程
+
+```mermaid
+flowchart TD
+  A[FactorSpec] --> B[FactorRunSpec]
+  B --> C[FactorPanelContract validation]
+  B --> D[LabelWindowSpec validation]
+  C --> E{Leakage / lineage / quality gate}
+  D --> E
+  E -- blocked --> X[BlockedClaims + ErrorCode]
+  E -- pass --> F[FactorEvaluationReport]
+  F --> G[MultiFactorCombiner]
+  G --> H[MultiFactorPortfolioPlan]
+  H --> I[ExperimentManifest]
+  F --> I
+  I --> J[ResearchReportCatalog]
+  J --> K[StrategyAdmissionPackage]
+  K --> L{Stage6 admission gate}
+  L -- pass/warn with QMT not authorized --> M[order_intent_draft_v1 handoff]
+  L -- fail/blocked --> X
+  M --> N[QMT route remains not-authorized: CR-020..CR-024 required]
+```
+
+| 步骤 | 输入 | 处理 | 输出 | 失败 / 回退 |
+|---|---|---|---|---|
+| 1. 因子定义 | 旧 `FactorDefinition`、数据字段、用户配置 | 校验 `FactorSpec` 必填字段、方向、窗口、lineage | versioned factor spec | `MF_SCHEMA_REQUIRED_FIELD_MISSING` |
+| 2. 运行冻结 | factor spec、dataset release、label/cost/benchmark | 生成 `FactorRunSpec` 和 config hash | run spec | `MF_PROVIDER_OR_LAKE_NOT_AUTHORIZED` 或 release missing |
+| 3. 面板 / 标签校验 | factor panel、price / returns、calendar | 校验 available_at、label overlap、四层 panel、quality | validated panel / label | fail-closed blocked claims |
+| 4. 单因子评价 | validated panel / label、benchmark、cost、exposure | 生成 IC、RankIC、ICIR、分层收益、turnover、暴露等 | `FactorEvaluationReport` | 输入不足时 report status=`blocked` |
+| 5. 多因子组合 | 多个 report、组合配置、约束 | 标准化、去极值、中性化、正交化、权重、约束、冻结 | `MultiFactorPortfolioPlan` | optimizer 需求转 Spike |
+| 6. manifest / catalog | run spec、report、portfolio plan | 登记 config、data、code、artifact、claims | `ExperimentManifest` / `ResearchReportCatalog` | 缺 P0 字段不得进入 admission |
+| 7. strategy admission | catalog、Stage6 gate、组合计划 | 汇总数据 / 因子 / 组合 / 成本 / benchmark / 稳健性 / 消融 / pre-sim / 5日 dry-run | `StrategyAdmissionPackage` | 任一 P0 gate fail -> blocked |
+| 8. QMT not-authorized handoff | admission package、portfolio plan | 只生成 `order_intent_draft_v1` 草稿引用 | draft handoff | QMT / simulation / live 仍需 CR-020..CR-024 |
+
+### 35.9 系统架构图
+
+```mermaid
+graph TD
+  subgraph User["User"]
+    R[P-03/P-07 Research Reviewer]
+    O[P-05 QMT Operator - later CR only]
+  end
+
+  subgraph App["Application / Experiment Layer"]
+    FRS[FactorRunSpec Builder]
+    EVAL[Factor Evaluation Runner]
+    COMB[MultiFactorCombiner]
+    ADM[StrategyAdmissionPackage Builder]
+  end
+
+  subgraph Service["Service / Contract Layer"]
+    FS[FactorSpec Registry]
+    FP[FactorPanelContract Gate]
+    LW[LabelWindowSpec Gate]
+    CAT[ResearchReportCatalog]
+    HANDOFF[order_intent_draft_v1 Handoff]
+  end
+
+  subgraph Data["Data / Evidence Layer"]
+    RI[research_input_v1]
+    EXP17[Experiment 17-21 Baseline]
+    CR011[CR-011 Factor Panel Audit]
+    STAGE6[Stage6 Admission Gate]
+    ART[JSON/CSV/Markdown Artifacts]
+  end
+
+  subgraph Infra["Infrastructure / External Boundary"]
+    LAKE[Project Data Lake / Catalog Truth]
+    QLIB[Qlib static reference only]
+    EXT[Other external projects reference matrix]
+    QMT[QMT / simulation / live not authorized]
+  end
+
+  R --> FRS
+  FRS --> FS
+  FS --> FP
+  RI --> FP
+  EXP17 --> FS
+  CR011 --> FP
+  RI --> LW
+  LW --> EVAL
+  FP --> EVAL
+  EVAL --> COMB
+  COMB --> ADM
+  ADM --> CAT
+  CAT --> ART
+  STAGE6 --> ADM
+  ADM --> HANDOFF
+  HANDOFF -.blocked unless CR-020..CR-024.-> QMT
+  QLIB -.cross-check only.-> FS
+  QLIB -.cross-check only.-> EVAL
+  EXT -.reference matrix only.-> FS
+  LAKE --> RI
+```
+
+### 35.10 Use Case -> Architecture Traceability
+
+| Use Case | 支撑模块 / 组件 | 关键流程 | 异常 / 失败路径 | 验证方式 |
+|---|---|---|---|---|
+| UC-20 | 全局 HLD、reference matrix、基线复用表、CR-026 分流 | 选择 CR30-A，自有闭环；外部项目只 reference / Spike | 外部 runner 被设默认时 `MF_EXTERNAL_RUNTIME_NOT_AUTHORIZED` | TS-030-01, TS-030-09 |
+| UC-21 | 外部项目矩阵、license / dependency / provider boundary | 10 类项目分类：reference / optional_spike / exclude / forbidden_migration | 许可证或运行边界不清时 exclude / Spike | TS-030-02 |
+| UC-22 | `FactorSpec`, `FactorRunSpec` | 从实验 17-21 和 `research_input_v1` 抽取字段并补齐 lineage | 字段缺失或 lineage 不完整时 blocked | TS-030-03 |
+| UC-23 | `FactorPanelContract`, `LabelWindowSpec` | 面板四层、available_at、label window、quality gate | 前视 / overlap / 复权混用 fail-closed | TS-030-04 |
+| UC-24 | `FactorEvaluationReport` | IC / RankIC / ICIR / 分层收益 / turnover / 暴露 / blocked claims | 输入 gate fail 时仅输出 blocked report | TS-030-05 |
+| UC-25 | `MultiFactorCombiner`, `MultiFactorPortfolioPlan` | 可解释组合、标准化、中性化、权重、约束、成本容量 | optimizer 需求转 Spike；约束缺失 blocked | TS-030-06 |
+| UC-26 | `ExperimentManifest`, `ResearchReportCatalog` | 记录 run、config hash、data release、factor versions、artifact、claims | 缺 P0 字段不得进入 admission | TS-030-07 |
+| UC-27 | `StrategyAdmissionPackage`, `order_intent_draft_v1` handoff | Stage6 gate 汇总，QMT not-authorized handoff | 无 QMT CR 或 gate fail -> admission blocked | TS-030-08, TS-030-10 |
+
+### 35.11 REQ -> Module Traceability
+
+| Requirement | 架构承载 | 关键证据 |
+|---|---|---|
+| REQ-174 | CR30-A 推荐方案、§35.5 自有闭环 | 不设外部默认 framework / truth / provider / runner。 |
+| REQ-175 | §35.4 外部项目矩阵 | 覆盖 Qlib、Alphalens、vectorbt、PyBroker、bt、Zipline Reloaded、LEAN、RQAlpha、vn.py / vnpy.alpha、Backtrader。 |
+| REQ-176 | `FactorSpec`, `FactorRunSpec` 字段字典 | factor_id、version、direction、input_fields、run_id、dataset_release、config_hash 等。 |
+| REQ-177 | `FactorPanelContract`, `LabelWindowSpec`, 错误码 | available_at、decision_time、label window、lineage、fail-closed。 |
+| REQ-178 | `FactorEvaluationReport` | IC、RankIC、ICIR、分层收益、多空、turnover、成本、暴露、claims。 |
+| REQ-179 | `MultiFactorCombiner`, `MultiFactorPortfolioPlan` | 可解释组合，optimizer 后置。 |
+| REQ-180 | `ExperimentManifest`, `ResearchReportCatalog` | run_id、config_hash、dataset/release、artifact paths、claims。 |
+| REQ-181 | `StrategyAdmissionPackage`, Stage6 gate | admission_status、blocked reasons、`order_intent_draft_v1`。 |
+| REQ-182 | 不授权边界、错误码、风险矩阵 | 所有运行 / 依赖 / provider / lake / QMT / credential 计数为 0。 |
+| REQ-183 | 基线复用表、模块职责 | 复用 `research_dataset.py`、实验 17-21、CR-011、Stage6 gate。 |
+| REQ-184 | CR-026 分流、DQ-CP3-CR030-03 | Qlib isolated runner 后续 Spike，不并行启动。 |
+| REQ-185 | schema provenance、field dictionary、validation rules、failure policy、fixture matrix | 后续 LLD / QA / docs 可消费。 |
+
+### 35.12 关键场景模拟
+
+| 模拟 ID | 场景 | 输入 / 前置条件 | 推荐架构执行路径 | 预期输出 | 失败 / 回退路径 | 结果 |
+|---|---|---|---|---|---|---|
+| SIM-CR030-01 | 外部项目不接管主线 | 用户要求借鉴 Qlib 并建设多因子闭环 | reference matrix -> CR30-A -> CR-026 deferred | HLD 推荐自有闭环，Qlib 为 reference / Spike | 若要求 qrun，输出 CR-026 Spike 条件，不进入 CR-030 P0 | PASS |
+| SIM-CR030-02 | 因子进入评价前防泄漏 | FactorPanel 缺 `available_at` 或 label overlap | `FactorPanelContract` + `LabelWindowSpec` gate | `MF_AVAILABLE_AT_VIOLATION` / `MF_LABEL_OVERLAP_RISK` blocked | 不生成 IC / combo / admission | PASS |
+| SIM-CR030-03 | 单因子评价进入组合 | 面板、标签、benchmark、成本、暴露均通过 | `FactorEvaluationReport` -> `MultiFactorCombiner` | 输出 metrics、claims、组合输入 | 暴露或成本缺失时 blocked / research_limited | PASS |
+| SIM-CR030-04 | 多因子组合申请策略准入 | 多个因子报告和 portfolio plan | manifest/catalog -> Stage6 gate -> admission package | pass/warn/fail/blocked + draft handoff | 任一 Stage6 P0 gate fail -> admission blocked | PASS |
+| SIM-CR030-05 | 用户把准入包解释为 QMT-ready | admission package 生成后要求 simulation/live | `order_intent_draft_v1` not-authorized boundary | `qmt_api_call=0`, `real_order=0`, `account_query=0` | 转 CR-020..CR-024，不在 CR-030 执行 | PASS |
+
+### 35.13 非功能需求设计
+
+| NFR | 设计承载 | 量化 / 可检验目标 |
+|---|---|---|
+| 准确性 | schema provenance、available_at、label window、benchmark / cost / exposure gate | `available_at > decision_time` 容忍次数为 0；label overlap 容忍次数为 0；关键字段缺失时 fail-closed。 |
+| 合理性 | 外部项目 cross-check、可解释组合默认、optimizer 后置 | 每个核心合同至少映射 Qlib / Alphalens / Zipline / LEAN 中 1 个对应概念；P0 不启用外部 optimizer。 |
+| 易分析性 | `FactorEvaluationReport`、manifest/catalog、JSON/CSV/Markdown artifact | 每个 report 至少包含 coverage、IC、RankIC、ICIR、分层收益、多空、turnover、成本、暴露、claims。 |
+| 可追溯 | `ExperimentManifest`、`ResearchReportCatalog`、config hash、data release | 每个 run 具备 run_id、config_hash、dataset_release、factor_versions、code_version 和 artifact_paths。 |
+| 防泄漏 | panel / label gate、错误码、blocked claims | 前视 / overlap / 复权混用 / lineage 缺失全部阻断评价、组合和准入。 |
+| 安全 | not-authorized boundary、permission counters、QMT route blocked | `implementation_changes=0`、`dependency_changes=0`、`external_project_run=0`、`provider_fetch=0`、`lake_write=0`、`catalog_publish=0`、`qmt_api_call=0`、`credential_read=0`。 |
+| 可扩展 | reference matrix、CR-026 / optimizer / ML / vectorbt / PyBroker Spike 条件 | 后续扩展必须以冻结合同为输入，不替换内部 truth。 |
+| 可测试 | TS-030-01..10、fixture matrix、错误码 | CP5 后每类错误码至少 1 个 fixture；HLD 阶段只定义测试入口，不执行验证。 |
+
+### 35.14 主要风险与应对
+
+| 风险 ID | 风险 | 等级 | 触发条件 | 应对 | 回退 / 切换条件 |
+|---|---|---|---|---|---|
+| R-CR030-01 | 外部框架误设默认 truth / runner | 高 | HLD/LLD/Story 把 Qlib 等设为默认依赖或 provider | CP3 决策项明确 CR30-A；错误码阻断 external runtime | 回退 CP3，转 CR-026 Spike |
+| R-CR030-02 | schema 从零设计遗漏 | 高 | 字段未追溯到现有基线或 external cross-check | `schema provenance` 表 + field dictionary + cross-check | 只允许增量补字段，不重写旧基线 |
+| R-CR030-03 | 防泄漏不足 | 高 | 缺 `available_at`、label overlap、复权混用 | fail-closed gate 和 fixture matrix | CP3 不通过或 CP5 blocked |
+| R-CR030-04 | 许可证 / 依赖误用 | 高 | 复制源码、默认引入 Commons Clause / 限制性项目 | reference matrix 标注 license / forbidden migration | 后续 legal / Spike / CP5 授权 |
+| R-CR030-05 | 研究报告误当交易授权 | 高 | admission package 被写成 QMT-ready / simulation-ready | not-authorized handoff，QMT route 另 CR | 转 CR-020..CR-024 |
+| R-CR030-06 | 重做既有能力产生双 truth | 中 | 绕开 `research_dataset.py` 和实验 17-21 | 基线复用表和兼容策略 | HLD 修改，补兼容 Story |
+| R-CR030-07 | optimizer 过早引入 | 中 | 需要 cvxpy、风险模型或 EnhancedIndexing | P0 采用可解释组合，optimizer Spike | 组合基线通过后另起 CR |
+| R-CR030-08 | 静态调研遗漏 runtime 细节 | 中 | 后续实现发现 Qlib / external runtime 假设不同 | HLD 明确静态证据边界 | bounded Spike 验证 |
+
+### 35.15 ADR 候选决策点
+
+| ADR ID | 决策 | 推荐结论 | 备选 | 影响范围 |
+|---|---|---|---|---|
+| ADR-079 | CR-030 多因子研究闭环主线 | 采用项目自有闭环；外部项目只 reference / Spike | Qlib runner-first；doc-only | HLD、Story、schema、QA |
+| ADR-080 | 外部项目矩阵与迁移边界 | 10 类项目全部分类，源码迁移默认 forbidden | 收窄项目；只分析 Qlib | license、dependency、docs |
+| ADR-081 | Schema provenance 策略 | 项目自有契约 + 既有基线 + external cross-check + fail-closed | 直接采用外部对象；从零设计 | data contracts、tests、reports |
+| ADR-082 | Factor panel / label window fail-closed | 前视、overlap、lineage、复权混用全部阻断 | warn-only | 防泄漏、admission |
+| ADR-083 | MultiFactorCombiner 默认策略 | P0 可解释组合，optimizer 后置 | 默认 EnhancedIndexing / cvxpy | dependency、complexity |
+| ADR-084 | ResearchReportCatalog / ExperimentManifest 产物形态 | JSON/CSV/Markdown + config hash + artifact refs | MLflow / pickle recorder | audit、复跑、维护 |
+| ADR-085 | StrategyAdmissionPackage 与 QMT handoff | 只生成 draft 和 blocked reasons；真实 QMT 另 CR | 生成可执行 order；完全不设计 handoff | safety、QMT route |
+| ADR-086 | CR-026 分流 | 合同冻结后单独 Spike | 合并入 CR-030 P0；取消 | follow-up tracking |
+
+### 35.16 CP3 待决策项草案
+
+| 决策 ID | 决策类型 | 待确认问题 | 推荐方案 | 备选方案 | 优劣分析 | 影响 / 风险 | 回退 / 切换条件 |
+|---|---|---|---|---|---|---|---|
+| DQ-CP3-CR030-01 | architecture | 是否接受 CR30-A 项目自有多因子研究闭环作为 HLD 推荐方案？ | 接受 CR30-A；外部项目只 reference / Spike / exclude / forbidden migration。 | A. Qlib runner-first；B. 文档 / Spike-only。 | 推荐方案最贴合现有 truth 和权限边界；Qlib-first 生态强但依赖 / provider 风险高；doc-only 无法支撑落地。 | 影响 Story 边界、依赖策略、数据 truth 和 QA。 | 若用户要求 runner，回退到 CR-026 CP2/CP3。 |
+| DQ-CP3-CR030-02 | implementation | 是否接受 schema provenance 和字段字典方案？ | 采用项目自有契约 + 现有基线复用 + external cross-check + fail-closed。 | A. 直接采用外部对象；B. 从零设计。 | 推荐方案兼顾项目事实源和成熟经验；直接采用外部对象会产生依赖；从零设计遗漏风险高。 | 影响 `FactorSpec` 等 10 个合同和后续测试 fixture。 | CP3 修改字段字典后重跑自动预检。 |
+| DQ-CP3-CR030-03 | follow_up_tracking | CR-026 Qlib isolated runner 是否继续后置？ | 保持后续 Spike candidate，不并行启动。 | A. 合并入 CR-030 P0；B. 取消。 | 推荐方案避免 runner 绑架 schema；合并会扩大权限；取消会丢失 Qlib runtime 价值。 | 影响 CR tracking 和后续路线。 | 合同冻结、依赖隔离和运行授权明确后启动 CR-026。 |
+| DQ-CP3-CR030-04 | implementation | MultiFactorCombiner 是否默认采用可解释组合、optimizer 后置？ | P0 使用规则权重 / 轻量线性组合；EnhancedIndexing / cvxpy / ML optimizer 转 Spike。 | A. 默认 optimizer；B. 不设计组合。 | 推荐方案易解释可验证；默认 optimizer 依赖和风险模型要求高；不设计组合无法形成准入闭环。 | 影响组合、成本、容量和 benchmark 约束。 | 若 P0 组合不足且用户接受依赖风险，另起 optimizer Spike。 |
+| DQ-CP3-CR030-05 | security | 是否确认 CP3 通过不授权实现、依赖变更、外部项目运行或真实操作？ | 确认不授权；只允许 HLD 进入 meta-po CP3 人工确认。 | A. 授权 bounded external runtime Spike；B. 授权依赖安装但不运行。 | 推荐方案权限最小；运行 Spike 证据更强但扩大安全 / 许可证面。 | 防止误触 provider/lake/QMT/credential。 | 需要运行时另起 CR / Spike 和 per-run 授权。 |
+| DQ-CP3-CR030-06 | runtime_authorization | 是否接受 `StrategyAdmissionPackage` 只输出 `order_intent_draft_v1` 草稿，不生成真实 order？ | 接受；真实 QMT / simulation / live 仍由 CR-020..CR-024 单独授权。 | A. 生成可执行 order；B. 完全不设计执行 handoff。 | 推荐方案保留生产路线衔接且不越权；可执行 order 风险极高；不设计 handoff 削弱 Stage6 闭环。 | 影响 QMT route、admission 文档和用户误读风险。 | QMT CR approved 后再消费 draft。 |
+| DQ-CP3-CR030-07 | risk_acceptance | 是否接受静态调研支撑 HLD、runtime 细节转后续 Spike 的残余风险？ | 接受静态调研作为 CP3 证据，runtime 细节不阻断 HLD。 | A. 要求先运行外部项目；B. 删除外部项目参考。 | 推荐方案符合当前权限；运行证据更强但越权；删除参考会降低 cross-check 质量。 | 静态资料可能遗漏 runtime 约束。 | 后续实现发现阻塞时转 bounded Spike。 |
+
+### 35.17 分阶段落地建议与工作量粗估
+
+> 本节仅为 HLD 级阶段建议，不拆解 Story，不生成 `STORY-BACKLOG.md`、`DEVELOPMENT-PLAN.yaml` 或 Story 卡片。
+
+| 阶段 | 目标 | 主要产物 | 估算 | 前置 |
+|---|---|---|---|---|
+| H1：合同冻结 | 冻结 `FactorSpec`、`FactorRunSpec`、panel、label、report、combiner、manifest/catalog、admission package 字段和错误码 | LLD 输入合同、fixture matrix | 中 | CP3 approved |
+| H2：基线复用与兼容 | 将实验 17-21 / CR-011 / Stage6 gate 能力映射到正式对象 | 兼容层、旧报告追溯说明 | 中 | H1 |
+| H3：评价与组合报告 | 标准化单因子评价、多因子组合和 report catalog | report artifact、manifest、catalog | 中高 | H1/H2 |
+| H4：StrategyAdmissionPackage | 接入 Stage6 gate，输出 blocked claims 和 `order_intent_draft_v1` draft | admission package | 中 | H3 |
+| H5：后续 Spike 分流 | CR-026 Qlib runner、optimizer、vectorbt performance、PyBroker ML、RQAlpha/vn.py route | 独立 CR / Spike 输入 | 不计入 CR-030 P0 | 合同冻结后 |
+
+### 35.18 待确认问题
+
+| ID | 问题 | 状态 | 推荐处理 | 影响范围 | 决策人 |
+|---|---|---|---|---|---|
+| CR30-Q1 | 是否接受 CR30-A 推荐架构？ | OPEN_FOR_CP3 | 接受项目自有多因子闭环 | HLD / Story / QA | 用户 / meta-po |
+| CR30-Q2 | 是否接受外部项目矩阵分类？ | OPEN_FOR_CP3 | 接受 reference / optional_spike / exclude / forbidden_migration | license / dependency | 用户 / meta-po |
+| CR30-Q3 | 是否接受 schema provenance 和 fail-closed 策略？ | OPEN_FOR_CP3 | 接受 DQ-CP3-CR030-02 | data contracts / testing | 用户 / meta-po |
+| CR30-Q4 | 是否接受 optimizer 后置？ | OPEN_FOR_CP3 | P0 可解释组合，optimizer Spike | combo / dependency | 用户 / meta-po |
+| CR30-Q5 | 是否确认 CP3 不授权实现或运行？ | OPEN_FOR_CP3 | 确认不授权 | runtime authorization | 用户 / meta-po |
+| CR30-Q6 | 是否接受 StrategyAdmissionPackage 仅 draft handoff？ | OPEN_FOR_CP3 | 接受 `order_intent_draft_v1` not-authorized boundary | QMT / Stage6 | 用户 / meta-po |
+
+### 35.19 HLD 自审记录
+
+| 检查项 | 结论 | 证据 |
+|---|---|---|
+| 问题定义、目标、约束、非目标、假设完整 | PASS | §35.1 |
+| Architecture Gray Areas 前置且 table-first | PASS | §35.2；`process/discussions/CP3-CR030-HLD-DISCUSSION-LOG.md` |
+| 至少 3 个候选方案比较 | PASS | §35.2 Advisor Table 与 §35.3 覆盖 CR30-A/B/C/D |
+| 推荐方案明确 | PASS | §35.5 推荐 CR30-A |
+| 外部项目矩阵覆盖 10 类项目 | PASS | §35.4 |
+| schema 不是从零设计 | PASS | §35.7.1 provenance 表 |
+| 字段字典、校验、错误码、failure policy 完整 | PASS | §35.7.2、§35.7.3 |
+| UC / REQ traceability 完整 | PASS | §35.10、§35.11 |
+| 关键场景模拟通过 | PASS | §35.12 |
+| Mermaid 图覆盖 User / Application / Service / Data / Infrastructure | PASS | §35.9 |
+| NFR、风险、ADR、阶段建议完整 | PASS | §35.13 至 §35.17 |
+| 不授权边界明确 | PASS | 本节导语、§35.1、§35.14、§35.16 |
+| HLD 拆分判断 | PASS | CR-030 属于主 HLD 的多因子研究闭环增量；QMT companion 只消费 draft boundary；Qlib runner 独立为 CR-026 Spike，不拆出本轮 HLD。 |

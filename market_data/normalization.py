@@ -244,6 +244,45 @@ def normalize_p0_candidate(
     )
 
 
+def normalize_adjustment_derivation_candidate(candidate: Mapping[str, Any] | object) -> NormalizeCandidate:
+    """把 CR017 derived view candidate 归一成未发布 candidate；不写湖、不发布 pointer。"""
+
+    payload = _record_payload(candidate)
+    view_id = str(payload.get("view_id") or "")
+    source_run_id = str(payload.get("source_run_id") or "")
+    lineage_checksum = str(payload.get("lineage_checksum") or "")
+    status = str(payload.get("status") or "")
+    reason_code = str(payload.get("reason_code") or "")
+    rows = payload.get("rows") or ()
+    manifest_complete = bool(view_id and source_run_id and lineage_checksum and status == "pass")
+    details: list[dict[str, Any]] = [
+        {
+            "view_id": view_id,
+            "candidate_only": True,
+            "row_count": len(rows) if isinstance(rows, (list, tuple)) else 0,
+        }
+    ]
+    error_codes: list[str] = []
+    if not manifest_complete:
+        error_codes.append(reason_code or NORMALIZE_MANIFEST_INCOMPLETE)
+
+    return NormalizeCandidate(
+        dataset=view_id,
+        run_id=source_run_id,
+        candidate_path=f"memory://cr017/{view_id}/{lineage_checksum}",
+        candidate_layer="derived_view",
+        status=CANDIDATE_UNPUBLISHED if not error_codes else "blocked",
+        current_pointer_changes=0,
+        provider_fetches=0,
+        credential_reads=0,
+        raw_writes=0,
+        publish_count=0,
+        manifest_complete=manifest_complete,
+        error_codes=tuple(dict.fromkeys(error_codes)),
+        details=tuple(details),
+    )
+
+
 def _find_replay_record(
     request: ReplayRequest,
     manifest_store: Mapping[str, Any] | list[Mapping[str, Any]] | tuple[Mapping[str, Any], ...] | None,
@@ -632,6 +671,8 @@ def _canonical_rows(
         open_price = _float_value(row, "open", nullable=True)
         high = _float_value(row, "high", nullable=True)
         low = _float_value(row, "low", nullable=True)
+        volume = _float_value(row, "vol", nullable=True)
+        amount = _float_value(row, "amount", nullable=True)
         open_price = close if open_price is None else open_price
         high = close if high is None else high
         low = close if low is None else low
@@ -665,6 +706,8 @@ def _canonical_rows(
                 "high": high,
                 "low": low,
                 "close": close,
+                "volume": volume,
+                "amount": amount,
                 "adj_factor": adj_factor_value,
                 "adjusted_open": adjusted_open,
                 "adjusted_high": adjusted_high,
@@ -1335,6 +1378,7 @@ __all__ = [
     "NORMALIZE_MANIFEST_INCOMPLETE",
     "NormalizeCandidate",
     "normalize_run",
+    "normalize_adjustment_derivation_candidate",
     "normalize_p0_candidate",
     "REPLAY_SOURCE_MISSING",
     "ReplayRequest",

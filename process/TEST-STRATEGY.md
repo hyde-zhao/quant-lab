@@ -1,10 +1,10 @@
 ---
 project_id: "local_backtest"
-wave_scope: "STORY-001..STORY-013 / STORY-004..STORY-013 independent acceptance, F-004 regression, documentation readiness, CR-011 factor research data completion, CR-014 BATCH-A CP7 preparation"
+wave_scope: "STORY-001..STORY-013 / STORY-004..STORY-013 independent acceptance, F-004 regression, documentation readiness, CR-011 factor research data completion, CR-014 BATCH-A CP7 preparation, CR-015/CR-016/CR-017 controlled offline CP7 completion"
 created_at: "2026-05-15"
-updated_at: "2026-05-27"
-target_story_range: "STORY-004..STORY-013 / CR011-S01..CR011-S08 / CR013-S01..CR013-S04 / CR014-S01..CR014-S08"
-regression_scope: "STORY-001..STORY-013 / CR011-S01..CR011-S08 / CR013-S01..CR013-S04 / CR014-S01..CR014-S08"
+updated_at: "2026-05-28"
+target_story_range: "STORY-004..STORY-013 / CR011-S01..CR011-S08 / CR013-S01..CR013-S04 / CR014-S01..CR014-S08 / CR017-S01..CR017-S06 / CR015-S01..CR015-S07 / CR016-S01..CR016-S04,CR016-S07"
+regression_scope: "STORY-001..STORY-013 / CR011-S01..CR011-S08 / CR013-S01..CR013-S04 / CR014-S01..CR014-S08 / CR017-S01..CR017-S06 / CR015-S01..CR015-S07 / CR016-S01..CR016-S04,CR016-S07; CR016-S05/S06 later-gated excluded"
 owner: "meta-qa"
 source_handoff:
   - "process/handoffs/META-DEV-IMPLEMENT-STORY-004-013-2026-05-15.md"
@@ -14,8 +14,13 @@ source_handoff:
   - "process/handoffs/META-QA-CR004-MARKET-DATA-VERIFY-2026-05-17.md"
   - "process/handoffs/META-DOC-CR011-DOCUMENTATION-2026-05-24.md"
   - "process/handoffs/META-QA-CR013-BATCH-A-CP7-VERIFY-2026-05-25.md"
+  - "process/handoffs/META-DOC-CR015-CR016-CR017-DOCUMENTATION-2026-05-28.md"
 source_checkpoint:
   - "checkpoints/CP5-ALL-STORIES-LLD-BATCH.md"
+  - "process/checks/CP7-CR016-S07-docs-user-manual-and-incident-playbooks-VERIFICATION-DONE.md"
+  - "process/checks/CP7-CR016-S04-simulation-live-runbook-and-approval-gates-VERIFICATION-DONE.md"
+  - "process/checks/CP7-CR017-S06-research-qmt-consumer-docs-and-migration-guide-VERIFICATION-DONE.md"
+  - "process/checks/CP7-CR015-S07-docs-and-foundation-runbook-boundary-VERIFICATION-DONE.md"
 ---
 
 # 测试策略
@@ -27,6 +32,8 @@ source_checkpoint:
 本轮只允许使用现有测试、临时目录、fixture 与 fake adapter；不得联网获取真实行情，不得生成真实生产数据，不得写入 `delivery/**`，不得生成安装脚本，不得修改 `engine/`、`strategies/`、`tests/` 业务源码。
 
 CR-011 文档刷新阶段追加覆盖因子研究生产级数据补齐验证口径：`CR011-S01` 至 `CR011-S08` 均已 CP7 PASS，文档刷新已完成，CP8 人工终验已 approved，CR-011 已关闭。本策略只增量记录测试矩阵和验证摘要，不重新运行真实联网、真实 lake 写入、凭据读取、旧 `data/**` 操作或旧报告覆盖。
+
+CR-015 / CR-016 / CR-017 文档收敛阶段追加覆盖 QMT foundation、staged activation runbook 和复权双视图消费边界的 CP7 完成事实：`CR017-S01` 至 `CR017-S06`、`CR015-S01` 至 `CR015-S07`、`CR016-S01` 至 `CR016-S04` 与 `CR016-S07` 均已完成受控离线 / mock / fixture / 文档范围 CP7 验证；`CR016-S05` 和 `CR016-S06` 仍为 later-gated，`implementation_allowed=false`，不进入 implemented 或 verified 分母。本策略只记录当前验证口径、later-gated 例外和真实操作禁止边界，不授权 QMT / MiniQMT / GUI、broker API、真实发单、撤单、账户查询、凭据读取、provider fetch、真实 lake 写入、broker lake 写入、publish、simulation、live_readonly、small_live、scale_up 或真实 incident 持久化。
 
 ## 测试设计方法选择
 
@@ -680,3 +687,94 @@ git status --short
 ```
 
 上述命令仅作为 CP7 准备口径；当前准备阶段不运行测试、不运行真实网络、不读取凭据、不触碰真实数据湖。若正式 CP7 执行时命中误报，CP7 报告必须逐项记录命中位置、豁免理由和剩余风险；不得用模糊匹配自动放行。
+
+## CR-015 / CR-016 / CR-017 CP7 验证完成策略增量
+
+### 当前状态与验证边界
+
+本节记录 2026-05-28 对 CR-015 / CR-016 / CR-017 受控离线范围的测试策略收敛。当前事实源为 `process/STORY-STATUS.md`、`process/STATE.md` 和已完成的 CP7 结果文件；本节只更新当前测试策略口径，不改写历史 CR 过程记录。
+
+| 范围 | 当前状态 | 验证边界 |
+|---|---|---|
+| `CR017-S01..S06` | verified / CP7 PASS | 覆盖复权策略、raw prices / adj_factor、qfq / hfq 派生视图、reader policy gate、质量 / 泄漏验证、research / QMT consumer 文档与迁移指南；不授权真实 QMT 或 scale_up。 |
+| `CR015-S01..S07` | verified / CP7 PASS | 覆盖 QMT foundation、adapter contract、OMS、pre-trade risk gate、broker lake schema dry-run、shadow order intent、foundation runbook；只允许 `shadow` / `dry_run` / `mock`。 |
+| `CR016-S01..S04` | verified / CP7 PASS | 覆盖 simulation enable gate、reconciliation、monitoring / kill switch、simulation / live runbook 与 approval gates；不启动 simulation / live。 |
+| `CR016-S07` | verified / CP7 PASS | 覆盖用户手册、incident playbook、recovery gate 和 unsupported claim boundary；只验证文档合同和静态测试。 |
+| `CR016-S05` / `CR016-S06` | later-gated | `implementation_allowed=false`；不得计入 implemented / verified；live_readonly、small_live、scale_up 必须等待后续独立审批、research maturity gate、CP5/CP6/CP7 和 per-run authorization。 |
+
+文档、runbook、incident playbook、CP5、CP6、CP7、Story `verified` 或本策略条目均不是 standing approval。它们不授权 QMT / MiniQMT / GUI、broker API、真实发单、撤单、账户查询、凭据读取、真实 snapshot 拉取、provider fetch、真实 lake 写入、broker lake 写入、publish、simulation、live_readonly、small_live、scale_up 或真实 incident 持久化。
+
+### 测试设计方法选择
+
+| 方法 | CR-015 / CR-016 / CR-017 适用性 | 应用说明 |
+|---|---|---|
+| 等价分区 | 高 | 按 CR017 研究消费、CR015 foundation、CR016 staged activation、later-gated scope 和 forbidden operation 分区。 |
+| 边界值分析 | 高 | 验证所有真实操作计数、默认授权声明、unsupported claim unblocked、sensitive raw value output、non-raw execution allowed、scale_up allowed 的 0 边界。 |
+| 状态转换测试 | 高 | 验证 `shadow -> simulation -> live_readonly -> small_live -> scale_up` 只能按相邻阶段申请；recovery gate 只解除 incident blocked 状态，不启动真实运行。 |
+| 错误推测 | 高 | 针对 CP7 PASS 被误写为真实授权、S05/S06 被误写为 implemented / verified、CR017 verified 被误解为 scale_up 解禁、真实 VWAP / minute / tick / Level2 / order-match claim 被解除等风险做静态扫描。 |
+
+### ISO 25010 质量优先级
+
+| 质量特征 | 优先级 | 验证重点 |
+|---|---|---|
+| 功能适合性 | P0 | 已 verified Story 的 AC、LLD §6 / §7 / §10 / §13 和文档合同均有 CP7 证据；S05/S06 later-gated 例外明确排除。 |
+| 可靠性 | P0 | 验证只使用离线 fixture、静态文档扫描、fake / mock adapter 和 `uv run --python 3.11` 测试；不依赖真实 QMT 环境。 |
+| 安全性 | P0 | 必测安全计数全部为 0；文档不输出敏感原值；CP5/CP6/CP7/Story verified 不被解释为真实操作授权。 |
+| 可维护性 | P1 | runbook、incident playbook、README、USER-MANUAL 和测试策略使用固定 stage、counter、blocked claim 和 later-gated 术语。 |
+| 兼容性 | P1 | CR017 raw-only 执行价边界不放宽 CR016 scale_up；CR015 foundation 不自动进入 CR016 live path。 |
+| 可移植性 | P1 | 验证命令统一通过 `uv run --python 3.11`，不修改 `pyproject.toml` / `uv.lock`。 |
+| 易用性 | P2 | 用户文档明确每个 stage 能做什么、不能做什么、需要哪些后续授权和证据。 |
+
+### CP7 完成证据摘要
+
+| 证据 | 结论 | 关键安全结论 |
+|---|---|---|
+| `process/checks/CP7-CR015-S07-docs-and-foundation-runbook-boundary-VERIFICATION-DONE.md` | PASS，`6 passed in 0.04s` | QMT / broker API、真实发单、撤单、账户查询、凭据读取、真实写湖、provider fetch、publish、simulation / live activation 均为 0。 |
+| `process/checks/CP7-CR016-S04-simulation-live-runbook-and-approval-gates-VERIFICATION-DONE.md` | PASS，`41 passed in 0.19s` | runbook、approval gate、rollback / recovery matrix 通过；simulation / live / small_live / scale_up run 均为 0。 |
+| `process/checks/CP7-CR016-S07-docs-user-manual-and-incident-playbooks-VERIFICATION-DONE.md` | PASS，`29 passed in 0.16s` | incident playbook、manual takeover record、unsupported claim boundary、sensitive raw value scan 通过；真实 incident 持久化为 0。 |
+| `process/checks/CP7-CR017-S06-research-qmt-consumer-docs-and-migration-guide-VERIFICATION-DONE.md` | PASS，`6 passed` + CR017 回归 `39 passed` | QMT execution raw-only、legacy qfq read-only、unsupported execution blocked；provider / lake / credential / publish / dependency / scale_up allowed 均为 0。 |
+
+### 必测安全计数
+
+下列计数是 CR-015 / CR-016 / CR-017 后续文档、验证或终验必须继续复核的 P0 安全边界；任一计数非 0 均不得把真实运行、S05/S06 或 scale_up 标记为已授权。
+
+| 计数项 | 期望值 | 覆盖范围 |
+|---|---:|---|
+| `qmt_api_call` / `real_broker_operation` | `0` | 禁止调用 QMT / MiniQMT / XtQuant / broker API。 |
+| `real_order_call` / `real_cancel_call` | `0` | 禁止真实发单和撤单。 |
+| `account_query_call` / `account_write_call` | `0` | 禁止查询或写入真实账户状态。 |
+| `credential_read` / `sensitive_raw_value_output` | `0` | 禁止读取或输出 `.env`、token、password、cookie、session、private key、真实账户、持仓或 broker root 原值。 |
+| `real_broker_lake_write` / `real_lake_write` | `0` | 禁止写真实 broker lake、market-data lake、`data/**` 或 `reports/**`。 |
+| `provider_fetch` / `publish` | `0` | 禁止 provider fetch 和 current pointer / 运行产物 publish。 |
+| `dependency_change` | `0` | 禁止修改 `pyproject.toml` / `uv.lock` 或执行依赖变更。 |
+| `simulation_run` / `live_run` / `small_live_run` / `scale_up_run` | `0` | 禁止启动 simulation、live_readonly、small_live 或 scale_up。 |
+| `real_snapshot_pull` / `incident_persisted` | `0` | 禁止拉取真实 broker snapshot 或持久化真实 incident。 |
+| `default_real_operation_authorization_claim` | `0` | 禁止把文档、runbook、CP5、CP6、CP7 或 Story verified 写成默认真实操作授权。 |
+| `unsupported_execution_claim_unblocked` / `microstructure_allowed_claim_count` | `0` | 禁止解除真实 VWAP、minute、tick、Level2、order-match 或 microstructure execution blocked claim。 |
+| `non_raw_execution_allowed` / `adjusted_execution_price_pass_count` | `0` | QMT execution 只能使用 `raw` / broker reference；`qfq`、`hfq`、`returns_adjusted` 不得进入执行价。 |
+| `legacy_qfq_overwrite` / `old_report_overwrite_allowed` | `0` | legacy qfq 和旧报告只读保留，不覆盖、不替换、不提升为 current truth。 |
+| `production_adjustment_governance_claim_allowed` / `scale_up_allowed` | `0` | CR017 S01-S06 已 verified，但 production governance 和 scale_up 仍需后续 gate 与用户授权。 |
+
+### 质量门
+
+#### 当前文档收敛入口准则
+
+- [x] 已读取 `process/STORY-STATUS.md` 和 `process/STATE.md`，确认 CR017 S01..S06、CR015 S01..S07、CR016 S01..S04 / S07 的 verified 状态，以及 CR016 S05/S06 later-gated。
+- [x] 已读取 CR015-S07、CR016-S04、CR016-S07、CR017-S06 的 CP7 PASS 文件。
+- [x] 写入范围限定为 `README.md`、`docs/USER-MANUAL.md`、`process/TEST-STRATEGY.md`。
+- [x] 本轮不修改源码、测试、依赖、`data/**`、`reports/**`、`delivery/**`、`DEV-LOG.md` 或凭据。
+
+#### 当前文档收敛出口准则
+
+- [x] README 顶部能力表不再使用旧 pending-CP7 状态词描述 CR015 / CR016 / CR017。
+- [x] README 与 USER-MANUAL 不再使用旧版 CR017 整体验证前置句式作为当前事实；改为 CR017 S01..S06 已 verified，但 scale_up 仍受 CR016-S06 later-gated、research maturity gate 和用户后续显式授权控制。
+- [x] 文档明确 runbook、incident playbook、CP5、CP6、CP7、Story verified 不授权真实运行。
+- [x] TEST-STRATEGY frontmatter 和本增量章节记录 CP7 完成事实、later-gated 例外、必测安全计数和真实操作禁止边界。
+
+#### 后续真实运行入口准则
+
+- [ ] 目标 Story 不属于 `CR016-S05` / `CR016-S06` later-gated，或已有新的人工审批明确解除 later-gated 状态。
+- [ ] 对应 Story 已完成 LLD、CP5、CP6、CP7，并有真实子 agent 调度证据。
+- [ ] 每次 run 都有用户显式 per-run authorization，且授权文本至少包含 `authorization_id`、stage、mode、strategy、run_id、capital limit、order scope、approver、expiry 和 rollback plan ref。
+- [ ] reconciliation gate、kill switch readiness、recovery gate 和 rollback target 均已满足。
+- [ ] 上述必测安全计数中与真实运行无关的默认授权、unsupported claim、敏感输出、依赖变更、非 raw execution、legacy overwrite 等仍为 0。

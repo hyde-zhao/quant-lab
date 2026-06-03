@@ -33,6 +33,23 @@ from strategies.momentum import MomentumConfig, build_momentum_targets
 from strategies.rsi import build_rsi_targets
 
 
+def write_story004_manifest_and_quality(data_dir, reports_dir, *, quality_status="pass", dataset_status="available"):
+    manifest_dir = data_dir / "manifests"
+    manifest_dir.mkdir(parents=True, exist_ok=True)
+    (manifest_dir / "data_prep_manifest.jsonl").write_text(
+        '{"run_id":"run-1","status":"success"}\n',
+        encoding="utf-8",
+    )
+    (reports_dir / "data_quality_report.csv").write_text(
+        "dataset,quality_status,fetch_status,dataset_status,missing_rate,failed_batch_count,"
+        "manifest_run_id,coverage_denominator,denominator_mode,thresholds_json,input_config_hash,"
+        "last_successful_update_at,data_freshness_trade_days,data_freshness_calendar_days\n"
+        f"overall,{quality_status},success,{dataset_status},0,0,run-1,4,"
+        'open_trade_dates_in_requested_range_x_target_symbols,"{}",hash-1,2020-01-03,0,0\n',
+        encoding="utf-8",
+    )
+
+
 def test_story_004_loader_reads_offline_parquet_and_quality_gate(tmp_path):
     data_dir = tmp_path / "data"
     reports_dir = tmp_path / "reports"
@@ -50,11 +67,7 @@ def test_story_004_loader_reads_offline_parquet_and_quality_gate(tmp_path):
     calendar = pd.DataFrame({"trade_date": ["2020-01-02", "2020-01-03"], "is_open": [True, True]})
     for dataset, frame in {"prices": prices, "index_members": members, "trade_calendar": calendar}.items():
         frame.to_parquet(data_dir / STANDARD_PARQUET_FILES[dataset], index=False)
-    (reports_dir / "data_quality_report.csv").write_text(
-        "dataset,quality_status,manifest_run_id\n"
-        "overall,pass,run-1\n",
-        encoding="utf-8",
-    )
+    write_story004_manifest_and_quality(data_dir, reports_dir)
     loaded = load_backtest_data(
         LoaderConfig(
             data_dir=data_dir,
@@ -66,6 +79,10 @@ def test_story_004_loader_reads_offline_parquet_and_quality_gate(tmp_path):
     assert loaded.universe == ["000001", "000002"]
     assert list(loaded.close_df.columns) == ["000001", "000002"]
     assert loaded.metadata["quality_status"] == "pass"
+    assert loaded.metadata["dataset_status"] == "available"
+    assert loaded.metadata["quality_policy"] == "fail_on_warn_or_fail"
+    assert loaded.metadata["allow_warn"] is False
+    assert loaded.metadata["quality_source"] == "csv_report"
 
 
 def test_story_004_loader_missing_quality_report_fails(tmp_path):
@@ -476,11 +493,7 @@ def test_t_logging_minimal_01_cli_diagnostics(caplog, tmp_path):
     calendar = pd.DataFrame({"trade_date": ["2020-01-02", "2020-01-03"], "is_open": [True, True]})
     for dataset, frame in {"prices": prices, "index_members": members, "trade_calendar": calendar}.items():
         frame.to_parquet(data_dir / STANDARD_PARQUET_FILES[dataset], index=False)
-    (reports_dir / "data_quality_report.csv").write_text(
-        "dataset,quality_status,manifest_run_id\n"
-        "overall,pass,run-logging\n",
-        encoding="utf-8",
-    )
+    write_story004_manifest_and_quality(data_dir, reports_dir)
     load_backtest_data(
         LoaderConfig(
             data_dir=data_dir,

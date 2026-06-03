@@ -1,5 +1,21 @@
 # DEV-LOG
 
+## 2026-05-28 - CR017-S04 实现 / CP6 完成
+
+- Story 范围：`CR017-S04-reader-api-and-policy-gates`；执行 `process/handoffs/META-DEV-CR017-S04-IMPLEMENT-2026-05-28.md`，消费 S03 CP7 PASS / verified 结果和 CP5 全量 LLD approved 门禁。
+- 调度证据：handoff `dispatch.mode=spawn_agent`，agent_name=`dev-yang`，agent_id/thread_id=`019e6bd3-3af1-7d23-b48a-1b7a70d06ab2`，tool_name=`multi_agent_v1.spawn_agent`，spawned_at=`2026-05-28T07:44:29+08:00`；handoff completed_at 等待 meta-po 回填，本 CP6 checked_at=`2026-05-28T07:54:04+08:00`。
+- 实现文件清单：`market_data/adjustment_readers.py`、`market_data/readers.py`、`engine/research_dataset.py`、`tests/test_cr017_reader_policy_gates.py`、`process/checks/CP6-CR017-S04-reader-api-and-policy-gates-CODING-DONE.md`、`process/stories/CR017-S04-reader-api-and-policy-gates.md`。
+- 实现摘要：新增显式 `research_adjustment_policy` reader API、`single_policy_gate()`、未发布 candidate 阻断和 QMT metadata handoff；reader metadata 固定包含 `policy`、`view_id`、`source_run_id`、`quality_status`、`single_policy_gate_status`，并保留 `research_adjustment_policy`。
+- `market_data/readers.py` 对 S04 API 做导出接入，不改变既有 `read_dataset` current pointer 读取语义；`engine/research_dataset.py` 支持从 `research_adjustment_policy` column / attrs / metadata / catalog coverage 抽取口径，并把 `single_policy_gate_status` 合并进研究数据集 metadata。
+- 关键决策与偏差：QMT handoff 只输出 metadata 和 `execution_price_policy=raw`，不包含 adjusted execution price 值；`adjusted_execution_price_pass_count=0` 固化为验收计数。未实现 CR017-S05/S06、CR015 或 CR016。
+- 已知限制：本 Story 只交付离线 reader/gate/handoff 合同；生产 reader 默认入口切换、用户迁移说明和完整质量 parity / leakage 验证由后续 S05/S06 收敛。
+- 验证命令：`uv run --python 3.11 pytest -q tests/test_cr017_reader_policy_gates.py`，结果 `5 passed in 0.34s`。
+- 回归命令：`uv run --python 3.11 pytest -q tests/test_cr017_reader_policy_gates.py tests/test_cr017_qfq_hfq_derivation.py tests/test_cr017_adjustment_policy_contract.py tests/test_cr017_raw_adj_factor_contract.py tests/test_market_data_contracts.py`，结果 `34 passed in 0.45s`。
+- 安全边界：provider_fetch=0、lake_write=0、credential_read=0、current_pointer_publish=0、dependency_change=0、legacy_qfq_overwrite=0、qmt_api_call=0、real_order=0；未读取 `.env`、token、password、private key、cookie 或 session；未修改 `pyproject.toml`、`uv.lock`、`data/**`、`reports/**` 或 `delivery/**`。
+- 状态回写：Story 已推进到 `ready-for-verification`；CP6 结论 `PASS`，路径为 `process/checks/CP6-CR017-S04-reader-api-and-policy-gates-CODING-DONE.md`。
+- meta-qa 验证入口：复跑 S04 指定测试和 CR017 合同回归；重点复核未指定 policy blocked、混用 policy blocked、metadata 必填字段、未发布 candidate blocked、QMT raw-only handoff 和八项安全计数全为 0。
+- BLOCKING：无。等待 meta-po 拉起 meta-qa 执行 CP7。
+
 ## 2026-05-27 - CR014-S03 实现 / CP6 完成
 
 - Story 范围：`CR014-S03-p0-plan-run-normalize-validate-publish-contract`；执行用户本轮明确授权的 BATCH-A 受控离线实现，消费 S01/S02 CP7 PASS 合同，不修改 S01/S02 共享文件。
@@ -305,3 +321,155 @@
 - CP6：`process/checks/CP6-CR005-S01-tushare-connector-real-lake-writer-CODING-DONE.md`、`process/checks/CP6-CR005-S02-tushare-dataset-schema-normalization-CODING-DONE.md`，结论均为 `PASS`。
 - meta-qa CP7 建议：复跑上述离线命令；重点验证 lake root missing / env 优先级、token 不外泄、Tushare import no-network、hs300 duplicate/invalid/missing schema、PIT available fields、adjustment_policy conflict；不要执行真实联网或真实写湖。
 - BLOCKING：无阻断 CP7 的项。仍有后续 Story 风险接受项：CR5-Q1 真实 Tushare 字段/限频、CR5-Q2 hs300 benchmark 口径、S04 `next_action` 字段表，均不阻断本批 CP7。
+
+## 2026-05-29 - CR018-S01 production current truth 定义与 dataset group 实现完成
+
+- Story：`CR018-S01-production-current-truth-definition-and-dataset-groups`，Wave：`CR018-W1-SCOPE-CONTRACT`。
+- 状态：已按 confirmed LLD 与 CP5 approved 批次完成受控离线实现；Story 已推进到 `ready-for-verification`，等待 meta-po 拉起 meta-qa 执行 CP7。
+- 实现文件清单：`market_data/release_scope.py`、`market_data/dataset_groups.py`、`market_data/catalog.py`、`tests/test_cr018_release_scope_dataset_groups.py`、`README.md`、`docs/USER-MANUAL.md`、`process/stories/CR018-S01-production-current-truth-definition-and-dataset-groups.md`、`process/checks/CP6-CR018-S01-production-current-truth-definition-and-dataset-groups-CODING-DONE.md`。
+- 关键决策与偏差：`release_scope` 固定第一版 scoped release 为 `2015-01-05..latest_closed_trade_date`，pre-2015 / since-inception 输出 `blocked/future_backfill`；`dataset_groups` 固化 P0 required_for_publish 与 P1 auxiliary blocked claims；`catalog.py` 仅增加只读 metadata helper，不调用 publish 或 current pointer 写入。
+- 已知限制：S01 只定义合同、JSON-ready summary 和文档边界，不执行真实 provider fetch、真实 lake write、catalog current pointer publish、凭据读取、DuckDB 依赖变更或 QMT operation；CR014 S14 candidate 仍不是 production current truth。
+- 验证命令：`PYTHONDONTWRITEBYTECODE=1 PYTEST_ADDOPTS='-p no:cacheprovider' uv run --python 3.11 pytest -q tests/test_cr018_release_scope_dataset_groups.py`，结果 `7 passed in 0.05s`。
+- 静态自检：`git diff --check -- market_data/release_scope.py market_data/dataset_groups.py market_data/catalog.py tests/test_cr018_release_scope_dataset_groups.py README.md docs/USER-MANUAL.md` 无输出。
+- CP6：`process/checks/CP6-CR018-S01-production-current-truth-definition-and-dataset-groups-CODING-DONE.md`，结论 `PASS`。
+- meta-qa 验证入口：复跑 S01 指定测试，重点检查 release scope、pre-2015 blocked、P0/P1 registry、P1 blocked claims、unknown dataset readiness blocked、JSON-ready summary、catalog helper no-publish 和文档边界。
+- 真实操作计数：`provider_fetch=0`、`lake_write=0`、`credential_read=0`、`current_pointer_publish=0`、`qmt_operation=0`；`pyproject.toml`、`uv.lock`、真实 lake 数据均未修改。
+- BLOCKING：无。
+
+## 2026-05-29 - CR018 published current truth 阶段三到阶段五真实重跑完成
+
+- 用户目标：基于已发布的 `published current truth` 重跑阶段三到阶段五核心研究，为后续 QMT admission 提供真实生产口径证据。
+- 执行范围：只读 `/mnt/ugreen-data-lake` published catalog current pointer；不读取 `.env`，不调用 provider，不执行真实 lake write，不发布 catalog current pointer，不操作 QMT，不改 DuckDB 依赖。
+- 前置修复：修正 `scripts/cr018_release_catalog_publish.py` 中 `trade_status` release publish 指针，避免 current pointer 只指向 2015 单文件；修复后 `trade_status` 指向 `canonical/trade_status/1.0/run_id=run-cr018-missing-data-backfill-20150101-20260528-p0p1-20260529`，覆盖 `2015-01-01..2026-05-28`，`coverage_denominator=11311360`。
+- 新增脚本：`scripts/cr018_run_production_current_truth_research.py`，用于读取 published current truth、生成标准研究输入快照、重跑阶段三 IC / 分组 / 组合、阶段四低波稳健性、阶段五风险 / 成本 / 容量 / 可交易性，并输出 QMT admission evidence。
+- 执行命令：`uv run --python 3.11 python scripts/cr018_run_production_current_truth_research.py --lake-root /mnt/ugreen-data-lake --release-id release-cr018-production-current-truth-20150101-20260528-20260529 --run-id run-cr018-production-rerun-20150101-20260528-20260529-01 --start-date 2015-01-01 --end-date 2026-05-28 --overwrite`，结果命令退出码 `0`，报告状态 `fail`。
+- 核心结果：`single_volatility_20d_top20` 年化 `2.6937%`，沪深300 `399300.SZ` 年化 `2.7673%`，低波超额 `-0.0736%`；低波最大回撤 `-55.8749%`，沪深300最大回撤 `-46.6961%`；低波 Rank IC 均值 `0.088391`。
+- QMT admission：`qmt-admission-evidence.json` 显示 `allowed=false`、`qmt_admission_allowed_count=0`、阻断原因为 `production_rerun_strategy_criteria_failed`；CR018-S09 继续 later-gated。
+- Phase 5 可交易性：低波 Top20 `unfilled_trade_count=185`，原因包括 `missing_execution_price=164`、`limit_down_sell_blocked=12`、`limit_up_buy_blocked=6`、`not_tradable=2`、`st_buy_blocked=1`。
+- 证据文件：`process/checks/REAL-TUSHARE-CR018-PRODUCTION-RERUN-2026-05-29.md`；报告目录：`reports/production_current_truth/release-cr018-production-current-truth-20150101-20260528-20260529/run-cr018-production-rerun-20150101-20260528-20260529-01/`。
+- 验证命令：`uv run --python 3.11 python -m py_compile scripts/cr018_run_production_current_truth_research.py scripts/cr018_release_catalog_publish.py` 无输出，通过；`git diff --check -- scripts/cr018_run_production_current_truth_research.py scripts/cr018_release_catalog_publish.py` 无输出，通过；`uv run --python 3.11 python -m market_data.cli report-readiness --lake-root /mnt/ugreen-data-lake --realism-mode production_strict` 返回 `status=pass`。
+- 已知非阻断项：研究运行期间出现 pandas `FutureWarning`，不影响本次报告生成；随后已将 bool 矩阵缺失填充从 `fillna` 改为 `where(...).astype(bool)`，避免后续运行继续触发同类 warning。
+
+## 2026-05-29 - CR018-S04 P1 auxiliary claim boundary 实现完成
+
+- Story：`CR018-S04-industry-market-cap-liquidity-and-exposure-data`，Wave：`CR018-W2-P0-P1-READINESS`。
+- 调度证据：`process/handoffs/META-DEV-CR018-S04-IMPLEMENT-2026-05-29.md`，dispatch.mode=`spawn_agent`，tool_name=`multi_agent_v1.spawn_agent`，agent_name=`dev-xu`，agent_id/thread_id=`019e713c-4439-7ed1-acbf-ab5f4b77c2fc`。
+- 实现文件清单：`market_data/readers.py`、`engine/research_dataset.py`、`tests/test_cr018_p1_auxiliary_claim_boundary.py`、`process/checks/CP6-CR018-S04-industry-market-cap-liquidity-and-exposure-data-CODING-DONE.md`、`DEV-LOG.md`。
+- 实现摘要：reader 侧新增 `build_cr018_p1_auxiliary_availability_metadata()`，只消费显式传入的 P1 metadata，覆盖 industry、market_cap、float_market_cap、beta/style、ADV、turnover、liquidity、capacity、impact_cost，并固定 `unpublished_lake_scan_count=0`；research 侧新增 `build_cr018_p1_claim_boundary()`，P1 缺失时阻断 industry neutral、market cap neutral、pure alpha、capacity、scale_up、capital amplification，但不改变 P0 core current truth readiness。
+- 关键决策与偏差：未改 `market_data/contracts.py`、`validation.py`、`benchmarks.py`、S03 primary 测试、依赖锁文件、真实 lake、catalog current pointer 或 QMT 入口；用户允许写入范围不包含 Story 卡片 / `STATE.md`，因此状态回写留给 meta-po。
+- 已知限制：本 Story 只定义 availability / claim boundary 合同，不提供真实 P1 数据、不触发 provider fetch、不 publish、不解除 scale_up 或资金放大声明。
+- 验证命令：`PYTHONDONTWRITEBYTECODE=1 PYTEST_ADDOPTS='-p no:cacheprovider' uv run --python 3.11 pytest -q tests/test_cr018_p1_auxiliary_claim_boundary.py tests/test_cr018_release_scope_dataset_groups.py`，结果 `10 passed in 0.54s`。
+- 静态自检：`git diff --check -- tests/test_cr018_p1_auxiliary_claim_boundary.py market_data/readers.py engine/research_dataset.py` 无输出；`git status --short -- market_data/__pycache__ tests/__pycache__ engine/__pycache__` 无输出。
+- CP6：`process/checks/CP6-CR018-S04-industry-market-cap-liquidity-and-exposure-data-CODING-DONE.md`，结论 `PASS`。
+- meta-qa 验证入口：复跑 S04 指定测试和 S01 release scope 回归；重点检查 P1 字段族覆盖、P1 missing 不阻断 P0 core readiness、六类声明 allowed count 为 0、reader 不扫描 unpublished lake、真实操作计数为 0。
+- 真实操作计数：`provider_fetch=0`、`lake_write=0`、`credential_read=0`、`current_pointer_publish=0`、`current_truth_publish=0`、`qmt_operation=0`、`duckdb_dependency_change=0`、`unpublished_lake_scan=0`。
+- BLOCKING：无。
+
+## 2026-05-29 - CR018-S03 四类 benchmark readiness 实现完成
+
+- Story：`CR018-S03-real-benchmark-index-components-weights-backfill`，Wave：`CR018-W2-P0-P1-READINESS`。
+- 状态：已按 confirmed LLD 与 CP5 approved 批次完成受控离线实现；Story 已推进到 `ready-for-verification`，等待 meta-po 拉起 meta-qa 执行 CP7。
+- 实现文件清单：`market_data/benchmarks.py`、`market_data/contracts.py`、`market_data/validation.py`、`tests/test_cr018_benchmark_group_readiness.py`、`process/stories/CR018-S03-real-benchmark-index-components-weights-backfill.md`、`process/checks/CP6-CR018-S03-real-benchmark-index-components-weights-backfill-CODING-DONE.md`、`DEV-LOG.md`。
+- 实现摘要：`benchmarks.py` 新增 CR018 四类 benchmark registry、4 x 3 dataset requirements、fixture readiness rows 和 claim boundary；`contracts.py` 只追加 benchmark readiness constants / schema；`validation.py` 只追加 matrix readiness validator 与 components / weights PIT helper。
+- 关键决策与偏差：四类 symbolic id 固定为 `HS300`、`ZZ500`、`ZZ1000`、`CSI_ALL_SHARE`；三类 dataset type 固定为 `prices`、`components`、`weights`，全部 `required_for_publish=True`；缺任一项时 production excess-return / index-enhancement / tracking-error allowed count 均为 0。工作区存在 S04 既有改动，本轮未修改 `engine/research_dataset.py`、`market_data/readers.py`、`tests/test_cr018_p1_auxiliary_claim_boundary.py` 或真实 lake/catalog 数据。
+- 已知限制：本 Story 只定义离线 readiness 合同和校验 helper，不提供真实 benchmark 回补、不触发 provider fetch、不 publish、不解除 QMT admission；provider-specific index code 后续真实运行仍需 per-run authorization。
+- 验证命令：`PYTHONDONTWRITEBYTECODE=1 PYTEST_ADDOPTS='-p no:cacheprovider' uv run --python 3.11 pytest -q tests/test_cr018_benchmark_group_readiness.py tests/test_cr018_release_scope_dataset_groups.py`，结果 `13 passed in 0.44s`。
+- CP6：`process/checks/CP6-CR018-S03-real-benchmark-index-components-weights-backfill-CODING-DONE.md`，结论 `PASS`。
+- meta-qa 验证入口：复跑 S03 指定测试和 S01 release scope 回归；重点检查四类 benchmark、三类 dataset type、4 x 3 required_for_publish、缺失阻断三类真实 claims、当前成分快照 PIT 阻断、weights 不替代 membership、proxy-as-real count 为 0。
+- 真实操作计数：`provider_fetch=0`、`lake_write=0`、`credential_read=0`、`current_pointer_publish=0`、`qmt_operation=0`、`duckdb_dependency_change=0`、`proxy_as_real_count=0`。
+- BLOCKING：无。
+
+## 2026-05-29 - CR018-S02 PIT / lifecycle / tradability readiness 实现完成
+
+- Story：`CR018-S02-pit-universe-lifecycle-st-trade-status-price-limit-backfill`，Wave：`CR018-W2-P0-P1-READINESS`。
+- 执行 handoff：`process/handoffs/META-DEV-CR018-S02-IMPLEMENT-2026-05-29.md`；当前 handoff dispatch 仍为 `pending-spawn_agent`，本轮由用户在当前线程直接指定 meta-dev 执行，未伪造 agent_id / thread_id。
+- 实现文件清单：`market_data/contracts.py`、`market_data/validation.py`、`market_data/readers.py`、`tests/test_cr018_pit_tradability_readiness.py`、`process/stories/CR018-S02-pit-universe-lifecycle-st-trade-status-price-limit-backfill.md`、`process/checks/CP6-CR018-S02-pit-universe-lifecycle-st-trade-status-price-limit-backfill-CODING-DONE.md`、`DEV-LOG.md`。
+- 实现摘要：`contracts.py` 追加 S02 PIT / lifecycle / tradability reason codes、required fields、P0 blocked claims 和 forbidden operation counters；`validation.py` 新增 `validate_pit_universe_readiness()`、`validate_lifecycle_readiness()`、`validate_tradability_readiness()`，缺 PIT available 字段、当前快照、as-of violation、lifecycle/code-change/denominator、ST/suspend/trade_status/prices_limit 或涨跌停可成交假设均 fail closed；`readers.py` 新增 `read_pit_tradability_readiness()` 与 `format_readiness_blocked_reason()`，默认 published-only，只消费显式 metadata / readiness result，不扫描 unpublished lake。
+- 关键决策与偏差：全部业务变更保持 additive，未删除 S03 benchmark 常量，未改变 S04 P1 helper 语义；Story 状态按 meta-dev 状态机推进到 `ready-for-verification`，但未修改 `STATE.md`，等待 meta-po 汇总状态。
+- 已知限制：本 Story 只提供离线 readiness 合同和 helper，不提供真实 PIT/lifecycle/tradability 回补，不执行真实 publish，不解除 QMT admission；真实 provider fetch、真实 lake write、catalog current pointer publish、凭据读取、DuckDB 依赖变更和 QMT operation 仍 blocked。
+- 验证命令：`PYTHONDONTWRITEBYTECODE=1 PYTEST_ADDOPTS='-p no:cacheprovider' uv run --python 3.11 pytest -q tests/test_cr018_pit_tradability_readiness.py tests/test_cr018_benchmark_group_readiness.py tests/test_cr018_p1_auxiliary_claim_boundary.py tests/test_cr018_release_scope_dataset_groups.py`，结果 `25 passed in 0.59s`。
+- 静态自检：`git diff --check -- market_data/contracts.py market_data/validation.py market_data/readers.py tests/test_cr018_pit_tradability_readiness.py` 无输出；`git diff --name-only -- pyproject.toml uv.lock` 无输出；`git status --short -- .pytest_cache tests/__pycache__ market_data/__pycache__ engine/__pycache__` 无输出。
+- CP6：`process/checks/CP6-CR018-S02-pit-universe-lifecycle-st-trade-status-price-limit-backfill-CODING-DONE.md`，结论 `PASS`。
+- meta-qa 验证入口：复跑 handoff 指定 pytest 命令；重点检查 PIT available 字段 fail closed、当前快照不可替代历史 PIT、as-of violation 计数、lifecycle/code-change/active denominator 缺失、ST/suspend/trade_status/prices_limit 缺失、涨跌停不可假设、reader published-only / no unpublished scan。
+- 真实操作计数：`provider_fetch=0`、`lake_write=0`、`credential_read=0`、`current_pointer_publish=0`、`current_truth_publish=0`、`qmt_operation=0`、`duckdb_dependency_change=0`、`unpublished_lake_scan=0`。
+- BLOCKING：无。
+
+## 2026-05-29 - CR018-S05 adjustment dual-view publish readiness 实现完成
+
+- Story：`CR018-S05-adjustment-dual-view-quality-and-qfq-hfq-publish-readiness`，Wave：`CR018-W2-P0-P1-READINESS`。
+- 执行 handoff：`process/handoffs/META-DEV-CR018-S05-IMPLEMENT-2026-05-29.md`；handoff frontmatter 仍为 `pending-spawn_agent`，本轮由用户在当前线程直接指定 meta-dev 执行，未伪造 agent_id / thread_id。
+- 实现文件清单：`market_data/adjustment_policy.py`、`market_data/validation.py`、`market_data/readers.py`、`tests/test_cr018_adjustment_publish_readiness.py`、`process/checks/CP6-CR018-S05-adjustment-dual-view-quality-and-qfq-hfq-publish-readiness-CODING-DONE.md`、`DEV-LOG.md`。
+- 实现摘要：`validation.py` 新增 `AdjustmentPublishReadinessResult` 与 `validate_adjustment_publish_readiness()`，raw / adj_factor / qfq / hfq / returns_adjusted 五类 view 必须全部字段 coverage=1.0、factor coverage=1.0、legacy baseline preserved 且真实操作计数为 0 才可进入 publish readiness；`readers.py` 新增 `build_cr018_adjustment_reader_policy_metadata()`，记录 adjustment policy、view kind、consumer kind、legacy baseline preserved 与 blocked reason，并强制 QMT execution 只能使用 `prices_raw`；`adjustment_policy.py` 新增 CR018 publish policy metadata helper，保留 old qfq baseline readonly。
+- 关键决策与偏差：全部业务变更保持 additive，未改变 S02/S03/S04 validation / reader 语义，未修改 `market_data/contracts.py`、provider connector、真实 lake、catalog current pointer、QMT 入口、`engine/research_dataset.py`、S02/S03/S04 primary 测试、`pyproject.toml` 或 `uv.lock`；用户允许写入范围不包含 Story 卡片 / `STATE.md`，因此状态回写留给 meta-po。
+- 已知限制：本 Story 只定义离线 readiness 合同、reader metadata 和 policy metadata，不执行真实 provider fetch、真实 lake write、catalog current pointer publish、凭据读取、DuckDB 依赖变更或 QMT operation；真实 publish 仍由后续 Explicit Publish Gate 与 per-run authorization 控制。
+- 验证命令：`PYTHONDONTWRITEBYTECODE=1 PYTEST_ADDOPTS='-p no:cacheprovider' uv run --python 3.11 pytest -q tests/test_cr018_adjustment_publish_readiness.py tests/test_cr018_pit_tradability_readiness.py tests/test_cr018_benchmark_group_readiness.py tests/test_cr018_p1_auxiliary_claim_boundary.py tests/test_cr018_release_scope_dataset_groups.py tests/test_cr017_adjustment_quality_parity.py tests/test_cr017_reader_policy_gates.py`，结果 `43 passed in 0.67s`。
+- 静态自检：`git diff --check -- market_data/adjustment_policy.py market_data/validation.py market_data/readers.py tests/test_cr018_adjustment_publish_readiness.py` 无输出；`git diff --name-only -- pyproject.toml uv.lock` 无输出。
+- CP6：`process/checks/CP6-CR018-S05-adjustment-dual-view-quality-and-qfq-hfq-publish-readiness-CODING-DONE.md`，结论 `PASS`。
+- meta-qa 验证入口：复跑 handoff 指定 pytest 命令；重点检查五类 readiness coverage=100%、缺 adj_factor 或 factor coverage 不足时 publish allowed=0、QMT adjusted view allowed=0、legacy qfq overwrite=0、reader metadata 字段完整、真实操作计数为 0。
+- 真实操作计数：`provider_fetch=0`、`lake_write=0`、`credential_read=0`、`current_pointer_publish=0`、`catalog_current_pointer_publish=0`、`current_truth_publish=0`、`qmt_operation=0`、`qmt_adjusted_execution_allowed=0`、`legacy_qfq_overwrite=0`、`duckdb_dependency_change=0`、`unpublished_lake_scan=0`。
+- BLOCKING：无。
+
+## 2026-05-29 - CR018-S06 production quality / readiness / rollback gate 实现完成
+
+- Story：`CR018-S06-production-quality-readiness-audit-and-rollback-gate`，Wave：`CR018-W3-PUBLISH-ROLLBACK`。
+- 执行 handoff：`process/handoffs/META-DEV-CR018-S06-IMPLEMENT-2026-05-29.md`；handoff frontmatter `dispatch.mode=spawn_agent`、`tool_name=multi_agent_v1.spawn_agent`、agent_name=`dev-zhu`、agent_id/thread_id=`019e7179-7a76-7441-97e8-aa043e067fa3`。
+- 实现文件清单：`market_data/validation.py`、`market_data/catalog.py`、`market_data/publish.py`、`tests/test_cr018_readiness_rollback_gate.py`、`process/checks/CP6-CR018-S06-production-quality-readiness-audit-and-rollback-gate-CODING-DONE.md`、`DEV-LOG.md`。
+- 实现摘要：`validation.py` 新增 `ReleaseReadinessAuditReport` 与 `build_release_readiness_audit_report()`，聚合 release、dataset、quality、blocked_claims、rollback_target、evidence_refs、真实操作计数和历史 evidence delete counts；`catalog.py` 新增 `ReleaseRollbackContractResult` 与 `build_cr018_release_rollback_contract()`，强制 rollback scope 为 release，dataset-only rollback fail-closed；`publish.py` 新增 `ReleasePublishAuditHookResult` 与 `validate_release_publish_readiness_audit()`，publish 前 hook 只消费 readiness report，不写 current pointer。
+- 关键决策与偏差：全部业务变更保持 additive，未改变 S02/S03/S05 既有 readiness helper 语义；P1 auxiliary missing 进入 `blocked_claims` 并标记 `capability_available=false`、`core_release_blocking=false`，不伪装为已具备能力；用户允许写入范围不包含 Story 卡片 / `STATE.md`，因此状态回写留给 meta-po。
+- 已知限制：本 Story 只定义离线 / fixture / dry-run readiness audit、rollback metadata 和 publish hook 合同，不执行真实 provider fetch、真实 lake write、catalog current pointer publish、凭据读取、DuckDB 依赖变更或 QMT operation；真实 publish 仍由后续 Explicit Publish Gate 与 per-run authorization 控制。
+- 验证命令：`PYTHONDONTWRITEBYTECODE=1 uv run --python 3.11 python -m py_compile market_data/validation.py market_data/catalog.py market_data/publish.py`，无输出，通过。
+- 验证命令：`PYTHONDONTWRITEBYTECODE=1 PYTEST_ADDOPTS='-p no:cacheprovider' uv run --python 3.11 pytest -q tests/test_cr018_readiness_rollback_gate.py`，结果 `4 passed in 0.40s`。
+- 验证命令：`PYTHONDONTWRITEBYTECODE=1 PYTEST_ADDOPTS='-p no:cacheprovider' uv run --python 3.11 pytest -q tests/test_cr018_readiness_rollback_gate.py tests/test_cr018_adjustment_publish_readiness.py tests/test_cr018_pit_tradability_readiness.py tests/test_cr018_benchmark_group_readiness.py tests/test_cr018_p1_auxiliary_claim_boundary.py tests/test_cr018_release_scope_dataset_groups.py`，结果 `35 passed in 0.60s`。
+- 静态自检：`git diff --check -- market_data/validation.py market_data/catalog.py market_data/publish.py tests/test_cr018_readiness_rollback_gate.py` 无输出；`git diff --name-only -- pyproject.toml uv.lock` 无输出；`git status --short -- .pytest_cache tests/__pycache__ market_data/__pycache__ engine/__pycache__` 无输出。
+- CP6：`process/checks/CP6-CR018-S06-production-quality-readiness-audit-and-rollback-gate-CODING-DONE.md`，结论 `PASS`。
+- meta-qa 验证入口：复跑 handoff 指定 pytest 命令；重点检查 release readiness audit 字段覆盖、P0 fail / required_missing / quality fail 时 publish allowed=0、P1 blocked claims 不伪装能力、release-level rollback、dataset-only rollback blocked、historical evidence delete counts=0、真实操作计数为 0。
+- 真实操作计数：`provider_fetch=0`、`real_lake_write=0`、`lake_write=0`、`credential_read=0`、`current_pointer_publish=0`、`catalog_current_pointer_publish=0`、`current_truth_publish=0`、`qmt_operation=0`、`duckdb_dependency_change=0`、`dataset_level_rollback_only_allowed=0`、`historical_evidence_delete(raw/manifest/candidate/quality/release_history)=0`。
+- BLOCKING：无。
+
+## 2026-05-29 - CR018-S07 explicit publish gate 与 current reader smoke 实现完成
+
+- Story：`CR018-S07-explicit-publish-gate-and-current-reader-smoke`，Wave：`CR018-W3-PUBLISH-ROLLBACK`。
+- 执行 handoff：`process/handoffs/META-DEV-CR018-S07-IMPLEMENT-2026-05-29.md`；handoff frontmatter `dispatch.mode=spawn_agent`、`tool_name=multi_agent_v1.spawn_agent`、agent_name=`dev-zhang`、agent_id/thread_id=`019e7190-bef4-77c0-aefa-e247d20ed6de`。
+- 实现文件清单：`market_data/publish.py`、`market_data/catalog.py`、`market_data/readers.py`、`tests/test_cr018_publish_current_reader_smoke.py`、`process/checks/CP6-CR018-S07-explicit-publish-gate-and-current-reader-smoke-CODING-DONE.md`、`DEV-LOG.md`。
+- 实现摘要：`publish.py` 新增 `ReleasePublishRequest`、`ReleasePublishDecision`、`explicit_publish_gate()` 和 `forbid_auto_publish_guard()`，强制 `approval_id`、S06 readiness、release evidence、rollback target 全部满足才生成 plan；`catalog.py` 新增 `CurrentPointerUpdatePlan`、`PublishEvidenceRecord`、`build_cr018_current_pointer_update_plan()` 和 `build_cr018_publish_evidence_record()`，只生成 release-level plan / evidence checksum；`readers.py` 新增 `CurrentReaderSmokeResult` 与 `current_reader_smoke()`，覆盖 P0 dataset group，只读 published current pointer，禁止 candidate fallback。
+- 关键决策与偏差：全部业务变更保持 additive，复用 S06 readiness / rollback report，不改变 CR014 `publish_current_pointer()` dry-run 合同，也不修改 S02/S03/S04/S05/S06 primary 测试；用户允许写入范围不包含 Story 卡片 / `STATE.md`，因此状态回写留给 meta-po。
+- 已知限制：本 Story 只定义离线 / fixture / dry-run publish decision、pointer plan、publish evidence 和 current reader smoke 合同；真实 current pointer publish 仍需后续 per-run authorization，不由本 CP6 授权。
+- 验证命令：`PYTHONDONTWRITEBYTECODE=1 uv run --python 3.11 python -m py_compile market_data/publish.py market_data/catalog.py market_data/readers.py tests/test_cr018_publish_current_reader_smoke.py`，无输出，通过。
+- 验证命令：`PYTHONDONTWRITEBYTECODE=1 PYTEST_ADDOPTS='-p no:cacheprovider' uv run --python 3.11 pytest -q tests/test_cr018_publish_current_reader_smoke.py`，结果 `7 passed in 0.40s`。
+- 验证命令：`PYTHONDONTWRITEBYTECODE=1 PYTEST_ADDOPTS='-p no:cacheprovider' uv run --python 3.11 pytest -q tests/test_cr018_publish_current_reader_smoke.py tests/test_cr018_readiness_rollback_gate.py tests/test_cr018_adjustment_publish_readiness.py tests/test_cr018_pit_tradability_readiness.py tests/test_cr018_benchmark_group_readiness.py tests/test_cr018_p1_auxiliary_claim_boundary.py tests/test_cr018_release_scope_dataset_groups.py tests/test_cr014_catalog_publish_gate.py`，结果 `49 passed in 0.74s`。
+- 静态自检：`git diff --check -- market_data/publish.py market_data/catalog.py market_data/readers.py tests/test_cr018_publish_current_reader_smoke.py` 无输出；`git diff --name-only -- pyproject.toml uv.lock` 无输出；`git status --short -- .pytest_cache tests/__pycache__ market_data/__pycache__ engine/__pycache__` 无输出。
+- CP6：`process/checks/CP6-CR018-S07-explicit-publish-gate-and-current-reader-smoke-CODING-DONE.md`，结论 `PASS`。
+- meta-qa 验证入口：复跑 handoff 指定 pytest 命令；重点检查缺 `approval_id` allowed count=0、P0 fail / evidence incomplete / rollback target missing 时 decision blocked 且 plan 为空、validate/parity/quality/DuckDB audit auto publish count=0、current reader smoke 覆盖 P0 group、缺 current pointer 返回 `catalog_not_published`、candidate fallback blocked、真实操作计数为 0。
+- 真实操作计数：`current_pointer_publish=0`、`catalog_current_pointer_publish=0`、`current_truth_publish=0`、`real_lake_write=0`、`lake_write=0`、`credential_read=0`、`provider_fetch=0`、`qmt_operation=0`、`duckdb_dependency_change=0`、`auto_publish_count=0`、`candidate_read_count=0`、`unpublished_lake_scan_count=0`。
+- BLOCKING：无。
+
+## 2026-05-29 - CR018-S08 published current truth 研究重跑实现完成
+
+- Story：`CR018-S08-production-current-truth-research-rerun`，Wave：`CR018-W4-RERUN-QMT-ADMISSION`。
+- 执行 handoff：`process/handoffs/META-DEV-CR018-S08-IMPLEMENT-2026-05-29.md`；本轮由用户在当前线程直接指定 meta-dev 执行，handoff frontmatter 仍为 `pending-spawn_agent`，`process/STATE.md` 已记录 S08 execution agent 为 `dev-zhang the 2nd` / `019e71a9-6c49-79f1-aa78-b569801046d6` running，本轮不修改 handoff/STATE。
+- 实现文件清单：`experiments/production_current_truth_rerun.py`、`engine/research_dataset.py`、`reports/production_current_truth/README.md`、`tests/test_cr018_production_current_truth_rerun.py`、`process/checks/CP6-CR018-S08-production-current-truth-research-rerun-CODING-DONE.md`、`DEV-LOG.md`。
+- 实现摘要：新增 `ProductionRerunRequest`、`production_current_truth_rerun_entry()`、`build_rerun_report_payload()`、`build_qmt_admission_evidence()`、`old_report_overwrite_guard()` 和旧 proxy/fixed baseline diff helper；`engine/research_dataset.py` additive 增加 `load_production_current_truth_dataset()`，只消费 S07 published current reader metadata / current truth metadata，candidate、proxy、provider raw fallback、P0 required_missing、未 publish release 和 missing current pointer 全部 fail closed。
+- 关键决策与偏差：S08 只交付 fixture / dry-run 合同，不执行阶段三到阶段五真实长任务；S08 未 PASS 时 `qmt_admission_allowed_count=0`；旧 baseline 仅用于 diff，不可作为 production input；旧报告目标冲突时 blocked 并返回 unique target 建议。用户允许写入范围不包含 Story 卡片 / `STATE.md` / handoff，因此状态回写留给 meta-po。
+- 已知限制：真实 production rerun、真实写报告、真实 provider fetch、真实 lake write、catalog current pointer publish、凭据读取、DuckDB 依赖变更和 QMT operation 仍需后续 per-run authorization；`reports/production_current_truth/README.md` 位于仓库 `.gitignore` 的 `reports/` 规则下，但文件已在允许写入范围内创建。
+- 验证命令：`PYTHONDONTWRITEBYTECODE=1 PYTEST_ADDOPTS='-p no:cacheprovider' uv run --python 3.11 pytest -q tests/test_cr018_production_current_truth_rerun.py`，结果 `11 passed in 0.52s`。
+- handoff 必跑验证：`PYTHONDONTWRITEBYTECODE=1 PYTEST_ADDOPTS='-p no:cacheprovider' uv run --python 3.11 pytest -q tests/test_cr018_production_current_truth_rerun.py tests/test_cr018_publish_current_reader_smoke.py tests/test_cr018_readiness_rollback_gate.py tests/test_cr018_adjustment_publish_readiness.py tests/test_cr018_pit_tradability_readiness.py tests/test_cr018_benchmark_group_readiness.py tests/test_cr018_p1_auxiliary_claim_boundary.py tests/test_cr018_release_scope_dataset_groups.py tests/test_cr014_catalog_publish_gate.py`，结果 `60 passed in 0.71s`。
+- 建议验证：`PYTHONPYCACHEPREFIX=/tmp/cr018-s08-pycompile-cache PYTHONDONTWRITEBYTECODE=1 uv run --python 3.11 python -m py_compile experiments/production_current_truth_rerun.py engine/research_dataset.py` 无输出；`git diff --check -- experiments/production_current_truth_rerun.py engine/research_dataset.py reports/production_current_truth/README.md tests/test_cr018_production_current_truth_rerun.py` 无输出；`git diff --name-only -- pyproject.toml uv.lock` 无输出；缓存状态检查无输出。
+- CP6：`process/checks/CP6-CR018-S08-production-current-truth-research-rerun-CODING-DONE.md`，结论 `PASS`。
+- meta-qa 验证入口：复跑 handoff 必跑验证；重点检查未 publish / missing current pointer / P0 required_missing / candidate / proxy / provider raw fallback 均 blocked 且 allowed count=0，loader 只读 published current reader metadata，report payload 字段完整，S08 fail 时 QMT admission allowed count=0，old report overwrite blocked 或 unique target，真实操作计数均为 0。
+- 真实操作计数：`old_report_overwrite=0`、`provider_fetch=0`、`lake_write=0`、`credential_read=0`、`qmt_operation=0`、`candidate_read_count=0`、`proxy_input_allowed_count=0`、`duckdb_dependency_change=0`、`real_stage_3_to_5_execution=0`、`catalog_current_pointer_publish=0`。
+- BLOCKING：无。
+
+## 2026-05-29 - CR018 production 数据湖 release current pointer 发布完成
+
+- 用户授权：按建议顺序执行数据湖发布收敛；本轮不执行 provider fetch、不读取 `.env` token、不操作 QMT。
+- 新增脚本：`scripts/cr018_release_catalog_publish.py`，用于将 full-history `prices` / `adj_factor` 聚合为 release-scoped canonical run、修正 `trade_calendar` / `events` catalog 元数据、生成 release readiness audit，并在显式审批 ID 下发布 10 个核心 dataset current pointer。
+- release：`release-cr018-production-current-truth-20150101-20260528-20260529`；release run：`run-cr018-release-full-history-20150101-20260528-20260529`；approval id：`user-approved-cr018-production-current-truth-20260529`。
+- 发布结果：`explicit_publish_gate.status=allowed`，`published_count=10`，`current_pointer_publish_count=10`，`catalog_current_pointer_publish_count=10`，`post_publish_readiness_status=pass`，`post_publish_blockers=[]`。
+- 核心数据集：`prices`、`adj_factor`、`hs300_index`、`trade_calendar`、`index_members`、`index_weights`、`stock_basic`、`trade_status`、`prices_limit`、`events` 均为 `published/pass/available`。
+- full-history 聚合：`prices` 2,768 个 parquet / 11,311,360 行，`adj_factor` 2,768 个 parquet / 11,823,057 行；全部通过 hardlink staging，未复制原始数据。
+- 独立复验：`uv run --python 3.11 python -m market_data.cli report-readiness --lake-root /mnt/ugreen-data-lake --realism-mode production_strict` 返回 `status=pass`、`blockers=[]`、`candidate_unpublished_count=0`、`published_count=10`。
+- 回归验证：`uv run --python 3.11 pytest -q tests/test_cr018_publish_current_reader_smoke.py tests/test_cr018_readiness_rollback_gate.py tests/test_cr014_catalog_publish_gate.py` 结果 `18 passed in 0.52s`。
+- current reader smoke：`prices` / `001914.SZ` / `2019-12-16` 返回 `row_count=1`，`adjustment_policy=qfq`，`source_run_id=run-cr014-s14-prices-adj-factor-2019-234833`，`available_at_rule=daily_close_fact`。
+- 证据文件：`process/checks/REAL-TUSHARE-CR018-RELEASE-PUBLISH-2026-05-29.md`；lake 证据在 `/mnt/ugreen-data-lake/quality/run-cr018-release-full-history-20150101-20260528-20260529/`。
+- 真实操作计数：`provider_fetch=0`、`credential_read=0`、`qmt_operation=0`；本轮执行了用户授权的 catalog current pointer publish，计数为 `10`。
+- 下一步：使用 published release current truth 重跑阶段三到阶段五核心研究；QMT simulation / live 仍后置，需另行 per-run authorization。

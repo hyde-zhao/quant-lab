@@ -1,14 +1,18 @@
 ---
 cr_id: "CR-006"
-status: "verified-pending-user-close-decision"
+status: "closed"
 impact_level: "medium"
 rollback_to: "story-execution"
-approval_result: "cp7-pass-batch-a-verified-pending-close"
+approval_result: "cp7-pass-batch-a-verified-closed"
 batch_a_verified: true
-closed: false
-close_gate: "user-close-decision-required"
+closed: true
+close_gate: "closed-by-g0-status-closure"
 created_at: "2026-05-18T20:57:04+08:00"
-updated_at: "2026-05-19T22:32:37+08:00"
+updated_at: "2026-05-30T14:25:41+08:00"
+closed_by: "meta-po"
+closed_at: "2026-05-30T14:25:41+08:00"
+closure_checkpoint: "checkpoints/CP8-G0-CR-STATUS-CLOSURE-2026-05-30.md"
+close_approval_text: "@meta-po 好的按照你推荐的顺序，逐步完成。"
 created_by: "codex"
 approved_by: "user"
 approved_at: "2026-05-19T21:45:00+08:00"
@@ -18,6 +22,8 @@ linked_change: "CR-005"
 ---
 
 # CR-006：Tushare-first 数据方案与旧 data reference-only 护栏
+
+> 2026-05-30T14:25:41+08:00 状态更新：G0 第一批 CR 状态收口已通过 `checkpoints/CP8-G0-CR-STATUS-CLOSURE-2026-05-30.md` 人工审查，CR-006 关闭。关闭依据为 CR006-BATCH-A 四张 Story CP7 与 batch summary 均 PASS；关闭不授权真实 Tushare 抓取、真实 lake read/write、旧 `data/**` 操作、凭据读取或 QMT 操作。
 
 > 2026-05-19T22:32:37+08:00 状态更新：meta-qa/qa-wei 已完成 CR006-BATCH-A CP7 验证，四份 Story CP7 与 batch summary 均为 PASS。验证结果：S01 4 passed、S02 4 passed、S03 7 passed、S04 5 passed、CR006 聚合 20 passed、全量回归 127 passed。meta-po 已回填 QA handoff、STATE 与本 CR：CR006-BATCH-A 标记为 `verified`；由于本 CR 自动终验授权=false，未直接 `closed`，当前状态为 `verified-pending-user-close-decision`。仍不授权真实 Tushare 抓取、真实 lake read/write、旧 `data/**` 读取/列出/迁移/复制/比对/删除或 `.env` / token / NAS 凭据读取打印。
 

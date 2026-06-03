@@ -8,7 +8,7 @@ argument-hint: "Agent 名称（kebab-case）、职责描述、是否需要限制
 user-invokable: true
 status: active
 ---
-<!-- myflow-managed: version=1.0.0 canonical-commit=05cbfdc generated=2026-05-18T12:11:08Z -->
+<!-- myflow-managed: version=1.0.0 canonical-commit=fe24c81 generated=2026-05-28T13:51:34Z -->
 
 # Claude Code Sub-agent 写作标准
 

@@ -1,6 +1,6 @@
 ---
 cr_id: "CR-014"
-status: "open"
+status: "closed"
 impact_level: "high"
 workflow_mode_before: "standard"
 workflow_mode_after_change: "standard"
@@ -14,6 +14,9 @@ approved_at: "2026-05-26T22:24:02+08:00"
 source: "user"
 approval_text: "process/changes/CR-014-A-SHARE-SINCE-INCEPTION-PRODUCTION-DATA-LAKE-2026-05-26.md  @meta-po 组织分析和实现这个CR"
 linked_issue: ""
+closed_by: "user"
+closed_at: "2026-05-31T21:43:48+08:00"
+close_reason: "CR014 Batch-A CP8 已 approved；S09 真实数据湖执行证据已拆分为后续真实运行 / CR018 / CR029 链路，当前 CR014 since-inception 架构与 Batch-A 交付关闭。"
 ---
 
 # CR-014 A 股自存在日起至今生产级全历史数据湖与 DuckDB 查询层评估
@@ -163,10 +166,10 @@ linked_issue: ""
 
 ## 处理结论
 
-- 审批结论：`pending`
+- 审批结论：`closed`
 - [ ] 自动批准（低风险）
 - [ ] 待人工确认（中风险）
-- [x] 待人工审批（高风险）
+- [x] CP8 已 approved；当前关闭 CR014 Batch-A / since-inception 架构交付，S09 / publish / QMT 仍按后续 CR 门控推进
 
 当前禁止事项：
 

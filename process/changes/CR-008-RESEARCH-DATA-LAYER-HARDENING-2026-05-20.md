@@ -1,11 +1,11 @@
 ---
 cr_id: "CR-008"
-status: "story-execution-batch-a-verified"
+status: "story-execution-batch-a-verified-pending-cp8"
 impact_level: "high"
 rollback_to: "solution-design"
-approval_result: "cp5-approved-story-execution"
+approval_result: "story-execution-batch-a-verified-pending-cp8"
 created_at: "2026-05-20T22:56:53+08:00"
-updated_at: "2026-05-22T04:53:48+08:00"
+updated_at: "2026-05-31T21:43:48+08:00"
 created_by: "codex"
 approved_by: "user"
 approved_at: "2026-05-21T21:45:07+08:00"
@@ -595,14 +595,14 @@ CR008 未完成六份 LLD、六份 CP5 自动预检与 CP5 批次人工确认前
 
 ## 处理结论
 
-- 审批结论：`cp5-approved-story-execution`
+- 审批结论：`story-execution-batch-a-verified-pending-cp8`
 - [ ] 自动批准（低风险）
 - [x] 用户已批准 CP3/CP4，进入 LLD/CP5 自动预检批次
 - [x] 六份 LLD 与六份 Story 级 CP5 自动预检均已完成且 PASS
 - [x] CP5 批次人工审批 approved
-- [x] 进入离线 story-execution
+- [x] 六个 Story 均已完成离线 story-execution 并 verified；下一步进入 CP8 / 关闭决策
 
-用户回复“通过”已作为 CR008-BATCH-A CP5 批次人工审查 approved 回填。CR008-BATCH-A 六份 LLD 与六份 Story 级 CP5 自动预检已完成且均为 PASS，真实 `spawn_agent` 调度证据已回填。当前进入 story-execution，`implementation_allowed=true` 仅限离线实现；不得真实 Tushare 抓取、不得真实 lake read/write、不得读取/打印凭据、不得操作旧 `data/**` 或读取/覆盖旧 `reports/data_quality_report.csv`。首批开发只调度 `CR008-S01`，其余 Story 按 S01 -> S02 -> S03 -> S04 -> S05 -> S06 串行等待上游 CP6 与文件所有权释放。
+用户回复“通过”已作为 CR008-BATCH-A CP5 批次人工审查 approved 回填。CR008-BATCH-A 六份 LLD 与六份 Story 级 CP5 自动预检已完成且均为 PASS，真实 `spawn_agent` 调度证据已回填。当前 `CR008-S01` 至 `CR008-S06` 均已完成 CP6 / CP7 并收敛为 `verified`；下一步进入 CP8 / 关闭决策。`implementation_allowed=true` 仅限离线实现；不得真实 Tushare 抓取、不得真实 lake read/write、不得读取/打印凭据、不得操作旧 `data/**` 或读取/覆盖旧 `reports/data_quality_report.csv`。
 
 ## 关联对象
 

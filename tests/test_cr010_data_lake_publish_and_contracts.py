@@ -28,6 +28,7 @@ from market_data.contracts import (
     INTERFACE_INDEX_WEIGHTS_SNAPSHOT,
     INTERFACE_PRICES_LIMIT_DAILY,
     INTERFACE_PRICES_ADJ_FACTOR,
+    INTERFACE_PRICES_DAILY,
     INTERFACE_STOCK_BASIC_SNAPSHOT,
     INTERFACE_TRADE_STATUS_DAILY,
     SOURCE_TUSHARE,
@@ -35,7 +36,7 @@ from market_data.contracts import (
 from market_data.lake_layout import LakeLayout
 from market_data.normalization import DatasetMappingError, normalize_run
 from market_data.readers import QualityPolicy, ReaderResult, read_dataset
-from market_data.storage import compute_idempotency_key, compute_params_hash
+from market_data.storage import ManifestWriter, compute_idempotency_key, compute_params_hash
 
 
 def _prices_frame() -> pd.DataFrame:
@@ -150,6 +151,99 @@ def test_validate_prices_can_bind_explicit_pit_universe(tmp_path: Path) -> None:
     assert entry.known_limitations == []
 
 
+def _success_manifest_record(
+    *,
+    run_id: str,
+    batch_id: str,
+    interface: str,
+    target_dataset: str,
+    raw_checksum: str,
+) -> dict[str, object]:
+    params = {"target_dataset": target_dataset}
+    params_hash = compute_params_hash(params)
+    return {
+        "schema_version": "1.0",
+        "run_id": run_id,
+        "batch_id": batch_id,
+        "idempotency_key": compute_idempotency_key(
+            run_id,
+            batch_id,
+            SOURCE_TUSHARE,
+            interface,
+            params_hash,
+        ),
+        "source": SOURCE_TUSHARE,
+        "interface": interface,
+        "params": params,
+        "params_hash": params_hash,
+        "requested_at": "2026-01-02T00:00:00+00:00",
+        "started_at": "2026-01-02T00:00:00+00:00",
+        "finished_at": "2026-01-02T00:00:01+00:00",
+        "attempts": 1,
+        "status": "success",
+        "raw_path": f"raw/tushare/{interface}/20260102/run_id={run_id}/{batch_id}.jsonl",
+        "raw_checksum": raw_checksum,
+        "raw_row_count": 2,
+        "canonical_path": None,
+        "error_type": None,
+        "error_message": None,
+        "retryable": None,
+        "success_items": 2,
+        "failed_items": 0,
+        "backoff_seconds": [],
+    }
+
+
+def test_validate_manifest_context_is_scoped_to_target_dataset(tmp_path: Path) -> None:
+    _write_prices_canonical(tmp_path)
+    layout = LakeLayout(tmp_path)
+    writer = ManifestWriter()
+    writer.append(
+        _success_manifest_record(
+            run_id="run-cr010",
+            batch_id="stock-basic-first",
+            interface=INTERFACE_STOCK_BASIC_SNAPSHOT,
+            target_dataset=DATASET_STOCK_BASIC,
+            raw_checksum="checksum-stock-basic",
+        ),
+        layout,
+    )
+    writer.append(
+        _success_manifest_record(
+            run_id="run-cr010",
+            batch_id="prices-second",
+            interface=INTERFACE_PRICES_DAILY,
+            target_dataset=DATASET_PRICES,
+            raw_checksum="checksum-prices-daily",
+        ),
+        layout,
+    )
+    args = argparse.Namespace(
+        lake_root=tmp_path,
+        dataset=DATASET_PRICES,
+        symbols="000001.SZ",
+        index_code=None,
+        exchange="SSE",
+        start_date="2026-01-02",
+        end_date="2026-01-03",
+        run_id="run-cr010",
+        open_trade_dates="2026-01-02,2026-01-03",
+        decision_time=None,
+        is_pit_universe=False,
+        use_trade_status_denominator=False,
+        prices_missing_rate_pass=0.0,
+        prices_missing_rate_warn=0.05,
+        prices_missing_rate_fail=0.2,
+    )
+
+    validated = cmd_validate(args)
+    entry = CatalogStore(tmp_path).get(DATASET_PRICES)
+
+    assert validated["catalog_status"] == "candidate_unpublished"
+    assert entry.source_interface == INTERFACE_PRICES_DAILY
+    assert entry.lineage_raw_checksum == "checksum-prices-daily"
+
+
 def test_validate_prices_can_use_trade_status_tradable_denominator(tmp_path: Path) -> None:
     layout = LakeLayout(tmp_path)
     price_path = layout.canonical_dataset_root(DATASET_PRICES) / "run_id=run-cr010" / "part-b1.parquet"
@@ -229,6 +323,271 @@ def test_validate_prices_can_use_trade_status_tradable_denominator(tmp_path: Pat
     assert validated["quality_status"] == "pass"
     assert validated["coverage"]["expected_rows"] == 1
     assert validated["coverage"]["missing_rows"] == 0
+
+
+def test_validate_prices_can_use_stock_basic_lifecycle_denominator(tmp_path: Path) -> None:
+    layout = LakeLayout(tmp_path)
+    price_path = layout.canonical_dataset_root(DATASET_PRICES) / "run_id=run-prices" / "part-b1.parquet"
+    price_path.parent.mkdir(parents=True, exist_ok=True)
+    _prices_frame().iloc[[1]].to_parquet(price_path, index=False)
+
+    stock_basic_path = layout.canonical_dataset_root(DATASET_STOCK_BASIC) / "run_id=run-stock-basic" / "part-b1.parquet"
+    stock_basic_path.parent.mkdir(parents=True, exist_ok=True)
+    pd.DataFrame(
+        [
+            {
+                "symbol": "000001.SZ",
+                "name": "平安银行",
+                "market": "主板",
+                "list_status": "L",
+                "list_date": "2026-01-03",
+                "delist_date": "",
+                "effective_date": "2026-01-03",
+                "available_date": "2026-01-03",
+                "available_at": "2026-01-03T00:00:00+08:00",
+                "available_at_rule": "security_master_list_delist_date",
+                "pit_status": "available",
+                "readiness_status": "available",
+                "source": "fixture",
+                "source_interface": INTERFACE_STOCK_BASIC_SNAPSHOT,
+                "source_run_id": "run-stock-basic",
+                "schema_version": "1.0",
+                "lineage_raw_checksum": "checksum-stock-basic",
+            }
+        ]
+    ).to_parquet(stock_basic_path, index=False)
+    args = argparse.Namespace(
+        lake_root=tmp_path,
+        dataset=DATASET_PRICES,
+        symbols="000001.SZ",
+        index_code=None,
+        exchange="SSE",
+        start_date="2026-01-02",
+        end_date="2026-01-03",
+        run_id="run-prices",
+        open_trade_dates="2026-01-02,2026-01-03",
+        decision_time=None,
+        is_pit_universe=False,
+        use_trade_status_denominator=False,
+        use_prices_denominator=False,
+        use_stock_basic_lifecycle_denominator=True,
+        stock_basic_run_id="run-stock-basic",
+        exclude_trade_status_untradable=False,
+        trade_status_run_id=None,
+        prices_missing_rate_pass=0.0,
+        prices_missing_rate_warn=0.05,
+        prices_missing_rate_fail=0.2,
+    )
+
+    validated = cmd_validate(args)
+
+    assert validated["quality_status"] == "warn"
+    assert validated["coverage"]["expected_rows"] == 1
+    assert validated["coverage"]["missing_rows"] == 0
+    assert validated["denominator_mode"] == "stock_basic_lifecycle_active_trade_date_symbol_pairs"
+
+
+def test_validate_prices_lifecycle_denominator_can_exclude_candidate_trade_status(tmp_path: Path) -> None:
+    layout = LakeLayout(tmp_path)
+    price_path = layout.canonical_dataset_root(DATASET_PRICES) / "run_id=run-prices" / "part-b1.parquet"
+    price_path.parent.mkdir(parents=True, exist_ok=True)
+    _prices_frame().iloc[[0]].to_parquet(price_path, index=False)
+
+    stock_basic_path = layout.canonical_dataset_root(DATASET_STOCK_BASIC) / "run_id=run-stock-basic" / "part-b1.parquet"
+    stock_basic_path.parent.mkdir(parents=True, exist_ok=True)
+    pd.DataFrame(
+        [
+            {
+                "symbol": "000001.SZ",
+                "name": "平安银行",
+                "market": "主板",
+                "list_status": "L",
+                "list_date": "2020-01-01",
+                "delist_date": "",
+                "effective_date": "2020-01-01",
+                "available_date": "2020-01-01",
+                "available_at": "2020-01-01T00:00:00+08:00",
+                "available_at_rule": "security_master_list_delist_date",
+                "pit_status": "available",
+                "readiness_status": "available",
+                "source": "fixture",
+                "source_interface": INTERFACE_STOCK_BASIC_SNAPSHOT,
+                "source_run_id": "run-stock-basic",
+                "schema_version": "1.0",
+                "lineage_raw_checksum": "checksum-stock-basic",
+            }
+        ]
+    ).to_parquet(stock_basic_path, index=False)
+    trade_status_path = layout.canonical_dataset_root(DATASET_TRADE_STATUS) / "run_id=run-trade-status" / "part-b1.parquet"
+    trade_status_path.parent.mkdir(parents=True, exist_ok=True)
+    pd.DataFrame(
+        [
+            {
+                "trade_date": "2026-01-03",
+                "symbol": "000001.SZ",
+                "is_tradable": False,
+                "is_suspended": True,
+                "is_st": False,
+                "status_reason": "suspended",
+                "source": "fixture",
+                "source_interface": INTERFACE_TRADE_STATUS_DAILY,
+                "source_run_id": "run-trade-status",
+                "available_at": "2026-01-03T09:30:00+08:00",
+                "available_at_rule": "daily_open_fact",
+                "schema_version": "1.0",
+                "lineage_raw_checksum": "checksum-trade-status",
+            }
+        ]
+    ).to_parquet(trade_status_path, index=False)
+    args = argparse.Namespace(
+        lake_root=tmp_path,
+        dataset=DATASET_PRICES,
+        symbols="000001.SZ",
+        index_code=None,
+        exchange="SSE",
+        start_date="2026-01-02",
+        end_date="2026-01-03",
+        run_id="run-prices",
+        open_trade_dates="2026-01-02,2026-01-03",
+        decision_time=None,
+        is_pit_universe=False,
+        use_trade_status_denominator=False,
+        use_prices_denominator=False,
+        use_stock_basic_lifecycle_denominator=True,
+        stock_basic_run_id="run-stock-basic",
+        exclude_trade_status_untradable=True,
+        trade_status_run_id="run-trade-status",
+        prices_missing_rate_pass=0.0,
+        prices_missing_rate_warn=0.05,
+        prices_missing_rate_fail=0.2,
+    )
+
+    validated = cmd_validate(args)
+
+    assert validated["quality_status"] == "warn"
+    assert validated["coverage"]["expected_rows"] == 1
+    assert validated["coverage"]["missing_rows"] == 0
+    assert validated["denominator_mode"] == "stock_basic_lifecycle_minus_trade_status_untradable_pairs"
+
+
+def test_validate_adj_factor_can_use_observed_prices_denominator(tmp_path: Path) -> None:
+    layout = LakeLayout(tmp_path)
+    price_path = layout.canonical_dataset_root(DATASET_PRICES) / "run_id=run-cr010" / "part-b1.parquet"
+    price_path.parent.mkdir(parents=True, exist_ok=True)
+    _prices_frame().iloc[[0]].to_parquet(price_path, index=False)
+
+    adj_path = layout.canonical_dataset_root(DATASET_ADJ_FACTOR) / "run_id=run-cr010" / "part-b1.parquet"
+    adj_path.parent.mkdir(parents=True, exist_ok=True)
+    pd.DataFrame(
+        [
+            {
+                "trade_date": "2026-01-02",
+                "symbol": "000001.SZ",
+                "adj_factor": 1.25,
+                "adjustment_policy": "qfq",
+                "source": "fixture",
+                "source_interface": INTERFACE_PRICES_ADJ_FACTOR,
+                "source_run_id": "run-cr010",
+                "available_at": "2026-01-02T16:00:00+08:00",
+                "available_at_rule": "daily_close_fact",
+                "schema_version": "1.0",
+                "lineage_raw_checksum": "checksum-adj-factor",
+            }
+        ]
+    ).to_parquet(adj_path, index=False)
+
+    args = argparse.Namespace(
+        lake_root=tmp_path,
+        dataset=DATASET_ADJ_FACTOR,
+        symbols="000001.SZ",
+        index_code=None,
+        exchange="SSE",
+        start_date="2026-01-02",
+        end_date="2026-01-03",
+        run_id="run-cr010",
+        open_trade_dates="2026-01-02,2026-01-03",
+        decision_time=None,
+        is_pit_universe=False,
+        use_trade_status_denominator=False,
+        use_prices_denominator=True,
+        prices_missing_rate_pass=0.0,
+        prices_missing_rate_warn=0.05,
+        prices_missing_rate_fail=0.2,
+    )
+
+    validated = cmd_validate(args)
+
+    assert validated["quality_status"] == "pass"
+    assert validated["coverage"]["expected_rows"] == 1
+    assert validated["coverage"]["actual_rows"] == 1
+    assert validated["coverage"]["missing_rows"] == 0
+    assert validated["denominator_mode"] == "prices_observed_trade_date_symbol_pairs"
+
+
+def test_validate_adj_factor_prices_denominator_not_masked_by_extra_rows(tmp_path: Path) -> None:
+    layout = LakeLayout(tmp_path)
+    price_path = layout.canonical_dataset_root(DATASET_PRICES) / "run_id=run-cr010" / "part-b1.parquet"
+    price_path.parent.mkdir(parents=True, exist_ok=True)
+    _prices_frame().to_parquet(price_path, index=False)
+
+    adj_path = layout.canonical_dataset_root(DATASET_ADJ_FACTOR) / "run_id=run-cr010" / "part-b1.parquet"
+    adj_path.parent.mkdir(parents=True, exist_ok=True)
+    pd.DataFrame(
+        [
+            {
+                "trade_date": "2026-01-02",
+                "symbol": "000001.SZ",
+                "adj_factor": 1.25,
+                "adjustment_policy": "qfq",
+                "source": "fixture",
+                "source_interface": INTERFACE_PRICES_ADJ_FACTOR,
+                "source_run_id": "run-cr010",
+                "available_at": "2026-01-02T16:00:00+08:00",
+                "available_at_rule": "daily_close_fact",
+                "schema_version": "1.0",
+                "lineage_raw_checksum": "checksum-adj-factor",
+            },
+            {
+                "trade_date": "2026-01-02",
+                "symbol": "000002.SZ",
+                "adj_factor": 2.0,
+                "adjustment_policy": "qfq",
+                "source": "fixture",
+                "source_interface": INTERFACE_PRICES_ADJ_FACTOR,
+                "source_run_id": "run-cr010",
+                "available_at": "2026-01-02T16:00:00+08:00",
+                "available_at_rule": "daily_close_fact",
+                "schema_version": "1.0",
+                "lineage_raw_checksum": "checksum-adj-factor",
+            },
+        ]
+    ).to_parquet(adj_path, index=False)
+
+    args = argparse.Namespace(
+        lake_root=tmp_path,
+        dataset=DATASET_ADJ_FACTOR,
+        symbols="000001.SZ,000002.SZ",
+        index_code=None,
+        exchange="SSE",
+        start_date="2026-01-02",
+        end_date="2026-01-03",
+        run_id="run-cr010",
+        open_trade_dates="2026-01-02,2026-01-03",
+        decision_time=None,
+        is_pit_universe=False,
+        use_trade_status_denominator=False,
+        use_prices_denominator=True,
+        prices_missing_rate_pass=0.0,
+        prices_missing_rate_warn=0.05,
+        prices_missing_rate_fail=0.2,
+    )
+
+    validated = cmd_validate(args)
+
+    assert validated["quality_status"] == "fail"
+    assert validated["coverage"]["expected_rows"] == 2
+    assert validated["coverage"]["actual_rows"] == 2
+    assert validated["coverage"]["missing_rows"] == 1
 
 
 def test_w3_unresolved_datasets_fail_fast_without_fake_availability(tmp_path: Path) -> None:

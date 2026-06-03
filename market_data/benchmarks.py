@@ -9,10 +9,27 @@ from typing import Any, Mapping, Sequence
 import pandas as pd
 
 from .contracts import (
+    CR018_BENCHMARK_BLOCKED_CLAIMS,
+    CR018_BENCHMARK_CSI_ALL_SHARE,
+    CR018_BENCHMARK_DATASET_COMPONENTS,
+    CR018_BENCHMARK_DATASET_PRICES,
+    CR018_BENCHMARK_DATASET_TYPES,
+    CR018_BENCHMARK_DATASET_WEIGHTS,
+    CR018_BENCHMARK_FORBIDDEN_OPERATION_COUNTERS,
+    CR018_BENCHMARK_HS300,
+    CR018_BENCHMARK_IDS,
+    CR018_BENCHMARK_INDEX_CODES,
+    CR018_BENCHMARK_REASON_PERMISSION_COUNTER_VIOLATION,
+    CR018_BENCHMARK_REASON_PROXY_USED_AS_REAL,
+    CR018_BENCHMARK_REQUIRED_FOR_PUBLISH,
+    CR018_BENCHMARK_ZZ1000,
+    CR018_BENCHMARK_ZZ500,
     CONNECTOR_ERROR_TYPES,
     DATASET_HS300_INDEX,
     DATASET_TRADE_CALENDAR,
     INTERFACE_HS300_INDEX_DAILY,
+    READINESS_STATUS_AVAILABLE,
+    READINESS_STATUS_REQUIRED_MISSING,
     SOURCE_TUSHARE,
 )
 from .lake_layout import LakeLayout
@@ -43,6 +60,39 @@ AMBIGUOUS_BENCHMARK_FIELDS = frozenset(
         "excess_annual_return",
     }
 )
+REAL_BENCHMARK_FIELD_NAMES = frozenset(
+    {
+        "real_benchmark",
+        "real_benchmark_id",
+        "real_benchmark_kind",
+        "real_benchmark_return",
+        "real_benchmark_weight",
+        "real_tracking_error",
+        "production_excess_return",
+        "index_enhancement",
+        "tracking_error",
+    }
+)
+CR018_BENCHMARK_DISPLAY_NAMES = {
+    CR018_BENCHMARK_HS300: "沪深300",
+    CR018_BENCHMARK_ZZ500: "中证500",
+    CR018_BENCHMARK_ZZ1000: "中证1000",
+    CR018_BENCHMARK_CSI_ALL_SHARE: "中证全指",
+}
+CR018_BENCHMARK_PROVIDER_NAMES = {
+    CR018_BENCHMARK_HS300: "csi_hs300",
+    CR018_BENCHMARK_ZZ500: "csi_zz500",
+    CR018_BENCHMARK_ZZ1000: "csi_zz1000",
+    CR018_BENCHMARK_CSI_ALL_SHARE: "csi_all_share",
+}
+
+
+class BenchmarkUnavailable(RuntimeError):
+    """真实 benchmark 可选但不可用时的结构化边界。"""
+
+
+class BenchmarkRequiredMissingError(BenchmarkUnavailable):
+    """真实 benchmark 被要求但缺失时的结构化边界。"""
 
 
 @dataclass(frozen=True, slots=True)
@@ -58,6 +108,199 @@ class BenchmarkCoverage:
 
     def to_metadata(self) -> dict[str, Any]:
         return asdict(self)
+
+
+@dataclass(frozen=True, slots=True)
+class BenchmarkDefinition:
+    benchmark_id: str
+    display_name: str
+    index_code: str
+    provider_symbol: str
+    required_for_publish: bool = CR018_BENCHMARK_REQUIRED_FOR_PUBLISH
+
+    def to_dict(self) -> dict[str, Any]:
+        return asdict(self)
+
+
+@dataclass(frozen=True, slots=True)
+class BenchmarkDatasetRequirement:
+    benchmark_id: str
+    index_code: str
+    dataset_type: str
+    required_for_publish: bool = CR018_BENCHMARK_REQUIRED_FOR_PUBLISH
+    coverage_denominator: str = DENOMINATOR_MODE_BENCHMARK
+    claim_impact: tuple[str, ...] = CR018_BENCHMARK_BLOCKED_CLAIMS
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            **asdict(self),
+            "claim_impact": list(self.claim_impact),
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class BenchmarkClaimBoundary:
+    real_benchmark_claim_allowed: bool
+    allowed_claims: tuple[str, ...]
+    blocked_claims: tuple[dict[str, Any], ...]
+    required_missing_count: int = 0
+    proxy_fields_used_as_real_count: int = 0
+    proxy_as_real_count: int = 0
+    operation_counts: dict[str, int] = field(default_factory=lambda: dict(CR018_BENCHMARK_FORBIDDEN_OPERATION_COUNTERS))
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "real_benchmark_claim_allowed": self.real_benchmark_claim_allowed,
+            "allowed_claims": list(self.allowed_claims),
+            "blocked_claims": [dict(item) for item in self.blocked_claims],
+            "required_missing_count": self.required_missing_count,
+            "proxy_fields_used_as_real_count": self.proxy_fields_used_as_real_count,
+            "proxy_as_real_count": self.proxy_as_real_count,
+            "operation_counts": dict(self.operation_counts),
+        }
+
+
+def list_required_benchmarks() -> tuple[BenchmarkDefinition, ...]:
+    """返回 CR018 固定四类宽基 benchmark registry，不读取 lake 或 provider。"""
+
+    return tuple(
+        BenchmarkDefinition(
+            benchmark_id=benchmark_id,
+            display_name=CR018_BENCHMARK_DISPLAY_NAMES[benchmark_id],
+            index_code=CR018_BENCHMARK_INDEX_CODES[benchmark_id],
+            provider_symbol=CR018_BENCHMARK_PROVIDER_NAMES[benchmark_id],
+        )
+        for benchmark_id in CR018_BENCHMARK_IDS
+    )
+
+
+def list_benchmark_dataset_requirements(
+    benchmark_id: str | None = None,
+) -> tuple[BenchmarkDatasetRequirement, ...]:
+    """展开 CR018 4 x 3 benchmark readiness requirement matrix。"""
+
+    ids = (str(benchmark_id),) if benchmark_id is not None else CR018_BENCHMARK_IDS
+    definitions = {item.benchmark_id: item for item in list_required_benchmarks()}
+    requirements: list[BenchmarkDatasetRequirement] = []
+    for resolved_id in ids:
+        definition = definitions.get(resolved_id)
+        if definition is None:
+            continue
+        for dataset_type in CR018_BENCHMARK_DATASET_TYPES:
+            requirements.append(
+                BenchmarkDatasetRequirement(
+                    benchmark_id=definition.benchmark_id,
+                    index_code=definition.index_code,
+                    dataset_type=dataset_type,
+                )
+            )
+    return tuple(requirements)
+
+
+def build_benchmark_readiness_rows(
+    *,
+    status: str = READINESS_STATUS_AVAILABLE,
+    missing: Sequence[tuple[str, str]] | None = None,
+    coverage_denominator: str = DENOMINATOR_MODE_BENCHMARK,
+) -> tuple[dict[str, Any], ...]:
+    """生成 fixture-only readiness rows，供合同测试或 dry-run 汇总使用。"""
+
+    missing_set = {(str(benchmark_id), str(dataset_type)) for benchmark_id, dataset_type in (missing or ())}
+    rows: list[dict[str, Any]] = []
+    for requirement in list_benchmark_dataset_requirements():
+        if (requirement.benchmark_id, requirement.dataset_type) in missing_set:
+            continue
+        rows.append(
+            {
+                "benchmark_id": requirement.benchmark_id,
+                "index_code": requirement.index_code,
+                "dataset_type": requirement.dataset_type,
+                "required_for_publish": requirement.required_for_publish,
+                "readiness_status": status,
+                "coverage_denominator": coverage_denominator,
+                "claim_impact": list(requirement.claim_impact),
+            }
+        )
+    return tuple(rows)
+
+
+def build_benchmark_claim_boundary(
+    readiness_result: Any | None = None,
+    *,
+    proxy_usage_metadata: Mapping[str, Any] | None = None,
+    permission_counters: Mapping[str, Any] | None = None,
+) -> BenchmarkClaimBoundary:
+    """根据 readiness 结果输出真实 benchmark claim boundary。
+
+    该 helper 不执行真实抓取、写湖、publish 或凭据读取。proxy 只允许保留
+    `proxy_*` / `proxy_baseline` 语义，不能反向填充真实 benchmark 字段。
+    """
+
+    result_payload = _benchmark_boundary_payload(readiness_result)
+    counters = _normalise_benchmark_operation_counts(
+        permission_counters or result_payload.get("operation_counts")
+    )
+    counter_violation = any(value != 0 for value in counters.values())
+    proxy_as_real_count = _proxy_fields_used_as_real_count(proxy_usage_metadata)
+    required_missing = _required_missing_count(result_payload)
+    result_passed = _result_passed(readiness_result, result_payload)
+    real_allowed = (
+        result_passed
+        and required_missing == 0
+        and proxy_as_real_count == 0
+        and not counter_violation
+    )
+    if real_allowed:
+        return BenchmarkClaimBoundary(
+            real_benchmark_claim_allowed=True,
+            allowed_claims=CR018_BENCHMARK_BLOCKED_CLAIMS,
+            blocked_claims=(),
+            operation_counts=counters,
+        )
+
+    blocked = _blocked_claims_from_result(result_payload)
+    if not blocked:
+        blocked = tuple(
+            {
+                "claim": claim,
+                "reason_code": READINESS_STATUS_REQUIRED_MISSING,
+                "required_for_publish": True,
+            }
+            for claim in CR018_BENCHMARK_BLOCKED_CLAIMS
+        )
+    if proxy_as_real_count:
+        blocked = (
+            *blocked,
+            *(
+                {
+                    "claim": claim,
+                    "reason_code": CR018_BENCHMARK_REASON_PROXY_USED_AS_REAL,
+                    "proxy_fields_used_as_real_count": proxy_as_real_count,
+                }
+                for claim in CR018_BENCHMARK_BLOCKED_CLAIMS
+            ),
+        )
+    if counter_violation:
+        blocked = (
+            *blocked,
+            *(
+                {
+                    "claim": claim,
+                    "reason_code": CR018_BENCHMARK_REASON_PERMISSION_COUNTER_VIOLATION,
+                    "operation_counts": dict(counters),
+                }
+                for claim in CR018_BENCHMARK_BLOCKED_CLAIMS
+            ),
+        )
+    return BenchmarkClaimBoundary(
+        real_benchmark_claim_allowed=False,
+        allowed_claims=(),
+        blocked_claims=_dedupe_blocked_claims(blocked),
+        required_missing_count=required_missing,
+        proxy_fields_used_as_real_count=proxy_as_real_count,
+        proxy_as_real_count=proxy_as_real_count,
+        operation_counts=counters,
+    )
 
 
 @dataclass(frozen=True, slots=True)
@@ -165,6 +408,7 @@ class BenchmarkResult:
     run_id: str | None
     lineage: dict[str, Any]
     frame: pd.DataFrame | None = field(default=None, repr=False, compare=False)
+    benchmark_path: str | None = None
 
     @property
     def available(self) -> bool:
@@ -173,8 +417,14 @@ class BenchmarkResult:
     def to_metadata(self) -> dict[str, Any]:
         return {
             "status": self.status,
+            "benchmark_status": self.status,
             "dataset": self.dataset,
+            "benchmark_dataset": self.dataset,
             "source": self.source,
+            "benchmark_source": self.source,
+            "benchmark_path": self.benchmark_path,
+            "benchmark_unavailable_reason": self.missing_reason,
+            "benchmark_is_proxy": False,
             "index_code": self.index_code,
             "interface": self.interface,
             "start_date": self.start_date,
@@ -470,10 +720,21 @@ def resolve_hs300_benchmark(
     index_code: str = DEFAULT_INDEX_CODE,
     required: bool = False,
     price_trade_dates: Sequence[str] | None = None,
+    benchmark_path: str | Path | None = None,
 ) -> BenchmarkResult:
     if start_date is None or end_date is None:
         raise ValueError("start_date 和 end_date 必须显式传入")
     resolved_policy = BenchmarkPolicy.from_config(policy, required=required)
+    if benchmark_path is not None:
+        return _resolve_explicit_hs300_benchmark_path(
+            benchmark_path=benchmark_path,
+            start_date=start_date,
+            end_date=end_date,
+            index_code=index_code,
+            policy=resolved_policy,
+            lake_root=lake_root,
+            price_trade_dates=price_trade_dates,
+        )
     if not resolved_policy.confirmed:
         return _non_available_result(
             "required_missing" if resolved_policy.required else "unavailable",
@@ -604,6 +865,168 @@ def resolve_hs300_benchmark(
     )
 
 
+def _resolve_explicit_hs300_benchmark_path(
+    *,
+    benchmark_path: str | Path,
+    start_date: str,
+    end_date: str,
+    index_code: str,
+    policy: BenchmarkPolicy,
+    lake_root: str | Path | None,
+    price_trade_dates: Sequence[str] | None,
+) -> BenchmarkResult:
+    path = Path(benchmark_path)
+    path_text = str(path)
+    if not path.exists():
+        return _non_available_result(
+            "required_missing" if policy.required else "unavailable",
+            reason="benchmark_path_missing",
+            quality_status="missing",
+            start_date=start_date,
+            end_date=end_date,
+            index_code=index_code,
+            policy=policy,
+            lake_root=lake_root,
+            source="explicit_path",
+            benchmark_path=path_text,
+        )
+    try:
+        frame = _read_explicit_benchmark_frame(path)
+    except Exception:
+        return _non_available_result(
+            "required_missing" if policy.required else "unavailable",
+            reason="benchmark_path_read_error",
+            quality_status="missing",
+            start_date=start_date,
+            end_date=end_date,
+            index_code=index_code,
+            policy=policy,
+            lake_root=lake_root,
+            source="explicit_path",
+            benchmark_path=path_text,
+        )
+    if "trade_date" not in frame.columns or "close" not in frame.columns:
+        return _non_available_result(
+            "required_missing" if policy.required else "unavailable",
+            reason="benchmark_path_schema_missing",
+            quality_status="missing",
+            start_date=start_date,
+            end_date=end_date,
+            index_code=index_code,
+            policy=policy,
+            lake_root=lake_root,
+            source="explicit_path",
+            benchmark_path=path_text,
+        )
+
+    frame = _filter_explicit_benchmark_frame(
+        frame,
+        start_date=start_date,
+        end_date=end_date,
+        index_code=index_code,
+    )
+    if frame.empty:
+        return _non_available_result(
+            "required_missing" if policy.required else "unavailable",
+            reason="benchmark_path_empty",
+            quality_status="missing",
+            start_date=start_date,
+            end_date=end_date,
+            index_code=index_code,
+            policy=policy,
+            lake_root=lake_root,
+            source="explicit_path",
+            benchmark_path=path_text,
+        )
+
+    frame_kind = _frame_benchmark_kind(frame)
+    expected_kind = policy.benchmark_kind
+    if expected_kind == "policy_unconfirmed":
+        expected_kind = frame_kind
+    if expected_kind == "policy_unconfirmed":
+        return _non_available_result(
+            "required_missing" if policy.required else "unavailable",
+            reason="policy_unconfirmed",
+            quality_status="missing",
+            start_date=start_date,
+            end_date=end_date,
+            index_code=index_code,
+            policy=policy,
+            lake_root=lake_root,
+            source="explicit_path",
+            benchmark_path=path_text,
+        )
+    if frame_kind != "policy_unconfirmed" and frame_kind != expected_kind:
+        return _non_available_result(
+            "quality_failed",
+            reason="policy_mismatch",
+            quality_status="fail",
+            start_date=start_date,
+            end_date=end_date,
+            index_code=index_code,
+            policy=policy,
+            lake_root=lake_root,
+            source="explicit_path",
+            benchmark_path=path_text,
+        )
+
+    frame = frame.sort_values("trade_date").reset_index(drop=True)
+    coverage = _explicit_path_coverage(frame)
+    coverage = _with_price_overlap(coverage, frame, price_trade_dates, start_date, end_date)
+    if price_trade_dates is not None and (coverage.price_overlap_count or 0) == 0:
+        return _non_available_result(
+            "required_missing" if policy.required else "unavailable",
+            reason="price_benchmark_overlap_missing",
+            quality_status="missing",
+            start_date=start_date,
+            end_date=end_date,
+            index_code=index_code,
+            policy=policy,
+            lake_root=lake_root,
+            coverage=BenchmarkCoverage(
+                coverage.numerator,
+                coverage.denominator,
+                coverage.ratio,
+                coverage.missing_trade_dates,
+                "price_benchmark_overlap_missing",
+                coverage.denominator_mode,
+                coverage.price_trade_dates_count,
+                coverage.price_overlap_count,
+            ),
+            source="explicit_path",
+            benchmark_path=path_text,
+        )
+
+    return BenchmarkResult(
+        status="available",
+        dataset=DATASET_HS300_INDEX,
+        source="explicit_path",
+        index_code=index_code,
+        interface=INTERFACE_HS300_INDEX_DAILY,
+        start_date=start_date,
+        end_date=end_date,
+        available_start_date=str(frame["trade_date"].min()),
+        available_end_date=str(frame["trade_date"].max()),
+        coverage=coverage,
+        quality_status="pass",
+        missing_reason=None,
+        required=policy.required,
+        benchmark_kind=expected_kind,
+        next_action=None,
+        remediation_job_spec=None,
+        catalog_entry=None,
+        run_id=_first(frame, "source_run_id"),
+        lineage={
+            "status": "explicit_path_fixture",
+            "benchmark_path": path_text,
+            "source_run_id": _first(frame, "source_run_id"),
+            "lineage_raw_checksum": _first(frame, "lineage_raw_checksum"),
+        },
+        frame=frame,
+        benchmark_path=path_text,
+    )
+
+
 def _non_available_result(
     status: str,
     *,
@@ -616,11 +1039,13 @@ def _non_available_result(
     lake_root: str | Path | None,
     reader: ReaderResult | None = None,
     coverage: BenchmarkCoverage | None = None,
+    source: str | None = None,
+    benchmark_path: str | None = None,
 ) -> BenchmarkResult:
     return BenchmarkResult(
         status=status,
         dataset=DATASET_HS300_INDEX,
-        source=_source(reader, None) if reader is not None else "none",
+        source=source or (_source(reader, None) if reader is not None else "none"),
         index_code=index_code,
         interface=INTERFACE_HS300_INDEX_DAILY,
         start_date=start_date,
@@ -644,7 +1069,40 @@ def _non_available_result(
         run_id=_entry_value(reader.catalog_entry, "latest_manifest_run_id") if reader and reader.catalog_entry else None,
         lineage=_lineage(reader, None) if reader else {"status": "lineage_unavailable", "reason": reason},
         frame=None,
+        benchmark_path=benchmark_path,
     )
+
+
+def _read_explicit_benchmark_frame(path: Path) -> pd.DataFrame:
+    if path.is_dir():
+        paths = sorted(item for item in path.rglob("*.parquet") if ".tmp" not in item.name)
+        if not paths:
+            return pd.DataFrame()
+        return pd.concat([pd.read_parquet(item) for item in paths], ignore_index=True)
+    if path.suffix.lower() == ".csv":
+        return pd.read_csv(path)
+    return pd.read_parquet(path)
+
+
+def _filter_explicit_benchmark_frame(
+    frame: pd.DataFrame,
+    *,
+    start_date: str,
+    end_date: str,
+    index_code: str,
+) -> pd.DataFrame:
+    work = frame.copy()
+    work["trade_date"] = work["trade_date"].astype(str)
+    work = work[(work["trade_date"] >= str(start_date)) & (work["trade_date"] <= str(end_date))]
+    if "index_code" in work.columns:
+        work = work[work["index_code"].astype(str) == str(index_code)]
+    return work.reset_index(drop=True)
+
+
+def _explicit_path_coverage(frame: pd.DataFrame) -> BenchmarkCoverage:
+    trade_dates = sorted(set(frame["trade_date"].astype(str)))
+    count = len(trade_dates)
+    return BenchmarkCoverage(count, count, 1.0 if count else 0.0, [], None)
 
 
 def _coverage(
@@ -961,6 +1419,98 @@ def _strip_disallowed_benchmark_fields(payload: Mapping[str, Any], *, allow_hs30
     return clean
 
 
+def _benchmark_boundary_payload(value: Any) -> dict[str, Any]:
+    if value is None:
+        return {}
+    if isinstance(value, Mapping):
+        return dict(value)
+    to_dict = getattr(value, "to_dict", None)
+    if callable(to_dict):
+        raw = to_dict()
+        return dict(raw) if isinstance(raw, Mapping) else {}
+    if is_dataclass(value):
+        return asdict(value)
+    return {}
+
+
+def _normalise_benchmark_operation_counts(
+    counters: Mapping[str, Any] | None,
+) -> dict[str, int]:
+    normalised = dict(CR018_BENCHMARK_FORBIDDEN_OPERATION_COUNTERS)
+    for key, value in dict(counters or {}).items():
+        try:
+            normalised[str(key)] = int(value)
+        except (TypeError, ValueError):
+            normalised[str(key)] = 1
+    return normalised
+
+
+def _proxy_fields_used_as_real_count(proxy_usage_metadata: Mapping[str, Any] | None) -> int:
+    if not proxy_usage_metadata:
+        return 0
+    count = 0
+    for raw_key in proxy_usage_metadata:
+        key = str(raw_key)
+        if key == "proxy_baseline" or key.startswith("proxy_"):
+            continue
+        if key in {"benchmark_kind", "benchmark_status", "benchmark_missing_reason"}:
+            continue
+        if (
+            key in REAL_BENCHMARK_FIELD_NAMES
+            or key in AMBIGUOUS_BENCHMARK_FIELDS
+            or key.startswith("hs300_")
+            or key.startswith("real_")
+            or key.startswith("benchmark_")
+        ):
+            count += 1
+    return count
+
+
+def _required_missing_count(result_payload: Mapping[str, Any]) -> int:
+    value = result_payload.get("required_missing_count")
+    if value is None:
+        required_missing = result_payload.get("required_missing")
+        if isinstance(required_missing, Sequence) and not isinstance(required_missing, (str, bytes, bytearray)):
+            return len(required_missing)
+        return 0
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return 1
+
+
+def _result_passed(value: Any, result_payload: Mapping[str, Any]) -> bool:
+    for field_name in ("passed", "release_ready", "real_benchmark_claim_allowed"):
+        if field_name in result_payload:
+            return bool(result_payload[field_name])
+    return bool(getattr(value, "passed", False))
+
+
+def _blocked_claims_from_result(result_payload: Mapping[str, Any]) -> tuple[dict[str, Any], ...]:
+    blocked_claims = result_payload.get("blocked_claims")
+    if isinstance(blocked_claims, Sequence) and not isinstance(blocked_claims, (str, bytes, bytearray)):
+        return tuple(dict(item) for item in blocked_claims if isinstance(item, Mapping))
+    return ()
+
+
+def _dedupe_blocked_claims(rows: Sequence[Mapping[str, Any]]) -> tuple[dict[str, Any], ...]:
+    seen: set[tuple[str, str, str, str]] = set()
+    output: list[dict[str, Any]] = []
+    for row in rows:
+        payload = dict(row)
+        key = (
+            str(payload.get("claim") or ""),
+            str(payload.get("benchmark_id") or ""),
+            str(payload.get("dataset_type") or ""),
+            str(payload.get("reason_code") or ""),
+        )
+        if key in seen:
+            continue
+        seen.add(key)
+        output.append(payload)
+    return tuple(output)
+
+
 def _compact(value: str) -> str:
     return str(value).replace("-", "")
 
@@ -972,15 +1522,27 @@ __all__ = [
     "DENOMINATOR_MODE_BENCHMARK",
     "REPORT_BENCHMARK_KINDS",
     "BENCHMARK_POLICY_FIELDS",
+    "CR018_BENCHMARK_DISPLAY_NAMES",
+    "CR018_BENCHMARK_PROVIDER_NAMES",
+    "REAL_BENCHMARK_FIELD_NAMES",
+    "BenchmarkRequiredMissingError",
     "BenchmarkCoverage",
+    "BenchmarkClaimBoundary",
+    "BenchmarkDatasetRequirement",
+    "BenchmarkDefinition",
     "BenchmarkPolicy",
     "BenchmarkPolicyResult",
     "BenchmarkResult",
+    "BenchmarkUnavailable",
     "NextAction",
     "RemediationJobSpec",
+    "build_benchmark_claim_boundary",
     "build_benchmark_field_payload",
     "build_benchmark_policy_result",
+    "build_benchmark_readiness_rows",
     "build_hs300_remediation_spec",
     "build_next_action",
+    "list_benchmark_dataset_requirements",
+    "list_required_benchmarks",
     "resolve_hs300_benchmark",
 ]

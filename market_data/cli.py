@@ -1820,7 +1820,12 @@ def _trade_calendar_from_catalog(args: argparse.Namespace) -> pd.DataFrame | Non
     return result.frame if result.available and result.frame is not None else None
 
 
-def _read_manifest_context(layout: LakeLayout, run_id: str | None) -> list[dict[str, Any]]:
+def _read_manifest_context(
+    layout: LakeLayout,
+    run_id: str | None,
+    dataset: str | None = None,
+) -> list[dict[str, Any]]:
+    from .normalization import DatasetMappingError, map_raw_to_dataset
     from .storage import read_manifest_records
 
     records = []
@@ -1829,6 +1834,13 @@ def _read_manifest_context(layout: LakeLayout, run_id: str | None) -> list[dict[
             continue
         if run_id is not None and record.get("run_id") != run_id:
             continue
+        if dataset is not None:
+            try:
+                mapped_dataset = map_raw_to_dataset(record)
+            except DatasetMappingError:
+                continue
+            if mapped_dataset != dataset:
+                continue
         records.append(record)
     return records
 
@@ -1860,6 +1872,138 @@ def _catalog_canonical_path(
         if run_root.exists():
             return run_root
     return None
+
+
+def _price_observed_expected_pairs(
+    layout: LakeLayout,
+    run_id: str | None,
+    *,
+    start_date: str,
+    end_date: str,
+    symbols: Sequence[str],
+) -> list[dict[str, str]]:
+    price_paths = _canonical_paths_for_run(layout, DATASET_PRICES, run_id)
+    if not price_paths:
+        raise CliExecutionError("prices denominator 不可用：未找到同 run_id 的 canonical prices")
+    frame = pd.concat((pd.read_parquet(path) for path in price_paths), ignore_index=True)
+    required_columns = {"trade_date", "symbol"}
+    if not required_columns.issubset(frame.columns):
+        raise CliExecutionError("prices denominator 不可用：canonical prices 缺少 trade_date/symbol")
+    pairs = frame[["trade_date", "symbol"]].copy()
+    pairs["trade_date"] = pairs["trade_date"].astype(str)
+    pairs["symbol"] = pairs["symbol"].astype(str)
+    pairs = pairs[(pairs["trade_date"] >= start_date) & (pairs["trade_date"] <= end_date)]
+    if symbols:
+        symbol_set = {str(symbol) for symbol in symbols}
+        pairs = pairs[pairs["symbol"].isin(symbol_set)]
+    if pairs.empty:
+        raise CliExecutionError("prices denominator 不可用：指定范围内没有 prices 交易对")
+    pairs = pairs.drop_duplicates(["trade_date", "symbol"]).sort_values(["trade_date", "symbol"])
+    return [
+        {"trade_date": str(row.trade_date), "symbol": str(row.symbol)}
+        for row in pairs.itertuples(index=False)
+    ]
+
+
+def _denominator_date_text(value: object) -> str:
+    text = str(value or "").strip()
+    if text.lower() in {"", "none", "nan", "nat", "<na>"}:
+        return ""
+    if len(text) == 8 and text.isdigit():
+        return f"{text[:4]}-{text[4:6]}-{text[6:8]}"
+    return text[:10]
+
+
+def _denominator_dates(start_date: str, end_date: str, open_trade_dates: Sequence[str]) -> list[str]:
+    if open_trade_dates:
+        return [str(item) for item in open_trade_dates]
+    return [item.date().isoformat() for item in pd.date_range(start=start_date, end=end_date, freq="D")]
+
+
+def _inactive_lifecycle_status(status: object) -> bool:
+    normalized = str(status or "").strip().upper()
+    return normalized in {"D", "DELISTED", "退市", "P", "PAUSED", "暂停上市"}
+
+
+def _stock_basic_lifecycle_expected_pairs(
+    layout: LakeLayout,
+    run_id: str | None,
+    *,
+    start_date: str,
+    end_date: str,
+    open_trade_dates: Sequence[str],
+    symbols: Sequence[str],
+) -> list[dict[str, str]]:
+    stock_basic_paths = _canonical_paths_for_run(layout, DATASET_STOCK_BASIC, run_id)
+    if not stock_basic_paths:
+        raise CliExecutionError("stock_basic lifecycle denominator 不可用：未找到 canonical stock_basic")
+    frame = pd.concat((pd.read_parquet(path) for path in stock_basic_paths), ignore_index=True)
+    if "ts_code" in frame.columns and "symbol" not in frame.columns:
+        frame["symbol"] = frame["ts_code"]
+    required_columns = {"symbol", "list_date"}
+    if not required_columns.issubset(frame.columns):
+        raise CliExecutionError("stock_basic lifecycle denominator 不可用：缺少 symbol/list_date")
+    symbol_filter = {str(symbol) for symbol in symbols if str(symbol)}
+    dates = _denominator_dates(start_date, end_date, open_trade_dates)
+    pairs: set[tuple[str, str]] = set()
+    for row in frame.to_dict(orient="records"):
+        symbol = str(row.get("symbol") or "").strip()
+        if not symbol or (symbol_filter and symbol not in symbol_filter):
+            continue
+        list_date = _denominator_date_text(row.get("list_date"))
+        delist_date = _denominator_date_text(row.get("delist_date"))
+        available_date = _denominator_date_text(row.get("available_at"))
+        if _inactive_lifecycle_status(row.get("list_status")):
+            continue
+        for trade_date in dates:
+            if list_date and trade_date < list_date:
+                continue
+            if delist_date and trade_date >= delist_date:
+                continue
+            if available_date and trade_date < available_date:
+                continue
+            pairs.add((trade_date, symbol))
+    if not pairs:
+        raise CliExecutionError("stock_basic lifecycle denominator 不可用：指定范围内没有 active pairs")
+    return [
+        {"trade_date": trade_date, "symbol": symbol}
+        for trade_date, symbol in sorted(pairs)
+    ]
+
+
+def _trade_status_untradable_pairs(
+    layout: LakeLayout,
+    run_id: str | None,
+    *,
+    start_date: str,
+    end_date: str,
+    symbols: Sequence[str],
+) -> set[tuple[str, str]]:
+    trade_status_paths = _canonical_paths_for_run(layout, DATASET_TRADE_STATUS, run_id)
+    if not trade_status_paths:
+        raise CliExecutionError("trade_status denominator 不可用：未找到 canonical trade_status")
+    frame = pd.concat((pd.read_parquet(path) for path in trade_status_paths), ignore_index=True)
+    required_columns = {"trade_date", "symbol"}
+    if not required_columns.issubset(frame.columns):
+        raise CliExecutionError("trade_status denominator 不可用：canonical trade_status 缺少 trade_date/symbol")
+    work = frame.copy()
+    work["trade_date"] = work["trade_date"].map(_denominator_date_text)
+    work["symbol"] = work["symbol"].astype(str)
+    work = work[(work["trade_date"] >= start_date) & (work["trade_date"] <= end_date)]
+    if symbols:
+        symbol_filter = {str(symbol) for symbol in symbols}
+        work = work[work["symbol"].isin(symbol_filter)]
+    if work.empty:
+        return set()
+    mask = pd.Series(False, index=work.index)
+    if "is_suspended" in work.columns:
+        mask = mask | work["is_suspended"].astype(bool)
+    if "is_tradable" in work.columns:
+        mask = mask | ~work["is_tradable"].astype(bool)
+    return {
+        (str(row.trade_date), str(row.symbol))
+        for row in work.loc[mask, ["trade_date", "symbol"]].itertuples(index=False)
+    }
 
 
 def _filter_hs300_canonical_for_request(
@@ -2152,7 +2296,7 @@ def cmd_validate(args: argparse.Namespace) -> dict[str, Any]:
     }:
         raise CliUsageError(f"validate 暂不支持 dataset={args.dataset}")
     start, end = _date_range(args)
-    records = _read_manifest_context(layout, args.run_id)
+    records = _read_manifest_context(layout, args.run_id, args.dataset)
     canonical_paths = _canonical_paths_for_run(layout, args.dataset, args.run_id)
     thresholds = QualityThresholds(
         prices_missing_rate_pass=args.prices_missing_rate_pass,
@@ -2173,6 +2317,53 @@ def cmd_validate(args: argparse.Namespace) -> dict[str, Any]:
     if open_trade_dates:
         validation_context["open_trade_dates"] = open_trade_dates
         validation_context["expected_dates"] = open_trade_dates
+    if getattr(args, "use_stock_basic_lifecycle_denominator", False) and getattr(
+        args,
+        "use_trade_status_denominator",
+        False,
+    ):
+        raise CliUsageError("--use-stock-basic-lifecycle-denominator 不能和 --use-trade-status-denominator 同时使用")
+    if getattr(args, "use_stock_basic_lifecycle_denominator", False):
+        if args.dataset != DATASET_PRICES:
+            raise CliUsageError("--use-stock-basic-lifecycle-denominator 仅支持 dataset=prices")
+        validation_context["expected_pairs"] = _stock_basic_lifecycle_expected_pairs(
+            layout,
+            getattr(args, "stock_basic_run_id", None) or args.run_id,
+            start_date=start,
+            end_date=end,
+            open_trade_dates=open_trade_dates,
+            symbols=symbols,
+        )
+        validation_context["denominator_mode"] = "stock_basic_lifecycle_active_trade_date_symbol_pairs"
+        validation_context["universe_mode"] = "stock_basic_lifecycle_candidate"
+        validation_context["pit_status"] = "non_pit_disclosed"
+    if getattr(args, "exclude_trade_status_untradable", False):
+        if args.dataset != DATASET_PRICES or not getattr(args, "use_stock_basic_lifecycle_denominator", False):
+            raise CliUsageError("--exclude-trade-status-untradable 需要 dataset=prices 且启用 stock_basic lifecycle denominator")
+        expected_pair_set = _trade_status_untradable_pairs(
+            layout,
+            getattr(args, "trade_status_run_id", None) or args.run_id,
+            start_date=start,
+            end_date=end,
+            symbols=symbols,
+        )
+        lifecycle_pairs = _stock_basic_lifecycle_expected_pairs(
+            layout,
+            getattr(args, "stock_basic_run_id", None) or args.run_id,
+            start_date=start,
+            end_date=end,
+            open_trade_dates=open_trade_dates,
+            symbols=symbols,
+        )
+        lifecycle_pair_set = {
+            (item["trade_date"], item["symbol"])
+            for item in lifecycle_pairs
+        }
+        validation_context["expected_pairs"] = [
+            {"trade_date": trade_date, "symbol": symbol}
+            for trade_date, symbol in sorted(lifecycle_pair_set - expected_pair_set)
+        ]
+        validation_context["denominator_mode"] = "stock_basic_lifecycle_minus_trade_status_untradable_pairs"
     if getattr(args, "use_trade_status_denominator", False) and args.dataset in {
         DATASET_PRICES,
         DATASET_ADJ_FACTOR,
@@ -2200,6 +2391,18 @@ def cmd_validate(args: argparse.Namespace) -> dict[str, Any]:
             {"trade_date": row.trade_date, "symbol": row.symbol}
             for row in tradable[["trade_date", "symbol"]].itertuples(index=False)
         ]
+        validation_context["denominator_mode"] = "trade_status_tradable_pairs"
+    if getattr(args, "use_prices_denominator", False):
+        if args.dataset != DATASET_ADJ_FACTOR:
+            raise CliUsageError("--use-prices-denominator 仅支持 dataset=adj_factor")
+        validation_context["expected_pairs"] = _price_observed_expected_pairs(
+            layout,
+            args.run_id,
+            start_date=start,
+            end_date=end,
+            symbols=symbols,
+        )
+        validation_context["denominator_mode"] = "prices_observed_trade_date_symbol_pairs"
     if getattr(args, "is_pit_universe", False):
         validation_context["is_pit_universe"] = True
         validation_context["universe_mode"] = "pit_index_members"
@@ -2887,6 +3090,11 @@ def build_parser() -> argparse.ArgumentParser:
     validate.add_argument("--decision-time")
     validate.add_argument("--is-pit-universe", action="store_true")
     validate.add_argument("--use-trade-status-denominator", action="store_true")
+    validate.add_argument("--use-prices-denominator", action="store_true")
+    validate.add_argument("--use-stock-basic-lifecycle-denominator", action="store_true")
+    validate.add_argument("--stock-basic-run-id")
+    validate.add_argument("--exclude-trade-status-untradable", action="store_true")
+    validate.add_argument("--trade-status-run-id")
     validate.add_argument("--prices-missing-rate-pass", type=float, default=0.0)
     validate.add_argument("--prices-missing-rate-warn", type=float, default=0.02)
     validate.add_argument("--prices-missing-rate-fail", type=float, default=0.05)
@@ -2911,6 +3119,11 @@ def build_parser() -> argparse.ArgumentParser:
     revalidate.add_argument("--decision-time")
     revalidate.add_argument("--is-pit-universe", action="store_true")
     revalidate.add_argument("--use-trade-status-denominator", action="store_true")
+    revalidate.add_argument("--use-prices-denominator", action="store_true")
+    revalidate.add_argument("--use-stock-basic-lifecycle-denominator", action="store_true")
+    revalidate.add_argument("--stock-basic-run-id")
+    revalidate.add_argument("--exclude-trade-status-untradable", action="store_true")
+    revalidate.add_argument("--trade-status-run-id")
     revalidate.add_argument("--prices-missing-rate-pass", type=float, default=0.0)
     revalidate.add_argument("--prices-missing-rate-warn", type=float, default=0.02)
     revalidate.add_argument("--prices-missing-rate-fail", type=float, default=0.05)

@@ -1,28 +1,1080 @@
 ---
 project_id: "local_backtest"
 workflow_mode: "production"
-current_phase: "requirement-clarification"
+current_phase: "documentation"
 current_agent: "meta-po"
-active_change: "CR-015, CR-016"
+active_change: "CR-030"
 active_story: ""
-iteration: 253
+iteration: 418
 blocked: false
 blocked_reason: ""
-last_action: "按用户要求先提交当前代码基线 commit 2aeba1d，再创建 QMT 相关变更单 CR-015 与 CR-016。"
-next_action: "等待用户确认 CR-015/CR-016 拆分和范围；确认后按 standard 流程进入 QMT 需求澄清、HLD/ADR、Story Plan 与 CP5 批次门控。"
+last_action: "根据用户澄清，将 CR-030 CP8 出口语义修订为：完成多因子策略研究与实验闭环，达到策略侧模拟盘入口；QMT 接口、simulation 账号和运行授权仍由后续 CR 单独准入。"
+next_action: "等待用户审查 checkpoints/CP8-CR030-DELIVERY-READINESS.md；回复 approve / 修改: <具体修改点> / reject。approve 接受 4 项推荐决策和策略侧模拟盘入口语义，不授权依赖变更、clone/install/run 外部项目、源码迁移、provider/lake/publish、真实 broker / QMT / simulation / live 或凭据读取。"
+cr_tracking:
+  status: "active-formal-cr"
+  index_path: "process/changes/CR-INDEX.yaml"
+  last_consistency_check: "PASS: uv run --python 3.11 python scripts/check_cr_tracking_consistency.py --project-root . at 2026-06-03T13:49:26+08:00"
+  active_crs:
+    - id: "CR-030"
+      title: "多因子研究框架借鉴与研究闭环标准化"
+      status: "active-documentation"
+      source_tracking: "process/changes/CR-019-FOLLOW-UP-TRACKING-2026-05-31.md"
+      formal_cr_path: "process/changes/CR-030-MULTIFACTOR-RESEARCH-FRAMEWORK-REFERENCE-AND-RESEARCH-LOOP-STANDARDIZATION-2026-06-02.md"
+      priority: 1
+      blocked_by: "CP5 全量 LLD 批次已由用户 approved；CR030-S01、CR030-S02、CR030-S03、CR030-S04、CR030-S05、CR030-S06、CR030-S07、CR030-S08 均已 CP6/CP7 PASS 并 verified；CP8 自动预检 PASS，Human Gate Launch Protocol 校验 PASS，当前等待用户 CP8 人工终验。首次 S08 dev-zhu the 2nd 调度因平台 usage limit 中断并已关闭，不作为 CP6 证据。仍不授权依赖变更、外部项目 clone/install/run/source copy、provider/lake/publish、QMT/simulation/live 或凭据操作。"
+      impact_surface: ["multifactor research framework reference", "FactorSpec", "FactorRunSpec", "factor panel", "label window", "IC / RankIC", "layered returns", "multifactor combination", "experiment manifest", "strategy admission package", "GitHub project license/dependency boundary"]
+      conflict_keys: ["multifactor_framework_reference", "factor_research_pipeline", "strategy_admission_package", "dependency_change", "source_migration", "provider_boundary", "D-CP8-CR019-05"]
+      next_gate: "CP8 CR030 delivery readiness"
+      next_action: "等待用户审查 checkpoints/CP8-CR030-DELIVERY-READINESS.md；回复 approve / 修改: <具体修改点> / reject。不得改依赖、运行外部项目、触发 provider/lake/publish、QMT/simulation/live 或读取凭据。"
+      last_checked_at: "2026-06-03T12:13:03+08:00"
+  closed_crs:
+    - id: "CR-025"
+      title: "Research execution semantic alignment and Backtrader optional reference"
+      status: "closed"
+      source_tracking: "process/changes/CR-019-FOLLOW-UP-TRACKING-2026-05-31.md"
+      formal_cr_path: "process/changes/CR-025-BACKTRADER-OPTIONAL-EXECUTION-BACKEND-HARDENING-2026-05-31.md"
+      priority: 1
+      blocked_by: "closed: CP8 approved by user at 2026-06-02T23:10:16+08:00; no dependency change, Backtrader run, source migration, runtime authorization, QMT/simulation/live, provider/lake/publish or multifactor research framework implementation was authorized"
+      impact_surface:
+        - "Backtrader optional semantic reference"
+        - "execution semantics"
+        - "dependency isolation"
+        - "clean feed"
+        - "target portfolio / order intent"
+        - "no broker"
+      conflict_keys:
+        - "backtrader_w6"
+        - "research_execution_semantic_alignment"
+        - "dependency_change"
+        - "execution_semantics"
+        - "order_intent_contract"
+        - "D-CP8-CR019-05"
+      next_gate: "closed"
+      next_action: "CR-025 已关闭；建议下一步按 CR-030 启动冲突预检 + CP2 以推进多因子研究闭环，或按 CR-020 单独启动 QMT gateway health 准入。"
+      last_checked_at: "2026-06-02T23:10:16+08:00"
+  blocked_crs: []
+  follow_up_candidates:
+    - id: "CR-020"
+      title: "QMT Windows gateway 实机部署准入"
+      status: "candidate"
+      source_tracking: "process/changes/CR-019-FOLLOW-UP-TRACKING-2026-05-31.md"
+      formal_cr_path: ""
+      priority: 1
+      blocked_by: "等待用户明确启动；CR-025 已关闭，但 CR-020 仍需单独 runtime authorization 和 CP2 / CP3 / CP5 门控，不授权交易。"
+      impact_surface: ["Windows FastAPI gateway", "trading/qmt_gateway_*", "docs/QMT-GATEWAY-INSTALL.md", "service_start", "port", "HMAC"]
+      conflict_keys: ["service_start", "port_binding", "QMT_gateway", "D-CP8-CR019-02"]
+      next_gate: "启动后续 CR 冲突预检 + CP2"
+      next_action: "用户如决定推进 C 线，使用 @meta-po 启动后续 CR 并声明 Windows host、端口、MiniQMT/XtQuant 版本、日志与回滚边界。"
+      last_checked_at: "2026-05-31T21:16:55+08:00"
+    - id: "CR-021"
+      title: "QMT simulation 账号接入准入"
+      status: "candidate"
+      source_tracking: "process/changes/CR-019-FOLLOW-UP-TRACKING-2026-05-31.md"
+      formal_cr_path: ""
+      priority: 2
+      blocked_by: "CR-020 未创建或未关闭；阶段六策略准入仍 blocked。"
+      impact_surface: ["simulation endpoints", "order/cancel/account query", "per-run authorization", "kill switch", "reconciliation"]
+      conflict_keys: ["QMT_simulation", "broker_order", "account_query", "D-CP8-CR019-02"]
+      next_gate: "CR020 closed + strategy admission remediation accepted + CP2"
+      next_action: "等待 CR020 关闭和用户单独授权 simulation 账号、交易窗口、资金上限、订单范围与回滚策略。"
+      last_checked_at: "2026-05-31T21:16:55+08:00"
+    - id: "CR-022"
+      title: "Live-readonly 准入"
+      status: "candidate"
+      source_tracking: "process/changes/CR-019-FOLLOW-UP-TRACKING-2026-05-31.md"
+      formal_cr_path: ""
+      priority: 3
+      blocked_by: "CR-021 未创建或未关闭。"
+      impact_surface: ["live-readonly endpoints", "account/position/order status", "real account readonly authorization", "broker lake no-write"]
+      conflict_keys: ["live_readonly", "account_query", "real_account", "D-CP8-CR019-02"]
+      next_gate: "CR021 closed + per-run readonly authorization + CP2"
+      next_action: "等待 CR021 关闭；启动时必须限定只读接口白名单和不写 broker lake。"
+      last_checked_at: "2026-05-31T21:16:55+08:00"
+    - id: "CR-023"
+      title: "Small-live 准入"
+      status: "candidate"
+      source_tracking: "process/changes/CR-019-FOLLOW-UP-TRACKING-2026-05-31.md"
+      formal_cr_path: ""
+      priority: 4
+      blocked_by: "CR-022 未创建或未关闭。"
+      impact_surface: ["live order/cancel", "pretrade risk", "kill switch", "reconciliation", "incident playbook"]
+      conflict_keys: ["small_live", "real_order", "broker_cancel", "D-CP8-CR019-02"]
+      next_gate: "CR022 closed + small-live explicit authorization + CP2"
+      next_action: "等待 CR022 关闭；启动时必须给出资金上限、单笔上限、标的范围、交易时间和人工确认策略。"
+      last_checked_at: "2026-05-31T21:16:55+08:00"
+    - id: "CR-024"
+      title: "Scale-up 准入"
+      status: "candidate"
+      source_tracking: "process/changes/CR-019-FOLLOW-UP-TRACKING-2026-05-31.md"
+      formal_cr_path: ""
+      priority: 5
+      blocked_by: "CR-023 未创建或未关闭；需要多轮 small-live 稳定证据。"
+      impact_surface: ["scale_up gate", "research maturity", "risk limits", "capital expansion", "strategy scope expansion"]
+      conflict_keys: ["scale_up", "capital_expansion", "risk_acceptance", "D-CP8-CR019-02"]
+      next_gate: "CR023 multi-run stability evidence + CP2"
+      next_action: "等待 small-live 多轮稳定、对账、回撤、风控、成交偏差等量化证据。"
+      last_checked_at: "2026-05-31T21:16:55+08:00"
+    - id: "CR-026"
+      title: "Qlib isolated runner / factor workflow boundary"
+      status: "candidate"
+      source_tracking: "process/changes/CR-019-FOLLOW-UP-TRACKING-2026-05-31.md"
+      formal_cr_path: ""
+      priority: 2
+      blocked_by: "factor panel、label window、报告 catalog 和 runner I/O 合同尚未冻结。"
+      impact_surface: ["Qlib isolated runner", "factor panel", "label window", "report catalog", "provider/dependency boundary"]
+      conflict_keys: ["qlib_w7", "dependency_change", "provider_boundary", "D-CP8-CR019-05"]
+      next_gate: "启动后续 CR 冲突预检 + CP2"
+      next_action: "等待 factor panel、label window、报告 catalog 和 runner I/O 合同冻结后启动。"
+      last_checked_at: "2026-05-31T21:16:55+08:00"
+  spike_candidates:
+    - id: "CR-027"
+      title: "Minute data feasibility Spike"
+      status: "spike_candidate"
+      source_tracking: "process/changes/CR-019-FOLLOW-UP-TRACKING-2026-05-31.md"
+      formal_cr_path: ""
+      priority: 3
+      blocked_by: "尚无日频执行假设失效证据和 minute source/schema/storage/quality plan。"
+      impact_surface: ["minute source", "minute schema", "storage", "quality", "execution realism", "provider/lake no-write"]
+      conflict_keys: ["minute_spike", "provider_fetch", "lake_write", "D-CP8-CR019-05"]
+      next_gate: "启动后续 Spike CR 冲突预检 + CP2/CP3"
+      next_action: "等待日频证据无法解释关键执行缺口，且 source/schema/storage/quality plan 明确后启动 bounded experiment。"
+      last_checked_at: "2026-05-31T21:16:55+08:00"
+    - id: "CR-028"
+      title: "Level2 rights and microstructure Spike"
+      status: "spike_candidate"
+      source_tracking: "process/changes/CR-019-FOLLOW-UP-TRACKING-2026-05-31.md"
+      formal_cr_path: ""
+      priority: 4
+      blocked_by: "尚无 L1/minute 无法关闭 order-book、queue 或 impact-cost 风险的证据。"
+      impact_surface: ["Level2 data rights", "order-book schema", "queue/impact-cost model", "replay fixture", "redaction"]
+      conflict_keys: ["level2_spike", "data_rights", "live_quote", "D-CP8-CR019-05"]
+      next_gate: "启动后续 Spike CR 冲突预检 + CP2/CP3"
+      next_action: "等待数据权利、order-book schema、replay fixture、质量审计和成本评估前置证据。"
+      last_checked_at: "2026-05-31T21:16:55+08:00"
+  stale_status_conflicts:
+    - id: "STALE-CR019-ACTIVE-CHANGE"
+      title: "STATE active_change stale CR-019 pointer resolved"
+      status: "resolved"
+      source_tracking: "process/STATE.md"
+      formal_cr_path: "process/changes/CR-019-STAGE6-MULTIFACTOR-SIMULATION-ARCHITECTURE-2026-05-30.md"
+      priority: 0
+      blocked_by: "resolved: STATE.md active_change was switched from closed CR-019 to CR-025 during CR-025 execution; CR-025 is now closed and active_change is cleared."
+      impact_surface: ["process/STATE.md", "state-router CR tracking", "CR-019 follow-up tracking"]
+      conflict_keys: ["active_change", "closed_cr", "CR-019"]
+      next_gate: "resolved"
+      next_action: "保留审计记录；当前无需阻断。"
+      last_checked_at: "2026-05-31T21:43:48+08:00"
+    - id: "SYNC-CR029-RELATED-ACTIVE"
+      title: "CR-029 related formal CR closed and preserved in CR-019 tracking"
+      status: "resolved-closed"
+      source_tracking: "process/changes/CR-019-FOLLOW-UP-TRACKING-2026-05-31.md"
+      formal_cr_path: "process/changes/CR-029-STAGE6-DATA-LAKE-ADMISSION-BENCHMARK-REAL-RUN-2026-05-31.md"
+      priority: 0
+      blocked_by: "resolved: CR-029 used parent_cr=CR-019 and source_decision_id=D-CP8-CR019-02, then was closed by user-accepted result."
+      impact_surface: ["CR-019 follow-up tracking", "CR-029", "stage6 admission data real-run"]
+      conflict_keys: ["related_active_cr", "parent_cr", "D-CP8-CR019-02"]
+      next_gate: "resolved"
+      next_action: "CR-029 已关闭；若继续策略准入，创建独立策略准入修复 CR。"
+      last_checked_at: "2026-05-31T21:43:48+08:00"
+  route_view:
+    - id: "line-a-research-credibility"
+      title: "研究可信度"
+      current_objects: ["CR-018", "CR-029", "CR-030", "future strategy admission remediation CR"]
+      status: "cr030_cp8_awaiting_user"
+      next_action: "CR-030 S01..S08 均已 CP6/CP7 PASS 并 verified；CP8 自动预检 PASS，当前等待用户审查 checkpoints/CP8-CR030-DELIVERY-READINESS.md。CR-030 出口为策略侧模拟盘入口审查输入；QMT 接口 ready 和真实模拟盘投入仍需后续 CR。"
+    - id: "line-b-backtest-simulation-consistency"
+      title: "回测 / 模拟一致性"
+      current_objects: ["CR-025"]
+      status: "closed"
+      next_action: "S01/S04/S02/S03/S05/S06 均已 verified；CP8 自动预检 PASS，用户已确认关闭。后续模拟 / 真实 QMT 仍需独立 CR 授权。"
+    - id: "line-c-qmt-production-execution"
+      title: "QMT 生产执行"
+      current_objects: ["CR-020", "CR-021", "CR-022", "CR-023", "CR-024"]
+      status: "candidate_not_authorized"
+      next_action: "CR-025 已关闭；用户仍需单独启动 CR-020 gateway health 准入，且不自动授权交易、服务启动或账户操作。"
+  reporting_policy: "状态查询必须同时输出 active CR、blocked CR、follow-up candidate、spike_candidate 和 stale_status_conflicts；candidate/spike_candidate 不占执行锁"
+  consistency_check: "scripts/check_cr_tracking_consistency.py --project-root ."
+human_gate_decisions:
+  status: "awaiting-user"
+  pending_gate: "CP8-CR030-DELIVERY-READINESS"
+  pending_checklist_path: "checkpoints/CP8-CR030-DELIVERY-READINESS.md"
+  launch_message_path: "process/checks/CP8-CR030-HUMAN-GATE-LAUNCH-MESSAGE.md"
+  pending_human_decisions:
+    - id: "DQ-CP8-CR030-01"
+      gate: "CP8"
+      decision_type: "follow_up_tracking"
+      question: "是否接受 CR-030 当前交付范围已完成，并允许在 CP8 approve 后关闭本 CR。"
+      recommendation: "approve 后关闭 CR-030 当前多因子研究与实验闭环交付范围，并确认策略侧已达到模拟盘入口审查输入。"
+      alternatives: ["修改指定文档 / 状态 / 证据后重跑 CP8", "reject 回退到指定阶段"]
+      pros_cons: "推荐方案可收敛 8 个 verified Story，让多因子策略研究、实验和本地回测准备开始；代价是不追加真实运行或外部 runtime 能力。"
+      impact_risk: "主要风险是被误读为真实模拟盘 / 实盘能力，已通过不授权项隔离。"
+      rollback_switch: "若发现 Story verified、CP7、文档或安全边界不一致，回退到对应 Story CP6 / CP7 或 documentation。"
+      status: "pending"
+      source: "checkpoints/CP8-CR030-DELIVERY-READINESS.md"
+    - id: "DQ-CP8-CR030-02"
+      gate: "CP8"
+      decision_type: "runtime_authorization"
+      question: "是否确认 CP8 approve 不授权依赖变更、外部项目 clone/install/run/source copy、provider/lake/publish、QMT/simulation/live、账号/订单或凭据读取。"
+      recommendation: "接受不授权边界，CP8 只关闭受控离线研究闭环交付。"
+      alternatives: ["单独启动 CR-020..CR-024、CR-026 或 Spike", "回退补强不授权措辞"]
+      pros_cons: "推荐方案审计风险最低；代价是后续真实路线仍需独立授权和门控。"
+      impact_risk: "若误授权会触发交易、凭据、写湖、publish 或 license 风险。"
+      rollback_switch: "用户后续明确启动候选 CR 并提供范围、环境、账号 / 数据 / 回滚边界后切换。"
+      status: "pending"
+      source: "checkpoints/CP8-CR030-DELIVERY-READINESS.md"
+    - id: "DQ-CP8-CR030-03"
+      gate: "CP8"
+      decision_type: "follow_up_tracking"
+      question: "是否接受 CR-026、optimizer / ML / external runtimes、CR-020..CR-024、CR-027 / CR-028 保持后续候选或 Spike。"
+      recommendation: "接受分流；多因子策略研究、实验和本地回测可继续，QMT 接口 ready 后投入模拟盘仍从 CR-020 / CR-021 开始单独授权。"
+      alternatives: ["合并 CR-026 与 optimizer / ML", "先启动 CR-020 / CR-021", "全部等待"]
+      pros_cons: "推荐方案符合先完成策略侧研究实验闭环、再完成 QMT 接口 / simulation 账号准入、最后进入真实 QMT 路线的顺序；代价是不会自动集成外部 runtime 或真实账号。"
+      impact_risk: "影响 roadmap、文件 owner、依赖和安全边界；候选启动前仍需冲突预检。"
+      rollback_switch: "用户明确启动候选 CR 后先做冲突预检；如重叠，由用户选择合并、等待、blocked、拆分或 superseded。"
+      status: "pending"
+      source: "checkpoints/CP8-CR030-DELIVERY-READINESS.md"
+    - id: "DQ-CP8-CR030-04"
+      gate: "CP8"
+      decision_type: "risk_acceptance"
+      question: "是否接受“模拟盘入口”的语义边界：当前出口是策略侧模拟盘入口审查输入，已完成多因子策略研究与实验闭环、StrategyAdmissionPackage 和 handoff 草稿；不是 QMT-ready / simulation-ready / live-ready。"
+      recommendation: "接受风险；将 CR-030 关闭为 strategy-side simulation-entry preparation complete; QMT interface and runtime authorization pending。QMT 接口 ready 且后续运行侧门控通过后，才可投入模拟盘。"
+      alternatives: ["回退 documentation 改成更保守措辞后重跑 S08 safety scan 和 CP8", "新增策略准入修复 CR"]
+      pros_cons: "推荐方案保留用户目标导向；代价是需要持续提醒这只是策略侧入口，不等于真实模拟盘授权。"
+      impact_risk: "风险等级 MEDIUM；主要风险是将策略侧入口误认为 QMT 接口、simulation 账号或订单通道已 ready。"
+      rollback_switch: "若需要真实 simulation 账号接入，启动 CR-021；若 QMT gateway 未 ready，先启动 CR-020；若 Stage6 策略准入需修复，另起策略准入修复 CR。"
+      status: "pending"
+      source: "checkpoints/CP8-CR030-DELIVERY-READINESS.md"
+  approved_gate:
+    gate: "CP5-CR030-MULTIFACTOR-RESEARCH-LOOP-BATCH-A-LLD-BATCH"
+    checklist_path: "checkpoints/CP5-CR030-MULTIFACTOR-RESEARCH-LOOP-BATCH-A-LLD-BATCH.md"
+    approved_by: "user"
+    approved_at: "2026-06-03T08:55:53+08:00"
+    approval_text: "@meta-po 同意，继续"
+    accepted_decision_ids:
+      - "DQ-CP5-CR030-01"
+      - "DQ-CP5-CR030-02"
+      - "DQ-CP5-CR030-03"
+      - "DQ-CP5-CR030-04"
+      - "DQ-CP5-CR030-05"
+  pending_non_authorized_items:
+    - "修改 pyproject.toml / uv.lock 或新增 / 安装 Qlib、Alphalens、vectorbt、PyBroker、bt、Zipline Reloaded、QuantConnect LEAN、RQAlpha、vn.py、Backtrader、optimizer、ML 等依赖"
+    - "clone / install / run 外部项目、外部 runner、Notebook、qrun、样例或测试"
+    - "复制、裁剪、改写、vendoring、fork 或源码级迁移任何外部项目源码、样例、测试或数据"
+    - "provider fetch、真实联网补数、真实 lake write、catalog publish / current pointer publish、broker lake write 或 reports overwrite"
+    - "调用 QMT、MiniQMT、XtQuant；启动 gateway、端口绑定、simulation、live_readonly、small_live、scale_up"
+    - "发单、撤单、账户查询、持仓查询、账户写操作或 broker 操作"
+    - "读取、打印、记录或保存 token、API key、cookie、session、账号、密码、交易密码、私钥、.env 或其他凭据"
+    - "将 CR-030、因子评价报告、多因子组合、catalog 或 StrategyAdmissionPackage 声明为 production truth、QMT-ready、simulation-ready、live-ready、真实模拟盘可用、真实交易可用或真实可交易证据"
+    - "自动启动 CR-020..CR-024、CR-026、CR-027、CR-028、optimizer / ML / external runtime Spike"
+    - "将 CP8 approve 解释为真实 simulation 账号、QMT gateway、订单、账户、provider、lake 或 publish 的运行授权"
 checkpoints:
   requirement_confirmed: true
   hld_confirmed: true
   hld_status: "approved"
   hld_confirmation_state: "approved"
-  story_plan_status: "cp5-approved-for-cr014"
+  story_plan_status: "cp5-approved-for-cr015-cr016-cr017"
   story_plan_confirmed: true
-  story_lld_status: "approved-for-cr014"
+  story_lld_status: "approved-for-cr015-cr016-cr017"
   story_lld_confirmed: true
   final_review_confirmed: false
+  cr030_multifactor_research_framework_reference:
+    type: "cp4-story-plan-and-cp5-lld-batch"
+    status: "active-documentation"
+    change_id: "CR-030"
+    formal_cr: "process/changes/CR-030-MULTIFACTOR-RESEARCH-FRAMEWORK-REFERENCE-AND-RESEARCH-LOOP-STANDARDIZATION-2026-06-02.md"
+    source_tracking: "process/changes/CR-019-FOLLOW-UP-TRACKING-2026-05-31.md"
+    predecessor_cr: "CR-025"
+    predecessor_status: "closed-cp8-approved"
+    cp2_auto_result: "process/checks/CP2-CR030-REQUIREMENTS-BASELINE.md"
+    cp2_manual_review: "checkpoints/CP2-CR030-REQUIREMENTS-BASELINE.md"
+    cp2_discussion_log: "process/discussions/CP2-CR030-SCENARIO-DISCUSSION-LOG.md"
+    cp2_discussion_checkpoint: "process/checks/CP2-CR030-DISCUSSION-CHECKPOINT.json"
+    analysis_artifact: "process/research/CR030-MULTIFACTOR-FRAMEWORK-REFERENCE-ANALYSIS-2026-06-03.md"
+    meta_pm_handoff: "process/handoffs/META-PM-CR030-REQ-CLARIFICATION-2026-06-03.md"
+    external_reference_handoff: "process/handoffs/META-PO-CR030-EXTERNAL-REFERENCE-RESEARCH-2026-06-03.md"
+    cp3_hld_dispatch:
+      mode: "spawn_agent"
+      agent_id: "019e8a90-fde0-7621-a5bb-bba1e1212653"
+      agent_name: "se-wei"
+      tool_name: "multi_agent_v1.spawn_agent"
+      spawned_at: "2026-06-03T06:51:19+08:00"
+      completed_at: "2026-06-03T07:34:00+08:00"
+      closed_at: "2026-06-03T07:34:00+08:00"
+    cp3_hld_result: "process/HLD.md#35-cr-030-multifactor-research-framework-reference-与研究闭环标准化"
+    cp3_discussion_log: "process/discussions/CP3-CR030-HLD-DISCUSSION-LOG.md"
+    cp3_discussion_checkpoint: "process/checks/CP3-CR030-DISCUSSION-CHECKPOINT.json"
+    cp3_auto_result: "process/checks/CP3-CR030-HLD-CONSISTENCY.md"
+    cp3_manual_review: "checkpoints/CP3-CR030-HLD-REVIEW.md"
+    cp3_manual_status: "approved"
+    cp3_approved_by: "user"
+    cp3_approved_at: "2026-06-03T07:45:10+08:00"
+    cp3_approval_text: "@meta-po 之前的会话不可用了。我现在需要推进CR-030，HLD已完成设计，所有决策项我都同意了。你可以继续推进了。"
+    cp3_decisions:
+      DQ-CP3-CR030-01: "approved: 接受 CR30-A 项目自有多因子研究闭环；外部项目只 reference / Spike / exclude / forbidden migration。"
+      DQ-CP3-CR030-02: "approved: 采用项目自有契约 + 现有基线复用 + external cross-check + fail-closed。"
+      DQ-CP3-CR030-03: "approved: CR-026 Qlib isolated runner 保持后续 Spike candidate，不并行启动。"
+      DQ-CP3-CR030-04: "approved: P0 使用规则权重 / 轻量线性组合；optimizer 转 Spike。"
+      DQ-CP3-CR030-05: "approved: CP3 只批准 HLD 进入后续规划，不授权实现、依赖变更、外部项目运行或真实操作。"
+      DQ-CP3-CR030-06: "approved: StrategyAdmissionPackage 只输出 order_intent_draft_v1 草稿，真实 QMT / simulation / live 仍由 CR-020..CR-024 单独授权。"
+      DQ-CP3-CR030-07: "approved: 接受静态调研作为 CP3 证据，runtime 细节后续转 Spike。"
+    cp3_launch_message: "process/checks/CP3-CR030-HUMAN-GATE-LAUNCH-MESSAGE.md"
+    cp4_auto_result: "process/checks/CP4-CR030-STORY-DAG-PARALLEL-SAFETY.md"
+    cp4_auto_status: "PASS"
+    cp4_story_planning_handoff: "process/handoffs/META-SE-CR030-STORY-PLANNING-2026-06-03.md"
+    cp4_story_planning_dispatch:
+      mode: "spawn_agent"
+      agent_id: "019e8abc-ad25-7031-a728-5d91ce94e374"
+      agent_name: "se-chu"
+      tool_name: "multi_agent_v1.spawn_agent"
+      spawned_at: "2026-06-03T07:45:10+08:00"
+      completed_at: "2026-06-03T08:30:00+08:00"
+      closed_at: "2026-06-03T08:30:00+08:00"
+    cp5_lld_dispatches:
+      - group: "G1"
+        stories:
+          - "CR030-S01-external-reference-matrix-and-loop-contract"
+          - "CR030-S02-factor-spec-run-spec-contract"
+          - "CR030-S03-factor-panel-label-window-fail-closed"
+        mode: "spawn_agent"
+        agent_id: "019e8acf-4381-7781-afb6-d6af9580fc57"
+        agent_name: "dev-zhang"
+        tool_name: "multi_agent_v1.spawn_agent"
+        spawned_at: "2026-06-03T08:30:00+08:00"
+        completed_at: "2026-06-03T08:30:00+08:00"
+        closed_at: "2026-06-03T08:30:00+08:00"
+      - group: "G2"
+        stories:
+          - "CR030-S04-factor-evaluation-report"
+          - "CR030-S05-multifactor-combiner-portfolio-plan"
+          - "CR030-S06-experiment-manifest-report-catalog"
+        mode: "spawn_agent"
+        agent_id: "019e8acf-8877-7a82-b7d6-50767b7e76d6"
+        agent_name: "dev-yang"
+        tool_name: "multi_agent_v1.spawn_agent"
+        spawned_at: "2026-06-03T08:30:00+08:00"
+        completed_at: "2026-06-03T08:30:00+08:00"
+        closed_at: "2026-06-03T08:30:00+08:00"
+      - group: "G3"
+        stories:
+          - "CR030-S07-strategy-admission-package-handoff"
+          - "CR030-S08-safety-docs-and-follow-up-boundary"
+        mode: "spawn_agent"
+        agent_id: "019e8acf-c519-7e42-b5cf-d9e3809d9675"
+        agent_name: "dev-he"
+        tool_name: "multi_agent_v1.spawn_agent"
+        spawned_at: "2026-06-03T08:30:00+08:00"
+        completed_at: "2026-06-03T08:30:00+08:00"
+        closed_at: "2026-06-03T08:30:00+08:00"
+    cp5_auto_status: "PASS"
+    cp5_auto_pass_count: 8
+    cp5_manual_review: "checkpoints/CP5-CR030-MULTIFACTOR-RESEARCH-LOOP-BATCH-A-LLD-BATCH.md"
+    cp5_manual_status: "approved"
+    cp5_approved_by: "user"
+    cp5_approved_at: "2026-06-03T08:55:53+08:00"
+    cp5_approval_text: "@meta-po 同意，继续"
+    cp5_decisions:
+      DQ-CP5-CR030-01: "approved: 接受全量 LLD 批次；实现出口包含项目自有多因子研究、本地回测和模拟盘前策略准备包。"
+      DQ-CP5-CR030-02: "approved: 接受当前 DAG 与 merge order；S03 等共享 owner 冲突后续串行判定。"
+      DQ-CP5-CR030-03: "approved: CR-026、optimizer、外部 runtime 保持后续 Spike，不进入 CR-030 P0。"
+      DQ-CP5-CR030-04: "approved: CP5 仍不授权依赖变更、外部项目运行、provider/lake/publish、QMT/simulation/live、账户/订单或凭据读取。"
+      DQ-CP5-CR030-05: "approved: 接受静态 LLD 和 CP5 自动预检作为进入受控实现的充分设计证据。"
+    cp5_launch_message: "process/checks/CP5-CR030-HUMAN-GATE-LAUNCH-MESSAGE.md"
+    implementation_allowed: true
+    dependency_change_authorized: false
+    external_repo_clone_install_run_authorized: false
+    source_migration_authorized: false
+    provider_fetch_authorized: false
+    lake_write_authorized: false
+    publish_authorized: false
+    qmt_simulation_live_authorized: false
+    credential_access_authorized: false
+    cp8_auto_result: "process/checks/CP8-CR030-DELIVERY-READINESS.md"
+    cp8_auto_status: "PASS"
+    cp8_manual_review: "checkpoints/CP8-CR030-DELIVERY-READINESS.md"
+    cp8_manual_status: "pending"
+    cp8_launch_message: "process/checks/CP8-CR030-HUMAN-GATE-LAUNCH-MESSAGE.md"
+    story_execution_all_verified: true
+    next_gate: "CP8 CR030 delivery readiness manual review"
+    next_action: "等待用户审查 checkpoints/CP8-CR030-DELIVERY-READINESS.md；回复 approve / 修改: <具体修改点> / reject。"
+  cr025_research_execution_semantic_alignment:
+    type: "cp4-story-plan-and-cp5-lld-batch"
+    status: "closed"
+    change_id: "CR-025"
+    batch_id: "CR025-RESEARCH-EXECUTION-SEMANTIC-ALIGNMENT-BATCH-A"
+    cp3_manual_review: "checkpoints/CP3-CR025-HLD-REVIEW.md"
+    cp3_manual_status: "approved"
+    cp4_auto_result: "process/checks/CP4-CR025-STORY-DAG-PARALLEL-SAFETY.md"
+    cp4_auto_status: "PASS"
+    story_count: 6
+    wave_count: 4
+    lld_count: 6
+    cp5_auto_pass_count: 6
+    cp5_auto_status: "PASS"
+    cp5_manual_review: "checkpoints/CP5-CR025-RESEARCH-EXECUTION-SEMANTIC-ALIGNMENT-BATCH-A-LLD-BATCH.md"
+    cp5_manual_status: "approved"
+    cp5_approved_by: "user"
+    cp5_approved_at: "2026-06-02T07:19:31+08:00"
+    cp5_approval_text: "@meta-po 将后续多因子框架借鉴其他github项目的cr记录好，CR中需要有足够的上下文。然后继续推进CR-025"
+    cp8_auto_result: "process/checks/CP8-CR025-DELIVERY-READINESS.md"
+    cp8_auto_status: "PASS"
+    cp8_manual_review: "checkpoints/CP8-CR025-DELIVERY-READINESS.md"
+    cp8_manual_status: "approved"
+    cp8_created_at: "2026-06-02T22:43:00+08:00"
+    cp8_approved_by: "user"
+    cp8_approved_at: "2026-06-02T23:10:16+08:00"
+    cp8_approval_text: "好的关闭CR025"
+    cp8_launch_message: "process/checks/CP8-CR025-HUMAN-GATE-LAUNCH-MESSAGE.md"
+    documentation_summary: "process/checks/DOC-CR025-DELIVERY-READINESS-SUMMARY-2026-06-02.md"
+    delivery_status: "closed-delivered"
+    lld_status: "approved"
+    lld_handoffs:
+      - "process/handoffs/META-DEV-CR025-LLD-BATCH-A-2026-06-01.md"
+      - "process/handoffs/META-DEV-CR025-LLD-BATCH-B-2026-06-01.md"
+    story_llds:
+      - "process/stories/CR025-S01-clean-feed-gate-backend-selector-LLD.md"
+      - "process/stories/CR025-S02-semantic-diff-schema-artifact-LLD.md"
+      - "process/stories/CR025-S03-order-intent-draft-qmt-boundary-LLD.md"
+      - "process/stories/CR025-S04-backtrader-module-reference-no-copy-guardrail-LLD.md"
+      - "process/stories/CR025-S05-no-real-operation-safety-verification-LLD.md"
+      - "process/stories/CR025-S06-route-docs-and-follow-up-handoff-LLD.md"
+    cp5_auto_results:
+      - "process/checks/CP5-CR025-S01-clean-feed-gate-backend-selector-LLD-IMPLEMENTABILITY.md"
+      - "process/checks/CP5-CR025-S02-semantic-diff-schema-artifact-LLD-IMPLEMENTABILITY.md"
+      - "process/checks/CP5-CR025-S03-order-intent-draft-qmt-boundary-LLD-IMPLEMENTABILITY.md"
+      - "process/checks/CP5-CR025-S04-backtrader-module-reference-no-copy-guardrail-LLD-IMPLEMENTABILITY.md"
+      - "process/checks/CP5-CR025-S05-no-real-operation-safety-verification-LLD-IMPLEMENTABILITY.md"
+      - "process/checks/CP5-CR025-S06-route-docs-and-follow-up-handoff-LLD-IMPLEMENTABILITY.md"
+    implementation_allowed: true
+    dependency_change_authorized: false
+    backtrader_runtime_authorized: false
+    source_migration_authorized: false
+    real_operation_authorized: false
+    multifactor_research_framework_authorized: false
+    story_execution:
+      current_wave: "CR025-W4-SAFETY-VERIFICATION-DOCS"
+      dev_ready: []
+      dev_running: []
+      verify_ready: []
+      verify_running: []
+      verify_failed:
+        - story_id: "CR025-S06-route-docs-and-follow-up-handoff"
+          status: "cp7-failed-fixed-reverified-pass"
+          handoff_path: "process/handoffs/META-QA-CR025-S06-CP7-VERIFY-2026-06-02.md"
+          cp6_checkpoint: "process/checks/CP6-CR025-S06-route-docs-and-follow-up-handoff-CODING-DONE.md"
+          cp7_checkpoint: "process/checks/CP7-CR025-S06-route-docs-and-follow-up-handoff-VERIFICATION-DONE.md"
+          agent_name: "qa-wei"
+          agent_id: "019e8602-5d35-7622-8f24-0a8adc1290ca"
+          thread_id: "019e8602-5d35-7622-8f24-0a8adc1290ca"
+          tool_name: "multi_agent_v1.spawn_agent"
+          completed_at: "2026-06-02T09:50:46+08:00"
+          closed_at: "2026-06-02T09:53:55+08:00"
+          blocker_id: "CR025-S06-CP7-F01"
+          blocker_summary: "bounded static trace scan 缺失 handoff 要求的精确 token `QuantConnect LEAN`；当前仅出现 `LEAN`。"
+          required_fix: "将 S06 bounded scan 文件集中候选参考对象的 `LEAN` 精确命名为 `QuantConnect LEAN`，保持后续 CR-only / not-authorized 边界，并重新执行 CP6 blocker-fix 与 CP7 复验。"
+          reverify_checkpoint: "process/checks/CP7-CR025-S06-route-docs-and-follow-up-handoff-REVERIFY-DONE.md"
+          reverify_status: "PASS"
+          reverified_at: "2026-06-02T22:22:55+08:00"
+      verified:
+        - story_id: "CR025-S01-clean-feed-gate-backend-selector"
+          cp6_checkpoint: "process/checks/CP6-CR025-S01-clean-feed-gate-backend-selector-CODING-DONE.md"
+          cp6_status: "PASS"
+          cp7_checkpoint: "process/checks/CP7-CR025-S01-clean-feed-gate-backend-selector-VERIFICATION-DONE.md"
+          cp7_status: "PASS"
+          verified_at: "2026-06-02T07:55:45+08:00"
+        - story_id: "CR025-S04-backtrader-module-reference-no-copy-guardrail"
+          cp6_checkpoint: "process/checks/CP6-CR025-S04-backtrader-module-reference-no-copy-guardrail-CODING-DONE.md"
+          cp6_status: "PASS"
+          cp7_checkpoint: "process/checks/CP7-CR025-S04-backtrader-module-reference-no-copy-guardrail-VERIFICATION-DONE.md"
+          cp7_status: "PASS"
+          verified_at: "2026-06-02T07:55:45+08:00"
+        - story_id: "CR025-S02-semantic-diff-schema-artifact"
+          cp6_checkpoint: "process/checks/CP6-CR025-S02-semantic-diff-schema-artifact-CODING-DONE.md"
+          cp6_status: "PASS"
+          cp7_checkpoint: "process/checks/CP7-CR025-S02-semantic-diff-schema-artifact-VERIFICATION-DONE.md"
+          cp7_status: "PASS"
+          verified_at: "2026-06-02T08:21:16+08:00"
+        - story_id: "CR025-S03-order-intent-draft-qmt-boundary"
+          cp6_checkpoint: "process/checks/CP6-CR025-S03-order-intent-draft-qmt-boundary-CODING-DONE.md"
+          cp6_status: "PASS"
+          cp7_checkpoint: "process/checks/CP7-CR025-S03-order-intent-draft-qmt-boundary-VERIFICATION-DONE.md"
+          cp7_status: "PASS"
+          verified_at: "2026-06-02T08:50:30+08:00"
+        - story_id: "CR025-S05-no-real-operation-safety-verification"
+          cp6_checkpoint: "process/checks/CP6-CR025-S05-no-real-operation-safety-verification-CODING-DONE.md"
+          cp6_status: "PASS"
+          cp7_checkpoint: "process/checks/CP7-CR025-S05-no-real-operation-safety-verification-VERIFICATION-DONE.md"
+          cp7_status: "PASS"
+          verified_at: "2026-06-02T09:18:42+08:00"
+        - story_id: "CR025-S06-route-docs-and-follow-up-handoff"
+          cp6_checkpoint: "process/checks/CP6-CR025-S06-route-docs-and-follow-up-handoff-CODING-DONE.md"
+          cp6_status: "PASS"
+          cp6_blocker_fix_checkpoint: "process/checks/CP6-CR025-S06-CP7-BLOCKER-FIX-CODING-DONE.md"
+          cp6_blocker_fix_status: "PASS"
+          cp7_first_checkpoint: "process/checks/CP7-CR025-S06-route-docs-and-follow-up-handoff-VERIFICATION-DONE.md"
+          cp7_first_status: "FAIL"
+          cp7_checkpoint: "process/checks/CP7-CR025-S06-route-docs-and-follow-up-handoff-REVERIFY-DONE.md"
+          cp7_status: "PASS"
+          verified_at: "2026-06-02T22:26:23+08:00"
+      blocked_by_dependency: []
+  cr019_stage6_qmt_bridge:
+    type: "cp5-lld-batch-review"
+    status: "closed"
+    change_id: "CR-019"
+    batch_id: "CR019-STAGE6-QMT-BRIDGE-BATCH-A"
+    cp4_auto_result: "process/checks/CP4-CR019-STORY-DAG-PARALLEL-SAFETY.md"
+    cp4_auto_status: "PASS"
+    lld_count: 10
+    cp5_auto_pass_count: 10
+    cp5_auto_status: "PASS"
+    cp5_manual_review: "checkpoints/CP5-CR019-STAGE6-QMT-BRIDGE-BATCH-A-LLD-BATCH.md"
+    cp5_manual_status: "approved"
+    cp5_approved_by: "user"
+    cp5_approved_at: "2026-05-30T18:56:50+08:00"
+    cp8_auto_result: "process/checks/CP8-CR019-DELIVERY-READINESS.md"
+    cp8_auto_status: "PASS"
+    cp8_manual_review: "checkpoints/CP8-CR019-DELIVERY-READINESS.md"
+    cp8_manual_status: "approved"
+    cp8_created_at: "2026-05-31T10:26:53+08:00"
+    cp8_approved_by: "user"
+    cp8_approved_at: "2026-05-31T10:43:18+08:00"
+    cp8_approval_text: "同意，按照你建议实施"
+    follow_up_tracking: "process/changes/CR-019-FOLLOW-UP-TRACKING-2026-05-31.md"
+    delivery_status: "closed-delivered"
+    lld_status: "approved"
+    blocking_open_items: 0
+    non_blocking_open_items:
+      - "O-CR019-S04-01"
+      - "LCQ-CR019-S10-01"
+      - "CR019-S05 TTL/skew/nonce 默认值"
+      - "CR019-S06 完整 endpoint matrix 范围"
+      - "CR019-S07 blocked reason priority"
+    story_execution:
+      current_story: "CR019-S10-docs-runbook-user-manual-boundary"
+      current_story_status: "verified"
+      wave_id: "CR019-W5-DOCS-RUNBOOK"
+      cp6_result: "process/checks/CP6-CR019-S01-stage6-admission-gate-package-CODING-DONE.md"
+      cp6_status: "PASS"
+      cp7_handoff: "process/handoffs/META-QA-CR019-S01-CP7-VERIFY-2026-05-30.md"
+      cp7_result: "process/checks/CP7-CR019-S01-stage6-admission-gate-package-VERIFICATION-DONE.md"
+      cp7_status: "PASS"
+      qa_agent_id: "019e789d-05c2-7b62-bb76-deab5c911c4b"
+      qa_agent_name: "qa-cao"
+      qa_started_at: "2026-05-30T19:20:20+08:00"
+      qa_completed_at: "2026-05-30T19:25:30+08:00"
+      qa_closed_at: "2026-05-30T19:25:30+08:00"
+      s02_dev_handoff: "process/handoffs/META-DEV-CR019-S02-IMPLEMENT-2026-05-30.md"
+      s02_dev_agent_id: "019e78a4-9720-7133-bb77-26978f45be69"
+      s02_dev_agent_name: "dev-you"
+      s02_dev_started_at: "2026-05-30T19:28:38+08:00"
+      s02_dev_completed_at: "2026-05-30T19:41:55+08:00"
+      s02_dev_closed_at: "2026-05-30T19:41:55+08:00"
+      s02_cp6_result: "process/checks/CP6-CR019-S02-primary-benchmark-dashboard-CODING-DONE.md"
+      s02_cp6_status: "PASS"
+      s02_cp7_handoff: "process/handoffs/META-QA-CR019-S02-CP7-VERIFY-2026-05-30.md"
+      s02_cp7_result: "process/checks/CP7-CR019-S02-primary-benchmark-dashboard-VERIFICATION-DONE.md"
+      s02_cp7_status: "PASS"
+      s02_qa_agent_id: "019e78b4-95cb-7e53-b841-719d0f0f530b"
+      s02_qa_agent_name: "qa-zhang"
+      s02_qa_started_at: "2026-05-30T19:46:03+08:00"
+      s02_qa_completed_at: "2026-05-30T19:51:32+08:00"
+      s02_qa_closed_at: "2026-05-30T19:51:32+08:00"
+      s03_dev_handoff: "process/handoffs/META-DEV-CR019-S03-IMPLEMENT-2026-05-30.md"
+      s03_dev_agent_id: "019e78be-613b-7783-bca1-b48ef8e38365"
+      s03_dev_agent_name: "dev-qin"
+      s03_dev_started_at: "2026-05-30T19:56:46+08:00"
+      s03_dev_completed_at: "2026-05-30T20:04:42+08:00"
+      s03_dev_closed_at: "2026-05-30T20:10:44+08:00"
+      s03_cp6_result: "process/checks/CP6-CR019-S03-qmt-cside-client-cli-contract-CODING-DONE.md"
+      s03_cp6_status: "PASS"
+      s03_cp7_handoff: "process/handoffs/META-QA-CR019-S03-CP7-VERIFY-2026-05-30.md"
+      s03_cp7_result: "process/checks/CP7-CR019-S03-qmt-cside-client-cli-contract-VERIFICATION-DONE.md"
+      s03_cp7_status: "PASS"
+      s03_qa_agent_id: "019e78cd-b3e8-74c0-ba1e-6172a5bf125e"
+      s03_qa_agent_name: "qa-shi"
+      s03_qa_started_at: "2026-05-30T20:13:30+08:00"
+      s03_qa_completed_at: "2026-05-30T20:16:35+08:00"
+      s03_qa_closed_at: "2026-05-30T20:21:24+08:00"
+      verified:
+        - "CR019-S01-stage6-admission-gate-package"
+        - "CR019-S02-primary-benchmark-dashboard"
+        - "CR019-S03-qmt-cside-client-cli-contract"
+        - "CR019-S04-windows-gateway-lifecycle-deployment"
+        - "CR019-S05-pairing-hmac-auth-redaction"
+        - "CR019-S06-qmt-endpoint-matrix-contract"
+        - "CR019-S07-run-gate-blocked-reason-integration"
+        - "CR019-S08-fallback-incident-signed-file-boundary"
+        - "CR019-S09-deferred-capability-register"
+        - "CR019-S10-docs-runbook-user-manual-boundary"
+      dev_running: []
+      dev_ready: []
+      next_dev_candidate: ""
+      s04_dev_handoff: "process/handoffs/META-DEV-CR019-S04-IMPLEMENT-2026-05-30.md"
+      s04_dev_agent_id: "019e78d8-0980-7af0-83a0-5c0b4aaa8d74"
+      s04_dev_agent_name: "dev-lv"
+      s04_dev_started_at: "2026-05-30T20:24:51+08:00"
+      s04_dev_completed_at: "2026-05-30T20:32:44+08:00"
+      s04_dev_closed_at: "2026-05-30T20:37:15+08:00"
+      s04_cp6_result: "process/checks/CP6-CR019-S04-windows-gateway-lifecycle-deployment-CODING-DONE.md"
+      s04_cp6_status: "PASS"
+      s04_cp7_handoff: "process/handoffs/META-QA-CR019-S04-CP7-VERIFY-2026-05-30.md"
+      s04_cp7_dispatch_status: "completed-closed"
+      s04_qa_agent_id: "019e78e8-037c-78c1-81e8-050ec8d844f5"
+      s04_qa_agent_name: "qa-wei"
+      s04_qa_started_at: "2026-05-30T20:42:15+08:00"
+      s04_qa_completed_at: "2026-05-30T20:45:16+08:00"
+      s04_qa_closed_at: "2026-05-30T20:49:47+08:00"
+      s04_cp7_result: "process/checks/CP7-CR019-S04-windows-gateway-lifecycle-deployment-VERIFICATION-DONE.md"
+      s04_cp7_status: "PASS"
+      s05_dev_gate: "ready"
+      s05_dev_handoff: "process/handoffs/META-DEV-CR019-S05-IMPLEMENT-2026-05-30.md"
+      s05_dev_agent_id: "019e78f3-f659-7760-8a21-84d1b14832d4"
+      s05_dev_agent_name: "dev-yang"
+      s05_dev_started_at: "2026-05-30T20:55:19+08:00"
+      s05_dev_completed_at: "2026-05-30T21:07:46+08:00"
+      s05_dev_closed_at: "2026-05-30T21:07:46+08:00"
+      s05_cp6_result: "process/checks/CP6-CR019-S05-pairing-hmac-auth-redaction-CODING-DONE.md"
+      s05_cp6_status: "PASS"
+      s05_cp7_handoff: "process/handoffs/META-QA-CR019-S05-CP7-VERIFY-2026-05-30.md"
+      s05_cp7_dispatch_status: "completed-closed"
+      s05_qa_agent_id: "019e7905-1ec5-77d3-b270-784c0fb0a48f"
+      s05_qa_agent_name: "qa-yan"
+      s05_qa_started_at: "2026-05-30T21:14:03+08:00"
+      s05_qa_completed_at: "2026-05-30T21:17:14+08:00"
+      s05_qa_closed_at: "2026-05-30T21:21:14+08:00"
+      s05_cp7_result: "process/checks/CP7-CR019-S05-pairing-hmac-auth-redaction-VERIFICATION-DONE.md"
+      s05_cp7_status: "PASS"
+      s05_story_status: "verified"
+      s06_dev_gate: "ready"
+      s06_dev_handoff: "process/handoffs/META-DEV-CR019-S06-IMPLEMENT-2026-05-31.md"
+      s06_dev_agent_id: "019e7b57-2b50-7353-a782-a0f6ddc513af"
+      s06_dev_agent_name: "dev-you"
+      s06_dev_started_at: "2026-05-31T08:02:53+08:00"
+      s06_dev_completed_at: "2026-05-31T08:12:36+08:00"
+      s06_dev_closed_at: "2026-05-31T08:15:43+08:00"
+      s06_cp6_result: "process/checks/CP6-CR019-S06-qmt-endpoint-matrix-contract-CODING-DONE.md"
+      s06_cp6_status: "PASS"
+      s06_cp7_handoff: "process/handoffs/META-QA-CR019-S06-CP7-VERIFY-2026-05-31.md"
+      s06_cp7_dispatch_status: "completed-closed"
+      s06_qa_agent_id: "019e7b64-9eb5-7193-99d1-57466159d32d"
+      s06_qa_agent_name: "qa-wei"
+      s06_qa_started_at: "2026-05-31T08:17:35+08:00"
+      s06_qa_completed_at: "2026-05-31T08:19:59+08:00"
+      s06_qa_closed_at: "2026-05-31T08:25:16+08:00"
+      s06_cp7_result: "process/checks/CP7-CR019-S06-qmt-endpoint-matrix-contract-VERIFICATION-DONE.md"
+      s06_cp7_status: "PASS"
+      s06_story_status: "verified"
+      s06_main_thread_cp7_result: "PASS: py_compile; S06+S03/S04/S05 regression 36 passed in 0.19s; dependency diff empty; cache status empty; forbidden import scan empty; counters all zero"
+      s07_dev_gate: "ready"
+      s07_dev_handoff: "process/handoffs/META-DEV-CR019-S07-IMPLEMENT-2026-05-31.md"
+      s07_dev_agent_id: "019e7b6d-929e-7bd2-be73-cbdad9a94a36"
+      s07_dev_agent_name: "dev-he"
+      s07_dev_started_at: "2026-05-31T08:27:22+08:00"
+      s07_dev_completed_at: "2026-05-31T08:37:31+08:00"
+      s07_dev_closed_at: "2026-05-31T08:42:42+08:00"
+      s07_cp6_result: "process/checks/CP6-CR019-S07-run-gate-blocked-reason-integration-CODING-DONE.md"
+      s07_cp6_status: "PASS"
+      s07_story_status: "verified"
+      s07_main_thread_cp6_result: "PASS: py_compile; S07+S06/S05/CR015/CR016 regression 70 passed in 0.31s; dependency diff empty; cache status empty; forbidden import scan empty; gateway gate counters all zero"
+      s07_cp7_handoff: "process/handoffs/META-QA-CR019-S07-CP7-VERIFY-2026-05-31.md"
+      s07_cp7_dispatch_status: "completed-closed"
+      s07_qa_agent_id: "019e7b7d-4f34-7fe0-9678-bf8f8b8f26ae"
+      s07_qa_agent_name: "qa-yan"
+      s07_qa_started_at: "2026-05-31T08:44:33+08:00"
+      s07_qa_completed_at: "2026-05-31T08:46:57+08:00"
+      s07_qa_closed_at: "2026-05-31T08:50:59+08:00"
+      s07_cp7_result: "process/checks/CP7-CR019-S07-run-gate-blocked-reason-integration-VERIFICATION-DONE.md"
+      s07_cp7_status: "PASS"
+      s07_main_thread_cp7_result: "PASS: py_compile; S07+S06/S05/CR015/CR016 regression 70 passed in 0.27s; dependency diff empty; cache status empty; forbidden import scan empty; broad/dangerous/prompt scans PASS; gateway gate counters all zero"
+      s08_dev_gate: "ready"
+      s08_dev_handoff: "process/handoffs/META-DEV-CR019-S08-IMPLEMENT-2026-05-31.md"
+      s08_dev_agent_id: "019e7b88-93ba-7223-b0f1-859c712eaf25"
+      s08_dev_agent_name: "dev-yang"
+      s08_dev_started_at: "2026-05-31T08:56:52+08:00"
+      s08_dev_completed_at: "2026-05-31T09:04:53+08:00"
+      s08_dev_closed_at: "2026-05-31T09:10:25+08:00"
+      s08_cp6_result: "process/checks/CP6-CR019-S08-fallback-incident-signed-file-boundary-CODING-DONE.md"
+      s08_cp6_status: "PASS"
+      s08_main_thread_cp6_result: "PASS: py_compile; S08+S07/S04/S05/S06 regression 54 passed in 0.25s; dependency diff empty; cache status empty; forbidden import scan empty; fallback counters all zero"
+      s08_story_status: "verified"
+      s08_cp7_handoff: "process/handoffs/META-QA-CR019-S08-CP7-VERIFY-2026-05-31.md"
+      s08_cp7_dispatch_status: "completed-closed"
+      s08_qa_agent_id: "019e7b97-e047-7673-ab10-e375d3ce62e0"
+      s08_qa_agent_name: "qa-hua"
+      s08_qa_started_at: "2026-05-31T09:13:33+08:00"
+      s08_qa_completed_at: "2026-05-31T09:16:42+08:00"
+      s08_qa_closed_at: "2026-05-31T09:23:13+08:00"
+      s08_cp7_result: "process/checks/CP7-CR019-S08-fallback-incident-signed-file-boundary-VERIFICATION-DONE.md"
+      s08_cp7_status: "PASS"
+      s08_main_thread_cp7_result: "PASS: py_compile; S08+S07/S04/S05/S06 regression 54 passed in 0.25s; dependency diff empty; cache status empty; forbidden import scan empty; fallback counters all zero"
+      s09_dev_gate: "ready"
+      s09_dev_handoff: "process/handoffs/META-DEV-CR019-S09-IMPLEMENT-2026-05-31.md"
+      s09_dev_agent_id: "019e7ba4-f915-7df2-9443-99586f4e7676"
+      s09_dev_agent_name: "dev-xu"
+      s09_dev_started_at: "2026-05-31T09:27:52+08:00"
+      s09_dev_completed_at: "2026-05-31T09:34:30+08:00"
+      s09_dev_closed_at: "2026-05-31T09:38:44+08:00"
+      s09_cp6_result: "process/checks/CP6-CR019-S09-deferred-capability-register-CODING-DONE.md"
+      s09_cp6_status: "PASS"
+      s09_story_status: "verified"
+      s09_main_thread_cp6_result: "PASS: py_compile; S09+S01/S02 regression 22 passed in 0.08s; dependency diff empty; cache status empty; focused real-config and enablement scans empty; dangerous scan only README existing uv sync examples; prompt scan empty; diff check PASS"
+      s09_cp7_handoff: "process/handoffs/META-QA-CR019-S09-CP7-VERIFY-2026-05-31.md"
+      s09_cp7_dispatch_status: "completed-closed"
+      s09_qa_agent_id: "019e7bb2-d91e-7513-8a5e-a16a0e6528c9"
+      s09_qa_agent_name: "qa-he"
+      s09_qa_started_at: "2026-05-31T09:43:03+08:00"
+      s09_qa_completed_at: "2026-05-31T09:45:23+08:00"
+      s09_qa_closed_at: "2026-05-31T09:50:40+08:00"
+      s09_cp7_result: "process/checks/CP7-CR019-S09-deferred-capability-register-VERIFICATION-DONE.md"
+      s09_cp7_status: "PASS"
+      s09_main_thread_cp7_result: "PASS: py_compile; S09+S01/S02 regression 22 passed in 0.08s; dependency diff empty; cache status empty; focused real-config and enablement scans empty; dangerous scan only README existing uv sync examples; prompt scan empty; diff check PASS"
+      s10_dev_gate: "ready"
+      s10_dev_ready_at: "2026-05-31T09:52:21+08:00"
+      s10_story_status: "verified"
+      s10_dev_ready_reason: "S01..S09 均已 verified，CP5/LLD confirmed，当前无 dev_running 文件冲突；只允许文档 / runbook / 静态测试实现，不授权真实交易、服务启动、凭据读取、provider fetch、lake / broker lake 写入、publish 或 simulation/live。"
+      s10_dev_handoff: "process/handoffs/META-DEV-CR019-S10-IMPLEMENT-2026-05-31.md"
+      s10_dev_agent_id: "019e7bbd-ebb5-74a3-8745-f3dc74cfc1f0"
+      s10_dev_agent_name: "dev-qin"
+      s10_dev_started_at: "2026-05-31T09:55:07+08:00"
+      s10_dev_completed_at: "2026-05-31T10:04:36+08:00"
+      s10_dev_closed_at: "2026-05-31T10:10:20+08:00"
+      s10_cp6_result: "process/checks/CP6-CR019-S10-docs-runbook-user-manual-boundary-CODING-DONE.md"
+      s10_cp6_status: "PASS"
+      s10_main_thread_cp6_result: "PASS: py_compile; S10+S09+S08+S07 regression 38 passed in 0.17s; dependency diff empty; cache status empty; static docs boundary tests PASS; suggested scans reviewed with benign forbidden-boundary/placeholders/blocked-QMT mentions; prompt scan empty; diff check PASS"
+      s10_cp7_handoff: "process/handoffs/META-QA-CR019-S10-CP7-VERIFY-2026-05-31.md"
+      s10_cp7_dispatch_status: "completed-closed"
+      s10_qa_agent_id: "019e7bd0-f92b-7550-be16-3a8fe67f77de"
+      s10_qa_agent_name: "qa-kong"
+      s10_qa_started_at: "2026-05-31T10:15:57+08:00"
+      s10_qa_completed_at: "2026-05-31T10:18:14+08:00"
+      s10_qa_closed_at: "2026-05-31T10:21:33+08:00"
+      s10_cp7_result: "process/checks/CP7-CR019-S10-docs-runbook-user-manual-boundary-VERIFICATION-DONE.md"
+      s10_cp7_status: "PASS"
+      s10_main_thread_cp7_result: "PASS: py_compile; S10+S09+S08+S07 regression 38 passed in 0.18s; dependency diff empty; cache status empty; sensitive/permission scan reviewed with only forbidden-boundary/placeholders/denylist/history safety hits; real-config scan reviewed with only pip-install prohibition; dangerous scan reviewed with uv sync examples; prompt scan empty; diff check PASS"
+      verify_ready: []
+      verify_running: []
+    real_operation_authorization:
+      implementation_allowed: true
+      implementation_scope: "controlled offline / fixture / dry-run contract implementation only"
+      dependency_change_authorized: false
+      fastapi_service_start_authorized: false
+      credential_read_allowed: false
+      real_qmt_operation_allowed: false
+      real_order_allowed: false
+      real_cancel_allowed: false
+      real_account_query_allowed: false
+      real_provider_fetch_allowed: false
+      real_lake_write_allowed: false
+      broker_lake_write_allowed: false
+      current_pointer_publish_allowed: false
+      simulation_or_live_run_allowed: false
+  cr015_cr016_cr017_intake:
+    type: "cp2-intake-decision"
+    status: "approved"
+    change_ids:
+      - "CR-015"
+      - "CR-016"
+      - "CR-017"
+    manual_review: "checkpoints/CP2-CR015-CR016-CR017-INTAKE-DECISION-BRIEF.md"
+    approved_by: "user"
+    approved_at: "2026-05-27T22:50:13+08:00"
+    approval_text: "@meta-po approve 全部推荐方案。你可以组织子agent开始实现这几个CR了"
+    decisions:
+      D-ALL-01: "approved: mixed sequence; CR-017 freezes adjustment/raw boundary, CR-015 foundation may design in parallel, CR-016 activation remains gated."
+      D-CR15-01: "approved: Windows QMT/MiniQMT node + XtQuant external Python API + OMS + adapter; strategies cannot call QMT directly."
+      D-CR15-02: "approved: local order state machine, external broker lake, pre-trade hard risk gate, shadow/dry-run/mock only before later gates."
+      D-CR17-01: "approved: prices_raw + adj_factor as facts, derived prices_qfq/prices_hfq/returns_adjusted, qfq as_of_trade_date, QMT raw/broker price only."
+      D-CR16-01: "approved: shadow -> QMT simulation -> live-readonly -> small-live -> scale-up, with runbook, reconciliation, kill switch and per-run authorization."
+    pm_handoff: "process/handoffs/META-PM-CR015-CR016-CR017-REQ-CLARIFICATION-2026-05-27.md"
+    pm_agent_id: "019e69ec-0002-7860-969e-a4cce1cb4ae9"
+    pm_agent_name: "pm-wu"
+    pm_spawned_at: "2026-05-27T22:50:13+08:00"
+    pm_completed_at: "2026-05-27T23:10:03+08:00"
+    pm_dispatch_status: "completed"
+    use_case_refresh: "process/USE-CASES.md#UC-10"
+    requirement_refresh: "process/REQUIREMENTS.md#REQ-098"
+    clarification_log_refresh: "process/CLARIFICATION-LOG.md#Q-030"
+    cp1_auto_result: "process/checks/CP1-CR015-CR016-CR017-USE-CASE-COMPLETENESS.md"
+    cp1_auto_status: "PASS"
+    cp2_auto_result: "process/checks/CP2-CR015-CR016-CR017-REQUIREMENTS-BASELINE.md"
+    cp2_auto_status: "PASS"
+    cp2_manual_status: "approved"
+    se_handoff: "process/handoffs/META-SE-CR015-CR016-CR017-HLD-ADR-2026-05-27.md"
+    se_agent_id: "019e69ff-0806-7741-a078-3f126c84b31b"
+    se_agent_name: "se-han"
+    se_dispatch_status: "completed"
+    se_spawned_at: "2026-05-27T23:10:03+08:00"
+    se_completed_at: "2026-05-27T23:29:20+08:00"
+    hld_refresh: "process/HLD.md#31-cr-015--cr-016--cr-017-研究消费边界同步"
+    hld_data_lake_refresh: "process/HLD-DATA-LAKE.md#18-cr-017-复权双视图与-qmt-原始交易价隔离"
+    hld_qmt_trading: "process/HLD-QMT-TRADING.md"
+    adr_refresh: "process/ARCHITECTURE-DECISION.md#adr-053adr-061"
+    cp3_auto_result: "process/checks/CP3-CR015-CR016-CR017-HLD-CONSISTENCY.md"
+    cp3_auto_status: "PASS"
+    cp3_manual_review: "checkpoints/CP3-CR015-CR016-CR017-HLD-REVIEW.md"
+    cp3_manual_status: "approved"
+    cp3_approved_by: "user"
+    cp3_approved_at: "2026-05-28T05:47:14+08:00"
+    cp3_approval_text: "@meta-po 通过审批，可以按照你推荐的方案，组织子agent推进项目。"
+    cp3_decisions:
+      Q-030: "approved recommended adjustment formula / factor direction / qfq as-of / anomaly quality handling."
+      Q-031: "approved independent raw/adj/qfq/hfq/returns views and old qfq read-only compatibility."
+      Q-032: "approved external broker lake schema, retention and redaction boundary."
+      Q-033: "approved OMS state machine including unknown/timeout/manual_review/frozen."
+      Q-034: "approved pre-trade hard risk gate with adapter_calls=0 on failure."
+      Q-035: "approved shadow -> simulation -> live_readonly -> small_live -> scale_up stage gate."
+      Q-036: "approved T+1 limit/protective price, timeout cancel and retry cap."
+      Q-037: "approved reconciliation thresholds, manual_review / kill switch and recovery gate."
+      Q-038: "approved Linux research node and Windows QMT node decoupling via signed file drop + ack/error enum default."
+    resume_context: "process/handoffs/META-PO-CR015-CR016-CR017-CONTEXT-RESUME-2026-05-28.md"
+    story_planning_handoff: "process/handoffs/META-SE-CR015-CR016-CR017-STORY-PLANNING-2026-05-28.md"
+    story_planning_agent_id: "019e6b6b-8496-7371-bcaf-4368f0de8f41"
+    story_planning_agent_name: "se-han"
+    story_planning_dispatch_status: "completed"
+    story_planning_spawned_at: "2026-05-28T05:51:12+08:00"
+    story_planning_completed_at: "2026-05-28T06:17:53+08:00"
+    story_planning_closed_at: "2026-05-28T06:20:01+08:00"
+    story_planning_result: "PASS: 20 Stories, 8 Waves, 3 LLD batches, CP4 auto precheck PASS."
+    cp4_auto_result: "process/checks/CP4-CR015-CR016-CR017-STORY-DAG-PARALLEL-SAFETY.md"
+    cp4_auto_status: "PASS"
+    story_cards:
+      - "process/stories/CR017-S01-adjustment-policy-requirements-and-adr-refresh.md"
+      - "process/stories/CR017-S02-raw-prices-and-adj-factor-contract-hardening.md"
+      - "process/stories/CR017-S03-qfq-hfq-derived-view-normalization.md"
+      - "process/stories/CR017-S04-reader-api-and-policy-gates.md"
+      - "process/stories/CR017-S05-validation-quality-parity-and-leakage-tests.md"
+      - "process/stories/CR017-S06-research-qmt-consumer-docs-and-migration-guide.md"
+      - "process/stories/CR015-S01-qmt-environment-and-interface-spike.md"
+      - "process/stories/CR015-S02-qmt-broker-adapter-contract.md"
+      - "process/stories/CR015-S03-oms-order-state-machine.md"
+      - "process/stories/CR015-S04-pretrade-risk-gate.md"
+      - "process/stories/CR015-S05-broker-lake-schema-and-writer.md"
+      - "process/stories/CR015-S06-target-portfolio-to-order-intent-shadow-mode.md"
+      - "process/stories/CR015-S07-docs-and-foundation-runbook-boundary.md"
+      - "process/stories/CR016-S01-simulation-account-order-enable-gate.md"
+      - "process/stories/CR016-S02-reconciliation-service-and-reports.md"
+      - "process/stories/CR016-S03-monitoring-heartbeat-and-kill-switch.md"
+      - "process/stories/CR016-S04-simulation-live-runbook-and-approval-gates.md"
+      - "process/stories/CR016-S05-live-readonly-and-small-live-admission.md"
+      - "process/stories/CR016-S06-scale-up-and-research-maturity-gates.md"
+      - "process/stories/CR016-S07-docs-user-manual-and-incident-playbooks.md"
+    lld_batches:
+      - batch_id: "CR017-ADJUSTMENT-DUAL-VIEW-BATCH-A"
+        handoff: "process/handoffs/META-DEV-CR017-LLD-BATCH-A-2026-05-28.md"
+        agent_id: "019e6b87-a390-7921-86fb-9c573a924ff4"
+        agent_name: "dev-kong"
+        status: "closed"
+        spawned_at: "2026-05-28T06:22:10+08:00"
+        completed_at: "2026-05-28T06:34:27+08:00"
+        closed_at: "2026-05-28T06:40:12+08:00"
+        stories:
+          - "CR017-S01-adjustment-policy-requirements-and-adr-refresh"
+          - "CR017-S02-raw-prices-and-adj-factor-contract-hardening"
+          - "CR017-S03-qfq-hfq-derived-view-normalization"
+          - "CR017-S04-reader-api-and-policy-gates"
+          - "CR017-S05-validation-quality-parity-and-leakage-tests"
+          - "CR017-S06-research-qmt-consumer-docs-and-migration-guide"
+      - batch_id: "CR015-QMT-FOUNDATION-BATCH-A"
+        handoff: "process/handoffs/META-DEV-CR015-LLD-BATCH-A-2026-05-28.md"
+        agent_id: "019e6b87-c21d-7491-a1b4-6277d19a71a5"
+        agent_name: "dev-qin"
+        status: "closed"
+        spawned_at: "2026-05-28T06:22:10+08:00"
+        completed_at: "2026-05-28T06:45:00+08:00"
+        closed_at: "2026-05-28T06:40:12+08:00"
+        stories:
+          - "CR015-S01-qmt-environment-and-interface-spike"
+          - "CR015-S02-qmt-broker-adapter-contract"
+          - "CR015-S03-oms-order-state-machine"
+          - "CR015-S04-pretrade-risk-gate"
+          - "CR015-S05-broker-lake-schema-and-writer"
+          - "CR015-S06-target-portfolio-to-order-intent-shadow-mode"
+          - "CR015-S07-docs-and-foundation-runbook-boundary"
+      - batch_id: "CR016-QMT-ACTIVATION-BATCH-A"
+        handoff: "process/handoffs/META-DEV-CR016-LLD-BATCH-A-2026-05-28.md"
+        agent_id: "019e6b87-e130-7811-bdf4-7e92e974ed65"
+        agent_name: "dev-xu"
+        status: "closed"
+        spawned_at: "2026-05-28T06:22:10+08:00"
+        completed_at: "2026-05-28T06:24:15+08:00"
+        closed_at: "2026-05-28T06:40:12+08:00"
+        stories:
+          - "CR016-S01-simulation-account-order-enable-gate"
+          - "CR016-S02-reconciliation-service-and-reports"
+          - "CR016-S03-monitoring-heartbeat-and-kill-switch"
+          - "CR016-S04-simulation-live-runbook-and-approval-gates"
+          - "CR016-S05-live-readonly-and-small-live-admission"
+          - "CR016-S06-scale-up-and-research-maturity-gates"
+          - "CR016-S07-docs-user-manual-and-incident-playbooks"
+    lld_status: "approved"
+    lld_count: 20
+    cp5_auto_status: "PASS"
+    cp5_auto_pass_count: 20
+    cp5_manual_review: "checkpoints/CP5-CR015-CR016-CR017-ALL-STORIES-LLD-BATCH.md"
+    cp5_manual_status: "approved"
+    cp5_approved_by: "user"
+    cp5_approved_at: "2026-05-28T07:03:27+08:00"
+    cp5_approval_text: "@meta-po 通过，继续。"
+    story_execution_status: "controlled-stories-verified-later-gated-s05-s06"
+    dev_running: []
+    dev_ready:
+      - "CR018-S07-explicit-publish-gate-and-current-reader-smoke"
+    verify_ready: []
+    verify_running: []
+    blocked_by_dependency: []
+    verified:
+      - "CR017-S01-adjustment-policy-requirements-and-adr-refresh"
+      - "CR017-S02-raw-prices-and-adj-factor-contract-hardening"
+      - "CR017-S03-qfq-hfq-derived-view-normalization"
+      - "CR017-S04-reader-api-and-policy-gates"
+      - "CR017-S05-validation-quality-parity-and-leakage-tests"
+      - "CR017-S06-research-qmt-consumer-docs-and-migration-guide"
+      - "CR015-S01-qmt-environment-and-interface-spike"
+      - "CR015-S02-qmt-broker-adapter-contract"
+      - "CR015-S03-oms-order-state-machine"
+      - "CR015-S04-pretrade-risk-gate"
+      - "CR015-S05-broker-lake-schema-and-writer"
+      - "CR015-S06-target-portfolio-to-order-intent-shadow-mode"
+      - "CR015-S07-docs-and-foundation-runbook-boundary"
+      - "CR016-S01-simulation-account-order-enable-gate"
+      - "CR016-S02-reconciliation-service-and-reports"
+      - "CR016-S03-monitoring-heartbeat-and-kill-switch"
+      - "CR016-S04-simulation-live-runbook-and-approval-gates"
+      - "CR016-S07-docs-user-manual-and-incident-playbooks"
+    later_gated:
+      - "CR016-S05-live-readonly-and-small-live-admission"
+      - "CR016-S06-scale-up-and-research-maturity-gates"
+    real_operation_authorization:
+      real_qmt_operation_allowed: false
+      real_order_allowed: false
+      real_cancel_allowed: false
+      real_account_query_allowed: false
+      credential_read_allowed: false
+      real_provider_fetch_allowed: false
+      real_lake_write_allowed: false
+      current_pointer_publish_allowed: false
+    documentation_handoff: "process/handoffs/META-DOC-CR015-CR016-CR017-DOCUMENTATION-2026-05-28.md"
+    documentation_agent_id: "019e6cc3-61e0-7d21-a1bf-4f8b7996a867"
+    documentation_agent_name: "doc-jin the 2nd"
+    documentation_dispatch_status: "completed-closed"
+    documentation_spawned_at: "2026-05-28T12:06:47+08:00"
+    documentation_completed_at: "2026-05-28T12:13:04+08:00"
+    documentation_closed_at: "2026-05-28T12:13:04+08:00"
+    documentation_result: "PASS: README.md, docs/USER-MANUAL.md, process/TEST-STRATEGY.md refreshed for CR015/CR016/CR017 controlled delivery status."
+    full_regression_result: "PASS: 154 passed in 0.92s for 19 CR015/CR016/CR017 test files"
+    documentation_diff_check: "PASS: git diff --check -- README.md docs/USER-MANUAL.md process/TEST-STRATEGY.md"
+    documentation_stale_wording_scan: "PASS: no old pending-CP7 status token or old CR017 verification-precondition current fact wording in README/USER-MANUAL/TEST-STRATEGY"
+    cp8_auto_result: "process/checks/CP8-CR015-CR016-CR017-DELIVERY-READINESS.md"
+    cp8_auto_status: "PASS"
+    cp8_manual_review: "checkpoints/CP8-CR015-CR016-CR017-DELIVERY-READINESS.md"
+    cp8_manual_status: "pending"
+    delivery_status: "ready-for-user-cp8-review"
+    s02_execution_handoff: "process/handoffs/META-DEV-CR016-S02-IMPLEMENT-2026-05-28.md"
+    s02_execution_agent_id: "019e6c5e-da6a-71c2-a7ef-71f49245c2e7"
+    s02_execution_agent_name: "dev-yang the 2nd"
+    s02_execution_dispatch_status: "completed-closed"
+    s02_execution_spawned_at: "2026-05-28T10:18:52+08:00"
+    s02_execution_completed_at: "2026-05-28T10:24:30+08:00"
+    s02_execution_closed_at: "2026-05-28T10:28:33+08:00"
+    s02_cp6_result: "process/checks/CP6-CR016-S02-reconciliation-service-and-reports-CODING-DONE.md"
+    s02_cp6_status: "PASS"
+    s02_story_status: "ready-for-verification"
+    s02_main_thread_test_result: "PYTHONDONTWRITEBYTECODE=1 PYTEST_ADDOPTS='-p no:cacheprovider' uv run --python 3.11 pytest -q tests/test_cr016_reconciliation_service_reports.py tests/test_cr015_oms_state_machine.py tests/test_cr015_broker_lake_schema_writer.py tests/test_cr016_simulation_order_enable_gate.py -> 38 passed in 0.16s"
+    s02_cp7_handoff: "process/handoffs/META-QA-CR016-S02-CP7-VERIFY-2026-05-28.md"
+    s02_cp7_agent_id: "019e6c6b-0c7e-7183-988f-251715d88a47"
+    s02_cp7_agent_name: "qa-cao the 2nd"
+    s02_cp7_dispatch_status: "completed-closed"
+    s02_cp7_spawned_at: "2026-05-28T10:30:23+08:00"
+    s02_cp7_completed_at: "2026-05-28T10:32:35+08:00"
+    s02_cp7_closed_at: "2026-05-28T10:37:45+08:00"
+    s02_cp7_result: "process/checks/CP7-CR016-S02-reconciliation-service-and-reports-VERIFICATION-DONE.md"
+    s02_cp7_status: "PASS"
+    s02_story_status: "verified"
+    s03_dev_gate:
+      dependencies_satisfied: true
+      file_conflict_free: true
+      implementation_allowed: true
+      status: "ready-for-verification"
+      reason: "CR015-S02/S03 与 CR016-S02 均已 verified，CP5 approved，当前无 file ownership 冲突；只允许 fixture-only monitoring / kill switch contract 实现。"
+    s03_execution_handoff: "process/handoffs/META-DEV-CR016-S03-IMPLEMENT-2026-05-28.md"
+    s03_execution_agent_id: "019e6c74-54ef-7cb2-ac70-163c253c785a"
+    s03_execution_agent_name: "dev-xu the 2nd"
+    s03_execution_dispatch_status: "completed-closed"
+    s03_execution_spawned_at: "2026-05-28T10:40:29+08:00"
+    s03_execution_completed_at: "2026-05-28T10:48:35+08:00"
+    s03_execution_closed_at: "2026-05-28T10:51:44+08:00"
+    s03_cp6_result: "process/checks/CP6-CR016-S03-monitoring-heartbeat-and-kill-switch-CODING-DONE.md"
+    s03_cp6_status: "PASS"
+    s03_story_status: "ready-for-verification"
+    s03_main_thread_test_result: "PYTHONDONTWRITEBYTECODE=1 PYTEST_ADDOPTS='-p no:cacheprovider' uv run --python 3.11 pytest -q tests/test_cr016_monitoring_kill_switch.py tests/test_cr015_qmt_adapter_contract.py tests/test_cr015_oms_state_machine.py tests/test_cr016_reconciliation_service_reports.py tests/test_cr016_simulation_order_enable_gate.py -> 54 passed in 0.19s"
+    s03_cp7_handoff: "process/handoffs/META-QA-CR016-S03-CP7-VERIFY-2026-05-28.md"
+    s03_cp7_agent_id: "019e6c80-3ba9-76f3-878c-b577f342cca4"
+    s03_cp7_agent_name: "qa-wei the 2nd"
+    s03_cp7_dispatch_status: "completed-closed"
+    s03_cp7_spawned_at: "2026-05-28T10:53:30+08:00"
+    s03_cp7_completed_at: "2026-05-28T10:57:35+08:00"
+    s03_cp7_closed_at: "2026-05-28T11:00:54+08:00"
+    s03_cp7_result: "process/checks/CP7-CR016-S03-monitoring-heartbeat-and-kill-switch-VERIFICATION-DONE.md"
+    s03_cp7_status: "PASS"
+    s03_story_status: "verified"
+    s04_dev_gate:
+      dependencies_satisfied: true
+      file_conflict_free: true
+      implementation_allowed: true
+      status: "in-development"
+      reason: "CR016-S01/S02/S03 均已 verified，CP5 approved，当前无 file ownership 冲突；只允许 runbook / approval gate 文档合同和静态测试实现。"
+    s04_execution_handoff: "process/handoffs/META-DEV-CR016-S04-IMPLEMENT-2026-05-28.md"
+    s04_execution_agent_id: "019e6c89-715f-7472-8b69-e20d1e9e4aa0"
+    s04_execution_agent_name: "dev-qin the 2nd"
+    s04_execution_dispatch_status: "completed-closed"
+    s04_execution_spawned_at: "2026-05-28T11:03:33+08:00"
+    s04_execution_completed_at: "2026-05-28T11:10:12+08:00"
+    s04_execution_closed_at: "2026-05-28T11:14:39+08:00"
+    s04_cp6_result: "process/checks/CP6-CR016-S04-simulation-live-runbook-and-approval-gates-CODING-DONE.md"
+    s04_cp6_status: "PASS"
+    s04_story_status: "ready-for-verification"
+    s04_main_thread_test_result: "PYTHONDONTWRITEBYTECODE=1 PYTEST_ADDOPTS='-p no:cacheprovider' uv run --python 3.11 pytest -q tests/test_cr016_runbook_approval_gates.py tests/test_cr015_foundation_runbook_boundary.py tests/test_cr016_monitoring_kill_switch.py tests/test_cr016_reconciliation_service_reports.py tests/test_cr016_simulation_order_enable_gate.py -> 41 passed in 0.21s"
+    s04_cp7_handoff: "process/handoffs/META-QA-CR016-S04-CP7-VERIFY-2026-05-28.md"
+    s04_cp7_agent_id: "019e6c95-337c-7851-8f1f-0c558da719b4"
+    s04_cp7_agent_name: "qa-shi the 2nd"
+    s04_cp7_dispatch_status: "completed-close-unavailable"
+    s04_cp7_spawned_at: "2026-05-28T11:16:25+08:00"
+    s04_cp7_completed_at: "2026-05-28T11:18:54+08:00"
+    s04_cp7_closed_at: ""
+    s04_cp7_close_attempt: "close_agent returned not_found at 2026-05-28T11:43:56+08:00; no closed_at fabricated."
+    s04_cp7_result: "process/checks/CP7-CR016-S04-simulation-live-runbook-and-approval-gates-VERIFICATION-DONE.md"
+    s04_cp7_status: "PASS"
+    s04_story_status: "verified"
+    s07_dev_gate:
+      dependencies_satisfied: true
+      file_conflict_free: true
+      implementation_allowed: true
+      status: "ready-for-verification"
+      reason: "CR016-S04 已 verified；CR016-S05/S06 均为 CP5 approved later-gated contract 输入且 implementation_allowed=false，不进入实现。CR016-S07 只允许文档 / 静态测试实现：incident playbook、README、USER-MANUAL 与 runbook 引用，不授权 simulation/live_readonly/small_live/scale_up 或任何真实 broker 操作。"
+    s07_execution_handoff: "process/handoffs/META-DEV-CR016-S07-IMPLEMENT-2026-05-28.md"
+    s07_execution_agent_id: "019e6cb1-70eb-72c2-bdf7-94a59009789f"
+    s07_execution_agent_name: "dev-zhu the 2nd"
+    s07_execution_dispatch_status: "completed-closed"
+    s07_execution_spawned_at: "2026-05-28T11:47:11+08:00"
+    s07_execution_completed_at: "2026-05-28T11:52:52+08:00"
+    s07_execution_closed_at: "2026-05-28T11:56:41+08:00"
+    s07_cp6_result: "process/checks/CP6-CR016-S07-docs-user-manual-and-incident-playbooks-CODING-DONE.md"
+    s07_cp6_status: "PASS"
+    s07_story_status_after_cp6: "ready-for-verification"
+    s07_main_thread_test_result: "PYTHONDONTWRITEBYTECODE=1 PYTEST_ADDOPTS='-p no:cacheprovider' uv run --python 3.11 pytest -q tests/test_cr016_docs_incident_playbooks.py tests/test_cr016_runbook_approval_gates.py tests/test_cr015_foundation_runbook_boundary.py tests/test_cr016_monitoring_kill_switch.py -> 29 passed in 0.19s"
+    s07_cp7_handoff: "process/handoffs/META-QA-CR016-S07-CP7-VERIFY-2026-05-28.md"
+    s07_cp7_agent_id: "019e6cbc-5bed-7273-87a7-a6d11a36ac88"
+    s07_cp7_agent_name: "qa-he the 2nd"
+    s07_cp7_dispatch_status: "completed-closed"
+    s07_cp7_spawned_at: "2026-05-28T11:59:06+08:00"
+    s07_cp7_completed_at: "2026-05-28T12:01:00+08:00"
+    s07_cp7_closed_at: "2026-05-28T12:04:05+08:00"
+    s07_cp7_result: "process/checks/CP7-CR016-S07-docs-user-manual-and-incident-playbooks-VERIFICATION-DONE.md"
+    s07_cp7_status: "PASS"
+    s07_story_status: "verified"
+    controlled_story_execution_summary: "CR017-S01..S06 verified; CR015-S01..S07 verified; CR016-S01..S04 and S07 verified; CR016-S05/S06 remain later-gated with implementation_allowed=false."
   cr014_change_intake:
     type: "change-impact-analysis"
-    status: "s09-cp7-pass-awaiting-real-run-authorization"
+    status: "s09-full-history-candidate-pulled-publish-blocked"
     change_id: "CR-014"
     change_file: "process/changes/CR-014-A-SHARE-SINCE-INCEPTION-PRODUCTION-DATA-LAKE-2026-05-26.md"
     impact_level: "high"
@@ -58,7 +1110,7 @@ checkpoints:
     candidate_story_batch: "CR014-FULL-HISTORY-LAKE-BATCH-A"
     future_real_run_batch: "CR014-REAL-RUN-BATCH-B"
     future_real_run_story: "process/stories/CR014-S09-windowed-real-fetch-lake-write-run.md"
-    future_real_run_status: "partial-real-smoke-pass"
+    future_real_run_status: "full-history-candidate-pulled-publish-blocked"
     future_real_run_cp4_addendum: "process/checks/CP4-CR014-BATCH-B-WINDOWED-REAL-FETCH-WRITE-DAG-ADDENDUM.md"
     future_real_run_cp4_status: "PASS"
     candidate_stories:
@@ -435,7 +1487,7 @@ checkpoints:
     s09_cp5_approval_text: "同意"
     s09_lld_status: "approved"
     s09_lld_confirmed: true
-    s09_story_status: "partial-real-smoke-pass-full-a-prices-pending"
+    s09_story_status: "full-history-2015-2026-ytd-prices-adj-factor-candidate-usable-non-pit-warn"
     s09_implementation_allowed: true
     s09_execution_handoff: "process/handoffs/META-DEV-CR014-S09-IMPLEMENTATION-2026-05-27.md"
     s09_execution_agent_id: "019e676b-9ab1-7fa3-860b-f32430ce9e65"
@@ -471,13 +1523,13 @@ checkpoints:
     s09_user_requested_pilot: "2026 year-to-date real data test"
     s09_recommended_pilot_window: "2026-01-01..2026-05-26"
     s09_window_note: "2026-05-27 is current date and not treated as latest completed trading day at update time; default end date remains 2026-05-26 unless user explicitly confirms after close."
-    s09_real_run_authorization_status: "authorized-and-executed-partial-smoke"
+    s09_real_run_authorization_status: "authorized-and-executed-2015-2026-ytd-full-history-candidate"
     s09_real_run_record: "process/checks/REAL-TUSHARE-CR014-S09-YTD-SMOKE-2026-05-27.md"
     s09_real_run_lake_root: "/tmp/local-backtest-cr014-s09-ytd-lake"
     s09_real_run_window: "2026-01-01..2026-05-26"
     s09_real_run_source: "tushare"
     s09_real_run_credential_policy: "uv --env-file .env; token value not printed or persisted"
-    s09_real_run_status: "PASS_PARTIAL_SCOPE"
+    s09_real_run_status: "PASS_2026_YTD_FULL_A_CANDIDATE_PRICES_ADJ_FACTOR_USABLE_NON_PIT_WARN"
     s09_real_run_network_calls: 6
     s09_real_run_raw_files: 6
     s09_real_run_manifest_lines: 6
@@ -487,8 +1539,498 @@ checkpoints:
       - "hs300_index"
       - "prices sample 000001.SZ"
       - "adj_factor sample 000001.SZ"
-    s09_full_a_prices_status: "pending-symbol-batching-runner-or-explicit-batch-authorization"
-    next_gate: "S09 full-A prices/adj_factor batching decision"
+    s09_configured_lake_smoke_check: "process/checks/REAL-TUSHARE-CR014-S09-YTD-CONFIG-LAKE-VERIFY-2026-05-28.md"
+    s09_sample_usability_check: "process/checks/REAL-TUSHARE-CR014-S10-2026-USABILITY-VALIDATION-2026-05-28.md"
+    s09_full_a_pull_check: "process/checks/REAL-TUSHARE-CR014-S11-FULL-A-2026-YTD-PULL-2026-05-28.md"
+    s09_adj_factor_revalidation_check: "process/checks/REAL-TUSHARE-CR014-S12-ADJ-FACTOR-PRICES-DENOMINATOR-REVALIDATION-2026-05-28.md"
+    s09_prices_lifecycle_trade_status_revalidation_check: "process/checks/REAL-TUSHARE-CR014-S13-PRICES-LIFECYCLE-TRADE-STATUS-DENOMINATOR-2026-05-28.md"
+    s09_full_history_pull_check: "process/checks/REAL-TUSHARE-CR014-S14-FULL-HISTORY-PRICES-ADJ-FACTOR-PULL-2026-05-29.md"
+    s09_full_history_open_trade_dates: 2768
+    s09_full_history_manifest_success: 5536
+    s09_full_history_prices_rows: 11311360
+    s09_full_history_adj_factor_rows: 11823057
+    s09_full_history_missing_adj_for_price_pairs: 0
+    s09_full_history_publish_status: "not_authorized_not_executed"
+    s09_full_history_duckdb_writes: 0
+    s09_full_history_candidate_query_smoke: "PASS: 000001.SZ/600000.SH across 2015-01-05..2026-05-28 returned 5504 rows; adjusted_close non-null; policy=qfq; current reader blocked by catalog_not_published."
+    s09_full_history_minimal_research_smoke: "PASS: 2025 low-volatility factor smoke computed 1204130 non-null 20d volatility rows, 5431 rebalance candidates, top20_count=20, forward_pairs=20."
+    s09_full_a_prices_status: "candidate_unpublished_warn_non_pit_missing_rows_zero_under_lifecycle_trade_status_denominator"
+    s09_full_a_adj_factor_status: "candidate_unpublished_pass_under_prices_observed_trade_date_symbol_pairs"
+    s09_full_a_current_pointer_publish_status: "not_authorized_not_executed"
+    s09_full_a_duckdb_file_count: 0
+    next_gate: "Read/query candidate usability verification and minimal research rerun; PIT/W3 gaps must close before production publish/current truth claim"
+  cr018_change_intake:
+    type: "change-impact-analysis"
+    status: "release-current-published-production-rerun-failed-s09-blocked"
+    change_id: "CR-018"
+    change_file: "process/changes/CR-018-PRODUCTION-DATA-LAKE-CLOSURE-2026-05-29.md"
+    impact_level: "high"
+    rollback_to: "requirement-clarification"
+    approval_result: "approved-for-requirement-and-design"
+    created_at: "2026-05-29T06:42:36+08:00"
+    created_by: "meta-po"
+    approved_by: "user"
+    approved_at: "2026-05-29T06:42:36+08:00"
+    approval_text: "@meta-po 批准D1到D6按照你推荐的方案推进。你可以推进项目了。"
+    source: "user"
+    user_goal: "先把数据湖推进到 production current truth，再进入 QMT 模拟盘。"
+    approved_decisions:
+      D1: "accepted: data lake production current truth is highest priority; QMT simulation deferred."
+      D2: "accepted: create CR018-PRODUCTION-DATA-LAKE-CLOSURE instead of extending CR014 further."
+      D3: "accepted: no direct publish of prices/adj_factor candidate before PIT/W3/benchmark/quality gates."
+      D4: "accepted: real provider pulls should be rate-limited and windowed; code/design/verification can parallelize."
+      D5: "accepted: QMT simulation only after data lake publish and research rerun pass."
+      D6: "accepted: production data research rerun is mandatory before QMT simulation."
+    baseline_inputs:
+      cr014_s14_check: "process/checks/REAL-TUSHARE-CR014-S14-FULL-HISTORY-PRICES-ADJ-FACTOR-PULL-2026-05-29.md"
+      prices_adj_factor_candidate_status: "2015-01-05..2026-05-28 full-A prices/adj_factor candidate pulled; publish blocked"
+      qmt_cp8_manual_review: "checkpoints/CP8-CR015-CR016-CR017-DELIVERY-READINESS.md"
+      qmt_status: "controlled offline verified; CP8 pending; CR016-S05/S06 later-gated"
+    permission_boundary: "no provider fetch, no credential read/print, no real lake write, no catalog publish, no QMT simulation/live operation, no DuckDB dependency change during CR intake/requirements."
+    workflow_mode_after_change: "standard"
+    fast_lane_upgrade_reason: "命中生产数据湖 current truth、外部 provider、真实 lake、publish/rollback、研究重跑和 QMT 后置门控。"
+    affected_documents:
+      - "process/USE-CASES.md"
+      - "process/REQUIREMENTS.md"
+      - "process/HLD-DATA-LAKE.md"
+      - "process/HLD.md"
+      - "process/ARCHITECTURE-DECISION.md"
+      - "process/STORY-BACKLOG.md"
+      - "process/DEVELOPMENT-PLAN.yaml"
+      - "process/TEST-STRATEGY.md"
+      - "README.md"
+      - "docs/USER-MANUAL.md"
+      - "market_data/**"
+      - "experiments/**"
+      - "tests/**"
+    pm_handoff: "process/handoffs/META-PM-CR018-REQ-CLARIFICATION-2026-05-29.md"
+    pm_agent_id: "019e70c0-a2b0-7a11-add3-86766e09bd0c"
+    pm_agent_name: "pm-wu"
+    pm_spawned_at: "2026-05-29T06:42:36+08:00"
+    pm_completed_at: "2026-05-29T06:48:42+08:00"
+    pm_closed_at: "2026-05-29T06:48:42+08:00"
+    pm_dispatch_status: "completed-closed"
+    use_case_refresh: "process/USE-CASES.md#UC-13"
+    requirement_refresh: "process/REQUIREMENTS.md#REQ-123"
+    cp1_auto_result: "process/checks/CP1-CR018-USE-CASE-COMPLETENESS.md"
+    cp1_auto_status: "PASS"
+    cp2_auto_result: "process/checks/CP2-CR018-REQUIREMENTS-BASELINE.md"
+    cp2_auto_status: "PASS"
+    cp2_manual_review: "checkpoints/CP2-CR018-PRODUCTION-DATA-LAKE-CLOSURE-DECISION-BRIEF.md"
+    cp2_manual_status: "approved"
+    cp2_approved_by: "user"
+    cp2_approved_at: "2026-05-29T06:48:42+08:00"
+    cp2_approval_text: "@meta-po 批准D1到D6按照你推荐的方案推进。你可以推进项目了。"
+    cp2_decisions:
+      D1: "approved recommended scoped release: 2015-01-05..latest_closed_trade_date, 2015-before blocked/future backfill."
+      D2: "approved recommended P0 group: prices_raw, adj_factor, qfq/hfq/returns_adjusted, trade_calendar, PIT/lifecycle/code-change, trade_status, prices_limit/ST/suspend, HS300/ZZ500/ZZ1000/中证全指行情/成分/权重."
+      D3: "approved recommended benchmark scope: HS300, ZZ500, ZZ1000, 中证全指行情、历史成分和权重."
+      D4: "approved recommended P1 for industry/market-cap/style/liquidity, but block neutralized/pure-alpha/capacity/scale-up claims until pass."
+      D5: "approved recommended release-level publish gate with dataset-level details; rollback at release level."
+      D6: "approved recommended QMT simulation/live_readonly/small_live/scale_up only after publish + production research rerun PASS."
+    se_handoff: "process/handoffs/META-SE-CR018-HLD-ADR-STORY-REPLACEMENT-2026-05-29.md"
+    se_agent_id: "019e70dd-1902-7883-a3c7-35466a4f19ab"
+    se_agent_name: "se-wei"
+    se_dispatch_status: "shutdown-partial-recovered-by-meta-po-checkpoint"
+    se_spawned_at: "2026-05-29T07:13:00+08:00"
+    se_closed_at: "2026-05-29T07:25:48+08:00"
+    se_partial_result: "process/DEVELOPMENT-PLAN.yaml CR018 section landed; CP3/CP4 missing from subagent return and completed by meta-po from landed artifacts."
+    se_previous_handoff: "process/handoffs/META-SE-CR018-HLD-ADR-STORY-2026-05-29.md"
+    se_previous_agent_id: "019e70ce-9ac4-70c1-b6c5-deab04c28ab0"
+    se_previous_agent_name: "se-han"
+    se_previous_status: "shutdown-partial"
+    se_previous_closed_at: "2026-05-29T07:13:00+08:00"
+    partial_design_outputs:
+      - "process/HLD-DATA-LAKE.md#19"
+      - "process/HLD.md#32"
+      - "process/ARCHITECTURE-DECISION.md#ADR-062"
+      - "process/STORY-BACKLOG.md#CR018-S01"
+      - "process/DEVELOPMENT-PLAN.yaml#cr018_story_plan"
+    cp3_auto_result: "process/checks/CP3-CR018-HLD-CONSISTENCY.md"
+    cp3_auto_status: "PASS"
+    cp3_manual_review: "checkpoints/CP3-CR018-HLD-REVIEW.md"
+    cp3_manual_status: "approved"
+    cp3_approved_by: "user"
+    cp3_approved_at: "2026-05-29T07:34:40+08:00"
+    cp3_approval_text: "批准"
+    cp4_auto_result: "process/checks/CP4-CR018-STORY-DAG-PARALLEL-SAFETY.md"
+    cp4_auto_status: "PASS"
+    cp4_blockers: []
+    story_planning_status: "cp5-approved-enter-story-execution"
+    story_cards_handoff: "process/handoffs/META-SE-CR018-STORY-CARDS-CP4-2026-05-29.md"
+    story_cards_agent_id: "019e70f2-5584-7de0-ad39-a2479592bf1c"
+    story_cards_agent_name: "se-shen"
+    story_cards_dispatch_status: "shutdown-incomplete-recovered-by-meta-po"
+    story_cards_spawned_at: "2026-05-29T07:34:40+08:00"
+    story_cards_closed_at: "2026-05-29T07:44:33+08:00"
+    story_cards_recovery: "meta-po recovery created CR018-S01..S09 Story cards, updated STORY-STATUS / DEVELOPMENT-PLAN, and rewrote CP4 PASS after subagent shutdown."
+    story_cards:
+      - "process/stories/CR018-S01-production-current-truth-definition-and-dataset-groups.md"
+      - "process/stories/CR018-S02-pit-universe-lifecycle-st-trade-status-price-limit-backfill.md"
+      - "process/stories/CR018-S03-real-benchmark-index-components-weights-backfill.md"
+      - "process/stories/CR018-S04-industry-market-cap-liquidity-and-exposure-data.md"
+      - "process/stories/CR018-S05-adjustment-dual-view-quality-and-qfq-hfq-publish-readiness.md"
+      - "process/stories/CR018-S06-production-quality-readiness-audit-and-rollback-gate.md"
+      - "process/stories/CR018-S07-explicit-publish-gate-and-current-reader-smoke.md"
+      - "process/stories/CR018-S08-production-current-truth-research-rerun.md"
+      - "process/stories/CR018-S09-qmt-simulation-admission-boundary-after-data-lake.md"
+    next_gate: "parallel meta-dev LLD for CR018-S01..S09 -> CP5 auto prechecks -> CP5 full LLD batch manual review"
+    lld_batches:
+      - batch_id: "CR018-LLD-G1"
+        handoff: "process/handoffs/META-DEV-CR018-LLD-G1-2026-05-29.md"
+        agent_id: "019e7102-dc44-7382-baaa-524b3667b2f3"
+        agent_name: "dev-lv"
+        status: "completed-closed"
+        spawned_at: "2026-05-29T07:54:37+08:00"
+        completed_at: "2026-05-29T08:04:50+08:00"
+        closed_at: "2026-05-29T08:04:50+08:00"
+        cp5_auto_status: "PASS"
+        stories:
+          - "CR018-S01-production-current-truth-definition-and-dataset-groups"
+          - "CR018-S02-pit-universe-lifecycle-st-trade-status-price-limit-backfill"
+          - "CR018-S03-real-benchmark-index-components-weights-backfill"
+      - batch_id: "CR018-LLD-G2"
+        handoff: "process/handoffs/META-DEV-CR018-LLD-G2-2026-05-29.md"
+        agent_id: "019e7102-dc8b-75e3-9a66-c94dbc4b30ba"
+        agent_name: "dev-yang"
+        status: "completed-closed"
+        spawned_at: "2026-05-29T07:54:37+08:00"
+        completed_at: "2026-05-29T08:03:18+08:00"
+        closed_at: "2026-05-29T08:03:18+08:00"
+        cp5_auto_status: "PASS"
+        stories:
+          - "CR018-S04-industry-market-cap-liquidity-and-exposure-data"
+          - "CR018-S05-adjustment-dual-view-quality-and-qfq-hfq-publish-readiness"
+          - "CR018-S06-production-quality-readiness-audit-and-rollback-gate"
+      - batch_id: "CR018-LLD-G3"
+        handoff: "process/handoffs/META-DEV-CR018-LLD-G3-2026-05-29.md"
+        agent_id: "019e7102-dce0-7901-b877-afec4c09dc36"
+        agent_name: "dev-kong"
+        status: "completed-closed"
+        spawned_at: "2026-05-29T07:54:37+08:00"
+        completed_at: "2026-05-29T08:03:42+08:00"
+        closed_at: "2026-05-29T08:03:42+08:00"
+        cp5_auto_status: "PASS"
+        stories:
+          - "CR018-S07-explicit-publish-gate-and-current-reader-smoke"
+          - "CR018-S08-production-current-truth-research-rerun"
+          - "CR018-S09-qmt-simulation-admission-boundary-after-data-lake"
+    story_lld_status: "approved"
+    story_lld_count: 9
+    cp5_auto_status: "PASS"
+    cp5_auto_pass_count: 9
+    cp5_auto_results:
+      - "process/checks/CP5-CR018-S01-production-current-truth-definition-and-dataset-groups-LLD-IMPLEMENTABILITY.md"
+      - "process/checks/CP5-CR018-S02-pit-universe-lifecycle-st-trade-status-price-limit-backfill-LLD-IMPLEMENTABILITY.md"
+      - "process/checks/CP5-CR018-S03-real-benchmark-index-components-weights-backfill-LLD-IMPLEMENTABILITY.md"
+      - "process/checks/CP5-CR018-S04-industry-market-cap-liquidity-and-exposure-data-LLD-IMPLEMENTABILITY.md"
+      - "process/checks/CP5-CR018-S05-adjustment-dual-view-quality-and-qfq-hfq-publish-readiness-LLD-IMPLEMENTABILITY.md"
+      - "process/checks/CP5-CR018-S06-production-quality-readiness-audit-and-rollback-gate-LLD-IMPLEMENTABILITY.md"
+      - "process/checks/CP5-CR018-S07-explicit-publish-gate-and-current-reader-smoke-LLD-IMPLEMENTABILITY.md"
+      - "process/checks/CP5-CR018-S08-production-current-truth-research-rerun-LLD-IMPLEMENTABILITY.md"
+      - "process/checks/CP5-CR018-S09-qmt-simulation-admission-boundary-after-data-lake-LLD-IMPLEMENTABILITY.md"
+    cp5_manual_review: "checkpoints/CP5-CR018-PRODUCTION-DATA-LAKE-CLOSURE-BATCH-A-LLD-BATCH.md"
+    cp5_manual_status: "approved"
+    cp5_approved_by: "user"
+    cp5_approved_at: "2026-05-29T08:25:12+08:00"
+    cp5_approval_text: "同意"
+    cp5_decision_items:
+      - "CP5-CR018-DQ-01 approve all 9 LLDs vs split batches"
+      - "CP5-CR018-DQ-02 implementation wave and file ownership policy"
+      - "CP5-CR018-DQ-03 offline implementation allowed while real operations blocked"
+      - "CP5-CR018-DQ-04 keep QMT admission later-gated"
+    story_execution_status: "release-current-published-s08-verified-s09-later-gated"
+    s02_execution_handoff: "process/handoffs/META-DEV-CR018-S02-IMPLEMENT-2026-05-29.md"
+    s02_execution_agent_id: "019e7152-23c8-7b42-b4e5-29bb8c6be49b"
+    s02_execution_agent_name: "dev-shi"
+    s02_execution_dispatch_status: "completed-closed"
+    s02_execution_spawned_at: "2026-05-29T09:21:13+08:00"
+    s02_execution_completed_at: "2026-05-29T09:33:00+08:00"
+    s02_execution_closed_at: "2026-05-29T09:33:17+08:00"
+    s02_cp6_result: "process/checks/CP6-CR018-S02-pit-universe-lifecycle-st-trade-status-price-limit-backfill-CODING-DONE.md"
+    s02_cp6_status: "PASS"
+    s02_story_status: "verified"
+    s02_main_thread_test_result: "PYTHONDONTWRITEBYTECODE=1 PYTEST_ADDOPTS='-p no:cacheprovider' uv run --python 3.11 pytest -q tests/test_cr018_pit_tradability_readiness.py tests/test_cr018_benchmark_group_readiness.py tests/test_cr018_p1_auxiliary_claim_boundary.py tests/test_cr018_release_scope_dataset_groups.py -> 25 passed in 0.58s"
+    s02_cp7_handoff: "process/handoffs/META-QA-CR018-S02-CP7-VERIFY-2026-05-29.md"
+    s02_cp7_agent_id: "019e715e-3443-7c10-a04e-07e9b87b92bb"
+    s02_cp7_agent_name: "qa-wei"
+    s02_cp7_dispatch_status: "completed-closed"
+    s02_cp7_spawned_at: "2026-05-29T09:34:23+08:00"
+    s02_cp7_completed_at: "2026-05-29T09:36:20+08:00"
+    s02_cp7_closed_at: "2026-05-29T09:39:10+08:00"
+    s02_cp7_result: "process/checks/CP7-CR018-S02-pit-universe-lifecycle-st-trade-status-price-limit-backfill-VERIFICATION-DONE.md"
+    s02_cp7_status: "PASS"
+    s02_main_thread_cp7_regression_result: "PYTHONDONTWRITEBYTECODE=1 PYTEST_ADDOPTS='-p no:cacheprovider' uv run --python 3.11 pytest -q tests/test_cr018_pit_tradability_readiness.py tests/test_cr018_benchmark_group_readiness.py tests/test_cr018_p1_auxiliary_claim_boundary.py tests/test_cr018_release_scope_dataset_groups.py -> 25 passed in 0.61s"
+    s05_execution_handoff: "process/handoffs/META-DEV-CR018-S05-IMPLEMENT-2026-05-29.md"
+    s05_execution_agent_id: "019e7163-bfe3-7601-8a48-a5e229e346dc"
+    s05_execution_agent_name: "dev-he"
+    s05_execution_dispatch_status: "completed-closed"
+    s05_execution_spawned_at: "2026-05-29T09:40:27+08:00"
+    s05_execution_completed_at: "2026-05-29T09:48:50+08:00"
+    s05_execution_closed_at: "2026-05-29T09:53:06+08:00"
+    s05_cp6_result: "process/checks/CP6-CR018-S05-adjustment-dual-view-quality-and-qfq-hfq-publish-readiness-CODING-DONE.md"
+    s05_cp6_status: "PASS"
+    s05_story_status: "verified"
+    s05_main_thread_test_result: "PYTHONDONTWRITEBYTECODE=1 PYTEST_ADDOPTS='-p no:cacheprovider' uv run --python 3.11 pytest -q tests/test_cr018_adjustment_publish_readiness.py tests/test_cr018_pit_tradability_readiness.py tests/test_cr018_benchmark_group_readiness.py tests/test_cr018_p1_auxiliary_claim_boundary.py tests/test_cr018_release_scope_dataset_groups.py tests/test_cr017_adjustment_quality_parity.py tests/test_cr017_reader_policy_gates.py -> 43 passed in 0.65s"
+    s05_cp7_handoff: "process/handoffs/META-QA-CR018-S05-CP7-VERIFY-2026-05-29.md"
+    s05_cp7_agent_id: "019e7170-3bc8-79d0-917d-23cc7b41b9e6"
+    s05_cp7_agent_name: "qa-kong"
+    s05_cp7_dispatch_status: "completed-closed"
+    s05_cp7_spawned_at: "2026-05-29T09:54:07+08:00"
+    s05_cp7_completed_at: "2026-05-29T09:56:03+08:00"
+    s05_cp7_closed_at: "2026-05-29T09:59:41+08:00"
+    s05_cp7_result: "process/checks/CP7-CR018-S05-adjustment-dual-view-quality-and-qfq-hfq-publish-readiness-VERIFICATION-DONE.md"
+    s05_cp7_status: "PASS"
+    s05_main_thread_cp7_regression_result: "PYTHONDONTWRITEBYTECODE=1 PYTEST_ADDOPTS='-p no:cacheprovider' uv run --python 3.11 pytest -q tests/test_cr018_adjustment_publish_readiness.py tests/test_cr018_pit_tradability_readiness.py tests/test_cr018_benchmark_group_readiness.py tests/test_cr018_p1_auxiliary_claim_boundary.py tests/test_cr018_release_scope_dataset_groups.py tests/test_cr017_adjustment_quality_parity.py tests/test_cr017_reader_policy_gates.py -> 43 passed in 0.66s"
+    s06_dev_gate:
+      dependencies_satisfied: true
+      file_conflict_free: true
+      implementation_allowed: true
+      current_pointer_publish_allowed: false
+      status: "verified"
+      reason: "S02/S03/S05 均已 verified，CP5 approved，当前无 dev_running 文件冲突；只允许 fixture-only readiness/rollback contract 实现，不授权真实 lake write 或 catalog current pointer publish。"
+    s06_execution_handoff: "process/handoffs/META-DEV-CR018-S06-IMPLEMENT-2026-05-29.md"
+    s06_execution_agent_id: "019e7179-7a76-7441-97e8-aa043e067fa3"
+    s06_execution_agent_name: "dev-zhu"
+    s06_execution_dispatch_status: "completed-closed"
+    s06_execution_spawned_at: "2026-05-29T10:04:10+08:00"
+    s06_execution_completed_at: "2026-05-29T10:12:49+08:00"
+    s06_execution_closed_at: "2026-05-29T10:17:24+08:00"
+    s06_cp6_result: "process/checks/CP6-CR018-S06-production-quality-readiness-audit-and-rollback-gate-CODING-DONE.md"
+    s06_cp6_status: "PASS"
+    s06_story_status: "verified"
+    s06_main_thread_test_result: "PYTHONDONTWRITEBYTECODE=1 PYTEST_ADDOPTS='-p no:cacheprovider' uv run --python 3.11 pytest -q tests/test_cr018_readiness_rollback_gate.py tests/test_cr018_adjustment_publish_readiness.py tests/test_cr018_pit_tradability_readiness.py tests/test_cr018_benchmark_group_readiness.py tests/test_cr018_p1_auxiliary_claim_boundary.py tests/test_cr018_release_scope_dataset_groups.py tests/test_cr014_catalog_publish_gate.py -> 42 passed in 0.66s"
+    s06_cp7_handoff: "process/handoffs/META-QA-CR018-S06-CP7-VERIFY-2026-05-29.md"
+    s06_cp7_agent_id: "019e7186-d771-7fa0-8622-958915a43d98"
+    s06_cp7_agent_name: "qa-hua"
+    s06_cp7_dispatch_status: "completed-closed"
+    s06_cp7_spawned_at: "2026-05-29T10:18:47+08:00"
+    s06_cp7_completed_at: "2026-05-29T10:21:20+08:00"
+    s06_cp7_closed_at: "2026-05-29T10:24:36+08:00"
+    s06_cp7_result: "process/checks/CP7-CR018-S06-production-quality-readiness-audit-and-rollback-gate-VERIFICATION-DONE.md"
+    s06_cp7_status: "PASS"
+    s06_main_thread_cp7_regression_result: "PYTHONDONTWRITEBYTECODE=1 PYTEST_ADDOPTS='-p no:cacheprovider' uv run --python 3.11 pytest -q tests/test_cr018_readiness_rollback_gate.py tests/test_cr018_adjustment_publish_readiness.py tests/test_cr018_pit_tradability_readiness.py tests/test_cr018_benchmark_group_readiness.py tests/test_cr018_p1_auxiliary_claim_boundary.py tests/test_cr018_release_scope_dataset_groups.py tests/test_cr014_catalog_publish_gate.py -> 42 passed in 0.65s"
+    s07_dev_gate:
+      dependencies_satisfied: true
+      file_conflict_free: true
+      implementation_allowed: true
+      current_pointer_publish_allowed: false
+      status: "verified"
+      reason: "S06 已 verified，S07 CP6/CP7 PASS，CP5 approved；fixture-only explicit publish gate / current reader smoke 合同已验证，不授权真实 current pointer publish。"
+    s07_execution_handoff: "process/handoffs/META-DEV-CR018-S07-IMPLEMENT-2026-05-29.md"
+    s07_execution_agent_id: "019e7190-bef4-77c0-aefa-e247d20ed6de"
+    s07_execution_agent_name: "dev-zhang"
+    s07_execution_dispatch_status: "completed-closed"
+    s07_execution_spawned_at: "2026-05-29T10:29:36+08:00"
+    s07_execution_completed_at: "2026-05-29T10:39:55+08:00"
+    s07_execution_closed_at: "2026-05-29T10:44:38+08:00"
+    s07_cp6_result: "process/checks/CP6-CR018-S07-explicit-publish-gate-and-current-reader-smoke-CODING-DONE.md"
+    s07_cp6_status: "PASS"
+    s07_story_status_after_cp6: "ready-for-verification"
+    s07_main_thread_test_result: "PYTHONDONTWRITEBYTECODE=1 PYTEST_ADDOPTS='-p no:cacheprovider' uv run --python 3.11 pytest -q tests/test_cr018_publish_current_reader_smoke.py tests/test_cr018_readiness_rollback_gate.py tests/test_cr018_adjustment_publish_readiness.py tests/test_cr018_pit_tradability_readiness.py tests/test_cr018_benchmark_group_readiness.py tests/test_cr018_p1_auxiliary_claim_boundary.py tests/test_cr018_release_scope_dataset_groups.py tests/test_cr014_catalog_publish_gate.py -> 49 passed in 0.71s"
+    s07_cp7_handoff: "process/handoffs/META-QA-CR018-S07-CP7-VERIFY-2026-05-29.md"
+    s07_cp7_agent_id: "019e719f-f89b-70a1-98f7-b5c70015fb31"
+    s07_cp7_agent_name: "qa-cao"
+    s07_cp7_dispatch_status: "completed-closed"
+    s07_cp7_spawned_at: "2026-05-29T10:46:13+08:00"
+    s07_cp7_completed_at: "2026-05-29T10:48:59+08:00"
+    s07_cp7_closed_at: "2026-05-29T10:53:06+08:00"
+    s07_cp7_result: "process/checks/CP7-CR018-S07-explicit-publish-gate-and-current-reader-smoke-VERIFICATION-DONE.md"
+    s07_cp7_status: "PASS"
+    s07_story_status: "verified"
+    s07_main_thread_cp7_regression_result: "PYTHONDONTWRITEBYTECODE=1 PYTEST_ADDOPTS='-p no:cacheprovider' uv run --python 3.11 pytest -q tests/test_cr018_publish_current_reader_smoke.py tests/test_cr018_readiness_rollback_gate.py tests/test_cr018_adjustment_publish_readiness.py tests/test_cr018_pit_tradability_readiness.py tests/test_cr018_benchmark_group_readiness.py tests/test_cr018_p1_auxiliary_claim_boundary.py tests/test_cr018_release_scope_dataset_groups.py tests/test_cr014_catalog_publish_gate.py -> 49 passed in 0.66s"
+    s08_dev_gate:
+      dependencies_satisfied: true
+      file_conflict_free: true
+      implementation_allowed: true
+      qmt_operation_allowed: false
+      provider_fetch_allowed: false
+      lake_write_allowed: false
+      credential_read_allowed: false
+      status: "verified"
+      reason: "S07 已 verified，CP5 approved，当前无 dev_running 文件冲突；只允许 fixture-only production rerun contract 实现，不授权真实长任务、provider fetch、lake write、publish、凭据读取或 QMT。"
+    s08_execution_handoff: "process/handoffs/META-DEV-CR018-S08-IMPLEMENT-2026-05-29.md"
+    s08_execution_agent_id: "019e71a9-6c49-79f1-aa78-b569801046d6"
+    s08_execution_agent_name: "dev-zhang the 2nd"
+    s08_execution_dispatch_status: "completed-closed"
+    s08_execution_spawned_at: "2026-05-29T10:56:39+08:00"
+    s08_execution_completed_at: "2026-05-29T11:05:38+08:00"
+    s08_execution_closed_at: "2026-05-29T11:10:32+08:00"
+    s08_cp6_result: "process/checks/CP6-CR018-S08-production-current-truth-research-rerun-CODING-DONE.md"
+    s08_cp6_status: "PASS"
+    s08_story_status_after_cp6: "ready-for-verification"
+    s08_main_thread_test_result: "PYTHONDONTWRITEBYTECODE=1 PYTEST_ADDOPTS='-p no:cacheprovider' uv run --python 3.11 pytest -q tests/test_cr018_production_current_truth_rerun.py tests/test_cr018_publish_current_reader_smoke.py tests/test_cr018_readiness_rollback_gate.py tests/test_cr018_adjustment_publish_readiness.py tests/test_cr018_pit_tradability_readiness.py tests/test_cr018_benchmark_group_readiness.py tests/test_cr018_p1_auxiliary_claim_boundary.py tests/test_cr018_release_scope_dataset_groups.py tests/test_cr014_catalog_publish_gate.py -> 60 passed in 0.66s"
+    s08_cp7_handoff: "process/handoffs/META-QA-CR018-S08-CP7-VERIFY-2026-05-29.md"
+    s08_cp7_agent_id: "019e71b7-4807-7e41-8d5e-f846b07b8bdf"
+    s08_cp7_agent_name: "qa-hua the 2nd"
+    s08_cp7_dispatch_status: "completed-closed"
+    s08_cp7_spawned_at: "2026-05-29T11:11:41+08:00"
+    s08_cp7_completed_at: "2026-05-29T11:14:23+08:00"
+    s08_cp7_closed_at: "2026-05-29T11:17:58+08:00"
+    s08_cp7_result: "process/checks/CP7-CR018-S08-production-current-truth-research-rerun-VERIFICATION-DONE.md"
+    s08_cp7_status: "PASS"
+    s08_story_status: "verified"
+    s08_main_thread_cp7_regression_result: "PYTHONDONTWRITEBYTECODE=1 PYTEST_ADDOPTS='-p no:cacheprovider' uv run --python 3.11 pytest -q tests/test_cr018_production_current_truth_rerun.py tests/test_cr018_publish_current_reader_smoke.py tests/test_cr018_readiness_rollback_gate.py tests/test_cr018_adjustment_publish_readiness.py tests/test_cr018_pit_tradability_readiness.py tests/test_cr018_benchmark_group_readiness.py tests/test_cr018_p1_auxiliary_claim_boundary.py tests/test_cr018_release_scope_dataset_groups.py tests/test_cr014_catalog_publish_gate.py -> 60 passed in 0.67s"
+    s09_dev_gate:
+      dependencies_satisfied: true
+      file_conflict_free: true
+      implementation_allowed: false
+      qmt_operation_allowed: false
+      requires_research_rerun_pass: true
+      research_rerun_pass: true
+      requires_per_run_authorization: true
+      per_run_authorization_present: false
+      later_gated_real_operation: true
+      status: "later-gated-by-per-run-authorization"
+      reason: "S08 已 verified，但 S09 Story/LLD 要求后续明确 per-run QMT authorization；未授权前不得实现会被理解为 simulation/live 解锁的 QMT admission，也不得执行真实 QMT。"
+    s03_execution_handoff: "process/handoffs/META-DEV-CR018-S03-IMPLEMENT-2026-05-29.md"
+    s03_execution_agent_id: "019e713c-10d0-76f2-a55b-01aace3cc4d5"
+    s03_execution_agent_name: "dev-qin"
+    s03_execution_dispatch_status: "completed-closed"
+    s03_execution_spawned_at: "2026-05-29T08:57:20+08:00"
+    s03_execution_completed_at: "2026-05-29T09:05:58+08:00"
+    s03_execution_closed_at: "2026-05-29T09:10:00+08:00"
+    s03_cp6_result: "process/checks/CP6-CR018-S03-real-benchmark-index-components-weights-backfill-CODING-DONE.md"
+    s03_cp6_status: "PASS"
+    s03_story_status: "verified"
+    s03_main_thread_test_result: "PYTHONDONTWRITEBYTECODE=1 PYTEST_ADDOPTS='-p no:cacheprovider' uv run --python 3.11 pytest -q tests/test_cr018_benchmark_group_readiness.py tests/test_cr018_release_scope_dataset_groups.py -> 13 passed in 0.41s"
+    s03_cp7_handoff: "process/handoffs/META-QA-CR018-S03-CP7-VERIFY-2026-05-29.md"
+    s03_cp7_agent_id: "019e714b-3597-7e31-b0d0-207f12130b47"
+    s03_cp7_agent_name: "qa-lv"
+    s03_cp7_dispatch_status: "completed-closed"
+    s03_cp7_spawned_at: "2026-05-29T09:13:46+08:00"
+    s03_cp7_completed_at: "2026-05-29T09:15:23+08:00"
+    s03_cp7_closed_at: "2026-05-29T09:18:05+08:00"
+    s03_cp7_result: "process/checks/CP7-CR018-S03-real-benchmark-index-components-weights-backfill-VERIFICATION-DONE.md"
+    s03_cp7_status: "PASS"
+    s03_main_thread_cp7_regression_result: "PYTHONDONTWRITEBYTECODE=1 PYTEST_ADDOPTS='-p no:cacheprovider' uv run --python 3.11 pytest -q tests/test_cr018_benchmark_group_readiness.py tests/test_cr018_release_scope_dataset_groups.py -> 13 passed in 0.47s"
+    s04_execution_handoff: "process/handoffs/META-DEV-CR018-S04-IMPLEMENT-2026-05-29.md"
+    s04_execution_agent_id: "019e713c-4439-7ed1-acbf-ab5f4b77c2fc"
+    s04_execution_agent_name: "dev-xu"
+    s04_execution_dispatch_status: "completed-close-unavailable"
+    s04_execution_spawned_at: "2026-05-29T08:57:20+08:00"
+    s04_execution_completed_at: "2026-05-29T09:03:36+08:00"
+    s04_execution_closed_at: ""
+    s04_execution_close_attempt: "close_agent returned not_found at 2026-05-29T09:09:46+08:00; no closed_at fabricated."
+    s04_cp6_result: "process/checks/CP6-CR018-S04-industry-market-cap-liquidity-and-exposure-data-CODING-DONE.md"
+    s04_cp6_status: "PASS"
+    s04_story_status: "verified"
+    s04_main_thread_test_result: "PYTHONDONTWRITEBYTECODE=1 PYTEST_ADDOPTS='-p no:cacheprovider' uv run --python 3.11 pytest -q tests/test_cr018_p1_auxiliary_claim_boundary.py tests/test_cr018_release_scope_dataset_groups.py -> 10 passed in 0.45s"
+    s04_cp7_handoff: "process/handoffs/META-QA-CR018-S04-CP7-VERIFY-2026-05-29.md"
+    s04_cp7_agent_id: "019e714b-56ab-7532-9051-0952cadb1da3"
+    s04_cp7_agent_name: "qa-shi"
+    s04_cp7_dispatch_status: "completed-closed"
+    s04_cp7_spawned_at: "2026-05-29T09:13:46+08:00"
+    s04_cp7_completed_at: "2026-05-29T09:16:15+08:00"
+    s04_cp7_closed_at: "2026-05-29T09:19:23+08:00"
+    s04_cp7_result: "process/checks/CP7-CR018-S04-industry-market-cap-liquidity-and-exposure-data-VERIFICATION-DONE.md"
+    s04_cp7_status: "PASS"
+    s04_main_thread_cp7_regression_result: "PYTHONDONTWRITEBYTECODE=1 PYTEST_ADDOPTS='-p no:cacheprovider' uv run --python 3.11 pytest -q tests/test_cr018_p1_auxiliary_claim_boundary.py tests/test_cr018_release_scope_dataset_groups.py -> 10 passed in 0.53s; combined S02-unrelated CR018 S03/S04/S01 regression -> 16 passed in 0.57s"
+    s01_execution_handoff: "process/handoffs/META-DEV-CR018-S01-IMPLEMENT-2026-05-29.md"
+    s01_execution_agent_id: "019e7126-854e-7891-8e54-738187c8f2a6"
+    s01_execution_agent_name: "dev-you"
+    s01_execution_dispatch_status: "completed-closed"
+    s01_execution_spawned_at: "2026-05-29T08:33:38+08:00"
+    s01_execution_completed_at: "2026-05-29T08:42:04+08:00"
+    s01_execution_closed_at: "2026-05-29T08:45:06+08:00"
+    s01_cp6_result: "process/checks/CP6-CR018-S01-production-current-truth-definition-and-dataset-groups-CODING-DONE.md"
+    s01_cp6_status: "PASS"
+    s01_main_thread_test_result: "PYTHONDONTWRITEBYTECODE=1 PYTEST_ADDOPTS='-p no:cacheprovider' uv run --python 3.11 pytest -q tests/test_cr018_release_scope_dataset_groups.py -> 7 passed in 0.04s"
+    s01_cp7_handoff: "process/handoffs/META-QA-CR018-S01-CP7-VERIFY-2026-05-29.md"
+    s01_cp7_agent_id: "019e7133-1e11-7041-aace-fbe30de97fea"
+    s01_cp7_agent_name: "qa-zhang"
+    s01_cp7_dispatch_status: "completed-closed"
+    s01_cp7_spawned_at: "2026-05-29T08:47:19+08:00"
+    s01_cp7_completed_at: "2026-05-29T08:49:29+08:00"
+    s01_cp7_closed_at: "2026-05-29T08:53:20+08:00"
+    s01_cp7_result: "process/checks/CP7-CR018-S01-production-current-truth-definition-and-dataset-groups-VERIFICATION-DONE.md"
+    s01_cp7_status: "PASS"
+    s01_story_status: "verified"
+    s01_main_thread_cp7_regression_result: "PYTHONDONTWRITEBYTECODE=1 PYTEST_ADDOPTS='-p no:cacheprovider' uv run --python 3.11 pytest -q tests/test_cr018_release_scope_dataset_groups.py tests/test_cr014_catalog_publish_gate.py -> 14 passed in 0.08s"
+    dev_ready: []
+    dev_running: []
+    verify_ready: []
+    verify_running: []
+    verified:
+      - "CR018-S01-production-current-truth-definition-and-dataset-groups"
+      - "CR018-S02-pit-universe-lifecycle-st-trade-status-price-limit-backfill"
+      - "CR018-S03-real-benchmark-index-components-weights-backfill"
+      - "CR018-S04-industry-market-cap-liquidity-and-exposure-data"
+      - "CR018-S05-adjustment-dual-view-quality-and-qfq-hfq-publish-readiness"
+      - "CR018-S06-production-quality-readiness-audit-and-rollback-gate"
+      - "CR018-S07-explicit-publish-gate-and-current-reader-smoke"
+      - "CR018-S08-production-current-truth-research-rerun"
+    blocked_by_dependency:
+      - story_id: "CR018-S09-qmt-simulation-admission-boundary-after-data-lake"
+        blocked_by: "后续明确 per-run QMT authorization"
+        dependency_type: "lifecycle-gate"
+    release_publish:
+      status: "published-pass"
+      release_id: "release-cr018-production-current-truth-20150101-20260528-20260529"
+      release_run_id: "run-cr018-release-full-history-20150101-20260528-20260529"
+      approval_id: "user-approved-cr018-production-current-truth-20260529"
+      approved_by: "user"
+      executed_by: "codex"
+      evidence: "process/checks/REAL-TUSHARE-CR018-RELEASE-PUBLISH-2026-05-29.md"
+      release_summary: "/mnt/ugreen-data-lake/quality/run-cr018-release-full-history-20150101-20260528-20260529/cr018_release_publish_summary.json"
+      explicit_publish_gate_status: "allowed"
+      published_count: 10
+      current_pointer_publish_count: 10
+      catalog_current_pointer_publish_count: 10
+      provider_fetch_count: 0
+      credential_read_count: 0
+      qmt_operation_count: 0
+      post_publish_readiness_status: "pass"
+      post_publish_blockers: []
+      cli_readiness_result: "PASS: production_strict status=pass, blockers=[], candidate_unpublished_count=0, published_count=10."
+      current_reader_smoke_result: "PASS: prices 001914.SZ on 2019-12-16 returned row_count=1 from published current pointer."
+      target_regression_result: "uv run --python 3.11 pytest -q tests/test_cr018_publish_current_reader_smoke.py tests/test_cr018_readiness_rollback_gate.py tests/test_cr014_catalog_publish_gate.py -> 18 passed in 0.52s"
+    production_rerun:
+      status: "fail"
+      evidence: "process/checks/REAL-TUSHARE-CR018-PRODUCTION-RERUN-2026-05-29.md"
+      report: "reports/production_current_truth/release-cr018-production-current-truth-20150101-20260528-20260529/run-cr018-production-rerun-20150101-20260528-20260529-01/rerun-report.json"
+      summary: "reports/production_current_truth/release-cr018-production-current-truth-20150101-20260528-20260529/run-cr018-production-rerun-20150101-20260528-20260529-01/rerun-summary.md"
+      qmt_admission_evidence: "reports/production_current_truth/release-cr018-production-current-truth-20150101-20260528-20260529/run-cr018-production-rerun-20150101-20260528-20260529-01/qmt-admission-evidence.json"
+      run_id: "run-cr018-production-rerun-20150101-20260528-20260529-01"
+      release_id: "release-cr018-production-current-truth-20150101-20260528-20260529"
+      coverage: "2015-01-01..2026-05-28"
+      research_adjustment_policy: "qfq"
+      strategy_pass: false
+      qmt_admission_allowed_count: 0
+      low_vol_top20_annual_return: 0.02693702069455295
+      hs300_annual_return: 0.02767291484316603
+      low_vol_minus_hs300_annual_return: -0.000735894148613081
+      low_vol_top20_max_drawdown: -0.5587489827318772
+      hs300_max_drawdown: -0.46696138837984813
+      low_vol_rank_ic_mean: 0.08839059147967537
+      unfilled_trade_count: 185
+      blocked_claims:
+        - "qmt_admission: production_rerun_strategy_criteria_failed"
+        - "pure_alpha: p1_auxiliary_missing"
+        - "industry_neutralized: p1_auxiliary_missing"
+        - "market_cap_neutralized: p1_auxiliary_missing"
+        - "risk_model_adjusted_alpha: p1_auxiliary_missing"
+      operation_counts:
+        provider_fetch: 0
+        credential_read: 0
+        lake_write: 0
+        catalog_current_pointer_publish: 0
+        qmt_operation: 0
+        candidate_read_count: 0
+        proxy_input_allowed_count: 0
+        duckdb_dependency_change: 0
+      script_compile_check: "PASS: uv run --python 3.11 python -m py_compile scripts/cr018_run_production_current_truth_research.py scripts/cr018_release_catalog_publish.py"
+      script_diff_check: "PASS: git diff --check -- scripts/cr018_run_production_current_truth_research.py scripts/cr018_release_catalog_publish.py"
+      readiness_recheck: "PASS: production_strict status=pass, blockers=[], candidate_unpublished_count=0, published_count=10"
+      non_blocking_warning: "pandas FutureWarning on fillna downcast happened during rerun; report generation unaffected and script fill path was cleaned afterward for future runs."
+    real_operation_authorization:
+      provider_fetch_allowed: false
+      credential_read_allowed: false
+      real_lake_write_allowed: false
+      current_pointer_publish_allowed: false
+      qmt_operation_allowed: false
+      duckdb_dependency_change_allowed: false
+    next_gate: "Production research rerun failed strategy admission; CR018-S09 remains blocked until user decides whether to analyze failure, add P1/risk-model inputs, or change admission criteria."
   cr013_change_intake:
     type: "change-impact-analysis"
     status: "closed"
@@ -3777,13 +5319,13 @@ phase_artifacts:
     closed_at: "2026-05-16T19:33:15+08:00"
   market_data_change:
     cr_path: "process/changes/CR-004-MARKET-DATA-COMPONENT-2026-05-17.md"
-    status: "open-batch-d-cp5-approved-implementation-queue"
-    approval_result: "approved-dispatch-started"
+    status: "batch-d-g1-verified-pending-total-close-decision"
+    approval_result: "batch-d-g1-verified-pending-total-close-decision"
     impact_level: "high"
     rollback_to: "solution-design"
     implementation_owner: "subagents-required"
     subagent_dispatch_required: true
-    subagent_dispatch_status: "meta-se-completed-meta-qa-strategy-completed-meta-dev-cp6-batch-a-completed-meta-qa-cp7-batch-a-pass-meta-dev-story-016-verified-meta-dev-story-017-cp6-pass-meta-qa-story-017-cp7-pass-batch-d-cp5-approved"
+    subagent_dispatch_status: "meta-se-completed-meta-qa-strategy-completed-meta-dev-cp6-batch-a-completed-meta-qa-cp7-batch-a-pass-meta-dev-story-016-verified-meta-dev-story-017-cp6-pass-meta-qa-story-017-cp7-pass-batch-d-s004-s018-cp6-cp7-pass"
     delivery_route_confirmed: true
     authorized_output_paths:
       - "process/HLD.md"
@@ -3879,6 +5421,16 @@ phase_artifacts:
         - "STORY-003 legacy quality CR-004 alignment addendum"
         - "STORY-004 Data Loader first / no real fetch LLD revision"
         - "STORY-018 experiment readonly benchmark LLD"
+      cp6_story_004_batch_d: "process/checks/CP6-STORY-004-cr004-batch-d-dataloader-CODING-DONE.md"
+      cp6_story_004_batch_d_status: "PASS"
+      cp7_story_004_batch_d: "process/checks/CP7-STORY-004-cr004-batch-d-dataloader-VERIFICATION-DONE.md"
+      cp7_story_004_batch_d_status: "PASS"
+      cp6_story_018_batch_d: "process/checks/CP6-STORY-018-cr004-experiment-readonly-benchmark-CODING-DONE.md"
+      cp6_story_018_batch_d_status: "PASS"
+      cp7_story_018_batch_d: "process/checks/CP7-STORY-018-cr004-experiment-readonly-benchmark-VERIFICATION-DONE.md"
+      cp7_story_018_batch_d_status: "PASS"
+      cp7_batch_d_summary: "process/checks/CP7-CR004-BATCH-D-VERIFICATION-SUMMARY-2026-05-30.md"
+      cp7_batch_d_status: "PASS"
       cp3_status: "approved"
       cp4_status: "approved"
       cp3_reviewed_by: "user"
@@ -3897,7 +5449,7 @@ phase_artifacts:
       - "质量校验和多源比对边界有单元测试。"
       - "uv 依赖一致，pytest 通过，默认路径无联网和无凭据。"
     created_at: "2026-05-17T12:01:04+08:00"
-    updated_at: "2026-05-17T15:53:20+08:00"
+    updated_at: "2026-05-30T15:05:00+08:00"
   tushare_5000_data_layer_change:
     cr_path: "process/changes/CR-005-TUSHARE-5000-DATA-LAYER-REMEDIATION-2026-05-17.md"
     handoff_path: "process/handoffs/NEXT-SESSION-CR005-TUSHARE-5000-DATA-LAYER-2026-05-17.md"
@@ -4467,50 +6019,187 @@ parallel_execution:
   max_parallel_lld: 3
   max_parallel_dev: 2
   max_parallel_qa: 2
+  active_execution_batch:
+    change_id: "CR-030"
+    phase: "story-execution"
+    batch_id: "CR030-MULTIFACTOR-RESEARCH-LOOP-BATCH-A"
+    cp5_manual_review: "checkpoints/CP5-CR030-MULTIFACTOR-RESEARCH-LOOP-BATCH-A-LLD-BATCH.md"
+    cp5_manual_status: "approved"
+    approved_at: "2026-06-03T08:55:53+08:00"
+    implementation_allowed: true
+    active_dev_ready: []
+    active_dev_running: []
+    active_verify_ready: []
+    active_verify_running: []
+    active_verified:
+      - story_id: "CR030-S01-external-reference-matrix-and-loop-contract"
+        cp6_checkpoint: "process/checks/CP6-CR030-S01-external-reference-matrix-and-loop-contract-CODING-DONE.md"
+        cp7_checkpoint: "process/checks/CP7-CR030-S01-external-reference-matrix-and-loop-contract-VERIFICATION-DONE.md"
+        dev_agent_id: "019e8b01-38bf-75b1-b52e-f50d11b372fc"
+        qa_agent_id: "019e8b0a-1a36-7403-bb00-5e9c4f130fb1"
+        verified_at: "2026-06-03T09:17:11+08:00"
+      - story_id: "CR030-S02-factor-spec-run-spec-contract"
+        cp6_checkpoint: "process/checks/CP6-CR030-S02-factor-spec-run-spec-contract-CODING-DONE.md"
+        cp7_checkpoint: "process/checks/CP7-CR030-S02-factor-spec-run-spec-contract-VERIFICATION-DONE.md"
+        dev_agent_id: "019e8b10-c570-7120-9735-a422f06e01f4"
+        qa_agent_id: "019e8b1a-2519-7930-ad51-2256c0953278"
+        verified_at: "2026-06-03T09:37:08+08:00"
+      - story_id: "CR030-S03-factor-panel-label-window-fail-closed"
+        cp6_checkpoint: "process/checks/CP6-CR030-S03-factor-panel-label-window-fail-closed-CODING-DONE.md"
+        cp7_checkpoint: "process/checks/CP7-CR030-S03-factor-panel-label-window-fail-closed-VERIFICATION-DONE.md"
+        dev_agent_id: "019e8b25-337a-7850-b3d7-03dc84840435"
+        qa_agent_id: "019e8b2f-de23-7db2-8219-1d856c40efb4"
+        verified_at: "2026-06-03T09:58:35+08:00"
+      - story_id: "CR030-S04-factor-evaluation-report"
+        cp6_checkpoint: "process/checks/CP6-CR030-S04-factor-evaluation-report-CODING-DONE.md"
+        cp7_checkpoint: "process/checks/CP7-CR030-S04-factor-evaluation-report-VERIFICATION-DONE.md"
+        dev_agent_id: "019e8b37-d4a9-72e2-a4ac-4d532e6317db"
+        qa_agent_id: "019e8b43-be99-7ca0-bf38-841cfc7f928c"
+        verified_at: "2026-06-03T10:21:23+08:00"
+      - story_id: "CR030-S05-multifactor-combiner-portfolio-plan"
+        cp6_checkpoint: "process/checks/CP6-CR030-S05-multifactor-combiner-portfolio-plan-CODING-DONE.md"
+        cp7_checkpoint: "process/checks/CP7-CR030-S05-multifactor-combiner-portfolio-plan-VERIFICATION-DONE.md"
+        dev_agent_id: "019e8b4e-a692-7f00-aa91-7c748ddd6a33"
+        qa_agent_id: "019e8b5b-e2a5-7ee1-ac1d-ce832731cccf"
+        verified_at: "2026-06-03T10:47:33+08:00"
+      - story_id: "CR030-S06-experiment-manifest-report-catalog"
+        cp6_checkpoint: "process/checks/CP6-CR030-S06-experiment-manifest-report-catalog-CODING-DONE.md"
+        cp7_checkpoint: "process/checks/CP7-CR030-S06-experiment-manifest-report-catalog-VERIFICATION-DONE.md"
+        dev_agent_id: "019e8b4e-a6e3-71f0-9e60-df022490ef26"
+        qa_agent_id: "019e8b5b-e30a-7641-aaf2-0aa22f9860cb"
+        verified_at: "2026-06-03T10:47:33+08:00"
+      - story_id: "CR030-S07-strategy-admission-package-handoff"
+        cp6_checkpoint: "process/checks/CP6-CR030-S07-strategy-admission-package-handoff-CODING-DONE.md"
+        cp7_checkpoint: "process/checks/CP7-CR030-S07-strategy-admission-package-handoff-VERIFICATION-DONE.md"
+        dev_agent_id: "019e8b66-de6b-70e0-aeca-c94b1b9d07c6"
+        qa_agent_id: "019e8b73-1a7b-72a0-b2d6-760665d5de93"
+        verified_at: "2026-06-03T11:12:22+08:00"
+      - story_id: "CR030-S08-safety-docs-and-follow-up-boundary"
+        cp6_checkpoint: "process/checks/CP6-CR030-S08-safety-docs-and-follow-up-boundary-CODING-DONE.md"
+        cp7_checkpoint: "process/checks/CP7-CR030-S08-safety-docs-and-follow-up-boundary-VERIFICATION-DONE.md"
+        dev_agent_id: "019e8b93-eb3b-7d01-ae25-384a76e4713f"
+        qa_agent_id: "019e8b9f-be55-7a20-9a87-611747604421"
+        verified_at: "2026-06-03T12:01:20+08:00"
+    blocked_by_dependency: []
+    no_real_operation_boundary: "依赖变更、外部项目 clone/install/run、源码迁移、provider/lake/publish、QMT/simulation/live、账户/订单或凭据读取均不授权。"
   lld_design_batch:
-    batch_id: "CR013-BATCH-A"
+    batch_id: "CR025-RESEARCH-EXECUTION-SEMANTIC-ALIGNMENT-BATCH-A"
     source: "change"
-    change_id: "CR-013"
-    wave_id: "CR013-BATCH-A-LLD"
+    change_id: "CR-025"
+    wave_id: "CR025-LLD-BATCH-A"
     stories:
-      - "CR013-S01-full-history-readiness-gap-register"
-      - "CR013-S02-execution-vwap-claim-boundary"
-      - "CR013-S03-unsupported-register-and-doc-refresh"
-      - "CR013-S04-full-history-backfill-roadmap"
-    status: "ready-for-review"
+      - "CR025-S01-clean-feed-gate-backend-selector"
+      - "CR025-S02-semantic-diff-schema-artifact"
+      - "CR025-S03-order-intent-draft-qmt-boundary"
+      - "CR025-S04-backtrader-module-reference-no-copy-guardrail"
+      - "CR025-S05-no-real-operation-safety-verification"
+      - "CR025-S06-route-docs-and-follow-up-handoff"
+    status: "approved"
     max_parallel_lld: 3
     waves:
-      - wave_id: "CR013-BATCH-A-LLD"
+      - wave_id: "CR025-LLD-W1-FEED-SEMANTIC"
         stories:
-          - "CR013-S01-full-history-readiness-gap-register"
-          - "CR013-S02-execution-vwap-claim-boundary"
-          - "CR013-S03-unsupported-register-and-doc-refresh"
-          - "CR013-S04-full-history-backfill-roadmap"
+          - "CR025-S01-clean-feed-gate-backend-selector"
+          - "CR025-S02-semantic-diff-schema-artifact"
+          - "CR025-S04-backtrader-module-reference-no-copy-guardrail"
         parallel: true
         status: "completed"
+        handoff_path: "process/handoffs/META-DEV-CR025-LLD-BATCH-A-2026-06-01.md"
+        agent_name: "dev-zhang"
+        agent_id: "019e83b3-a392-7892-a311-49e6a7e571c9"
+      - wave_id: "CR025-LLD-W2-ORDER-SAFETY-DOCS"
+        stories:
+          - "CR025-S03-order-intent-draft-qmt-boundary"
+          - "CR025-S05-no-real-operation-safety-verification"
+          - "CR025-S06-route-docs-and-follow-up-handoff"
+        parallel: true
+        status: "completed"
+        handoff_path: "process/handoffs/META-DEV-CR025-LLD-BATCH-B-2026-06-01.md"
+        agent_name: "dev-qin"
+        agent_id: "019e83b3-beb0-7b62-951e-cd2b60e0ff17"
     handoff_paths:
-      - "process/handoffs/META-DEV-CR013-LLD-BATCH-2026-05-25.md"
+      - "process/handoffs/META-DEV-CR025-LLD-BATCH-A-2026-06-01.md"
+      - "process/handoffs/META-DEV-CR025-LLD-BATCH-B-2026-06-01.md"
     story_llds:
-      - "process/stories/CR013-S01-full-history-readiness-gap-register-LLD.md"
-      - "process/stories/CR013-S02-execution-vwap-claim-boundary-LLD.md"
-      - "process/stories/CR013-S03-unsupported-register-and-doc-refresh-LLD.md"
-      - "process/stories/CR013-S04-full-history-backfill-roadmap-LLD.md"
+      - "process/stories/CR025-S01-clean-feed-gate-backend-selector-LLD.md"
+      - "process/stories/CR025-S02-semantic-diff-schema-artifact-LLD.md"
+      - "process/stories/CR025-S03-order-intent-draft-qmt-boundary-LLD.md"
+      - "process/stories/CR025-S04-backtrader-module-reference-no-copy-guardrail-LLD.md"
+      - "process/stories/CR025-S05-no-real-operation-safety-verification-LLD.md"
+      - "process/stories/CR025-S06-route-docs-and-follow-up-handoff-LLD.md"
     cp5_auto_results:
-      - "process/checks/CP5-CR013-S01-full-history-readiness-gap-register-LLD-IMPLEMENTABILITY.md"
-      - "process/checks/CP5-CR013-S02-execution-vwap-claim-boundary-LLD-IMPLEMENTABILITY.md"
-      - "process/checks/CP5-CR013-S03-unsupported-register-and-doc-refresh-LLD-IMPLEMENTABILITY.md"
-      - "process/checks/CP5-CR013-S04-full-history-backfill-roadmap-LLD-IMPLEMENTABILITY.md"
+      - "process/checks/CP5-CR025-S01-clean-feed-gate-backend-selector-LLD-IMPLEMENTABILITY.md"
+      - "process/checks/CP5-CR025-S02-semantic-diff-schema-artifact-LLD-IMPLEMENTABILITY.md"
+      - "process/checks/CP5-CR025-S03-order-intent-draft-qmt-boundary-LLD-IMPLEMENTABILITY.md"
+      - "process/checks/CP5-CR025-S04-backtrader-module-reference-no-copy-guardrail-LLD-IMPLEMENTABILITY.md"
+      - "process/checks/CP5-CR025-S05-no-real-operation-safety-verification-LLD-IMPLEMENTABILITY.md"
+      - "process/checks/CP5-CR025-S06-route-docs-and-follow-up-handoff-LLD-IMPLEMENTABILITY.md"
     cp5_auto_status: "PASS"
-    gate: "CP5-CR013-BATCH-A-pending-user-review"
-    implementation_allowed: false
-    cp5_manual_review: "checkpoints/CP5-CR013-BATCH-A-LLD-BATCH.md"
-    agent_name: "dev-xu"
-    agent_id: "019e5f96-597f-7933-91ba-2928b24858db"
-    completed_at: "2026-05-25T22:44:27+08:00"
-    reason: "CR013-S01..S04 四份 LLD 与 CP5 自动预检已完成且 PASS；等待 meta-po 创建 CP5 批次人工审查稿，approved 前不得实现。"
+    gate: "CP5-CR025-BATCH-A-approved-story-execution"
+    implementation_allowed: true
+    cp5_manual_review: "checkpoints/CP5-CR025-RESEARCH-EXECUTION-SEMANTIC-ALIGNMENT-BATCH-A-LLD-BATCH.md"
+    agent_name: "dev-zhang, dev-qin"
+    agent_id: "019e83b3-a392-7892-a311-49e6a7e571c9, 019e83b3-beb0-7b62-951e-cd2b60e0ff17"
+    started_at: "2026-06-01T23:00:59+08:00"
+    completed_at: "2026-06-01T23:11:56+08:00"
+    reason: "CR025 CP4 自动预检 PASS；6 个 Story 已完成 LLD 设计和 CP5 自动预检，6/6 PASS；CP5 已由用户确认 approved。当前允许按 DAG 调度 S01/S04 受控离线实现；不得改依赖、运行 Backtrader、源码移植、触发真实操作或实现多因子研究主框架。"
   lld_ready: []
   lld_running: []
   lld_review:
+    - story_id: "CR025-S01-clean-feed-gate-backend-selector"
+      wave_id: "CR025-LLD-W1-FEED-SEMANTIC"
+      handoff_path: "process/handoffs/META-DEV-CR025-LLD-BATCH-A-2026-06-01.md"
+      agent_name: "dev-zhang"
+      agent_id: "019e83b3-a392-7892-a311-49e6a7e571c9"
+      status: "confirmed-cp5-approved"
+      lld: "process/stories/CR025-S01-clean-feed-gate-backend-selector-LLD.md"
+      cp5_precheck: "process/checks/CP5-CR025-S01-clean-feed-gate-backend-selector-LLD-IMPLEMENTABILITY.md"
+      cp5_status: "PASS"
+    - story_id: "CR025-S02-semantic-diff-schema-artifact"
+      wave_id: "CR025-LLD-W1-FEED-SEMANTIC"
+      handoff_path: "process/handoffs/META-DEV-CR025-LLD-BATCH-A-2026-06-01.md"
+      agent_name: "dev-zhang"
+      agent_id: "019e83b3-a392-7892-a311-49e6a7e571c9"
+      status: "confirmed-cp5-approved"
+      lld: "process/stories/CR025-S02-semantic-diff-schema-artifact-LLD.md"
+      cp5_precheck: "process/checks/CP5-CR025-S02-semantic-diff-schema-artifact-LLD-IMPLEMENTABILITY.md"
+      cp5_status: "PASS"
+    - story_id: "CR025-S04-backtrader-module-reference-no-copy-guardrail"
+      wave_id: "CR025-LLD-W1-FEED-SEMANTIC"
+      handoff_path: "process/handoffs/META-DEV-CR025-LLD-BATCH-A-2026-06-01.md"
+      agent_name: "dev-zhang"
+      agent_id: "019e83b3-a392-7892-a311-49e6a7e571c9"
+      status: "confirmed-cp5-approved"
+      lld: "process/stories/CR025-S04-backtrader-module-reference-no-copy-guardrail-LLD.md"
+      cp5_precheck: "process/checks/CP5-CR025-S04-backtrader-module-reference-no-copy-guardrail-LLD-IMPLEMENTABILITY.md"
+      cp5_status: "PASS"
+    - story_id: "CR025-S03-order-intent-draft-qmt-boundary"
+      wave_id: "CR025-LLD-W2-ORDER-SAFETY-DOCS"
+      handoff_path: "process/handoffs/META-DEV-CR025-LLD-BATCH-B-2026-06-01.md"
+      agent_name: "dev-qin"
+      agent_id: "019e83b3-beb0-7b62-951e-cd2b60e0ff17"
+      status: "confirmed-cp5-approved"
+      lld: "process/stories/CR025-S03-order-intent-draft-qmt-boundary-LLD.md"
+      cp5_precheck: "process/checks/CP5-CR025-S03-order-intent-draft-qmt-boundary-LLD-IMPLEMENTABILITY.md"
+      cp5_status: "PASS"
+    - story_id: "CR025-S05-no-real-operation-safety-verification"
+      wave_id: "CR025-LLD-W2-ORDER-SAFETY-DOCS"
+      handoff_path: "process/handoffs/META-DEV-CR025-LLD-BATCH-B-2026-06-01.md"
+      agent_name: "dev-qin"
+      agent_id: "019e83b3-beb0-7b62-951e-cd2b60e0ff17"
+      status: "confirmed-cp5-approved"
+      lld: "process/stories/CR025-S05-no-real-operation-safety-verification-LLD.md"
+      cp5_precheck: "process/checks/CP5-CR025-S05-no-real-operation-safety-verification-LLD-IMPLEMENTABILITY.md"
+      cp5_status: "PASS"
+    - story_id: "CR025-S06-route-docs-and-follow-up-handoff"
+      wave_id: "CR025-LLD-W2-ORDER-SAFETY-DOCS"
+      handoff_path: "process/handoffs/META-DEV-CR025-LLD-BATCH-B-2026-06-01.md"
+      agent_name: "dev-qin"
+      agent_id: "019e83b3-beb0-7b62-951e-cd2b60e0ff17"
+      status: "confirmed-cp5-approved"
+      lld: "process/stories/CR025-S06-route-docs-and-follow-up-handoff-LLD.md"
+      cp5_precheck: "process/checks/CP5-CR025-S06-route-docs-and-follow-up-handoff-LLD-IMPLEMENTABILITY.md"
+      cp5_status: "PASS"
     - story_id: "CR011-S08-factor-panel-audit-and-robust-validation"
       wave_id: "CR011-VALIDATION-BATCH-C-LLD"
       status: "confirmed-cp5-approved"
@@ -4758,13 +6447,261 @@ parallel_execution:
     qa_handoff: "process/handoffs/META-QA-CR010-REMAINING-BATCHES-VERIFY-2026-05-22.md"
     qa_cp7_check: "process/checks/CP7-CR010-REMAINING-BATCHES-META-QA-VERIFICATION-2026-05-22.md"
   dev_running: []
-  dev_ready: []
-  verify_ready:
-    - "CR013-S01-full-history-readiness-gap-register"
-    - "CR013-S02-execution-vwap-claim-boundary"
-    - "CR013-S03-unsupported-register-and-doc-refresh"
-    - "CR013-S04-full-history-backfill-roadmap"
+  verify_ready: []
   verify_running: []
+  verified:
+    - story_id: "CR030-S01-external-reference-matrix-and-loop-contract"
+      change_id: "CR-030"
+      wave_id: "CR030-W1-CONTRACT-GOVERNANCE"
+      status: "verified"
+      lld: "process/stories/CR030-S01-external-reference-matrix-and-loop-contract-LLD.md"
+      cp5_precheck: "process/checks/CP5-CR030-S01-external-reference-matrix-and-loop-contract-LLD-IMPLEMENTABILITY.md"
+      cp5_manual_review: "checkpoints/CP5-CR030-MULTIFACTOR-RESEARCH-LOOP-BATCH-A-LLD-BATCH.md"
+      handoff_path: "process/handoffs/META-DEV-CR030-S01-IMPLEMENT-2026-06-03.md"
+      cp6_checkpoint: "process/checks/CP6-CR030-S01-external-reference-matrix-and-loop-contract-CODING-DONE.md"
+      cp6_status: "PASS"
+      agent_id: "019e8b01-38bf-75b1-b52e-f50d11b372fc"
+      agent_name: "dev-shi"
+      tool_name: "multi_agent_v1.spawn_agent"
+      started_at: "2026-06-03T08:55:53+08:00"
+      completed_at: "2026-06-03T09:11:23+08:00"
+      closed_at: "2026-06-03T09:11:23+08:00"
+      qa_agent_id: "019e8b0a-1a36-7403-bb00-5e9c4f130fb1"
+      qa_agent_name: "qa-hua"
+      qa_tool_name: "multi_agent_v1.spawn_agent"
+      qa_started_at: "2026-06-03T09:11:23+08:00"
+      qa_completed_at: "2026-06-03T09:17:11+08:00"
+      qa_closed_at: "2026-06-03T09:17:11+08:00"
+      qa_handoff_path: "process/handoffs/META-QA-CR030-S01-CP7-VERIFY-2026-06-03.md"
+      cp7_checkpoint: "process/checks/CP7-CR030-S01-external-reference-matrix-and-loop-contract-VERIFICATION-DONE.md"
+      allowed_files:
+        - "docs/CR030-MULTIFACTOR-REFERENCE-MATRIX.md"
+        - "tests/test_cr030_external_reference_guardrails.py"
+        - "process/checks/CP6-CR030-S01-external-reference-matrix-and-loop-contract-CODING-DONE.md"
+        - "process/handoffs/META-DEV-CR030-S01-IMPLEMENT-2026-06-03.md"
+      cp7_status: "PASS"
+      verified_at: "2026-06-03T09:17:11+08:00"
+      reason: "CP6 PASS，CP7 PASS，meta-po 主线程复跑测试 6 passed；S01 reference boundary 已冻结，可解锁 S02。仍不得改依赖、运行外部项目、源码迁移、provider/lake/publish、QMT/simulation/live 或读取凭据。"
+    - story_id: "CR030-S02-factor-spec-run-spec-contract"
+      change_id: "CR-030"
+      wave_id: "CR030-W1-CONTRACT-GOVERNANCE"
+      status: "verified"
+      lld: "process/stories/CR030-S02-factor-spec-run-spec-contract-LLD.md"
+      cp5_precheck: "process/checks/CP5-CR030-S02-factor-spec-run-spec-contract-LLD-IMPLEMENTABILITY.md"
+      cp5_manual_review: "checkpoints/CP5-CR030-MULTIFACTOR-RESEARCH-LOOP-BATCH-A-LLD-BATCH.md"
+      handoff_path: "process/handoffs/META-DEV-CR030-S02-IMPLEMENT-2026-06-03.md"
+      cp6_checkpoint: "process/checks/CP6-CR030-S02-factor-spec-run-spec-contract-CODING-DONE.md"
+      cp6_status: "PASS"
+      agent_id: "019e8b10-c570-7120-9735-a422f06e01f4"
+      agent_name: "dev-you"
+      tool_name: "multi_agent_v1.spawn_agent"
+      started_at: "2026-06-03T09:19:57+08:00"
+      completed_at: "2026-06-03T09:28:58+08:00"
+      closed_at: "2026-06-03T09:28:58+08:00"
+      qa_agent_id: "019e8b1a-2519-7930-ad51-2256c0953278"
+      qa_agent_name: "qa-jin"
+      qa_tool_name: "multi_agent_v1.spawn_agent"
+      qa_started_at: "2026-06-03T09:30:11+08:00"
+      qa_completed_at: "2026-06-03T09:37:08+08:00"
+      qa_closed_at: "2026-06-03T09:37:08+08:00"
+      qa_handoff_path: "process/handoffs/META-QA-CR030-S02-CP7-VERIFY-2026-06-03.md"
+      cp7_checkpoint: "process/checks/CP7-CR030-S02-factor-spec-run-spec-contract-VERIFICATION-DONE.md"
+      allowed_files:
+        - "engine/multifactor_contracts.py"
+        - "tests/test_cr030_factor_spec_run_spec_contract.py"
+        - "process/checks/CP6-CR030-S02-factor-spec-run-spec-contract-CODING-DONE.md"
+        - "process/handoffs/META-DEV-CR030-S02-IMPLEMENT-2026-06-03.md"
+      optional_minimal_adapter_files:
+        - "engine/research_dataset.py"
+        - "experiments/run_experiment_17_21_factor_suite.py"
+      cp7_status: "PASS"
+      verified_at: "2026-06-03T09:37:08+08:00"
+      reason: "CP6 PASS，CP7 PASS，meta-po 主线程复跑 S02 测试 5 passed、S01+S02 组合测试 11 passed；S02 合同冻结，可解锁 S03。仍不得改依赖、运行外部项目、源码迁移、provider/lake/publish、QMT/simulation/live 或读取凭据。"
+    - story_id: "CR030-S03-factor-panel-label-window-fail-closed"
+      change_id: "CR-030"
+      wave_id: "CR030-W2-PANEL-EVALUATION"
+      status: "verified"
+      lld: "process/stories/CR030-S03-factor-panel-label-window-fail-closed-LLD.md"
+      cp5_precheck: "process/checks/CP5-CR030-S03-factor-panel-label-window-fail-closed-LLD-IMPLEMENTABILITY.md"
+      cp5_manual_review: "checkpoints/CP5-CR030-MULTIFACTOR-RESEARCH-LOOP-BATCH-A-LLD-BATCH.md"
+      handoff_path: "process/handoffs/META-DEV-CR030-S03-IMPLEMENT-2026-06-03.md"
+      cp6_checkpoint: "process/checks/CP6-CR030-S03-factor-panel-label-window-fail-closed-CODING-DONE.md"
+      cp6_status: "PASS"
+      agent_id: "019e8b25-337a-7850-b3d7-03dc84840435"
+      agent_name: "dev-kong"
+      tool_name: "multi_agent_v1.spawn_agent"
+      started_at: "2026-06-03T09:42:19+08:00"
+      completed_at: "2026-06-03T09:50:33+08:00"
+      closed_at: "2026-06-03T09:50:33+08:00"
+      qa_agent_id: "019e8b2f-de23-7db2-8219-1d856c40efb4"
+      qa_agent_name: "qa-lv"
+      qa_tool_name: "multi_agent_v1.spawn_agent"
+      qa_started_at: "2026-06-03T09:53:57+08:00"
+      qa_completed_at: "2026-06-03T09:58:35+08:00"
+      qa_closed_at: "2026-06-03T09:58:35+08:00"
+      qa_handoff_path: "process/handoffs/META-QA-CR030-S03-CP7-VERIFY-2026-06-03.md"
+      cp7_checkpoint: "process/checks/CP7-CR030-S03-factor-panel-label-window-fail-closed-VERIFICATION-DONE.md"
+      allowed_files:
+        - "engine/factor_panel_contracts.py"
+        - "tests/test_cr030_factor_panel_label_window_gates.py"
+        - "process/checks/CP6-CR030-S03-factor-panel-label-window-fail-closed-CODING-DONE.md"
+        - "process/handoffs/META-DEV-CR030-S03-IMPLEMENT-2026-06-03.md"
+      optional_minimal_adapter_files:
+        - "engine/research_dataset.py"
+        - "market_data/readers.py"
+      cp7_status: "PASS"
+      verified_at: "2026-06-03T09:58:35+08:00"
+      reason: "CP6 PASS，CP7 PASS，meta-po 主线程复跑 S03 测试 6 passed、S01-S03 组合回归 17 passed、py_compile PASS；S03 panel/label gate 冻结，可解锁 S04。仍不得改依赖、运行外部项目、源码迁移、provider/lake/publish、QMT/simulation/live 或读取凭据。"
+    - story_id: "CR030-S04-factor-evaluation-report"
+      change_id: "CR-030"
+      wave_id: "CR030-W2-PANEL-EVALUATION"
+      status: "verified"
+      lld: "process/stories/CR030-S04-factor-evaluation-report-LLD.md"
+      cp5_precheck: "process/checks/CP5-CR030-S04-factor-evaluation-report-LLD-IMPLEMENTABILITY.md"
+      cp5_manual_review: "checkpoints/CP5-CR030-MULTIFACTOR-RESEARCH-LOOP-BATCH-A-LLD-BATCH.md"
+      handoff_path: "process/handoffs/META-DEV-CR030-S04-IMPLEMENT-2026-06-03.md"
+      cp6_checkpoint: "process/checks/CP6-CR030-S04-factor-evaluation-report-CODING-DONE.md"
+      cp6_status: "PASS"
+      agent_id: "019e8b37-d4a9-72e2-a4ac-4d532e6317db"
+      agent_name: "dev-zhu"
+      tool_name: "multi_agent_v1.spawn_agent"
+      started_at: "2026-06-03T10:02:39+08:00"
+      completed_at: "2026-06-03T10:12:20+08:00"
+      closed_at: "2026-06-03T10:12:20+08:00"
+      qa_agent_id: "019e8b43-be99-7ca0-bf38-841cfc7f928c"
+      qa_agent_name: "qa-wei"
+      qa_tool_name: "multi_agent_v1.spawn_agent"
+      qa_started_at: "2026-06-03T10:15:39+08:00"
+      qa_completed_at: "2026-06-03T10:21:23+08:00"
+      qa_closed_at: "2026-06-03T10:21:23+08:00"
+      qa_handoff_path: "process/handoffs/META-QA-CR030-S04-CP7-VERIFY-2026-06-03.md"
+      cp7_checkpoint: "process/checks/CP7-CR030-S04-factor-evaluation-report-VERIFICATION-DONE.md"
+      allowed_files:
+        - "engine/factor_evaluation.py"
+        - "reports/factor_evaluation/**"
+        - "tests/test_cr030_factor_evaluation_report.py"
+        - "process/checks/CP6-CR030-S04-factor-evaluation-report-CODING-DONE.md"
+        - "process/handoffs/META-DEV-CR030-S04-IMPLEMENT-2026-06-03.md"
+      optional_minimal_adapter_files:
+        - "engine/factor_panel_contracts.py"
+        - "reports/research_catalog/**"
+      cp7_status: "PASS"
+      verified_at: "2026-06-03T10:21:23+08:00"
+      reason: "CP6 PASS，CP7 PASS，meta-po 主线程复跑 S04 测试 6 passed、S01-S04 组合回归 23 passed、py_compile PASS；S04 evaluation report 合同冻结，可解锁 S05/S06。仍不得改依赖、运行外部项目、源码迁移、provider/lake/publish、QMT/simulation/live 或读取凭据。"
+    - story_id: "CR030-S05-multifactor-combiner-portfolio-plan"
+      change_id: "CR-030"
+      wave_id: "CR030-W3-COMBINATION-MANIFEST"
+      status: "verified"
+      lld: "process/stories/CR030-S05-multifactor-combiner-portfolio-plan-LLD.md"
+      cp5_precheck: "process/checks/CP5-CR030-S05-multifactor-combiner-portfolio-plan-LLD-IMPLEMENTABILITY.md"
+      cp5_manual_review: "checkpoints/CP5-CR030-MULTIFACTOR-RESEARCH-LOOP-BATCH-A-LLD-BATCH.md"
+      handoff_path: "process/handoffs/META-DEV-CR030-S05-IMPLEMENT-2026-06-03.md"
+      cp6_checkpoint: "process/checks/CP6-CR030-S05-multifactor-combiner-portfolio-plan-CODING-DONE.md"
+      cp6_status: "PASS"
+      agent_id: "019e8b4e-a692-7f00-aa91-7c748ddd6a33"
+      agent_name: "dev-qin"
+      tool_name: "multi_agent_v1.spawn_agent"
+      started_at: "2026-06-03T10:27:37+08:00"
+      completed_at: "2026-06-03T10:35:14+08:00"
+      closed_at: "2026-06-03T10:38:08+08:00"
+      qa_agent_id: "019e8b5b-e2a5-7ee1-ac1d-ce832731cccf"
+      qa_agent_name: "qa-kong"
+      qa_tool_name: "multi_agent_v1.spawn_agent"
+      qa_started_at: "2026-06-03T10:42:02+08:00"
+      qa_completed_at: "2026-06-03T10:43:26+08:00"
+      qa_closed_at: "2026-06-03T10:47:33+08:00"
+      qa_handoff_path: "process/handoffs/META-QA-CR030-S05-CP7-VERIFY-2026-06-03.md"
+      cp7_checkpoint: "process/checks/CP7-CR030-S05-multifactor-combiner-portfolio-plan-VERIFICATION-DONE.md"
+      cp7_status: "PASS"
+      verified_at: "2026-06-03T10:47:33+08:00"
+      reason: "CP6 PASS，CP7 PASS，meta-po 主线程复跑 S05 测试 6 passed、S01-S06 当前组合回归 35 passed、py_compile PASS；S05 portfolio plan 合同冻结。仍不得改依赖、运行外部项目、源码迁移、provider/lake/publish、QMT/simulation/live 或读取凭据。"
+    - story_id: "CR030-S06-experiment-manifest-report-catalog"
+      change_id: "CR-030"
+      wave_id: "CR030-W3-COMBINATION-MANIFEST"
+      status: "verified"
+      lld: "process/stories/CR030-S06-experiment-manifest-report-catalog-LLD.md"
+      cp5_precheck: "process/checks/CP5-CR030-S06-experiment-manifest-report-catalog-LLD-IMPLEMENTABILITY.md"
+      cp5_manual_review: "checkpoints/CP5-CR030-MULTIFACTOR-RESEARCH-LOOP-BATCH-A-LLD-BATCH.md"
+      handoff_path: "process/handoffs/META-DEV-CR030-S06-IMPLEMENT-2026-06-03.md"
+      cp6_checkpoint: "process/checks/CP6-CR030-S06-experiment-manifest-report-catalog-CODING-DONE.md"
+      cp6_status: "PASS"
+      agent_id: "019e8b4e-a6e3-71f0-9e60-df022490ef26"
+      agent_name: "dev-xu"
+      tool_name: "multi_agent_v1.spawn_agent"
+      started_at: "2026-06-03T10:27:37+08:00"
+      completed_at: "2026-06-03T10:34:13+08:00"
+      closed_at: "2026-06-03T10:37:16+08:00"
+      qa_agent_id: "019e8b5b-e30a-7641-aaf2-0aa22f9860cb"
+      qa_agent_name: "qa-cao"
+      qa_tool_name: "multi_agent_v1.spawn_agent"
+      qa_started_at: "2026-06-03T10:42:02+08:00"
+      qa_completed_at: "2026-06-03T10:44:24+08:00"
+      qa_closed_at: "2026-06-03T10:47:06+08:00"
+      qa_handoff_path: "process/handoffs/META-QA-CR030-S06-CP7-VERIFY-2026-06-03.md"
+      cp7_checkpoint: "process/checks/CP7-CR030-S06-experiment-manifest-report-catalog-VERIFICATION-DONE.md"
+      cp7_status: "PASS"
+      verified_at: "2026-06-03T10:47:33+08:00"
+      reason: "CP6 PASS，CP7 PASS，meta-po 主线程复跑 S06 测试 6 passed、S01-S06 当前组合回归 35 passed、py_compile PASS；S06 manifest/catalog 合同冻结，可解锁 S07。仍不得改依赖、运行外部项目、源码迁移、provider/lake/publish、QMT/simulation/live 或读取凭据。"
+    - story_id: "CR030-S07-strategy-admission-package-handoff"
+      change_id: "CR-030"
+      wave_id: "CR030-W4-ADMISSION-SAFETY-DOCS"
+      status: "verified"
+      lld: "process/stories/CR030-S07-strategy-admission-package-handoff-LLD.md"
+      cp5_precheck: "process/checks/CP5-CR030-S07-strategy-admission-package-handoff-LLD-IMPLEMENTABILITY.md"
+      cp5_manual_review: "checkpoints/CP5-CR030-MULTIFACTOR-RESEARCH-LOOP-BATCH-A-LLD-BATCH.md"
+      handoff_path: "process/handoffs/META-DEV-CR030-S07-IMPLEMENT-2026-06-03.md"
+      cp6_checkpoint: "process/checks/CP6-CR030-S07-strategy-admission-package-handoff-CODING-DONE.md"
+      cp6_status: "PASS"
+      dependency_unlocked_by: "CR030-S05-multifactor-combiner-portfolio-plan + CR030-S06-experiment-manifest-report-catalog"
+      dependency_unlocked_at: "2026-06-03T10:47:33+08:00"
+      agent_id: "019e8b66-de6b-70e0-aeca-c94b1b9d07c6"
+      agent_name: "dev-lv"
+      tool_name: "multi_agent_v1.spawn_agent"
+      started_at: "2026-06-03T10:54:05+08:00"
+      completed_at: "2026-06-03T11:01:17+08:00"
+      closed_at: "2026-06-03T11:03:59+08:00"
+      qa_agent_id: "019e8b73-1a7b-72a0-b2d6-760665d5de93"
+      qa_agent_name: "qa-yan"
+      qa_tool_name: "multi_agent_v1.spawn_agent"
+      qa_started_at: "2026-06-03T11:07:23+08:00"
+      qa_completed_at: "2026-06-03T11:09:36+08:00"
+      qa_closed_at: "2026-06-03T11:12:22+08:00"
+      qa_handoff_path: "process/handoffs/META-QA-CR030-S07-CP7-VERIFY-2026-06-03.md"
+      cp7_checkpoint: "process/checks/CP7-CR030-S07-strategy-admission-package-handoff-VERIFICATION-DONE.md"
+      cp7_status: "PASS"
+      verified_at: "2026-06-03T11:12:22+08:00"
+      reason: "CP6 PASS，CP7 PASS，meta-po 主线程复跑 S07 测试 7 passed、S01-S07 组合回归 42 passed、py_compile PASS；S07 admission package 合同冻结，可解锁 S08。仍不得改依赖、QMT/MiniQMT/XtQuant、gateway、order/cancel/account、broker lake、simulation/live 或读取凭据。"
+    - story_id: "CR030-S08-safety-docs-and-follow-up-boundary"
+      change_id: "CR-030"
+      wave_id: "CR030-W4-ADMISSION-SAFETY-DOCS"
+      status: "verified"
+      lld: "process/stories/CR030-S08-safety-docs-and-follow-up-boundary-LLD.md"
+      cp5_precheck: "process/checks/CP5-CR030-S08-safety-docs-and-follow-up-boundary-LLD-IMPLEMENTABILITY.md"
+      cp5_manual_review: "checkpoints/CP5-CR030-MULTIFACTOR-RESEARCH-LOOP-BATCH-A-LLD-BATCH.md"
+      handoff_path: "process/handoffs/META-DEV-CR030-S08-IMPLEMENT-2026-06-03.md"
+      cp6_checkpoint: "process/checks/CP6-CR030-S08-safety-docs-and-follow-up-boundary-CODING-DONE.md"
+      cp6_status: "PASS"
+      agent_id: "019e8b93-eb3b-7d01-ae25-384a76e4713f"
+      agent_name: "dev-you the 2nd"
+      tool_name: "multi_agent_v1.spawn_agent"
+      started_at: "2026-06-03T11:43:14+08:00"
+      completed_at: "2026-06-03T11:48:38+08:00"
+      closed_at: "2026-06-03T11:52:27+08:00"
+      qa_agent_id: "019e8b9f-be55-7a20-9a87-611747604421"
+      qa_agent_name: "qa-shi the 2nd"
+      qa_tool_name: "multi_agent_v1.spawn_agent"
+      qa_started_at: "2026-06-03T11:55:29+08:00"
+      qa_completed_at: "2026-06-03T11:57:48+08:00"
+      qa_closed_at: "2026-06-03T12:01:20+08:00"
+      qa_handoff_path: "process/handoffs/META-QA-CR030-S08-CP7-VERIFY-2026-06-03.md"
+      cp7_checkpoint: "process/checks/CP7-CR030-S08-safety-docs-and-follow-up-boundary-VERIFICATION-DONE.md"
+      cp7_status: "PASS"
+      verified_at: "2026-06-03T12:01:20+08:00"
+      reason: "CP6 PASS，CP7 PASS，meta-po 主线程复跑 S08 测试 8 passed、S01-S08 组合回归 50 passed、py_compile PASS；S08 safety/docs 合同冻结。仍不得改依赖、运行外部项目、源码迁移、provider/lake/publish、QMT/simulation/live 或读取凭据。"
+  verify_running: []
+  dev_running: []
+  verify_ready: []
+  dev_ready: []
   verify_failed:
     - story_id: "CR011-S06-industry-market-cap-style-exposure-data"
       status: "cp7-failed-returned-to-dev"
@@ -5513,17 +7450,40 @@ orchestrator_session:
   agent_id: "019e3bd0-969f-7ab1-87a9-2ecfb3b0d0f3"
   agent_name: "po-sun"
   thread_id: "019e3bd0-969f-7ab1-87a9-2ecfb3b0d0f3"
-  workflow_id: "local_backtest"
-  active_change: "CR-014"
+  workflow_id: "local_backtest-cr030"
+  active_change: "CR-030"
   status: "awaiting-user"
-  pending_gate: "CR-014-approval"
-  pending_checklist_path: "process/changes/CR-014-A-SHARE-SINCE-INCEPTION-PRODUCTION-DATA-LAKE-2026-05-26.md"
+  pending_gate: "CP8-CR030-DELIVERY-READINESS"
+  pending_checklist_path: "checkpoints/CP8-CR030-DELIVERY-READINESS.md"
   pending_user_decision: "approve | 修改: <具体修改点> | reject"
-  resume_instruction: "等待用户审批 CR-014。若 approve，则进入 requirement clarification 并真实调度 meta-pm 澄清 A 股全历史范围与成功标准；若 修改: <具体修改点>，先修订 CR；若 reject，则关闭或归档本 CR。批准前不得进入 HLD、Story、LLD、实现、DuckDB 依赖引入、provider fetch、真实 lake 写入或凭据读取。"
+  pending_decision_ids:
+    - "DQ-CP8-CR030-01"
+    - "DQ-CP8-CR030-02"
+    - "DQ-CP8-CR030-03"
+    - "DQ-CP8-CR030-04"
+  pending_non_authorized_items:
+    - "实现 CR-030 LLD 范围外 Story 或跳过 Story DAG / 文件 owner 调度"
+    - "修改 pyproject.toml / uv.lock 或新增 Qlib / Alphalens / vectorbt / Backtrader / 其他外部项目依赖"
+    - "clone / install / run GitHub 项目、外部 runner、Backtrader optional backend、样例或测试"
+    - "复制、裁剪、改写或源码级迁移任何外部项目源码"
+    - "真实 broker / Backtrader live store / QMT gateway"
+    - "QMT / MiniQMT / XtQuant、gateway 启动、端口绑定、simulation、live、account query、order/cancel"
+    - "provider fetch 或真实联网补数"
+    - "lake write、broker lake write、catalog publish"
+    - "读取、打印、记录或保存任何凭据 / token / session / cookie / 交易密码"
+    - "把研究报告、外部项目参考或 order_intent_draft_v1 声明为 production truth、simulation-ready 或 QMT admission pass"
+  resume_instruction: "CR-030 当前 active_change=CR-030，状态 active-documentation；正式文件为 process/changes/CR-030-MULTIFACTOR-RESEARCH-FRAMEWORK-REFERENCE-AND-RESEARCH-LOOP-STANDARDIZATION-2026-06-02.md。CP2 已 approved，CP3 HLD approved，CP4 PASS，CP5 全量 LLD 批次已由用户 approved。CR030-S01、CR030-S02、CR030-S03、CR030-S04、CR030-S05、CR030-S06、CR030-S07、CR030-S08 均已 CP6/CP7 PASS 并 verified；CP8 自动预检 PASS，Human Gate Launch Protocol 校验 PASS。用户已澄清“研究和生产”指完成多因子策略研究与实验，达到策略侧模拟盘入口；QMT 接口 ready 且后续运行侧门控通过后才可投入模拟盘。当前等待用户审查 checkpoints/CP8-CR030-DELIVERY-READINESS.md 并回复 approve / 修改: <具体修改点> / reject。S08 首次 dev-zhu the 2nd 调度因 usage limit 中断并已关闭，不作为 CP6 证据；有效 dev agent 为 dev-you the 2nd，有效 QA agent 为 qa-shi the 2nd。CP8 approve 只接受 4 项推荐决策和策略侧模拟盘入口语义，不授权依赖变更、clone/install/run 外部项目、源码迁移、QMT / simulation / live、provider/lake/publish、账户/订单或凭据读取。"
+  cp4_story_planning_dispatch:
+    mode: "spawn_agent"
+    agent_id: "019e8abc-ad25-7031-a728-5d91ce94e374"
+    agent_name: "se-chu"
+    tool_name: "multi_agent_v1.spawn_agent"
+    spawned_at: "2026-06-03T07:45:10+08:00"
+    scope: "CR-030 story-planning / CP4 only; no implementation, dependency change, external run, provider/lake/publish, QMT/simulation/live or credential access."
   spawned_at: "2026-05-18T20:15:21+08:00"
   resumed_at: ""
-  last_seen_at: "2026-05-26T22:16:42+08:00"
-  awaiting_since: "2026-05-26T22:16:42+08:00"
+  last_seen_at: "2026-06-03T13:44:48+08:00"
+  awaiting_since: "2026-06-03T12:13:03+08:00"
   closed_at: ""
   previous_agent_id: "019e3b01-e3c3-7672-bdce-089f98da46df"
   previous_thread_id: "019e3b01-e3c3-7672-bdce-089f98da46df"
@@ -5537,6 +7497,2045 @@ agent_lifecycle:
       checked_at: "2026-05-17T20:53:58+08:00"
       note: "CR005-S02 blocker fix meta-dev/dev-zhu 已完成 CP6；meta-qa/qa-he the 2nd 已完成 S02 CP7 重验并 PASS；CR-005 Batch A 已 verified。"
   active_agents:
+    - role: "meta-qa"
+      agent_id: "019e8b9f-be55-7a20-9a87-611747604421"
+      agent_name: "qa-shi the 2nd"
+      thread_id: "019e8b9f-be55-7a20-9a87-611747604421"
+      workflow_id: "local_backtest-cr030"
+      change_id: "CR-030"
+      story_id: "CR030-S08-safety-docs-and-follow-up-boundary"
+      wave_id: "CR030-W4-ADMISSION-SAFETY-DOCS"
+      handoff_path: "process/handoffs/META-QA-CR030-S08-CP7-VERIFY-2026-06-03.md"
+      status: "completed-closed"
+      evidence: "spawn_agent returned agent_id=019e8b9f-be55-7a20-9a87-611747604421 nickname=qa-shi the 2nd for CR030-S08 CP7 verification; CP7 PASS at process/checks/CP7-CR030-S08-safety-docs-and-follow-up-boundary-VERIFICATION-DONE.md; close_agent called at 2026-06-03T12:01:20+08:00."
+      tool_name: "multi_agent_v1.spawn_agent"
+      reusable: true
+      spawned_at: "2026-06-03T11:55:29+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-06-03T12:01:20+08:00"
+      completed_at: "2026-06-03T11:57:48+08:00"
+      closed_at: "2026-06-03T12:01:20+08:00"
+      fallback_reason: ""
+    - role: "meta-dev"
+      agent_id: "019e8b93-eb3b-7d01-ae25-384a76e4713f"
+      agent_name: "dev-you the 2nd"
+      thread_id: "019e8b93-eb3b-7d01-ae25-384a76e4713f"
+      workflow_id: "local_backtest-cr030"
+      change_id: "CR-030"
+      story_id: "CR030-S08-safety-docs-and-follow-up-boundary"
+      wave_id: "CR030-W4-ADMISSION-SAFETY-DOCS"
+      handoff_path: "process/handoffs/META-DEV-CR030-S08-IMPLEMENT-2026-06-03.md"
+      status: "completed-closed"
+      evidence: "spawn_agent returned agent_id=019e8b93-eb3b-7d01-ae25-384a76e4713f nickname=dev-you the 2nd for CR030-S08 controlled implementation; CP6 PASS at process/checks/CP6-CR030-S08-safety-docs-and-follow-up-boundary-CODING-DONE.md; close_agent called at 2026-06-03T11:52:27+08:00. Previous attempt agent_id=019e8b7d-bde1-74e1-b78c-d78d5ba3e12e errored due platform usage limit and was closed; it is retained only as audit, not CP6 evidence."
+      tool_name: "multi_agent_v1.spawn_agent"
+      reusable: true
+      spawned_at: "2026-06-03T11:43:14+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-06-03T11:52:27+08:00"
+      completed_at: "2026-06-03T11:48:38+08:00"
+      closed_at: "2026-06-03T11:52:27+08:00"
+      fallback_reason: ""
+      previous_failed_dispatch:
+        agent_id: "019e8b7d-bde1-74e1-b78c-d78d5ba3e12e"
+        agent_name: "dev-zhu the 2nd"
+        status: "errored-usage-limit"
+        closed_at: "2026-06-03T11:42:39+08:00"
+    - role: "meta-dev"
+      agent_id: "019e8588-e4ad-73b3-8787-699893c6213c"
+      agent_name: "dev-zhang"
+      thread_id: "019e8588-e4ad-73b3-8787-699893c6213c"
+      workflow_id: "local_backtest-cr025"
+      change_id: "CR-025"
+      story_id: "CR025-S01-clean-feed-gate-backend-selector"
+      wave_id: "CR025-W1-FEED-GOVERNANCE"
+      handoff_path: "process/handoffs/META-DEV-CR025-S01-IMPLEMENT-2026-06-02.md"
+      status: "completed-closed"
+      evidence: "spawn_agent returned agent_id=019e8588-e4ad-73b3-8787-699893c6213c nickname=dev-zhang for CR025-S01 controlled offline implementation; CP6 PASS at process/checks/CP6-CR025-S01-clean-feed-gate-backend-selector-CODING-DONE.md; close_agent called at 2026-06-02T07:44:16+08:00."
+      tool_name: "multi_agent_v1.spawn_agent"
+      reusable: false
+      spawned_at: "2026-06-02T07:33:45+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-06-02T07:44:16+08:00"
+      completed_at: "2026-06-02T07:40:52+08:00"
+      closed_at: "2026-06-02T07:44:16+08:00"
+      fallback_reason: ""
+    - role: "meta-dev"
+      agent_id: "019e8589-2c7b-7173-8aa5-1f8a327375fb"
+      agent_name: "dev-xu"
+      thread_id: "019e8589-2c7b-7173-8aa5-1f8a327375fb"
+      workflow_id: "local_backtest-cr025"
+      change_id: "CR-025"
+      story_id: "CR025-S04-backtrader-module-reference-no-copy-guardrail"
+      wave_id: "CR025-W1-FEED-GOVERNANCE"
+      handoff_path: "process/handoffs/META-DEV-CR025-S04-IMPLEMENT-2026-06-02.md"
+      status: "completed-closed"
+      evidence: "spawn_agent returned agent_id=019e8589-2c7b-7173-8aa5-1f8a327375fb nickname=dev-xu for CR025-S04 controlled offline implementation; CP6 PASS at process/checks/CP6-CR025-S04-backtrader-module-reference-no-copy-guardrail-CODING-DONE.md; close_agent called at 2026-06-02T07:41:20+08:00."
+      tool_name: "multi_agent_v1.spawn_agent"
+      reusable: false
+      spawned_at: "2026-06-02T07:33:45+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-06-02T07:41:20+08:00"
+      completed_at: "2026-06-02T07:37:38+08:00"
+      closed_at: "2026-06-02T07:41:20+08:00"
+      fallback_reason: ""
+    - role: "meta-qa"
+      agent_id: "019e8598-7e2d-7113-b2a4-732b3a2bf28c"
+      agent_name: "qa-kong"
+      thread_id: "019e8598-7e2d-7113-b2a4-732b3a2bf28c"
+      workflow_id: "local_backtest-cr025"
+      change_id: "CR-025"
+      story_id: "CR025-W1-FEED-GOVERNANCE-CP7"
+      wave_id: "CR025-W1-FEED-GOVERNANCE"
+      handoff_path: "process/handoffs/META-QA-CR025-W1-CP7-VERIFY-2026-06-02.md"
+      status: "completed-closed"
+      evidence: "spawn_agent returned agent_id=019e8598-7e2d-7113-b2a4-732b3a2bf28c nickname=qa-kong for CR025-W1 CP7 controlled offline verification; S01/S04 CP7 PASS; close_agent called at 2026-06-02T07:55:45+08:00."
+      tool_name: "multi_agent_v1.spawn_agent"
+      reusable: false
+      spawned_at: "2026-06-02T07:50:33+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-06-02T07:55:45+08:00"
+      completed_at: "2026-06-02T07:52:12+08:00"
+      closed_at: "2026-06-02T07:55:45+08:00"
+      fallback_reason: ""
+    - role: "meta-dev"
+      agent_id: "019e85a1-acd8-76f3-96bd-1102eb15f256"
+      agent_name: "dev-zhu"
+      thread_id: "019e85a1-acd8-76f3-96bd-1102eb15f256"
+      workflow_id: "local_backtest-cr025"
+      change_id: "CR-025"
+      story_id: "CR025-S02-semantic-diff-schema-artifact"
+      wave_id: "CR025-W2-SEMANTIC-DIFF"
+      handoff_path: "process/handoffs/META-DEV-CR025-S02-IMPLEMENT-2026-06-02.md"
+      status: "completed-closed"
+      evidence: "spawn_agent returned agent_id=019e85a1-acd8-76f3-96bd-1102eb15f256 nickname=dev-zhu for CR025-S02 controlled offline implementation; CP6 PASS at process/checks/CP6-CR025-S02-semantic-diff-schema-artifact-CODING-DONE.md; close_agent called at 2026-06-02T08:12:05+08:00."
+      tool_name: "multi_agent_v1.spawn_agent"
+      reusable: false
+      spawned_at: "2026-06-02T08:00:30+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-06-02T08:12:05+08:00"
+      completed_at: "2026-06-02T08:08:31+08:00"
+      closed_at: "2026-06-02T08:12:05+08:00"
+      fallback_reason: ""
+    - role: "meta-qa"
+      agent_id: "019e85af-1f70-7571-9206-621f2d79cda9"
+      agent_name: "qa-zhang"
+      thread_id: "019e85af-1f70-7571-9206-621f2d79cda9"
+      workflow_id: "local_backtest-cr025"
+      change_id: "CR-025"
+      story_id: "CR025-S02-semantic-diff-schema-artifact"
+      wave_id: "CR025-W2-SEMANTIC-DIFF"
+      handoff_path: "process/handoffs/META-QA-CR025-S02-CP7-VERIFY-2026-06-02.md"
+      status: "completed-closed"
+      evidence: "spawn_agent returned agent_id=019e85af-1f70-7571-9206-621f2d79cda9 nickname=qa-zhang for CR025-S02 CP7 controlled offline verification; CP7 PASS at process/checks/CP7-CR025-S02-semantic-diff-schema-artifact-VERIFICATION-DONE.md; close_agent called at 2026-06-02T08:21:16+08:00."
+      tool_name: "multi_agent_v1.spawn_agent"
+      reusable: false
+      spawned_at: "2026-06-02T08:15:17+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-06-02T08:21:16+08:00"
+      completed_at: "2026-06-02T08:17:09+08:00"
+      closed_at: "2026-06-02T08:21:16+08:00"
+      fallback_reason: ""
+    - role: "meta-dev"
+      agent_id: "019e85ba-2dd3-79f2-835d-c324957d3776"
+      agent_name: "dev-you"
+      thread_id: "019e85ba-2dd3-79f2-835d-c324957d3776"
+      workflow_id: "local_backtest-cr025"
+      change_id: "CR-025"
+      story_id: "CR025-S03-order-intent-draft-qmt-boundary"
+      wave_id: "CR025-W3-ORDER-INTENT-QMT"
+      handoff_path: "process/handoffs/META-DEV-CR025-S03-IMPLEMENT-2026-06-02.md"
+      status: "completed-closed"
+      evidence: "spawn_agent returned agent_id=019e85ba-2dd3-79f2-835d-c324957d3776 nickname=dev-you for CR025-S03 controlled offline implementation; CP6 PASS at process/checks/CP6-CR025-S03-order-intent-draft-qmt-boundary-CODING-DONE.md; close_agent called at 2026-06-02T08:39:30+08:00."
+      tool_name: "multi_agent_v1.spawn_agent"
+      reusable: false
+      spawned_at: "2026-06-02T08:27:19+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-06-02T08:39:30+08:00"
+      completed_at: "2026-06-02T08:35:09+08:00"
+      closed_at: "2026-06-02T08:39:30+08:00"
+      fallback_reason: ""
+    - role: "meta-qa"
+      agent_id: "019e85c8-c788-7e83-b1bb-4b6c5a635306"
+      agent_name: "qa-shi"
+      thread_id: "019e85c8-c788-7e83-b1bb-4b6c5a635306"
+      workflow_id: "local_backtest-cr025"
+      change_id: "CR-025"
+      story_id: "CR025-S03-order-intent-draft-qmt-boundary"
+      wave_id: "CR025-W3-ORDER-INTENT-QMT"
+      handoff_path: "process/handoffs/META-QA-CR025-S03-CP7-VERIFY-2026-06-02.md"
+      status: "completed-closed"
+      evidence: "spawn_agent returned agent_id=019e85c8-c788-7e83-b1bb-4b6c5a635306 nickname=qa-shi for CR025-S03 CP7 controlled offline verification; CP7 PASS at process/checks/CP7-CR025-S03-order-intent-draft-qmt-boundary-VERIFICATION-DONE.md; close_agent called at 2026-06-02T08:50:30+08:00."
+      tool_name: "multi_agent_v1.spawn_agent"
+      reusable: false
+      spawned_at: "2026-06-02T08:43:31+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-06-02T08:50:30+08:00"
+      completed_at: "2026-06-02T08:46:28+08:00"
+      closed_at: "2026-06-02T08:50:30+08:00"
+      fallback_reason: ""
+    - role: "meta-dev"
+      agent_id: "019e85d3-9cf2-77a1-a227-455cc7078469"
+      agent_name: "dev-shi"
+      thread_id: "019e85d3-9cf2-77a1-a227-455cc7078469"
+      workflow_id: "local_backtest-cr025"
+      change_id: "CR-025"
+      story_id: "CR025-S05-no-real-operation-safety-verification"
+      wave_id: "CR025-W4-SAFETY-VERIFICATION-DOCS"
+      handoff_path: "process/handoffs/META-DEV-CR025-S05-IMPLEMENT-2026-06-02.md"
+      status: "completed-closed"
+      evidence: "spawn_agent returned agent_id=019e85d3-9cf2-77a1-a227-455cc7078469 nickname=dev-shi for CR025-S05 controlled offline safety test implementation; CP6 PASS at process/checks/CP6-CR025-S05-no-real-operation-safety-verification-CODING-DONE.md; close_agent called at 2026-06-02T09:08:23+08:00."
+      tool_name: "multi_agent_v1.spawn_agent"
+      reusable: false
+      spawned_at: "2026-06-02T08:55:03+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-06-02T09:08:23+08:00"
+      completed_at: "2026-06-02T09:02:43+08:00"
+      closed_at: "2026-06-02T09:08:23+08:00"
+      fallback_reason: ""
+    - role: "meta-qa"
+      agent_id: "019e85e4-1880-7c21-bc65-1efc837ed5b8"
+      agent_name: "qa-yan"
+      thread_id: "019e85e4-1880-7c21-bc65-1efc837ed5b8"
+      workflow_id: "local_backtest-cr025"
+      change_id: "CR-025"
+      story_id: "CR025-S05-no-real-operation-safety-verification"
+      wave_id: "CR025-W4-SAFETY-VERIFICATION-DOCS"
+      handoff_path: "process/handoffs/META-QA-CR025-S05-CP7-VERIFY-2026-06-02.md"
+      status: "completed-closed"
+      evidence: "spawn_agent returned agent_id=019e85e4-1880-7c21-bc65-1efc837ed5b8 nickname=qa-yan for CR025-S05 CP7 controlled offline verification; CP7 PASS at process/checks/CP7-CR025-S05-no-real-operation-safety-verification-VERIFICATION-DONE.md; close_agent called at 2026-06-02T09:18:42+08:00."
+      tool_name: "multi_agent_v1.spawn_agent"
+      reusable: false
+      spawned_at: "2026-06-02T09:13:03+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-06-02T09:18:42+08:00"
+      completed_at: "2026-06-02T09:15:53+08:00"
+      closed_at: "2026-06-02T09:18:42+08:00"
+      fallback_reason: ""
+    - role: "meta-dev"
+      agent_id: "019e85ee-1bae-7351-b198-92d269939f1b"
+      agent_name: "dev-kong"
+      thread_id: "019e85ee-1bae-7351-b198-92d269939f1b"
+      workflow_id: "local_backtest-cr025"
+      change_id: "CR-025"
+      story_id: "CR025-S06-route-docs-and-follow-up-handoff"
+      wave_id: "CR025-W4-SAFETY-VERIFICATION-DOCS"
+      handoff_path: "process/handoffs/META-DEV-CR025-S06-IMPLEMENT-2026-06-02.md"
+      status: "completed-closed"
+      evidence: "spawn_agent returned agent_id=019e85ee-1bae-7351-b198-92d269939f1b nickname=dev-kong for CR025-S06 controlled offline docs/follow-up boundary implementation; CP6 PASS at process/checks/CP6-CR025-S06-route-docs-and-follow-up-handoff-CODING-DONE.md; close_agent called at 2026-06-02T09:35:40+08:00."
+      tool_name: "multi_agent_v1.spawn_agent"
+      reusable: false
+      spawned_at: "2026-06-02T09:23:59+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-06-02T09:35:40+08:00"
+      completed_at: "2026-06-02T09:33:25+08:00"
+      closed_at: "2026-06-02T09:35:40+08:00"
+      fallback_reason: ""
+    - role: "meta-qa"
+      agent_id: "019e8602-5d35-7622-8f24-0a8adc1290ca"
+      agent_name: "qa-wei"
+      thread_id: "019e8602-5d35-7622-8f24-0a8adc1290ca"
+      workflow_id: "local_backtest-cr025"
+      change_id: "CR-025"
+      story_id: "CR025-S06-route-docs-and-follow-up-handoff"
+      wave_id: "CR025-W4-SAFETY-VERIFICATION-DOCS"
+      handoff_path: "process/handoffs/META-QA-CR025-S06-CP7-VERIFY-2026-06-02.md"
+      status: "completed-closed"
+      evidence: "spawn_agent returned agent_id=019e8602-5d35-7622-8f24-0a8adc1290ca nickname=qa-wei for CR025-S06 CP7 controlled offline verification; CP7 FAIL at process/checks/CP7-CR025-S06-route-docs-and-follow-up-handoff-VERIFICATION-DONE.md due missing exact token QuantConnect LEAN; close_agent called at 2026-06-02T09:53:55+08:00."
+      tool_name: "multi_agent_v1.spawn_agent"
+      reusable: false
+      spawned_at: "2026-06-02T09:46:09+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-06-02T09:53:55+08:00"
+      completed_at: "2026-06-02T09:50:46+08:00"
+      closed_at: "2026-06-02T09:53:55+08:00"
+      fallback_reason: ""
+    - role: "meta-dev"
+      agent_id: "019e860a-cd11-7820-b0e0-821e2133fbb2"
+      agent_name: "dev-qin"
+      thread_id: "019e860a-cd11-7820-b0e0-821e2133fbb2"
+      workflow_id: "local_backtest-cr025"
+      change_id: "CR-025"
+      story_id: "CR025-S06-route-docs-and-follow-up-handoff"
+      wave_id: "CR025-W4-SAFETY-VERIFICATION-DOCS"
+      handoff_path: "process/handoffs/META-DEV-CR025-S06-CP7-BLOCKER-FIX-2026-06-02.md"
+      status: "completed-close-unavailable"
+      evidence: "spawn_agent returned agent_id=019e860a-cd11-7820-b0e0-821e2133fbb2 nickname=dev-qin for CR025-S06 CP7 blocker fix CR025-S06-CP7-F01; CP6 blocker-fix PASS at process/checks/CP6-CR025-S06-CP7-BLOCKER-FIX-CODING-DONE.md; close_agent returned not_found at 2026-06-02T22:08:41+08:00, no closed_at fabricated."
+      tool_name: "multi_agent_v1.spawn_agent"
+      reusable: false
+      spawned_at: "2026-06-02T09:55:21+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-06-02T22:08:41+08:00"
+      completed_at: "2026-06-02T10:00:17+08:00"
+      closed_at: ""
+      fallback_reason: ""
+      close_attempt: "close_agent returned not_found at 2026-06-02T22:08:41+08:00; no closed_at fabricated."
+    - role: "meta-qa"
+      agent_id: "019e88b1-5328-7890-961f-aa76a50de028"
+      agent_name: "qa-wei"
+      thread_id: "019e88b1-5328-7890-961f-aa76a50de028"
+      workflow_id: "local_backtest-cr025"
+      change_id: "CR-025"
+      story_id: "CR025-S06-route-docs-and-follow-up-handoff"
+      wave_id: "CR025-W4-SAFETY-VERIFICATION-DOCS"
+      handoff_path: "process/handoffs/META-QA-CR025-S06-CP7-REVERIFY-2026-06-02.md"
+      status: "completed-closed"
+      evidence: "spawn_agent returned agent_id=019e88b1-5328-7890-961f-aa76a50de028 nickname=qa-wei for CR025-S06 CP7 reverify after blocker fix; CP7 reverify PASS at process/checks/CP7-CR025-S06-route-docs-and-follow-up-handoff-REVERIFY-DONE.md; close_agent called at 2026-06-02T22:26:23+08:00."
+      tool_name: "multi_agent_v1.spawn_agent"
+      reusable: false
+      spawned_at: "2026-06-02T22:16:28+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-06-02T22:26:23+08:00"
+      completed_at: "2026-06-02T22:22:55+08:00"
+      closed_at: "2026-06-02T22:26:23+08:00"
+      fallback_reason: ""
+    - role: "meta-doc"
+      agent_id: "019e88c2-4810-79b3-97a4-9391c63e65f3"
+      agent_name: "doc-hua"
+      thread_id: "019e88c2-4810-79b3-97a4-9391c63e65f3"
+      workflow_id: "local_backtest-cr025"
+      change_id: "CR-025"
+      story_id: ""
+      wave_id: "CR025-DOCUMENTATION"
+      handoff_path: "process/handoffs/META-DOC-CR025-DELIVERY-READINESS-2026-06-02.md"
+      status: "completed-closed"
+      evidence: "spawn_agent returned agent_id=019e88c2-4810-79b3-97a4-9391c63e65f3 nickname=doc-hua for CR-025 documentation readiness review; DOC summary PASS at process/checks/DOC-CR025-DELIVERY-READINESS-SUMMARY-2026-06-02.md; close_agent called at 2026-06-02T22:39:29+08:00."
+      tool_name: "multi_agent_v1.spawn_agent"
+      reusable: false
+      spawned_at: "2026-06-02T22:34:58+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-06-02T22:39:29+08:00"
+      completed_at: "2026-06-02T22:37:51+08:00"
+      closed_at: "2026-06-02T22:39:29+08:00"
+      fallback_reason: ""
+    - role: "meta-dev"
+      agent_id: "019e83b3-a392-7892-a311-49e6a7e571c9"
+      agent_name: "dev-zhang"
+      thread_id: "019e83b3-a392-7892-a311-49e6a7e571c9"
+      workflow_id: "local_backtest-cr025"
+      change_id: "CR-025"
+      story_id: "CR025-LLD-BATCH-A"
+      wave_id: "CR025-LLD-W1-FEED-SEMANTIC"
+      handoff_path: "process/handoffs/META-DEV-CR025-LLD-BATCH-A-2026-06-01.md"
+      status: "completed-closed"
+      evidence: "spawn_agent returned agent_id=019e83b3-a392-7892-a311-49e6a7e571c9 nickname=dev-zhang for CR-025 LLD Batch A; wait_agent completed with 3 LLD and 3 CP5 PASS; close_agent called."
+      tool_name: "multi_agent_v1.spawn_agent"
+      reusable: true
+      spawned_at: "2026-06-01T23:00:59+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-06-01T23:11:56+08:00"
+      completed_at: "2026-06-01T23:11:56+08:00"
+      closed_at: "2026-06-01T23:11:56+08:00"
+      fallback_reason: ""
+    - role: "meta-dev"
+      agent_id: "019e83b3-beb0-7b62-951e-cd2b60e0ff17"
+      agent_name: "dev-qin"
+      thread_id: "019e83b3-beb0-7b62-951e-cd2b60e0ff17"
+      workflow_id: "local_backtest-cr025"
+      change_id: "CR-025"
+      story_id: "CR025-LLD-BATCH-B"
+      wave_id: "CR025-LLD-W2-ORDER-SAFETY-DOCS"
+      handoff_path: "process/handoffs/META-DEV-CR025-LLD-BATCH-B-2026-06-01.md"
+      status: "completed-closed"
+      evidence: "spawn_agent returned agent_id=019e83b3-beb0-7b62-951e-cd2b60e0ff17 nickname=dev-qin for CR-025 LLD Batch B; wait_agent completed with 3 LLD and 3 CP5 PASS; close_agent called."
+      tool_name: "multi_agent_v1.spawn_agent"
+      reusable: true
+      spawned_at: "2026-06-01T23:00:59+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-06-01T23:11:56+08:00"
+      completed_at: "2026-06-01T23:11:56+08:00"
+      closed_at: "2026-06-01T23:11:56+08:00"
+      fallback_reason: ""
+    - role: "meta-se"
+      agent_id: "019e839f-a973-7781-bed7-5261c695b887"
+      agent_name: "se-shen"
+      thread_id: "019e839f-a973-7781-bed7-5261c695b887"
+      workflow_id: "local_backtest-cr025"
+      change_id: "CR-025"
+      story_id: "CR025-STORY-PLANNING-CP4"
+      wave_id: "CR025-CP4"
+      handoff_path: "process/handoffs/META-SE-CR025-STORY-PLANNING-CP4-2026-06-01.md"
+      status: "completed-closed"
+      evidence: "spawn_agent returned agent_id=019e839f-a973-7781-bed7-5261c695b887 nickname=se-shen for CR-025 Story Plan / CP4; wait_agent completed with CP4 PASS; close_agent called."
+      tool_name: "multi_agent_v1.spawn_agent"
+      reusable: true
+      spawned_at: "2026-06-01T22:39:04+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-06-01T22:42:19+08:00"
+      completed_at: "2026-06-01T22:42:19+08:00"
+      closed_at: "2026-06-01T22:42:19+08:00"
+      fallback_reason: ""
+    - role: "meta-se"
+      agent_id: "019e8373-266b-7212-a2a9-76c74a2410f5"
+      agent_name: "se-chu"
+      thread_id: "019e8373-266b-7212-a2a9-76c74a2410f5"
+      workflow_id: "local_backtest-cr025"
+      change_id: "CR-025"
+      story_id: "CR025-HLD-ADR"
+      wave_id: "CR025-CP3"
+      handoff_path: "process/handoffs/META-SE-CR025-HLD-ADR-2026-06-01.md"
+      status: "completed-closed"
+      evidence: "spawn_agent returned agent_id=019e8373-266b-7212-a2a9-76c74a2410f5 nickname=se-chu; wait_agent completed; close_agent called. meta-se wrote HLD §34, ADR-074..077, CP3 discussion/checkpoint, CP3 auto precheck PASS and CP3 review draft with Backtrader local project analysis."
+      tool_name: "multi_agent_v1.spawn_agent"
+      reusable: true
+      spawned_at: "2026-06-01T21:43:54+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-06-01T22:10:17+08:00"
+      completed_at: "2026-06-01T22:10:17+08:00"
+      closed_at: "2026-06-01T22:10:17+08:00"
+      fallback_reason: ""
+    - role: "meta-pm"
+      agent_id: "019e77ac-22e1-7d22-b75d-0a18cfcb9744"
+      agent_name: "pm-wang"
+      thread_id: "019e77ac-22e1-7d22-b75d-0a18cfcb9744"
+      workflow_id: "local_backtest-cr019"
+      change_id: "CR-019"
+      story_id: "CR019-REQ-CLARIFICATION"
+      wave_id: "CR019-G2-CP2"
+      handoff_path: "process/handoffs/META-PM-CR019-REQ-CLARIFICATION-2026-05-30.md"
+      status: "closed"
+      evidence: "spawn_agent; CR019 requirement clarification and CP2 preparation completed with CP1 PASS and CP2 auto PASS"
+      tool_name: "multi_agent_v1.spawn_agent / multi_agent_v1.close_agent"
+      reusable: false
+      spawned_at: "2026-05-30T15:08:00+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-05-30T15:17:38+08:00"
+      completed_at: "2026-05-30T15:17:38+08:00"
+      closed_at: "2026-05-30T15:17:38+08:00"
+      fallback_reason: ""
+    - role: "meta-se"
+      agent_id: "019e782a-2097-7112-a0da-9f0a692a06fd"
+      agent_name: "se-wei"
+      thread_id: "019e782a-2097-7112-a0da-9f0a692a06fd"
+      workflow_id: "local_backtest-cr019"
+      change_id: "CR-019"
+      story_id: "CR019-STORY-PLANNING-CP4"
+      wave_id: "CR019-G2-CP4"
+      handoff_path: "process/handoffs/META-SE-CR019-STORY-PLANNING-CP4-2026-05-30.md"
+      status: "closed"
+      evidence: "resume_agent returned status=pending_init; send_input submission_id=019e7858-c8a3-7e40-966a-2b880f64eb7e for CR-019 Story Plan / CP4; close_agent previous_status returned completed Story Plan with 10 Stories, 5 Waves, CP4 PASS"
+      tool_name: "multi_agent_v1.resume_agent / multi_agent_v1.send_input"
+      reusable: true
+      spawned_at: "2026-05-30T17:14:51+08:00"
+      resumed_at: "2026-05-30T18:05:47+08:00"
+      last_seen_at: "2026-05-30T18:25:09+08:00"
+      completed_at: "2026-05-30T18:25:09+08:00"
+      closed_at: "2026-05-30T18:25:09+08:00"
+      fallback_reason: ""
+    - role: "meta-dev"
+      agent_id: "019e786c-c6c5-71d1-83d9-0af5a4457eb3"
+      agent_name: "dev-he"
+      thread_id: "019e786c-c6c5-71d1-83d9-0af5a4457eb3"
+      workflow_id: "local_backtest-cr019"
+      change_id: "CR-019"
+      story_id: "CR019-LLD-BATCH-A"
+      wave_id: "CR019-STAGE6-QMT-BRIDGE-BATCH-A"
+      handoff_path: "process/handoffs/META-DEV-CR019-LLD-BATCH-A-2026-05-30.md"
+      status: "closed"
+      evidence: "spawn_agent returned agent_id=019e786c-c6c5-71d1-83d9-0af5a4457eb3 nickname=dev-he; close_agent previous_status returned completed LLD Batch A with CR019-S01..S04 CP5 PASS"
+      tool_name: "multi_agent_v1.spawn_agent / multi_agent_v1.close_agent"
+      reusable: true
+      spawned_at: "2026-05-30T18:27:49+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-05-30T18:42:39+08:00"
+      completed_at: "2026-05-30T18:42:39+08:00"
+      closed_at: "2026-05-30T18:42:39+08:00"
+      fallback_reason: ""
+    - role: "meta-dev"
+      agent_id: "019e786c-de7b-71a0-87b6-201abd1fb39c"
+      agent_name: "dev-xu"
+      thread_id: "019e786c-de7b-71a0-87b6-201abd1fb39c"
+      workflow_id: "local_backtest-cr019"
+      change_id: "CR-019"
+      story_id: "CR019-LLD-BATCH-B"
+      wave_id: "CR019-STAGE6-QMT-BRIDGE-BATCH-A"
+      handoff_path: "process/handoffs/META-DEV-CR019-LLD-BATCH-B-2026-05-30.md"
+      status: "closed"
+      evidence: "spawn_agent returned agent_id=019e786c-de7b-71a0-87b6-201abd1fb39c nickname=dev-xu; close_agent previous_status returned completed LLD Batch B with CR019-S05..S07 CP5 PASS"
+      tool_name: "multi_agent_v1.spawn_agent / multi_agent_v1.close_agent"
+      reusable: true
+      spawned_at: "2026-05-30T18:27:49+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-05-30T18:45:33+08:00"
+      completed_at: "2026-05-30T18:45:33+08:00"
+      closed_at: "2026-05-30T18:45:33+08:00"
+      fallback_reason: ""
+    - role: "meta-dev"
+      agent_id: "019e786c-f248-72d2-be57-5ba1a18ed23b"
+      agent_name: "dev-shi"
+      thread_id: "019e786c-f248-72d2-be57-5ba1a18ed23b"
+      workflow_id: "local_backtest-cr019"
+      change_id: "CR-019"
+      story_id: "CR019-LLD-BATCH-C"
+      wave_id: "CR019-STAGE6-QMT-BRIDGE-BATCH-A"
+      handoff_path: "process/handoffs/META-DEV-CR019-LLD-BATCH-C-2026-05-30.md"
+      status: "closed"
+      evidence: "spawn_agent returned agent_id=019e786c-f248-72d2-be57-5ba1a18ed23b nickname=dev-shi; close_agent previous_status returned completed LLD Batch C with CR019-S08..S10 CP5 PASS"
+      tool_name: "multi_agent_v1.spawn_agent / multi_agent_v1.close_agent"
+      reusable: true
+      spawned_at: "2026-05-30T18:27:49+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-05-30T18:38:43+08:00"
+      completed_at: "2026-05-30T18:38:43+08:00"
+      closed_at: "2026-05-30T18:38:43+08:00"
+      fallback_reason: ""
+    - role: "meta-dev"
+      agent_id: "019e788f-6821-7b73-a542-f73eca256c98"
+      agent_name: "dev-zhang"
+      thread_id: "019e788f-6821-7b73-a542-f73eca256c98"
+      workflow_id: "local_backtest-cr019"
+      change_id: "CR-019"
+      story_id: "CR019-S01-stage6-admission-gate-package"
+      wave_id: "CR019-W1-ADMISSION-BENCHMARK"
+      handoff_path: "process/handoffs/META-DEV-CR019-S01-IMPLEMENT-2026-05-30.md"
+      status: "closed"
+      evidence: "spawn_agent returned agent_id=019e788f-6821-7b73-a542-f73eca256c98 nickname=dev-zhang; close_agent previous_status returned completed S01 implementation with CP6 PASS"
+      tool_name: "multi_agent_v1.spawn_agent / multi_agent_v1.close_agent"
+      reusable: true
+      spawned_at: "2026-05-30T19:05:30+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-05-30T19:15:53+08:00"
+      completed_at: "2026-05-30T19:15:53+08:00"
+      closed_at: "2026-05-30T19:15:53+08:00"
+      fallback_reason: ""
+    - role: "meta-qa"
+      agent_id: "019e789d-05c2-7b62-bb76-deab5c911c4b"
+      agent_name: "qa-cao"
+      thread_id: "019e789d-05c2-7b62-bb76-deab5c911c4b"
+      workflow_id: "local_backtest-cr019"
+      change_id: "CR-019"
+      story_id: "CR019-S01-stage6-admission-gate-package"
+      wave_id: "CR019-W1-ADMISSION-BENCHMARK"
+      handoff_path: "process/handoffs/META-QA-CR019-S01-CP7-VERIFY-2026-05-30.md"
+      status: "closed"
+      evidence: "spawn_agent returned agent_id=019e789d-05c2-7b62-bb76-deab5c911c4b nickname=qa-cao; close_agent previous_status returned completed CR019-S01 CP7 PASS"
+      tool_name: "multi_agent_v1.spawn_agent / multi_agent_v1.close_agent"
+      reusable: true
+      spawned_at: "2026-05-30T19:20:20+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-05-30T19:25:30+08:00"
+      completed_at: "2026-05-30T19:25:30+08:00"
+      closed_at: "2026-05-30T19:25:30+08:00"
+      fallback_reason: ""
+    - role: "meta-dev"
+      agent_id: "019e78a4-9720-7133-bb77-26978f45be69"
+      agent_name: "dev-you"
+      thread_id: "019e78a4-9720-7133-bb77-26978f45be69"
+      workflow_id: "local_backtest-cr019"
+      change_id: "CR-019"
+      story_id: "CR019-S02-primary-benchmark-dashboard"
+      wave_id: "CR019-W1-ADMISSION-BENCHMARK"
+      handoff_path: "process/handoffs/META-DEV-CR019-S02-IMPLEMENT-2026-05-30.md"
+      status: "closed"
+      evidence: "spawn_agent returned agent_id=019e78a4-9720-7133-bb77-26978f45be69 nickname=dev-you; close_agent previous_status returned completed S02 implementation with CP6 PASS"
+      tool_name: "multi_agent_v1.spawn_agent / multi_agent_v1.close_agent"
+      reusable: true
+      spawned_at: "2026-05-30T19:28:38+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-05-30T19:41:55+08:00"
+      completed_at: "2026-05-30T19:41:55+08:00"
+      closed_at: "2026-05-30T19:41:55+08:00"
+      fallback_reason: ""
+    - role: "meta-qa"
+      agent_id: "019e78b4-95cb-7e53-b841-719d0f0f530b"
+      agent_name: "qa-zhang"
+      thread_id: "019e78b4-95cb-7e53-b841-719d0f0f530b"
+      workflow_id: "local_backtest-cr019"
+      change_id: "CR-019"
+      story_id: "CR019-S02-primary-benchmark-dashboard"
+      wave_id: "CR019-W1-ADMISSION-BENCHMARK"
+      handoff_path: "process/handoffs/META-QA-CR019-S02-CP7-VERIFY-2026-05-30.md"
+      status: "closed"
+      evidence: "spawn_agent returned agent_id=019e78b4-95cb-7e53-b841-719d0f0f530b nickname=qa-zhang; close_agent previous_status returned completed CR019-S02 CP7 PASS"
+      tool_name: "multi_agent_v1.spawn_agent / multi_agent_v1.close_agent"
+      reusable: true
+      spawned_at: "2026-05-30T19:46:03+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-05-30T19:51:32+08:00"
+      completed_at: "2026-05-30T19:51:32+08:00"
+      closed_at: "2026-05-30T19:51:32+08:00"
+      fallback_reason: ""
+    - role: "meta-dev"
+      agent_id: "019e78be-613b-7783-bca1-b48ef8e38365"
+      agent_name: "dev-qin"
+      thread_id: "019e78be-613b-7783-bca1-b48ef8e38365"
+      workflow_id: "local_backtest-cr019"
+      change_id: "CR-019"
+      story_id: "CR019-S03-qmt-cside-client-cli-contract"
+      wave_id: "CR019-W2-CS-TRANSPORT"
+      handoff_path: "process/handoffs/META-DEV-CR019-S03-IMPLEMENT-2026-05-30.md"
+      status: "closed"
+      evidence: "spawn_agent returned agent_id=019e78be-613b-7783-bca1-b48ef8e38365 nickname=dev-qin; close_agent previous_status returned completed S03 implementation with CP6 PASS"
+      tool_name: "multi_agent_v1.spawn_agent / multi_agent_v1.close_agent"
+      reusable: true
+      spawned_at: "2026-05-30T19:56:46+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-05-30T20:10:44+08:00"
+      completed_at: "2026-05-30T20:04:42+08:00"
+      closed_at: "2026-05-30T20:10:44+08:00"
+      fallback_reason: ""
+    - role: "meta-qa"
+      agent_id: "019e78cd-b3e8-74c0-ba1e-6172a5bf125e"
+      agent_name: "qa-shi"
+      thread_id: "019e78cd-b3e8-74c0-ba1e-6172a5bf125e"
+      workflow_id: "local_backtest-cr019"
+      change_id: "CR-019"
+      story_id: "CR019-S03-qmt-cside-client-cli-contract"
+      wave_id: "CR019-W2-CS-TRANSPORT"
+      handoff_path: "process/handoffs/META-QA-CR019-S03-CP7-VERIFY-2026-05-30.md"
+      status: "closed"
+      evidence: "spawn_agent returned agent_id=019e78cd-b3e8-74c0-ba1e-6172a5bf125e nickname=qa-shi; close_agent previous_status returned completed CR019-S03 CP7 PASS"
+      tool_name: "multi_agent_v1.spawn_agent / multi_agent_v1.close_agent"
+      reusable: true
+      spawned_at: "2026-05-30T20:13:30+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-05-30T20:21:24+08:00"
+      completed_at: "2026-05-30T20:16:35+08:00"
+      closed_at: "2026-05-30T20:21:24+08:00"
+      fallback_reason: ""
+    - role: "meta-dev"
+      agent_id: "019e78d8-0980-7af0-83a0-5c0b4aaa8d74"
+      agent_name: "dev-lv"
+      thread_id: "019e78d8-0980-7af0-83a0-5c0b4aaa8d74"
+      workflow_id: "local_backtest-cr019"
+      change_id: "CR-019"
+      story_id: "CR019-S04-windows-gateway-lifecycle-deployment"
+      wave_id: "CR019-W2-CS-TRANSPORT"
+      handoff_path: "process/handoffs/META-DEV-CR019-S04-IMPLEMENT-2026-05-30.md"
+      status: "closed"
+      evidence: "spawn_agent returned agent_id=019e78d8-0980-7af0-83a0-5c0b4aaa8d74 nickname=dev-lv; close_agent previous_status returned completed S04 implementation with CP6 PASS"
+      tool_name: "multi_agent_v1.spawn_agent / multi_agent_v1.close_agent"
+      reusable: true
+      spawned_at: "2026-05-30T20:24:51+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-05-30T20:37:15+08:00"
+      completed_at: "2026-05-30T20:32:44+08:00"
+      closed_at: "2026-05-30T20:37:15+08:00"
+      fallback_reason: ""
+    - role: "meta-qa"
+      agent_id: "019e78e8-037c-78c1-81e8-050ec8d844f5"
+      agent_name: "qa-wei"
+      thread_id: "019e78e8-037c-78c1-81e8-050ec8d844f5"
+      workflow_id: "local_backtest-cr019"
+      change_id: "CR-019"
+      story_id: "CR019-S04-windows-gateway-lifecycle-deployment"
+      wave_id: "CR019-W2-CS-TRANSPORT"
+      handoff_path: "process/handoffs/META-QA-CR019-S04-CP7-VERIFY-2026-05-30.md"
+      status: "closed"
+      evidence: "spawn_agent returned agent_id=019e78e8-037c-78c1-81e8-050ec8d844f5 nickname=qa-wei; close_agent previous_status returned completed CR019-S04 CP7 PASS"
+      tool_name: "multi_agent_v1.spawn_agent / multi_agent_v1.close_agent"
+      reusable: true
+      spawned_at: "2026-05-30T20:42:15+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-05-30T20:49:47+08:00"
+      completed_at: "2026-05-30T20:45:16+08:00"
+      closed_at: "2026-05-30T20:49:47+08:00"
+      fallback_reason: ""
+    - role: "meta-dev"
+      agent_id: "019e78f3-f659-7760-8a21-84d1b14832d4"
+      agent_name: "dev-yang"
+      thread_id: "019e78f3-f659-7760-8a21-84d1b14832d4"
+      workflow_id: "local_backtest-cr019"
+      change_id: "CR-019"
+      story_id: "CR019-S05-pairing-hmac-auth-redaction"
+      wave_id: "CR019-W3-AUTH-ENDPOINT-GATE"
+      handoff_path: "process/handoffs/META-DEV-CR019-S05-IMPLEMENT-2026-05-30.md"
+      status: "closed"
+      evidence: "spawn_agent returned agent_id=019e78f3-f659-7760-8a21-84d1b14832d4 nickname=dev-yang; close_agent previous_status returned completed CR019-S05 CP6 PASS"
+      tool_name: "multi_agent_v1.spawn_agent / multi_agent_v1.close_agent"
+      reusable: true
+      spawned_at: "2026-05-30T20:55:19+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-05-30T21:07:46+08:00"
+      completed_at: "2026-05-30T21:07:46+08:00"
+      closed_at: "2026-05-30T21:07:46+08:00"
+      fallback_reason: ""
+    - role: "meta-qa"
+      agent_id: "019e7905-1ec5-77d3-b270-784c0fb0a48f"
+      agent_name: "qa-yan"
+      thread_id: "019e7905-1ec5-77d3-b270-784c0fb0a48f"
+      workflow_id: "local_backtest-cr019"
+      change_id: "CR-019"
+      story_id: "CR019-S05-pairing-hmac-auth-redaction"
+      wave_id: "CR019-W3-AUTH-ENDPOINT-GATE"
+      handoff_path: "process/handoffs/META-QA-CR019-S05-CP7-VERIFY-2026-05-30.md"
+      status: "closed"
+      evidence: "spawn_agent returned agent_id=019e7905-1ec5-77d3-b270-784c0fb0a48f nickname=qa-yan; close_agent previous_status returned completed CR019-S05 CP7 PASS"
+      tool_name: "multi_agent_v1.spawn_agent / multi_agent_v1.close_agent"
+      reusable: true
+      spawned_at: "2026-05-30T21:14:03+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-05-30T21:21:14+08:00"
+      completed_at: "2026-05-30T21:17:14+08:00"
+      closed_at: "2026-05-30T21:21:14+08:00"
+      fallback_reason: ""
+    - role: "meta-dev"
+      agent_id: "019e7b57-2b50-7353-a782-a0f6ddc513af"
+      agent_name: "dev-you"
+      thread_id: "019e7b57-2b50-7353-a782-a0f6ddc513af"
+      workflow_id: "local_backtest-cr019"
+      change_id: "CR-019"
+      story_id: "CR019-S06-qmt-endpoint-matrix-contract"
+      wave_id: "CR019-W3-AUTH-ENDPOINT-GATE"
+      handoff_path: "process/handoffs/META-DEV-CR019-S06-IMPLEMENT-2026-05-31.md"
+      status: "closed"
+      evidence: "spawn_agent returned agent_id=019e7b57-2b50-7353-a782-a0f6ddc513af nickname=dev-you; close_agent previous_status returned completed CR019-S06 CP6 PASS"
+      tool_name: "multi_agent_v1.spawn_agent / multi_agent_v1.close_agent"
+      reusable: true
+      spawned_at: "2026-05-31T08:02:53+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-05-31T08:15:43+08:00"
+      completed_at: "2026-05-31T08:12:36+08:00"
+      closed_at: "2026-05-31T08:15:43+08:00"
+      fallback_reason: ""
+    - role: "meta-qa"
+      agent_id: "019e7b64-9eb5-7193-99d1-57466159d32d"
+      agent_name: "qa-wei"
+      thread_id: "019e7b64-9eb5-7193-99d1-57466159d32d"
+      workflow_id: "local_backtest-cr019"
+      change_id: "CR-019"
+      story_id: "CR019-S06-qmt-endpoint-matrix-contract"
+      wave_id: "CR019-W3-AUTH-ENDPOINT-GATE"
+      handoff_path: "process/handoffs/META-QA-CR019-S06-CP7-VERIFY-2026-05-31.md"
+      status: "closed"
+      evidence: "spawn_agent returned agent_id=019e7b64-9eb5-7193-99d1-57466159d32d nickname=qa-wei; wait_agent returned completed CR019-S06 CP7 PASS; close_agent previous_status returned completed CR019-S06 CP7 PASS"
+      tool_name: "multi_agent_v1.spawn_agent / multi_agent_v1.wait_agent / multi_agent_v1.close_agent"
+      reusable: true
+      spawned_at: "2026-05-31T08:17:35+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-05-31T08:25:16+08:00"
+      completed_at: "2026-05-31T08:19:59+08:00"
+      closed_at: "2026-05-31T08:25:16+08:00"
+      fallback_reason: ""
+    - role: "meta-dev"
+      agent_id: "019e7b6d-929e-7bd2-be73-cbdad9a94a36"
+      agent_name: "dev-he"
+      thread_id: "019e7b6d-929e-7bd2-be73-cbdad9a94a36"
+      workflow_id: "local_backtest-cr019"
+      change_id: "CR-019"
+      story_id: "CR019-S07-run-gate-blocked-reason-integration"
+      wave_id: "CR019-W3-AUTH-ENDPOINT-GATE"
+      handoff_path: "process/handoffs/META-DEV-CR019-S07-IMPLEMENT-2026-05-31.md"
+      status: "closed"
+      evidence: "spawn_agent returned agent_id=019e7b6d-929e-7bd2-be73-cbdad9a94a36 nickname=dev-he; wait_agent returned completed CR019-S07 CP6 PASS; close_agent previous_status returned completed CR019-S07 CP6 PASS"
+      tool_name: "multi_agent_v1.spawn_agent / multi_agent_v1.wait_agent / multi_agent_v1.close_agent"
+      reusable: true
+      spawned_at: "2026-05-31T08:27:22+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-05-31T08:42:42+08:00"
+      completed_at: "2026-05-31T08:37:31+08:00"
+      closed_at: "2026-05-31T08:42:42+08:00"
+      fallback_reason: ""
+    - role: "meta-qa"
+      agent_id: "019e7b7d-4f34-7fe0-9678-bf8f8b8f26ae"
+      agent_name: "qa-yan"
+      thread_id: "019e7b7d-4f34-7fe0-9678-bf8f8b8f26ae"
+      workflow_id: "local_backtest-cr019"
+      change_id: "CR-019"
+      story_id: "CR019-S07-run-gate-blocked-reason-integration"
+      wave_id: "CR019-W3-AUTH-ENDPOINT-GATE"
+      handoff_path: "process/handoffs/META-QA-CR019-S07-CP7-VERIFY-2026-05-31.md"
+      status: "closed"
+      evidence: "spawn_agent returned agent_id=019e7b7d-4f34-7fe0-9678-bf8f8b8f26ae nickname=qa-yan; wait_agent returned completed CR019-S07 CP7 PASS; close_agent previous_status returned completed CR019-S07 CP7 PASS"
+      tool_name: "multi_agent_v1.spawn_agent / multi_agent_v1.wait_agent / multi_agent_v1.close_agent"
+      reusable: true
+      spawned_at: "2026-05-31T08:44:33+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-05-31T08:50:59+08:00"
+      completed_at: "2026-05-31T08:46:57+08:00"
+      closed_at: "2026-05-31T08:50:59+08:00"
+      fallback_reason: ""
+    - role: "meta-dev"
+      agent_id: "019e7b88-93ba-7223-b0f1-859c712eaf25"
+      agent_name: "dev-yang"
+      thread_id: "019e7b88-93ba-7223-b0f1-859c712eaf25"
+      workflow_id: "local_backtest-cr019"
+      change_id: "CR-019"
+      story_id: "CR019-S08-fallback-incident-signed-file-boundary"
+      wave_id: "CR019-W4-FALLBACK-DEFERRED"
+      handoff_path: "process/handoffs/META-DEV-CR019-S08-IMPLEMENT-2026-05-31.md"
+      status: "closed"
+      evidence: "spawn_agent returned agent_id=019e7b88-93ba-7223-b0f1-859c712eaf25 nickname=dev-yang; wait_agent returned completed CR019-S08 CP6 PASS; close_agent previous_status returned completed CR019-S08 CP6 PASS"
+      tool_name: "multi_agent_v1.spawn_agent / multi_agent_v1.wait_agent / multi_agent_v1.close_agent"
+      reusable: true
+      spawned_at: "2026-05-31T08:56:52+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-05-31T09:10:25+08:00"
+      completed_at: "2026-05-31T09:04:53+08:00"
+      closed_at: "2026-05-31T09:10:25+08:00"
+      fallback_reason: ""
+    - role: "meta-qa"
+      agent_id: "019e7b97-e047-7673-ab10-e375d3ce62e0"
+      agent_name: "qa-hua"
+      thread_id: "019e7b97-e047-7673-ab10-e375d3ce62e0"
+      workflow_id: "local_backtest-cr019"
+      change_id: "CR-019"
+      story_id: "CR019-S08-fallback-incident-signed-file-boundary"
+      wave_id: "CR019-W4-FALLBACK-DEFERRED"
+      handoff_path: "process/handoffs/META-QA-CR019-S08-CP7-VERIFY-2026-05-31.md"
+      status: "closed"
+      evidence: "spawn_agent returned agent_id=019e7b97-e047-7673-ab10-e375d3ce62e0 nickname=qa-hua; wait_agent returned completed CR019-S08 CP7 PASS; close_agent previous_status returned completed CR019-S08 CP7 PASS"
+      tool_name: "multi_agent_v1.spawn_agent / multi_agent_v1.wait_agent / multi_agent_v1.close_agent"
+      reusable: true
+      spawned_at: "2026-05-31T09:13:33+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-05-31T09:23:13+08:00"
+      completed_at: "2026-05-31T09:16:42+08:00"
+      closed_at: "2026-05-31T09:23:13+08:00"
+      fallback_reason: ""
+    - role: "meta-dev"
+      agent_id: "019e7ba4-f915-7df2-9443-99586f4e7676"
+      agent_name: "dev-xu"
+      thread_id: "019e7ba4-f915-7df2-9443-99586f4e7676"
+      workflow_id: "local_backtest-cr019"
+      change_id: "CR-019"
+      story_id: "CR019-S09-deferred-capability-register"
+      wave_id: "CR019-W4-FALLBACK-DEFERRED"
+      handoff_path: "process/handoffs/META-DEV-CR019-S09-IMPLEMENT-2026-05-31.md"
+      status: "closed"
+      evidence: "spawn_agent returned agent_id=019e7ba4-f915-7df2-9443-99586f4e7676 nickname=dev-xu; wait_agent returned completed CR019-S09 CP6 PASS; close_agent previous_status returned completed CR019-S09 CP6 PASS"
+      tool_name: "multi_agent_v1.spawn_agent / multi_agent_v1.wait_agent / multi_agent_v1.close_agent"
+      reusable: true
+      spawned_at: "2026-05-31T09:27:52+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-05-31T09:38:44+08:00"
+      completed_at: "2026-05-31T09:34:30+08:00"
+      closed_at: "2026-05-31T09:38:44+08:00"
+      fallback_reason: ""
+    - role: "meta-qa"
+      agent_id: "019e7bb2-d91e-7513-8a5e-a16a0e6528c9"
+      agent_name: "qa-he"
+      thread_id: "019e7bb2-d91e-7513-8a5e-a16a0e6528c9"
+      workflow_id: "local_backtest-cr019"
+      change_id: "CR-019"
+      story_id: "CR019-S09-deferred-capability-register"
+      wave_id: "CR019-W4-FALLBACK-DEFERRED"
+      handoff_path: "process/handoffs/META-QA-CR019-S09-CP7-VERIFY-2026-05-31.md"
+      status: "closed"
+      evidence: "spawn_agent returned agent_id=019e7bb2-d91e-7513-8a5e-a16a0e6528c9 nickname=qa-he; wait_agent returned completed CR019-S09 CP7 PASS; close_agent previous_status returned completed CR019-S09 CP7 PASS"
+      tool_name: "multi_agent_v1.spawn_agent / multi_agent_v1.wait_agent / multi_agent_v1.close_agent"
+      reusable: true
+      spawned_at: "2026-05-31T09:43:03+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-05-31T09:50:40+08:00"
+      completed_at: "2026-05-31T09:45:23+08:00"
+      closed_at: "2026-05-31T09:50:40+08:00"
+      fallback_reason: ""
+    - role: "meta-dev"
+      agent_id: "019e7bbd-ebb5-74a3-8745-f3dc74cfc1f0"
+      agent_name: "dev-qin"
+      thread_id: "019e7bbd-ebb5-74a3-8745-f3dc74cfc1f0"
+      workflow_id: "local_backtest-cr019"
+      change_id: "CR-019"
+      story_id: "CR019-S10-docs-runbook-user-manual-boundary"
+      wave_id: "CR019-W5-DOCS-RUNBOOK"
+      handoff_path: "process/handoffs/META-DEV-CR019-S10-IMPLEMENT-2026-05-31.md"
+      status: "closed"
+      evidence: "spawn_agent returned agent_id=019e7bbd-ebb5-74a3-8745-f3dc74cfc1f0 nickname=dev-qin; wait_agent returned completed CR019-S10 CP6 PASS; close_agent previous_status returned completed CR019-S10 CP6 PASS"
+      tool_name: "multi_agent_v1.spawn_agent / multi_agent_v1.wait_agent / multi_agent_v1.close_agent"
+      reusable: true
+      spawned_at: "2026-05-31T09:55:07+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-05-31T10:10:20+08:00"
+      completed_at: "2026-05-31T10:04:36+08:00"
+      closed_at: "2026-05-31T10:10:20+08:00"
+      fallback_reason: ""
+    - role: "meta-qa"
+      agent_id: "019e7bd0-f92b-7550-be16-3a8fe67f77de"
+      agent_name: "qa-kong"
+      thread_id: "019e7bd0-f92b-7550-be16-3a8fe67f77de"
+      workflow_id: "local_backtest-cr019"
+      change_id: "CR-019"
+      story_id: "CR019-S10-docs-runbook-user-manual-boundary"
+      wave_id: "CR019-W5-DOCS-RUNBOOK"
+      handoff_path: "process/handoffs/META-QA-CR019-S10-CP7-VERIFY-2026-05-31.md"
+      status: "closed"
+      evidence: "spawn_agent returned agent_id=019e7bd0-f92b-7550-be16-3a8fe67f77de nickname=qa-kong; wait_agent returned completed CR019-S10 CP7 PASS; close_agent previous_status returned completed CR019-S10 CP7 PASS"
+      tool_name: "multi_agent_v1.spawn_agent / multi_agent_v1.wait_agent / multi_agent_v1.close_agent"
+      reusable: true
+      spawned_at: "2026-05-31T10:15:57+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-05-31T10:21:33+08:00"
+      completed_at: "2026-05-31T10:18:14+08:00"
+      closed_at: "2026-05-31T10:21:33+08:00"
+      fallback_reason: ""
+    - role: "meta-dev"
+      agent_id: "019e713c-10d0-76f2-a55b-01aace3cc4d5"
+      agent_name: "dev-qin"
+      thread_id: "019e713c-10d0-76f2-a55b-01aace3cc4d5"
+      workflow_id: "local_backtest-cr018"
+      change_id: "CR-018"
+      story_id: "CR018-S03-real-benchmark-index-components-weights-backfill"
+      wave_id: "CR018-W2-P0-P1-READINESS"
+      handoff_path: "process/handoffs/META-DEV-CR018-S03-IMPLEMENT-2026-05-29.md"
+      status: "closed"
+      evidence: "spawn_agent; CR018-S03 controlled offline implementation"
+      tool_name: "multi_agent_v1.spawn_agent"
+      reusable: false
+      spawned_at: "2026-05-29T08:57:20+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-05-29T09:10:00+08:00"
+      completed_at: "2026-05-29T09:05:58+08:00"
+      closed_at: "2026-05-29T09:10:00+08:00"
+      fallback_reason: ""
+    - role: "meta-dev"
+      agent_id: "019e713c-4439-7ed1-acbf-ab5f4b77c2fc"
+      agent_name: "dev-xu"
+      thread_id: "019e713c-4439-7ed1-acbf-ab5f4b77c2fc"
+      workflow_id: "local_backtest-cr018"
+      change_id: "CR-018"
+      story_id: "CR018-S04-industry-market-cap-liquidity-and-exposure-data"
+      wave_id: "CR018-W2-P0-P1-READINESS"
+      handoff_path: "process/handoffs/META-DEV-CR018-S04-IMPLEMENT-2026-05-29.md"
+      status: "completed-close-unavailable"
+      evidence: "spawn_agent; CR018-S04 controlled offline implementation"
+      tool_name: "multi_agent_v1.spawn_agent"
+      reusable: false
+      spawned_at: "2026-05-29T08:57:20+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-05-29T09:09:46+08:00"
+      completed_at: "2026-05-29T09:03:36+08:00"
+      closed_at: ""
+      fallback_reason: "close_agent returned not_found at 2026-05-29T09:09:46+08:00; no closed_at fabricated."
+    - role: "meta-dev"
+      agent_id: "019e7152-23c8-7b42-b4e5-29bb8c6be49b"
+      agent_name: "dev-shi"
+      thread_id: "019e7152-23c8-7b42-b4e5-29bb8c6be49b"
+      workflow_id: "local_backtest-cr018"
+      change_id: "CR-018"
+      story_id: "CR018-S02-pit-universe-lifecycle-st-trade-status-price-limit-backfill"
+      wave_id: "CR018-W2-P0-P1-READINESS"
+      handoff_path: "process/handoffs/META-DEV-CR018-S02-IMPLEMENT-2026-05-29.md"
+      status: "closed"
+      evidence: "spawn_agent+close_agent; CR018-S02 CP6 PASS and target regression 25 passed"
+      tool_name: "multi_agent_v1.spawn_agent/close_agent"
+      reusable: false
+      spawned_at: "2026-05-29T09:21:13+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-05-29T09:33:17+08:00"
+      completed_at: "2026-05-29T09:33:00+08:00"
+      closed_at: "2026-05-29T09:33:17+08:00"
+      fallback_reason: ""
+    - role: "meta-qa"
+      agent_id: "019e715e-3443-7c10-a04e-07e9b87b92bb"
+      agent_name: "qa-wei"
+      thread_id: "019e715e-3443-7c10-a04e-07e9b87b92bb"
+      workflow_id: "local_backtest-cr018"
+      change_id: "CR-018"
+      story_id: "CR018-S02-pit-universe-lifecycle-st-trade-status-price-limit-backfill"
+      wave_id: "CR018-W2-P0-P1-READINESS"
+      handoff_path: "process/handoffs/META-QA-CR018-S02-CP7-VERIFY-2026-05-29.md"
+      status: "closed"
+      evidence: "spawn_agent+close_agent; CR018-S02 CP7 PASS and target regression 25 passed"
+      tool_name: "multi_agent_v1.spawn_agent/close_agent"
+      reusable: false
+      spawned_at: "2026-05-29T09:34:23+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-05-29T09:39:10+08:00"
+      completed_at: "2026-05-29T09:36:20+08:00"
+      closed_at: "2026-05-29T09:39:10+08:00"
+      fallback_reason: ""
+    - role: "meta-dev"
+      agent_id: "019e7163-bfe3-7601-8a48-a5e229e346dc"
+      agent_name: "dev-he"
+      thread_id: "019e7163-bfe3-7601-8a48-a5e229e346dc"
+      workflow_id: "local_backtest-cr018"
+      change_id: "CR-018"
+      story_id: "CR018-S05-adjustment-dual-view-quality-and-qfq-hfq-publish-readiness"
+      wave_id: "CR018-W2-P0-P1-READINESS"
+      handoff_path: "process/handoffs/META-DEV-CR018-S05-IMPLEMENT-2026-05-29.md"
+      status: "closed"
+      evidence: "spawn_agent+close_agent; CR018-S05 CP6 PASS and target regression 43 passed"
+      tool_name: "multi_agent_v1.spawn_agent/close_agent"
+      reusable: false
+      spawned_at: "2026-05-29T09:40:27+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-05-29T09:53:06+08:00"
+      completed_at: "2026-05-29T09:48:50+08:00"
+      closed_at: "2026-05-29T09:53:06+08:00"
+      fallback_reason: ""
+    - role: "meta-qa"
+      agent_id: "019e7170-3bc8-79d0-917d-23cc7b41b9e6"
+      agent_name: "qa-kong"
+      thread_id: "019e7170-3bc8-79d0-917d-23cc7b41b9e6"
+      workflow_id: "local_backtest-cr018"
+      change_id: "CR-018"
+      story_id: "CR018-S05-adjustment-dual-view-quality-and-qfq-hfq-publish-readiness"
+      wave_id: "CR018-W2-P0-P1-READINESS"
+      handoff_path: "process/handoffs/META-QA-CR018-S05-CP7-VERIFY-2026-05-29.md"
+      status: "closed"
+      evidence: "spawn_agent+close_agent; CR018-S05 CP7 PASS and target regression 43 passed"
+      tool_name: "multi_agent_v1.spawn_agent/close_agent"
+      reusable: false
+      spawned_at: "2026-05-29T09:54:07+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-05-29T09:59:41+08:00"
+      completed_at: "2026-05-29T09:56:03+08:00"
+      closed_at: "2026-05-29T09:59:41+08:00"
+      fallback_reason: ""
+    - role: "meta-dev"
+      agent_id: "019e7179-7a76-7441-97e8-aa043e067fa3"
+      agent_name: "dev-zhu"
+      thread_id: "019e7179-7a76-7441-97e8-aa043e067fa3"
+      workflow_id: "local_backtest-cr018"
+      change_id: "CR-018"
+      story_id: "CR018-S06-production-quality-readiness-audit-and-rollback-gate"
+      wave_id: "CR018-W3-PUBLISH-ROLLBACK"
+      handoff_path: "process/handoffs/META-DEV-CR018-S06-IMPLEMENT-2026-05-29.md"
+      status: "closed"
+      evidence: "spawn_agent+close_agent; CR018-S06 CP6 PASS and target regression 35 passed"
+      tool_name: "multi_agent_v1.spawn_agent/close_agent"
+      reusable: false
+      spawned_at: "2026-05-29T10:04:10+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-05-29T10:17:24+08:00"
+      completed_at: "2026-05-29T10:12:49+08:00"
+      closed_at: "2026-05-29T10:17:24+08:00"
+      fallback_reason: ""
+    - role: "meta-qa"
+      agent_id: "019e7186-d771-7fa0-8622-958915a43d98"
+      agent_name: "qa-hua"
+      thread_id: "019e7186-d771-7fa0-8622-958915a43d98"
+      workflow_id: "local_backtest-cr018"
+      change_id: "CR-018"
+      story_id: "CR018-S06-production-quality-readiness-audit-and-rollback-gate"
+      wave_id: "CR018-W3-PUBLISH-ROLLBACK"
+      handoff_path: "process/handoffs/META-QA-CR018-S06-CP7-VERIFY-2026-05-29.md"
+      status: "closed"
+      evidence: "spawn_agent+close_agent; CR018-S06 CP7 PASS and target regression 42 passed"
+      tool_name: "multi_agent_v1.spawn_agent/close_agent"
+      reusable: false
+      spawned_at: "2026-05-29T10:18:47+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-05-29T10:24:36+08:00"
+      completed_at: "2026-05-29T10:21:20+08:00"
+      closed_at: "2026-05-29T10:24:36+08:00"
+      fallback_reason: ""
+    - role: "meta-dev"
+      agent_id: "019e7190-bef4-77c0-aefa-e247d20ed6de"
+      agent_name: "dev-zhang"
+      thread_id: "019e7190-bef4-77c0-aefa-e247d20ed6de"
+      workflow_id: "local_backtest-cr018"
+      change_id: "CR-018"
+      story_id: "CR018-S07-explicit-publish-gate-and-current-reader-smoke"
+      wave_id: "CR018-W3-PUBLISH-ROLLBACK"
+      handoff_path: "process/handoffs/META-DEV-CR018-S07-IMPLEMENT-2026-05-29.md"
+      status: "closed"
+      evidence: "spawn_agent+close_agent; CR018-S07 CP6 PASS and target regression 49 passed"
+      tool_name: "multi_agent_v1.spawn_agent/close_agent"
+      reusable: false
+      spawned_at: "2026-05-29T10:29:36+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-05-29T10:44:38+08:00"
+      completed_at: "2026-05-29T10:39:55+08:00"
+      closed_at: "2026-05-29T10:44:38+08:00"
+      fallback_reason: ""
+    - role: "meta-qa"
+      agent_id: "019e719f-f89b-70a1-98f7-b5c70015fb31"
+      agent_name: "qa-cao"
+      thread_id: "019e719f-f89b-70a1-98f7-b5c70015fb31"
+      workflow_id: "local_backtest-cr018"
+      change_id: "CR-018"
+      story_id: "CR018-S07-explicit-publish-gate-and-current-reader-smoke"
+      wave_id: "CR018-W3-PUBLISH-ROLLBACK"
+      handoff_path: "process/handoffs/META-QA-CR018-S07-CP7-VERIFY-2026-05-29.md"
+      status: "closed"
+      evidence: "spawn_agent+close_agent; CR018-S07 CP7 PASS and target regression 49 passed"
+      tool_name: "multi_agent_v1.spawn_agent/close_agent"
+      reusable: false
+      spawned_at: "2026-05-29T10:46:13+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-05-29T10:53:06+08:00"
+      completed_at: "2026-05-29T10:48:59+08:00"
+      closed_at: "2026-05-29T10:53:06+08:00"
+      fallback_reason: ""
+    - role: "meta-dev"
+      agent_id: "019e71a9-6c49-79f1-aa78-b569801046d6"
+      agent_name: "dev-zhang the 2nd"
+      thread_id: "019e71a9-6c49-79f1-aa78-b569801046d6"
+      workflow_id: "local_backtest-cr018"
+      change_id: "CR-018"
+      story_id: "CR018-S08-production-current-truth-research-rerun"
+      wave_id: "CR018-W4-RERUN-QMT-ADMISSION"
+      handoff_path: "process/handoffs/META-DEV-CR018-S08-IMPLEMENT-2026-05-29.md"
+      status: "closed"
+      evidence: "spawn_agent+close_agent; CR018-S08 CP6 PASS and target regression 60 passed"
+      tool_name: "multi_agent_v1.spawn_agent/close_agent"
+      reusable: false
+      spawned_at: "2026-05-29T10:56:39+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-05-29T11:10:32+08:00"
+      completed_at: "2026-05-29T11:05:38+08:00"
+      closed_at: "2026-05-29T11:10:32+08:00"
+      fallback_reason: ""
+    - role: "meta-qa"
+      agent_id: "019e71b7-4807-7e41-8d5e-f846b07b8bdf"
+      agent_name: "qa-hua the 2nd"
+      thread_id: "019e71b7-4807-7e41-8d5e-f846b07b8bdf"
+      workflow_id: "local_backtest-cr018"
+      change_id: "CR-018"
+      story_id: "CR018-S08-production-current-truth-research-rerun"
+      wave_id: "CR018-W4-RERUN-QMT-ADMISSION"
+      handoff_path: "process/handoffs/META-QA-CR018-S08-CP7-VERIFY-2026-05-29.md"
+      status: "closed"
+      evidence: "spawn_agent+close_agent; CR018-S08 CP7 PASS and target regression 60 passed"
+      tool_name: "multi_agent_v1.spawn_agent/close_agent"
+      reusable: false
+      spawned_at: "2026-05-29T11:11:41+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-05-29T11:17:58+08:00"
+      completed_at: "2026-05-29T11:14:23+08:00"
+      closed_at: "2026-05-29T11:17:58+08:00"
+      fallback_reason: ""
+    - role: "meta-qa"
+      agent_id: "019e714b-3597-7e31-b0d0-207f12130b47"
+      agent_name: "qa-lv"
+      thread_id: "019e714b-3597-7e31-b0d0-207f12130b47"
+      workflow_id: "local_backtest-cr018"
+      change_id: "CR-018"
+      story_id: "CR018-S03-real-benchmark-index-components-weights-backfill"
+      wave_id: "CR018-W2-P0-P1-READINESS"
+      handoff_path: "process/handoffs/META-QA-CR018-S03-CP7-VERIFY-2026-05-29.md"
+      status: "closed"
+      evidence: "spawn_agent+close_agent; CR018-S03 CP7 PASS and target regression 13 passed"
+      tool_name: "multi_agent_v1.spawn_agent/close_agent"
+      reusable: false
+      spawned_at: "2026-05-29T09:13:46+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-05-29T09:18:05+08:00"
+      completed_at: "2026-05-29T09:15:23+08:00"
+      closed_at: "2026-05-29T09:18:05+08:00"
+      fallback_reason: ""
+    - role: "meta-qa"
+      agent_id: "019e714b-56ab-7532-9051-0952cadb1da3"
+      agent_name: "qa-shi"
+      thread_id: "019e714b-56ab-7532-9051-0952cadb1da3"
+      workflow_id: "local_backtest-cr018"
+      change_id: "CR-018"
+      story_id: "CR018-S04-industry-market-cap-liquidity-and-exposure-data"
+      wave_id: "CR018-W2-P0-P1-READINESS"
+      handoff_path: "process/handoffs/META-QA-CR018-S04-CP7-VERIFY-2026-05-29.md"
+      status: "closed"
+      evidence: "spawn_agent+close_agent; CR018-S04 CP7 PASS and target regression 10 passed"
+      tool_name: "multi_agent_v1.spawn_agent/close_agent"
+      reusable: false
+      spawned_at: "2026-05-29T09:13:46+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-05-29T09:19:23+08:00"
+      completed_at: "2026-05-29T09:16:15+08:00"
+      closed_at: "2026-05-29T09:19:23+08:00"
+      fallback_reason: ""
+    - role: "meta-qa"
+      agent_id: "019e7133-1e11-7041-aace-fbe30de97fea"
+      agent_name: "qa-zhang"
+      thread_id: "019e7133-1e11-7041-aace-fbe30de97fea"
+      workflow_id: "local_backtest-cr018"
+      change_id: "CR-018"
+      story_id: "CR018-S01-production-current-truth-definition-and-dataset-groups"
+      wave_id: "CR018-W1-SCOPE-CONTRACT"
+      handoff_path: "process/handoffs/META-QA-CR018-S01-CP7-VERIFY-2026-05-29.md"
+      status: "closed"
+      evidence: "spawn_agent+close_agent; CR018-S01 CP7 PASS and target regression 14 passed"
+      tool_name: "multi_agent_v1.spawn_agent/close_agent"
+      reusable: false
+      spawned_at: "2026-05-29T08:47:19+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-05-29T08:53:20+08:00"
+      completed_at: "2026-05-29T08:49:29+08:00"
+      closed_at: "2026-05-29T08:53:20+08:00"
+      fallback_reason: ""
+    - role: "meta-dev"
+      agent_id: "019e7126-854e-7891-8e54-738187c8f2a6"
+      agent_name: "dev-you"
+      thread_id: "019e7126-854e-7891-8e54-738187c8f2a6"
+      workflow_id: "local_backtest-cr018"
+      change_id: "CR-018"
+      story_id: "CR018-S01-production-current-truth-definition-and-dataset-groups"
+      wave_id: "CR018-W1-SCOPE-CONTRACT"
+      handoff_path: "process/handoffs/META-DEV-CR018-S01-IMPLEMENT-2026-05-29.md"
+      status: "closed"
+      evidence: "spawn_agent+close_agent; CR018-S01 CP6 PASS and S01 tests 7 passed"
+      tool_name: "multi_agent_v1.spawn_agent/close_agent"
+      reusable: false
+      spawned_at: "2026-05-29T08:33:38+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-05-29T08:45:06+08:00"
+      completed_at: "2026-05-29T08:42:04+08:00"
+      closed_at: "2026-05-29T08:45:06+08:00"
+      fallback_reason: ""
+    - role: "meta-dev"
+      agent_id: "019e7102-dc44-7382-baaa-524b3667b2f3"
+      agent_name: "dev-lv"
+      thread_id: "019e7102-dc44-7382-baaa-524b3667b2f3"
+      workflow_id: "local_backtest-cr018"
+      change_id: "CR-018"
+      story_id: "CR018-LLD-G1"
+      wave_id: "CR018-LLD"
+      handoff_path: "process/handoffs/META-DEV-CR018-LLD-G1-2026-05-29.md"
+      status: "closed"
+      evidence: "spawn_agent+close_agent; CR018 S01-S03 LLD and CP5 auto prechecks PASS"
+      tool_name: "multi_agent_v1.spawn_agent/close_agent"
+      reusable: false
+      spawned_at: "2026-05-29T07:54:37+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-05-29T08:04:50+08:00"
+      completed_at: "2026-05-29T08:04:50+08:00"
+      closed_at: "2026-05-29T08:04:50+08:00"
+      fallback_reason: ""
+    - role: "meta-dev"
+      agent_id: "019e7102-dc8b-75e3-9a66-c94dbc4b30ba"
+      agent_name: "dev-yang"
+      thread_id: "019e7102-dc8b-75e3-9a66-c94dbc4b30ba"
+      workflow_id: "local_backtest-cr018"
+      change_id: "CR-018"
+      story_id: "CR018-LLD-G2"
+      wave_id: "CR018-LLD"
+      handoff_path: "process/handoffs/META-DEV-CR018-LLD-G2-2026-05-29.md"
+      status: "closed"
+      evidence: "spawn_agent+close_agent; CR018 S04-S06 LLD and CP5 auto prechecks PASS"
+      tool_name: "multi_agent_v1.spawn_agent/close_agent"
+      reusable: false
+      spawned_at: "2026-05-29T07:54:37+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-05-29T08:03:18+08:00"
+      completed_at: "2026-05-29T08:03:18+08:00"
+      closed_at: "2026-05-29T08:03:18+08:00"
+      fallback_reason: ""
+    - role: "meta-dev"
+      agent_id: "019e7102-dce0-7901-b877-afec4c09dc36"
+      agent_name: "dev-kong"
+      thread_id: "019e7102-dce0-7901-b877-afec4c09dc36"
+      workflow_id: "local_backtest-cr018"
+      change_id: "CR-018"
+      story_id: "CR018-LLD-G3"
+      wave_id: "CR018-LLD"
+      handoff_path: "process/handoffs/META-DEV-CR018-LLD-G3-2026-05-29.md"
+      status: "closed"
+      evidence: "spawn_agent+close_agent; CR018 S07-S09 LLD and CP5 auto prechecks PASS; S09 QMT later-gated retained"
+      tool_name: "multi_agent_v1.spawn_agent/close_agent"
+      reusable: false
+      spawned_at: "2026-05-29T07:54:37+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-05-29T08:03:42+08:00"
+      completed_at: "2026-05-29T08:03:42+08:00"
+      closed_at: "2026-05-29T08:03:42+08:00"
+      fallback_reason: ""
+    - role: "meta-se"
+      agent_id: "019e70f2-5584-7de0-ad39-a2479592bf1c"
+      agent_name: "se-shen"
+      thread_id: "019e70f2-5584-7de0-ad39-a2479592bf1c"
+      workflow_id: "local_backtest-cr018"
+      change_id: "CR-018"
+      story_id: "CR018-STORY-CARDS-CP4-RERUN"
+      wave_id: "CR018-STORY-PLANNING"
+      handoff_path: "process/handoffs/META-SE-CR018-STORY-CARDS-CP4-2026-05-29.md"
+      status: "shutdown-incomplete"
+      evidence: "spawn_agent+close_agent; no CR018 Story cards landed, meta-po recovery completed Story cards and CP4"
+      tool_name: "multi_agent_v1.spawn_agent/close_agent"
+      reusable: false
+      spawned_at: "2026-05-29T07:34:40+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-05-29T07:44:33+08:00"
+      completed_at: ""
+      closed_at: "2026-05-29T07:44:33+08:00"
+      fallback_reason: ""
+    - role: "meta-se"
+      agent_id: "019e70dd-1902-7883-a3c7-35466a4f19ab"
+      agent_name: "se-wei"
+      thread_id: "019e70dd-1902-7883-a3c7-35466a4f19ab"
+      workflow_id: "local_backtest-cr018"
+      change_id: "CR-018"
+      story_id: "CR018-HLD-ADR-STORY-PLANNING-REPLACEMENT"
+      wave_id: "CR018-SOLUTION-DESIGN"
+      handoff_path: "process/handoffs/META-SE-CR018-HLD-ADR-STORY-REPLACEMENT-2026-05-29.md"
+      status: "shutdown-partial"
+      evidence: "spawn_agent+close_agent; partial DEVELOPMENT-PLAN CR018 section landed, CP3/CP4 completed by meta-po from landed artifacts"
+      tool_name: "multi_agent_v1.spawn_agent/close_agent"
+      reusable: false
+      spawned_at: "2026-05-29T07:13:00+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-05-29T07:25:48+08:00"
+      completed_at: ""
+      closed_at: "2026-05-29T07:25:48+08:00"
+      fallback_reason: ""
+    - role: "meta-se"
+      agent_id: "019e70ce-9ac4-70c1-b6c5-deab04c28ab0"
+      agent_name: "se-han"
+      thread_id: "019e70ce-9ac4-70c1-b6c5-deab04c28ab0"
+      workflow_id: "local_backtest-cr018"
+      change_id: "CR-018"
+      story_id: "CR018-HLD-ADR-STORY-PLANNING"
+      wave_id: "CR018-SOLUTION-DESIGN"
+      handoff_path: "process/handoffs/META-SE-CR018-HLD-ADR-STORY-2026-05-29.md"
+      status: "shutdown-partial"
+      evidence: "spawn_agent+close_agent; partial CR018 HLD/ADR/Story Backlog changes landed, CP3/CP4 incomplete"
+      tool_name: "multi_agent_v1.spawn_agent/close_agent"
+      reusable: false
+      spawned_at: "2026-05-29T06:48:42+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-05-29T07:13:00+08:00"
+      completed_at: ""
+      closed_at: "2026-05-29T07:13:00+08:00"
+      fallback_reason: ""
+    - role: "meta-pm"
+      agent_id: "019e70c0-a2b0-7a11-add3-86766e09bd0c"
+      agent_name: "pm-wu"
+      thread_id: "019e70c0-a2b0-7a11-add3-86766e09bd0c"
+      workflow_id: "local_backtest-cr018"
+      change_id: "CR-018"
+      story_id: "CR018-REQ-CLARIFICATION"
+      wave_id: "CR018-REQUIREMENT-CLARIFICATION"
+      handoff_path: "process/handoffs/META-PM-CR018-REQ-CLARIFICATION-2026-05-29.md"
+      status: "closed"
+      evidence: "spawn_agent+close_agent; CR018 use-case/requirements increment advice returned"
+      tool_name: "multi_agent_v1.spawn_agent/close_agent"
+      reusable: false
+      spawned_at: "2026-05-29T06:42:36+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-05-29T06:48:42+08:00"
+      completed_at: "2026-05-29T06:48:42+08:00"
+      closed_at: "2026-05-29T06:48:42+08:00"
+      fallback_reason: ""
+    - role: "meta-doc"
+      agent_id: "019e6cc3-61e0-7d21-a1bf-4f8b7996a867"
+      agent_name: "doc-jin the 2nd"
+      thread_id: "019e6cc3-61e0-7d21-a1bf-4f8b7996a867"
+      workflow_id: "local_backtest-cr015-cr016-cr017"
+      change_id: "CR-015, CR-016, CR-017"
+      story_id: "CR015-CR016-CR017-controlled-documentation-refresh"
+      wave_id: "CR015-CR016-CR017-DOCUMENTATION"
+      handoff_path: "process/handoffs/META-DOC-CR015-CR016-CR017-DOCUMENTATION-2026-05-28.md"
+      status: "closed"
+      evidence: "spawn_agent+wait_agent+close_agent; README/USER-MANUAL/TEST-STRATEGY documentation refresh completed"
+      tool_name: "multi_agent_v1.spawn_agent/wait_agent/close_agent"
+      reusable: false
+      spawned_at: "2026-05-28T12:06:47+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-05-28T12:13:04+08:00"
+      completed_at: "2026-05-28T12:13:04+08:00"
+      closed_at: "2026-05-28T12:13:04+08:00"
+      fallback_reason: ""
+    - role: "meta-qa"
+      agent_id: "019e6cbc-5bed-7273-87a7-a6d11a36ac88"
+      agent_name: "qa-he the 2nd"
+      thread_id: "019e6cbc-5bed-7273-87a7-a6d11a36ac88"
+      workflow_id: "local_backtest-cr015-cr016-cr017"
+      change_id: "CR-016"
+      story_id: "CR016-S07-docs-user-manual-and-incident-playbooks"
+      wave_id: "CR016-W2-LIVE-SCALE-DOCS-GATED-CP7"
+      handoff_path: "process/handoffs/META-QA-CR016-S07-CP7-VERIFY-2026-05-28.md"
+      status: "closed"
+      evidence: "spawn_agent+wait_agent+close_agent; CR016-S07 CP7 PASS"
+      tool_name: "multi_agent_v1.spawn_agent/wait_agent/close_agent"
+      reusable: false
+      spawned_at: "2026-05-28T11:59:06+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-05-28T12:04:05+08:00"
+      completed_at: "2026-05-28T12:01:00+08:00"
+      closed_at: "2026-05-28T12:04:05+08:00"
+      fallback_reason: ""
+    - role: "meta-dev"
+      agent_id: "019e6cb1-70eb-72c2-bdf7-94a59009789f"
+      agent_name: "dev-zhu the 2nd"
+      thread_id: "019e6cb1-70eb-72c2-bdf7-94a59009789f"
+      workflow_id: "local_backtest-cr015-cr016-cr017"
+      change_id: "CR-016"
+      story_id: "CR016-S07-docs-user-manual-and-incident-playbooks"
+      wave_id: "CR016-W2-LIVE-SCALE-DOCS-GATED"
+      handoff_path: "process/handoffs/META-DEV-CR016-S07-IMPLEMENT-2026-05-28.md"
+      status: "closed"
+      evidence: "spawn_agent+wait_agent+close_agent; CR016-S07 CP6 PASS"
+      tool_name: "multi_agent_v1.spawn_agent/wait_agent/close_agent"
+      reusable: false
+      spawned_at: "2026-05-28T11:47:11+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-05-28T11:56:41+08:00"
+      completed_at: "2026-05-28T11:52:52+08:00"
+      closed_at: "2026-05-28T11:56:41+08:00"
+      fallback_reason: ""
+    - role: "meta-qa"
+      agent_id: "019e6c95-337c-7851-8f1f-0c558da719b4"
+      agent_name: "qa-shi the 2nd"
+      thread_id: "019e6c95-337c-7851-8f1f-0c558da719b4"
+      workflow_id: "local_backtest-cr015-cr016-cr017"
+      change_id: "CR-016"
+      story_id: "CR016-S04-simulation-live-runbook-and-approval-gates"
+      wave_id: "CR016-W1-SIMULATION-OPS-GATES-CP7"
+      handoff_path: "process/handoffs/META-QA-CR016-S04-CP7-VERIFY-2026-05-28.md"
+      status: "completed"
+      evidence: "spawn_agent+wait_agent; close_agent attempted but target not found after completion"
+      tool_name: "multi_agent_v1.spawn_agent/wait_agent/close_agent-attempt"
+      reusable: false
+      spawned_at: "2026-05-28T11:16:25+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-05-28T11:43:56+08:00"
+      completed_at: "2026-05-28T11:18:54+08:00"
+      closed_at: ""
+      fallback_reason: "close_agent target not found at 2026-05-28T11:43:56+08:00; completed evidence retained without fabricated closed_at"
+    - role: "meta-dev"
+      agent_id: "019e6c89-715f-7472-8b69-e20d1e9e4aa0"
+      agent_name: "dev-qin the 2nd"
+      thread_id: "019e6c89-715f-7472-8b69-e20d1e9e4aa0"
+      workflow_id: "local_backtest-cr015-cr016-cr017"
+      change_id: "CR-016"
+      story_id: "CR016-S04-simulation-live-runbook-and-approval-gates"
+      wave_id: "CR016-W1-SIMULATION-OPS-GATES"
+      handoff_path: "process/handoffs/META-DEV-CR016-S04-IMPLEMENT-2026-05-28.md"
+      status: "closed"
+      evidence: "spawn_agent+wait_agent+close_agent; CR016-S04 CP6 PASS"
+      tool_name: "multi_agent_v1.spawn_agent/wait_agent/close_agent"
+      reusable: false
+      spawned_at: "2026-05-28T11:03:33+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-05-28T11:14:39+08:00"
+      completed_at: "2026-05-28T11:10:12+08:00"
+      closed_at: "2026-05-28T11:14:39+08:00"
+      fallback_reason: ""
+    - role: "meta-qa"
+      agent_id: "019e6c80-3ba9-76f3-878c-b577f342cca4"
+      agent_name: "qa-wei the 2nd"
+      thread_id: "019e6c80-3ba9-76f3-878c-b577f342cca4"
+      workflow_id: "local_backtest-cr015-cr016-cr017"
+      change_id: "CR-016"
+      story_id: "CR016-S03-monitoring-heartbeat-and-kill-switch"
+      wave_id: "CR016-W1-SIMULATION-OPS-GATES-CP7"
+      handoff_path: "process/handoffs/META-QA-CR016-S03-CP7-VERIFY-2026-05-28.md"
+      status: "closed"
+      evidence: "spawn_agent+wait_agent+close_agent; CR016-S03 CP7 PASS"
+      tool_name: "multi_agent_v1.spawn_agent/wait_agent/close_agent"
+      reusable: false
+      spawned_at: "2026-05-28T10:53:30+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-05-28T11:00:54+08:00"
+      completed_at: "2026-05-28T10:57:35+08:00"
+      closed_at: "2026-05-28T11:00:54+08:00"
+      fallback_reason: ""
+    - role: "meta-dev"
+      agent_id: "019e6c74-54ef-7cb2-ac70-163c253c785a"
+      agent_name: "dev-xu the 2nd"
+      thread_id: "019e6c74-54ef-7cb2-ac70-163c253c785a"
+      workflow_id: "local_backtest-cr015-cr016-cr017"
+      change_id: "CR-016"
+      story_id: "CR016-S03-monitoring-heartbeat-and-kill-switch"
+      wave_id: "CR016-W1-SIMULATION-OPS-GATES"
+      handoff_path: "process/handoffs/META-DEV-CR016-S03-IMPLEMENT-2026-05-28.md"
+      status: "closed"
+      evidence: "spawn_agent+wait_agent(timeout)+notification+close_agent; CR016-S03 CP6 PASS"
+      tool_name: "multi_agent_v1.spawn_agent/wait_agent/close_agent"
+      reusable: false
+      spawned_at: "2026-05-28T10:40:29+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-05-28T10:51:44+08:00"
+      completed_at: "2026-05-28T10:48:35+08:00"
+      closed_at: "2026-05-28T10:51:44+08:00"
+      fallback_reason: ""
+    - role: "meta-qa"
+      agent_id: "019e6c6b-0c7e-7183-988f-251715d88a47"
+      agent_name: "qa-cao the 2nd"
+      thread_id: "019e6c6b-0c7e-7183-988f-251715d88a47"
+      workflow_id: "local_backtest-cr015-cr016-cr017"
+      change_id: "CR-016"
+      story_id: "CR016-S02-reconciliation-service-and-reports"
+      wave_id: "CR016-W1-SIMULATION-OPS-GATES-CP7"
+      handoff_path: "process/handoffs/META-QA-CR016-S02-CP7-VERIFY-2026-05-28.md"
+      status: "closed"
+      evidence: "spawn_agent+wait_agent+close_agent; CR016-S02 CP7 PASS"
+      tool_name: "multi_agent_v1.spawn_agent/wait_agent/close_agent"
+      reusable: false
+      spawned_at: "2026-05-28T10:30:23+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-05-28T10:37:45+08:00"
+      completed_at: "2026-05-28T10:32:35+08:00"
+      closed_at: "2026-05-28T10:37:45+08:00"
+      fallback_reason: ""
+    - role: "meta-dev"
+      agent_id: "019e6c5e-da6a-71c2-a7ef-71f49245c2e7"
+      agent_name: "dev-yang the 2nd"
+      thread_id: "019e6c5e-da6a-71c2-a7ef-71f49245c2e7"
+      workflow_id: "local_backtest-cr015-cr016-cr017"
+      change_id: "CR-016"
+      story_id: "CR016-S02-reconciliation-service-and-reports"
+      wave_id: "CR016-W1-SIMULATION-OPS-GATES"
+      handoff_path: "process/handoffs/META-DEV-CR016-S02-IMPLEMENT-2026-05-28.md"
+      status: "closed"
+      evidence: "spawn_agent+wait_agent+close_agent; CR016-S02 CP6 PASS"
+      tool_name: "multi_agent_v1.spawn_agent/wait_agent/close_agent"
+      reusable: false
+      spawned_at: "2026-05-28T10:18:52+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-05-28T10:28:33+08:00"
+      completed_at: "2026-05-28T10:24:30+08:00"
+      closed_at: "2026-05-28T10:28:33+08:00"
+      fallback_reason: ""
+    - role: "meta-dev"
+      agent_id: "019e6bb1-f913-7582-96c8-68737021cf85"
+      agent_name: "dev-he"
+      thread_id: "019e6bb1-f913-7582-96c8-68737021cf85"
+      workflow_id: "local_backtest-cr015-cr016-cr017"
+      change_id: "CR-017"
+      story_id: "CR017-S01-adjustment-policy-requirements-and-adr-refresh, CR017-S02-raw-prices-and-adj-factor-contract-hardening"
+      wave_id: "CR017-W1-ADJUSTMENT-CONTRACTS"
+      handoff_path: "process/handoffs/META-DEV-CR017-W1-IMPLEMENT-2026-05-28.md"
+      status: "closed"
+      evidence: "spawn_agent+wait_agent+close_agent; CR017-W1 S01/S02 CP6 PASS"
+      tool_name: "multi_agent_v1.spawn_agent/wait_agent/close_agent"
+      reusable: false
+      spawned_at: "2026-05-28T07:08:12+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-05-28T07:19:51+08:00"
+      completed_at: "2026-05-28T07:14:01+08:00"
+      closed_at: "2026-05-28T07:19:51+08:00"
+      fallback_reason: ""
+    - role: "meta-dev"
+      agent_id: "019e6bb1-f956-7a02-9d78-78904c52bfdb"
+      agent_name: "dev-zhu"
+      thread_id: "019e6bb1-f956-7a02-9d78-78904c52bfdb"
+      workflow_id: "local_backtest-cr015-cr016-cr017"
+      change_id: "CR-015"
+      story_id: "CR015-S01-qmt-environment-and-interface-spike"
+      wave_id: "CR015-W1-FOUNDATION-CONTRACTS"
+      handoff_path: "process/handoffs/META-DEV-CR015-S01-IMPLEMENT-2026-05-28.md"
+      status: "closed"
+      evidence: "spawn_agent+send_input+wait_agent+close_agent; CR015-S01 CP6 PASS"
+      tool_name: "multi_agent_v1.spawn_agent/send_input/wait_agent/close_agent"
+      reusable: false
+      spawned_at: "2026-05-28T07:08:12+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-05-28T07:37:14+08:00"
+      completed_at: "2026-05-28T07:35:15+08:00"
+      closed_at: "2026-05-28T07:37:14+08:00"
+      fallback_reason: ""
+    - role: "meta-dev"
+      agent_id: "019e6bc3-c576-7a22-acd1-69031710d48a"
+      agent_name: "dev-zhang"
+      thread_id: "019e6bc3-c576-7a22-acd1-69031710d48a"
+      workflow_id: "local_backtest-cr015-cr016-cr017"
+      change_id: "CR-017"
+      story_id: "CR017-S03-qfq-hfq-derived-view-normalization"
+      wave_id: "CR017-W2-DERIVATION-READERS"
+      handoff_path: "process/handoffs/META-DEV-CR017-S03-IMPLEMENT-2026-05-28.md"
+      status: "closed"
+      evidence: "spawn_agent+send_input+wait_agent+close_agent; CR017-S03 CP6 PASS"
+      tool_name: "multi_agent_v1.spawn_agent/send_input/wait_agent/close_agent"
+      reusable: false
+      spawned_at: "2026-05-28T07:27:36+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-05-28T07:35:49+08:00"
+      completed_at: "2026-05-28T07:34:45+08:00"
+      closed_at: "2026-05-28T07:35:49+08:00"
+      fallback_reason: ""
+    - role: "meta-qa"
+      agent_id: "019e6bbd-714e-7621-ad55-06e96e061d35"
+      agent_name: "qa-kong"
+      thread_id: "019e6bbd-714e-7621-ad55-06e96e061d35"
+      workflow_id: "local_backtest-cr015-cr016-cr017"
+      change_id: "CR-017"
+      story_id: "CR017-S01-adjustment-policy-requirements-and-adr-refresh, CR017-S02-raw-prices-and-adj-factor-contract-hardening"
+      wave_id: "CR017-W1-ADJUSTMENT-CONTRACTS-CP7"
+      handoff_path: "process/handoffs/META-QA-CR017-W1-CP7-VERIFY-2026-05-28.md"
+      status: "closed"
+      evidence: "spawn_agent+wait_agent+close_agent; CR017-W1 S01/S02 CP7 PASS"
+      tool_name: "multi_agent_v1.spawn_agent/wait_agent/close_agent"
+      reusable: false
+      spawned_at: "2026-05-28T07:20:41+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-05-28T07:26:01+08:00"
+      completed_at: "2026-05-28T07:22:33+08:00"
+      closed_at: "2026-05-28T07:26:01+08:00"
+      fallback_reason: ""
+    - role: "meta-qa"
+      agent_id: "019e6bcb-f813-7d71-bbcb-9a1091b0f96e"
+      agent_name: "qa-wei"
+      thread_id: "019e6bcb-f813-7d71-bbcb-9a1091b0f96e"
+      workflow_id: "local_backtest-cr015-cr016-cr017"
+      change_id: "CR-017"
+      story_id: "CR017-S03-qfq-hfq-derived-view-normalization"
+      wave_id: "CR017-W2-DERIVATION-READERS-CP7"
+      handoff_path: "process/handoffs/META-QA-CR017-S03-CP7-VERIFY-2026-05-28.md"
+      status: "closed"
+      evidence: "spawn_agent+wait_agent+close_agent; CR017-S03 CP7 PASS"
+      tool_name: "multi_agent_v1.spawn_agent/wait_agent/close_agent"
+      reusable: false
+      spawned_at: "2026-05-28T07:36:33+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-05-28T07:41:26+08:00"
+      completed_at: "2026-05-28T07:38:23+08:00"
+      closed_at: "2026-05-28T07:41:26+08:00"
+      fallback_reason: ""
+    - role: "meta-qa"
+      agent_id: "019e6bd3-3ab0-7672-8f95-0ca4ed22fa48"
+      agent_name: "qa-shi"
+      thread_id: "019e6bd3-3ab0-7672-8f95-0ca4ed22fa48"
+      workflow_id: "local_backtest-cr015-cr016-cr017"
+      change_id: "CR-015"
+      story_id: "CR015-S01-qmt-environment-and-interface-spike"
+      wave_id: "CR015-W1-FOUNDATION-CONTRACTS-CP7"
+      handoff_path: "process/handoffs/META-QA-CR015-S01-CP7-VERIFY-2026-05-28.md"
+      status: "closed"
+      evidence: "spawn_agent+wait_agent+close_agent; CR015-S01 CP7 PASS"
+      tool_name: "multi_agent_v1.spawn_agent/wait_agent/close_agent"
+      reusable: false
+      spawned_at: "2026-05-28T07:44:29+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-05-28T07:48:21+08:00"
+      completed_at: "2026-05-28T07:46:49+08:00"
+      closed_at: "2026-05-28T07:48:21+08:00"
+      fallback_reason: ""
+    - role: "meta-dev"
+      agent_id: "019e6bd3-3af1-7d23-b48a-1b7a70d06ab2"
+      agent_name: "dev-yang"
+      thread_id: "019e6bd3-3af1-7d23-b48a-1b7a70d06ab2"
+      workflow_id: "local_backtest-cr015-cr016-cr017"
+      change_id: "CR-017"
+      story_id: "CR017-S04-reader-api-and-policy-gates"
+      wave_id: "CR017-W2-DERIVATION-READERS"
+      handoff_path: "process/handoffs/META-DEV-CR017-S04-IMPLEMENT-2026-05-28.md"
+      status: "closed"
+      evidence: "spawn_agent+wait_agent+close_agent; CR017-S04 CP6 PASS"
+      tool_name: "multi_agent_v1.spawn_agent/wait_agent/close_agent"
+      reusable: false
+      spawned_at: "2026-05-28T07:44:29+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-05-28T07:56:05+08:00"
+      completed_at: "2026-05-28T07:54:04+08:00"
+      closed_at: "2026-05-28T07:56:05+08:00"
+      fallback_reason: ""
+    - role: "meta-dev"
+      agent_id: "019e6bd8-b70c-7970-a1eb-dd71e647e6d0"
+      agent_name: "dev-you"
+      thread_id: "019e6bd8-b70c-7970-a1eb-dd71e647e6d0"
+      workflow_id: "local_backtest-cr015-cr016-cr017"
+      change_id: "CR-015"
+      story_id: "CR015-S02-qmt-broker-adapter-contract"
+      wave_id: "CR015-W1-FOUNDATION-CONTRACTS"
+      handoff_path: "process/handoffs/META-DEV-CR015-S02-IMPLEMENT-2026-05-28.md"
+      status: "closed"
+      evidence: "spawn_agent+wait_agent+close_agent; CR015-S02 CP6 PASS"
+      tool_name: "multi_agent_v1.spawn_agent/wait_agent/close_agent"
+      reusable: false
+      spawned_at: "2026-05-28T07:50:28+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-05-28T08:00:07+08:00"
+      completed_at: "2026-05-28T07:57:21+08:00"
+      closed_at: "2026-05-28T08:00:07+08:00"
+      fallback_reason: ""
+    - role: "meta-qa"
+      agent_id: "019e6bdf-8f4b-7553-a3ad-7124fc7fb276"
+      agent_name: "qa-hua"
+      thread_id: "019e6bdf-8f4b-7553-a3ad-7124fc7fb276"
+      workflow_id: "local_backtest-cr015-cr016-cr017"
+      change_id: "CR-017"
+      story_id: "CR017-S04-reader-api-and-policy-gates"
+      wave_id: "CR017-W2-DERIVATION-READERS-CP7"
+      handoff_path: "process/handoffs/META-QA-CR017-S04-CP7-VERIFY-2026-05-28.md"
+      status: "closed"
+      evidence: "spawn_agent+wait_agent+close_agent; CR017-S04 CP7 PASS"
+      tool_name: "multi_agent_v1.spawn_agent/wait_agent/close_agent"
+      reusable: false
+      spawned_at: "2026-05-28T07:57:56+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-05-28T08:02:53+08:00"
+      completed_at: "2026-05-28T08:00:02+08:00"
+      closed_at: "2026-05-28T08:02:53+08:00"
+      fallback_reason: ""
+    - role: "meta-qa"
+      agent_id: "019e6be3-369f-7f11-bed0-7e01d3555089"
+      agent_name: "qa-zhang"
+      thread_id: "019e6be3-369f-7f11-bed0-7e01d3555089"
+      workflow_id: "local_backtest-cr015-cr016-cr017"
+      change_id: "CR-015"
+      story_id: "CR015-S02-qmt-broker-adapter-contract"
+      wave_id: "CR015-W1-FOUNDATION-CONTRACTS-CP7"
+      handoff_path: "process/handoffs/META-QA-CR015-S02-CP7-VERIFY-2026-05-28.md"
+      status: "closed"
+      evidence: "spawn_agent+wait_agent+close_agent; CR015-S02 CP7 PASS"
+      tool_name: "multi_agent_v1.spawn_agent/wait_agent/close_agent"
+      reusable: false
+      spawned_at: "2026-05-28T08:01:56+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-05-28T08:06:26+08:00"
+      completed_at: "2026-05-28T08:03:39+08:00"
+      closed_at: "2026-05-28T08:06:26+08:00"
+      fallback_reason: ""
+    - role: "meta-dev"
+      agent_id: "019e6be6-532d-78b1-a61a-39c71140e152"
+      agent_name: "dev-lv"
+      thread_id: "019e6be6-532d-78b1-a61a-39c71140e152"
+      workflow_id: "local_backtest-cr015-cr016-cr017"
+      change_id: "CR-017"
+      story_id: "CR017-S05-validation-quality-parity-and-leakage-tests"
+      wave_id: "CR017-W2-DERIVATION-READERS"
+      handoff_path: "process/handoffs/META-DEV-CR017-S05-IMPLEMENT-2026-05-28.md"
+      status: "closed"
+      evidence: "spawn_agent+wait_agent+close_agent; CR017-S05 CP6 PASS"
+      tool_name: "multi_agent_v1.spawn_agent/wait_agent/close_agent"
+      reusable: false
+      spawned_at: "2026-05-28T08:05:20+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-05-28T08:16:00+08:00"
+      completed_at: "2026-05-28T08:13:05+08:00"
+      closed_at: "2026-05-28T08:16:00+08:00"
+      fallback_reason: ""
+    - role: "meta-dev"
+      agent_id: "019e6be9-9023-7d52-b1f2-9f93acea500a"
+      agent_name: "dev-shi"
+      thread_id: "019e6be9-9023-7d52-b1f2-9f93acea500a"
+      workflow_id: "local_backtest-cr015-cr016-cr017"
+      change_id: "CR-015"
+      story_id: "CR015-S03-oms-order-state-machine"
+      wave_id: "CR015-W2-OMS-RISK-LAKE"
+      handoff_path: "process/handoffs/META-DEV-CR015-S03-IMPLEMENT-2026-05-28.md"
+      status: "closed"
+      evidence: "spawn_agent+wait_agent+close_agent; CR015-S03 CP6 PASS"
+      tool_name: "multi_agent_v1.spawn_agent/wait_agent/close_agent"
+      reusable: false
+      spawned_at: "2026-05-28T08:08:55+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-05-28T08:18:51+08:00"
+      completed_at: "2026-05-28T08:15:23+08:00"
+      closed_at: "2026-05-28T08:18:51+08:00"
+      fallback_reason: ""
+    - role: "meta-qa"
+      agent_id: "019e6bf1-96ce-7f02-ae98-50bd7cbc86db"
+      agent_name: "qa-yan"
+      thread_id: "019e6bf1-96ce-7f02-ae98-50bd7cbc86db"
+      workflow_id: "local_backtest-cr015-cr016-cr017"
+      change_id: "CR-017"
+      story_id: "CR017-S05-validation-quality-parity-and-leakage-tests"
+      wave_id: "CR017-W2-DERIVATION-READERS-CP7"
+      handoff_path: "process/handoffs/META-QA-CR017-S05-CP7-VERIFY-2026-05-28.md"
+      status: "closed"
+      evidence: "spawn_agent+wait_agent+close_agent; CR017-S05 CP7 PASS"
+      tool_name: "multi_agent_v1.spawn_agent/wait_agent/close_agent"
+      reusable: false
+      spawned_at: "2026-05-28T08:17:38+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-05-28T08:21:43+08:00"
+      completed_at: "2026-05-28T08:19:49+08:00"
+      closed_at: "2026-05-28T08:21:43+08:00"
+      fallback_reason: ""
+    - role: "meta-qa"
+      agent_id: "019e6bf4-7b26-7801-9b7b-4343b653315a"
+      agent_name: "qa-lv"
+      thread_id: "019e6bf4-7b26-7801-9b7b-4343b653315a"
+      workflow_id: "local_backtest-cr015-cr016-cr017"
+      change_id: "CR-015"
+      story_id: "CR015-S03-oms-order-state-machine"
+      wave_id: "CR015-W2-OMS-RISK-LAKE-CP7"
+      handoff_path: "process/handoffs/META-QA-CR015-S03-CP7-VERIFY-2026-05-28.md"
+      status: "closed"
+      evidence: "spawn_agent+subagent_notification+close_agent; CR015-S03 CP7 PASS"
+      tool_name: "multi_agent_v1.spawn_agent/close_agent"
+      reusable: false
+      spawned_at: "2026-05-28T08:20:48+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-05-28T08:25:16+08:00"
+      completed_at: "2026-05-28T08:22:15+08:00"
+      closed_at: "2026-05-28T08:25:16+08:00"
+      fallback_reason: ""
+    - role: "meta-dev"
+      agent_id: "019e6bfc-348d-7730-b9a1-cec5434a2646"
+      agent_name: "dev-lv the 2nd"
+      thread_id: "019e6bfc-348d-7730-b9a1-cec5434a2646"
+      workflow_id: "local_backtest-cr015-cr016-cr017"
+      change_id: "CR-017"
+      story_id: "CR017-S06-research-qmt-consumer-docs-and-migration-guide"
+      wave_id: "CR017-W3-CONSUMER-MIGRATION"
+      handoff_path: "process/handoffs/META-DEV-CR017-S06-IMPLEMENT-2026-05-28.md"
+      status: "closed"
+      evidence: "spawn_agent+wait_agent/notification+close_agent; CR017-S06 CP6 PASS"
+      tool_name: "multi_agent_v1.spawn_agent/wait_agent/close_agent"
+      reusable: false
+      spawned_at: "2026-05-28T08:29:17+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-05-28T08:40:12+08:00"
+      completed_at: "2026-05-28T08:36:51+08:00"
+      closed_at: "2026-05-28T08:40:12+08:00"
+      fallback_reason: ""
+    - role: "meta-dev"
+      agent_id: "019e6bfc-34e1-7c93-9358-1b97db2cb08a"
+      agent_name: "dev-shi the 2nd"
+      thread_id: "019e6bfc-34e1-7c93-9358-1b97db2cb08a"
+      workflow_id: "local_backtest-cr015-cr016-cr017"
+      change_id: "CR-015"
+      story_id: "CR015-S04-pretrade-risk-gate"
+      wave_id: "CR015-W2-OMS-RISK-LAKE"
+      handoff_path: "process/handoffs/META-DEV-CR015-S04-IMPLEMENT-2026-05-28.md"
+      status: "closed"
+      evidence: "spawn_agent+wait_agent+close_agent; CR015-S04 CP6 PASS"
+      tool_name: "multi_agent_v1.spawn_agent/wait_agent/close_agent"
+      reusable: false
+      spawned_at: "2026-05-28T08:29:17+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-05-28T08:40:12+08:00"
+      completed_at: "2026-05-28T08:36:38+08:00"
+      closed_at: "2026-05-28T08:40:12+08:00"
+      fallback_reason: ""
+    - role: "meta-qa"
+      agent_id: "019e6c08-71c1-7f22-b5ce-80726a751f30"
+      agent_name: "qa-yan the 2nd"
+      thread_id: "019e6c08-71c1-7f22-b5ce-80726a751f30"
+      workflow_id: "local_backtest-cr015-cr016-cr017"
+      change_id: "CR-015"
+      story_id: "CR015-S04-pretrade-risk-gate"
+      wave_id: "CR015-W2-OMS-RISK-LAKE-CP7"
+      handoff_path: "process/handoffs/META-QA-CR015-S04-CP7-VERIFY-2026-05-28.md"
+      status: "closed"
+      evidence: "spawn_agent+wait_agent+close_agent; CR015-S04 CP7 PASS"
+      tool_name: "multi_agent_v1.spawn_agent/wait_agent/close_agent"
+      reusable: false
+      spawned_at: "2026-05-28T08:42:37+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-05-28T08:48:18+08:00"
+      completed_at: "2026-05-28T08:45:18+08:00"
+      closed_at: "2026-05-28T08:48:18+08:00"
+      fallback_reason: ""
+    - role: "meta-qa"
+      agent_id: "019e6c08-720d-77c0-89e4-1d5c8a57a66b"
+      agent_name: "qa-hua the 2nd"
+      thread_id: "019e6c08-720d-77c0-89e4-1d5c8a57a66b"
+      workflow_id: "local_backtest-cr015-cr016-cr017"
+      change_id: "CR-017"
+      story_id: "CR017-S06-research-qmt-consumer-docs-and-migration-guide"
+      wave_id: "CR017-W3-CONSUMER-MIGRATION-CP7"
+      handoff_path: "process/handoffs/META-QA-CR017-S06-CP7-VERIFY-2026-05-28.md"
+      status: "closed"
+      evidence: "spawn_agent+notification+close_agent; CR017-S06 CP7 PASS"
+      tool_name: "multi_agent_v1.spawn_agent/close_agent"
+      reusable: false
+      spawned_at: "2026-05-28T08:42:37+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-05-28T08:48:50+08:00"
+      completed_at: "2026-05-28T08:45:04+08:00"
+      closed_at: "2026-05-28T08:48:50+08:00"
+      fallback_reason: ""
+    - role: "meta-dev"
+      agent_id: "019e6c12-451b-73e0-9621-09c8750e6b81"
+      agent_name: "dev-he the 2nd"
+      thread_id: "019e6c12-451b-73e0-9621-09c8750e6b81"
+      workflow_id: "local_backtest-cr015-cr016-cr017"
+      change_id: "CR-015"
+      story_id: "CR015-S05-broker-lake-schema-and-writer"
+      wave_id: "CR015-W2-OMS-RISK-LAKE"
+      handoff_path: "process/handoffs/META-DEV-CR015-S05-IMPLEMENT-2026-05-28.md"
+      status: "closed"
+      evidence: "spawn_agent+wait_agent+close_agent; CR015-S05 CP6 PASS"
+      tool_name: "multi_agent_v1.spawn_agent/wait_agent/close_agent"
+      reusable: false
+      spawned_at: "2026-05-28T08:53:21+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-05-28T09:04:29+08:00"
+      completed_at: "2026-05-28T09:01:08+08:00"
+      closed_at: "2026-05-28T09:04:29+08:00"
+      fallback_reason: ""
+    - role: "meta-qa"
+      agent_id: "019e6c1d-ab63-7130-98a8-ecf802425771"
+      agent_name: "qa-kong the 2nd"
+      thread_id: "019e6c1d-ab63-7130-98a8-ecf802425771"
+      workflow_id: "local_backtest-cr015-cr016-cr017"
+      change_id: "CR-015"
+      story_id: "CR015-S05-broker-lake-schema-and-writer"
+      wave_id: "CR015-W2-OMS-RISK-LAKE-CP7"
+      handoff_path: "process/handoffs/META-QA-CR015-S05-CP7-VERIFY-2026-05-28.md"
+      status: "closed"
+      evidence: "spawn_agent+wait_agent+close_agent; CR015-S05 CP7 PASS"
+      tool_name: "multi_agent_v1.spawn_agent/wait_agent/close_agent"
+      reusable: false
+      spawned_at: "2026-05-28T09:05:47+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-05-28T09:11:25+08:00"
+      completed_at: "2026-05-28T09:07:31+08:00"
+      closed_at: "2026-05-28T09:11:25+08:00"
+      fallback_reason: ""
+    - role: "meta-dev"
+      agent_id: "019e6c24-a307-73a2-9354-2039863031f9"
+      agent_name: "dev-you the 2nd"
+      thread_id: "019e6c24-a307-73a2-9354-2039863031f9"
+      workflow_id: "local_backtest-cr015-cr016-cr017"
+      change_id: "CR-015"
+      story_id: "CR015-S06-target-portfolio-to-order-intent-shadow-mode"
+      wave_id: "CR015-W3-SHADOW-RUNBOOK"
+      handoff_path: "process/handoffs/META-DEV-CR015-S06-IMPLEMENT-2026-05-28.md"
+      status: "closed"
+      evidence: "spawn_agent+wait_agent+close_agent; CR015-S06 CP6 PASS"
+      tool_name: "multi_agent_v1.spawn_agent/wait_agent/close_agent"
+      reusable: false
+      spawned_at: "2026-05-28T09:13:25+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-05-28T09:24:30+08:00"
+      completed_at: "2026-05-28T09:20:54+08:00"
+      closed_at: "2026-05-28T09:24:30+08:00"
+      fallback_reason: ""
+    - role: "meta-qa"
+      agent_id: "019e6c30-47c4-7972-86ff-2f9a24a743bf"
+      agent_name: "qa-lv the 2nd"
+      thread_id: "019e6c30-47c4-7972-86ff-2f9a24a743bf"
+      workflow_id: "local_backtest-cr015-cr016-cr017"
+      change_id: "CR-015"
+      story_id: "CR015-S06-target-portfolio-to-order-intent-shadow-mode"
+      wave_id: "CR015-W3-SHADOW-RUNBOOK-CP7"
+      handoff_path: "process/handoffs/META-QA-CR015-S06-CP7-VERIFY-2026-05-28.md"
+      status: "closed"
+      evidence: "spawn_agent+wait_agent+close_agent; CR015-S06 CP7 PASS"
+      tool_name: "multi_agent_v1.spawn_agent/wait_agent/close_agent"
+      reusable: false
+      spawned_at: "2026-05-28T09:26:07+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-05-28T09:32:40+08:00"
+      completed_at: "2026-05-28T09:28:48+08:00"
+      closed_at: "2026-05-28T09:32:40+08:00"
+      fallback_reason: ""
+    - role: "meta-dev"
+      agent_id: "019e6c3b-de29-77c3-92e3-91c9a82a3115"
+      agent_name: "dev-kong the 2nd"
+      thread_id: "019e6c3b-de29-77c3-92e3-91c9a82a3115"
+      workflow_id: "local_backtest-cr015-cr016-cr017"
+      change_id: "CR-015"
+      story_id: "CR015-S07-docs-and-foundation-runbook-boundary"
+      wave_id: "CR015-W3-SHADOW-RUNBOOK"
+      handoff_path: "process/handoffs/META-DEV-CR015-S07-IMPLEMENT-2026-05-28.md"
+      status: "closed"
+      evidence: "spawn_agent+wait_agent+close_agent; CR015-S07 CP6 PASS"
+      tool_name: "multi_agent_v1.spawn_agent/wait_agent/close_agent"
+      reusable: false
+      spawned_at: "2026-05-28T09:38:47+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-05-28T09:47:32+08:00"
+      completed_at: "2026-05-28T09:44:33+08:00"
+      closed_at: "2026-05-28T09:47:32+08:00"
+      fallback_reason: ""
+    - role: "meta-qa"
+      agent_id: "019e6c45-42f0-7ad2-a5a0-4754f184eee9"
+      agent_name: "qa-zhang the 2nd"
+      thread_id: "019e6c45-42f0-7ad2-a5a0-4754f184eee9"
+      workflow_id: "local_backtest-cr015-cr016-cr017"
+      change_id: "CR-015"
+      story_id: "CR015-S07-docs-and-foundation-runbook-boundary"
+      wave_id: "CR015-W3-SHADOW-RUNBOOK-CP7"
+      handoff_path: "process/handoffs/META-QA-CR015-S07-CP7-VERIFY-2026-05-28.md"
+      status: "closed"
+      evidence: "spawn_agent+wait_agent+close_agent; CR015-S07 CP7 PASS"
+      tool_name: "multi_agent_v1.spawn_agent/wait_agent/close_agent"
+      reusable: false
+      spawned_at: "2026-05-28T09:49:02+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-05-28T09:54:11+08:00"
+      completed_at: "2026-05-28T09:51:39+08:00"
+      closed_at: "2026-05-28T09:54:11+08:00"
+      fallback_reason: ""
+    - role: "meta-dev"
+      agent_id: "019e6c4c-4259-7841-8741-9cc533d26950"
+      agent_name: "dev-zhang the 2nd"
+      thread_id: "019e6c4c-4259-7841-8741-9cc533d26950"
+      workflow_id: "local_backtest-cr015-cr016-cr017"
+      change_id: "CR-016"
+      story_id: "CR016-S01-simulation-account-order-enable-gate"
+      wave_id: "CR016-W1-SIMULATION-OPS-GATES"
+      handoff_path: "process/handoffs/META-DEV-CR016-S01-IMPLEMENT-2026-05-28.md"
+      status: "closed"
+      evidence: "spawn_agent+wait_agent+close_agent; CR016-S01 CP6 PASS"
+      tool_name: "multi_agent_v1.spawn_agent/wait_agent/close_agent"
+      reusable: false
+      spawned_at: "2026-05-28T09:56:41+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-05-28T10:07:43+08:00"
+      completed_at: "2026-05-28T10:03:34+08:00"
+      closed_at: "2026-05-28T10:07:43+08:00"
+      fallback_reason: ""
+    - role: "meta-qa"
+      agent_id: "019e6c57-6aac-7762-98e4-c5cc22d583e2"
+      agent_name: "qa-jin the 2nd"
+      thread_id: "019e6c57-6aac-7762-98e4-c5cc22d583e2"
+      workflow_id: "local_backtest-cr015-cr016-cr017"
+      change_id: "CR-016"
+      story_id: "CR016-S01-simulation-account-order-enable-gate"
+      wave_id: "CR016-W1-SIMULATION-OPS-GATES-CP7"
+      handoff_path: "process/handoffs/META-QA-CR016-S01-CP7-VERIFY-2026-05-28.md"
+      status: "closed"
+      evidence: "spawn_agent+wait_agent+close_agent; CR016-S01 CP7 PASS"
+      tool_name: "multi_agent_v1.spawn_agent/wait_agent/close_agent"
+      reusable: false
+      spawned_at: "2026-05-28T10:08:54+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-05-28T10:14:24+08:00"
+      completed_at: "2026-05-28T10:09:54+08:00"
+      closed_at: "2026-05-28T10:14:24+08:00"
+      fallback_reason: ""
+    - role: "meta-se"
+      agent_id: "019e6b6b-8496-7371-bcaf-4368f0de8f41"
+      agent_name: "se-han"
+      thread_id: "019e6b6b-8496-7371-bcaf-4368f0de8f41"
+      workflow_id: "local_backtest-cr015-cr016-cr017"
+      change_id: "CR-015, CR-016, CR-017"
+      story_id: ""
+      wave_id: "story-planning"
+      handoff_path: "process/handoffs/META-SE-CR015-CR016-CR017-STORY-PLANNING-2026-05-28.md"
+      status: "closed"
+      evidence: "spawn_agent+send_input+wait_agent+close_agent; story planning and CP4 PASS"
+      tool_name: "multi_agent_v1.spawn_agent/send_input/wait_agent/close_agent"
+      reusable: false
+      spawned_at: "2026-05-28T05:51:12+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-05-28T06:20:01+08:00"
+      completed_at: "2026-05-28T06:17:53+08:00"
+      closed_at: "2026-05-28T06:20:01+08:00"
+      fallback_reason: ""
+    - role: "meta-dev"
+      agent_id: "019e6b87-a390-7921-86fb-9c573a924ff4"
+      agent_name: "dev-kong"
+      thread_id: "019e6b87-a390-7921-86fb-9c573a924ff4"
+      workflow_id: "local_backtest-cr015-cr016-cr017"
+      change_id: "CR-017"
+      story_id: ""
+      wave_id: "CR017-ADJUSTMENT-DUAL-VIEW-BATCH-A"
+      handoff_path: "process/handoffs/META-DEV-CR017-LLD-BATCH-A-2026-05-28.md"
+      status: "closed"
+      evidence: "spawn_agent+wait_agent+close_agent; CR017 LLD and CP5 auto PASS"
+      tool_name: "multi_agent_v1.spawn_agent/wait_agent/close_agent"
+      reusable: false
+      spawned_at: "2026-05-28T06:22:10+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-05-28T06:40:12+08:00"
+      completed_at: "2026-05-28T06:34:27+08:00"
+      closed_at: "2026-05-28T06:40:12+08:00"
+      fallback_reason: ""
+    - role: "meta-dev"
+      agent_id: "019e6b87-c21d-7491-a1b4-6277d19a71a5"
+      agent_name: "dev-qin"
+      thread_id: "019e6b87-c21d-7491-a1b4-6277d19a71a5"
+      workflow_id: "local_backtest-cr015-cr016-cr017"
+      change_id: "CR-015"
+      story_id: ""
+      wave_id: "CR015-QMT-FOUNDATION-BATCH-A"
+      handoff_path: "process/handoffs/META-DEV-CR015-LLD-BATCH-A-2026-05-28.md"
+      status: "closed"
+      evidence: "spawn_agent+wait_agent+close_agent; CR015 LLD and CP5 auto PASS"
+      tool_name: "multi_agent_v1.spawn_agent/wait_agent/close_agent"
+      reusable: false
+      spawned_at: "2026-05-28T06:22:10+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-05-28T06:40:12+08:00"
+      completed_at: "2026-05-28T06:45:00+08:00"
+      closed_at: "2026-05-28T06:40:12+08:00"
+      fallback_reason: ""
+    - role: "meta-dev"
+      agent_id: "019e6b87-e130-7811-bdf4-7e92e974ed65"
+      agent_name: "dev-xu"
+      thread_id: "019e6b87-e130-7811-bdf4-7e92e974ed65"
+      workflow_id: "local_backtest-cr015-cr016-cr017"
+      change_id: "CR-016"
+      story_id: ""
+      wave_id: "CR016-QMT-ACTIVATION-BATCH-A"
+      handoff_path: "process/handoffs/META-DEV-CR016-LLD-BATCH-A-2026-05-28.md"
+      status: "closed"
+      evidence: "spawn_agent+wait_agent+close_agent; CR016 LLD and CP5 auto PASS"
+      tool_name: "multi_agent_v1.spawn_agent/wait_agent/close_agent"
+      reusable: false
+      spawned_at: "2026-05-28T06:22:10+08:00"
+      resumed_at: ""
+      last_seen_at: "2026-05-28T06:40:12+08:00"
+      completed_at: "2026-05-28T06:24:15+08:00"
+      closed_at: "2026-05-28T06:40:12+08:00"
+      fallback_reason: ""
     - role: "meta-doc"
       agent_id: "019e5fce-4a9d-7bd3-a95f-b3155a4fa4cc"
       agent_name: "doc-yan"
@@ -8024,6 +12023,3325 @@ agent_lifecycle:
       completed_at: "2026-05-16T19:33:15+08:00"
       closed_at: "2026-05-16T19:33:15+08:00"
 history:
+  - at: "2026-06-03T13:44:48+08:00"
+    actor: "meta-po"
+    action: "cr030-cp8-simulation-entry-semantics-republished"
+    from_phase: "documentation"
+    to_phase: "documentation"
+    reason: "用户澄清“研究和生产”指完成多因子策略研究与实验，达到策略侧模拟盘入口；QMT 接口 ready 且后续运行侧门控通过后才可投入模拟盘。meta-po 已据此修订 CP8 决策口径、CR030 文档、STATE 和 CR-INDEX；本修订不授权依赖变更、外部运行、provider/lake/publish、QMT/simulation/live、账户/订单或凭据读取。修订后验证：S08 安全测试 8 passed，Human Gate Decision Brief PASS，CR tracking consistency PASS，diff check PASS，STATE YAML PASS。"
+    artifacts:
+      - "docs/CR030-MULTIFACTOR-RESEARCH-LOOP.md"
+      - "process/checks/CP8-CR030-DELIVERY-READINESS.md"
+      - "checkpoints/CP8-CR030-DELIVERY-READINESS.md"
+      - "process/checks/CP8-CR030-HUMAN-GATE-LAUNCH-MESSAGE.md"
+      - "process/changes/CR-INDEX.yaml"
+      - "process/STATE.md"
+    next_gate: "CP8 CR030 delivery readiness manual review"
+    pending_decision_count: 4
+    safety_confirmations:
+      dependency_change_authorized: false
+      external_repo_clone_install_run_authorized: false
+      source_migration_authorized: false
+      provider_fetch_authorized: false
+      lake_write_authorized: false
+      publish_authorized: false
+      qmt_simulation_live_authorized: false
+      credential_access_authorized: false
+  - at: "2026-06-03T12:13:03+08:00"
+    actor: "meta-po"
+    action: "cr030-cp8-launched"
+    from_phase: "documentation"
+    to_phase: "documentation"
+    reason: "CR-030 S01..S08 全部 verified；CP8 自动预检 PASS，Human Gate Launch Protocol 校验 PASS，已生成 CP8 人工终验稿和发起消息，等待用户确认 4 项决策。"
+    artifacts:
+      - "process/checks/CP8-CR030-DELIVERY-READINESS.md"
+      - "checkpoints/CP8-CR030-DELIVERY-READINESS.md"
+      - "process/checks/CP8-CR030-HUMAN-GATE-LAUNCH-MESSAGE.md"
+      - "process/changes/CR-INDEX.yaml"
+      - "process/STATE.md"
+    next_gate: "CP8 CR030 delivery readiness manual review"
+    pending_decision_count: 4
+    safety_confirmations:
+      dependency_change_authorized: false
+      external_repo_clone_install_run_authorized: false
+      source_migration_authorized: false
+      provider_fetch_authorized: false
+      lake_write_authorized: false
+      publish_authorized: false
+      qmt_simulation_live_authorized: false
+      credential_access_authorized: false
+  - at: "2026-06-03T12:01:20+08:00"
+    actor: "meta-po"
+    action: "cr030-s08-cp7-pass-all-stories-verified"
+    from_phase: "story-execution"
+    to_phase: "documentation"
+    reason: "meta-qa/qa-shi the 2nd 完成 CR030-S08 CP7 PASS；meta-po 主线程关闭 QA agent，回填 CP7/handoff dispatch evidence，并复跑 S08 测试 8 passed、S01-S08 组合回归 50 passed、py_compile PASS。CR030-S01..S08 全部 verified，story-execution 出口满足，进入 documentation / CP8 交付就绪收敛。"
+    artifacts:
+      - "process/checks/CP7-CR030-S08-safety-docs-and-follow-up-boundary-VERIFICATION-DONE.md"
+      - "process/handoffs/META-QA-CR030-S08-CP7-VERIFY-2026-06-03.md"
+      - "process/stories/CR030-S08-safety-docs-and-follow-up-boundary.md"
+      - "process/changes/CR-INDEX.yaml"
+      - "process/STATE.md"
+    next_gate: "CP8 CR030 delivery readiness"
+    safety_confirmations:
+      dependency_change_authorized: false
+      external_repo_clone_install_run_authorized: false
+      source_migration_authorized: false
+      provider_fetch_authorized: false
+      lake_write_authorized: false
+      publish_authorized: false
+      qmt_simulation_live_authorized: false
+      credential_access_authorized: false
+  - at: "2026-06-03T11:55:29+08:00"
+    actor: "meta-po"
+    action: "cr030-s08-cp7-dispatched"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "CR030-S08 CP6 PASS 后，通过 multi_agent_v1.spawn_agent 调度 meta-qa/qa-shi the 2nd 执行 S08 CP7，agent_id=019e8b9f-be55-7a20-9a87-611747604421。当前仅表示 verify_running，不表示 CP7 已通过。"
+    artifacts:
+      - "process/stories/CR030-S08-safety-docs-and-follow-up-boundary.md"
+      - "process/changes/CR-INDEX.yaml"
+      - "process/STATE.md"
+    next_gate: "CP7 CR030-S08 verification done"
+    safety_confirmations:
+      dependency_change_authorized: false
+      external_repo_clone_install_run_authorized: false
+      source_migration_authorized: false
+      provider_fetch_authorized: false
+      lake_write_authorized: false
+      publish_authorized: false
+      qmt_simulation_live_authorized: false
+      credential_access_authorized: false
+  - at: "2026-06-03T11:52:27+08:00"
+    actor: "meta-po"
+    action: "cr030-s08-cp6-pass-ready-for-verification"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "meta-dev/dev-you the 2nd 完成 CR030-S08 CP6 PASS；meta-po 主线程关闭 dev agent，回填 CP6/handoff dispatch evidence。S08 进入 ready-for-verification。首次 dev-zhu the 2nd 因平台 usage limit 中断并已关闭，不作为 CP6 证据。"
+    artifacts:
+      - "docs/CR030-MULTIFACTOR-RESEARCH-LOOP.md"
+      - "tests/test_cr030_no_real_operation_safety.py"
+      - "process/checks/CP6-CR030-S08-safety-docs-and-follow-up-boundary-CODING-DONE.md"
+      - "process/handoffs/META-DEV-CR030-S08-IMPLEMENT-2026-06-03.md"
+      - "process/stories/CR030-S08-safety-docs-and-follow-up-boundary.md"
+      - "process/changes/CR-INDEX.yaml"
+      - "process/STATE.md"
+    next_gate: "CP7 CR030-S08 verification done"
+    safety_confirmations:
+      dependency_change_authorized: false
+      external_repo_clone_install_run_authorized: false
+      source_migration_authorized: false
+      provider_fetch_authorized: false
+      lake_write_authorized: false
+      publish_authorized: false
+      qmt_simulation_live_authorized: false
+      credential_access_authorized: false
+  - at: "2026-06-03T11:43:14+08:00"
+    actor: "meta-po"
+    action: "cr030-s08-dev-dispatch-retry"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "CR030-S08 首次 meta-dev/dev-zhu the 2nd 调度 agent_id=019e8b7d-bde1-74e1-b78c-d78d5ba3e12e 因平台 usage limit errored，meta-po 于 2026-06-03T11:42:39+08:00 关闭该句柄；随后重新通过 multi_agent_v1.spawn_agent 调度 meta-dev/dev-you the 2nd，agent_id=019e8b93-eb3b-7d01-ae25-384a76e4713f。首次失败不作为 CP6 证据。"
+    artifacts:
+      - "process/stories/CR030-S08-safety-docs-and-follow-up-boundary.md"
+      - "process/changes/CR-INDEX.yaml"
+      - "process/STATE.md"
+    next_gate: "CP6 CR030-S08 coding done"
+    safety_confirmations:
+      dependency_change_authorized: false
+      external_repo_clone_install_run_authorized: false
+      source_migration_authorized: false
+      provider_fetch_authorized: false
+      lake_write_authorized: false
+      publish_authorized: false
+      qmt_simulation_live_authorized: false
+      credential_access_authorized: false
+  - at: "2026-06-03T11:19:00+08:00"
+    actor: "meta-po"
+    action: "cr030-s08-dev-dispatched-errored"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "CR030-S08 依赖和文件 owner 重检通过后，通过 multi_agent_v1.spawn_agent 调度 meta-dev/dev-zhu the 2nd，agent_id=019e8b7d-bde1-74e1-b78c-d78d5ba3e12e；该线程随后因平台 usage limit errored，已关闭，不作为 CP6 证据。"
+    artifacts:
+      - "process/stories/CR030-S08-safety-docs-and-follow-up-boundary.md"
+      - "process/changes/CR-INDEX.yaml"
+      - "process/STATE.md"
+    next_gate: "retry CP6 CR030-S08 coding done"
+    safety_confirmations:
+      dependency_change_authorized: false
+      external_repo_clone_install_run_authorized: false
+      source_migration_authorized: false
+      provider_fetch_authorized: false
+      lake_write_authorized: false
+      publish_authorized: false
+      qmt_simulation_live_authorized: false
+      credential_access_authorized: false
+  - at: "2026-06-03T11:12:22+08:00"
+    actor: "meta-po"
+    action: "cr030-s07-cp7-pass-s08-dev-ready"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "meta-qa/qa-yan 完成 CR030-S07 CP7 PASS；meta-po 主线程关闭 QA agent，回填 CP7/handoff dispatch evidence，并复跑 S07 测试 7 passed、S01-S07 组合回归 42 passed、py_compile PASS。S07 标记 verified；按 DAG 和文件 owner 重检，CR030-S08 进入 dev_ready。"
+    artifacts:
+      - "process/checks/CP7-CR030-S07-strategy-admission-package-handoff-VERIFICATION-DONE.md"
+      - "process/handoffs/META-QA-CR030-S07-CP7-VERIFY-2026-06-03.md"
+      - "process/stories/CR030-S07-strategy-admission-package-handoff.md"
+      - "process/stories/CR030-S08-safety-docs-and-follow-up-boundary.md"
+      - "process/changes/CR-INDEX.yaml"
+      - "process/STATE.md"
+    next_gate: "CP6 CR030-S08 coding done"
+    safety_confirmations:
+      dependency_change_authorized: false
+      external_repo_clone_install_run_authorized: false
+      source_migration_authorized: false
+      provider_fetch_authorized: false
+      lake_write_authorized: false
+      publish_authorized: false
+      qmt_simulation_live_authorized: false
+      credential_access_authorized: false
+  - at: "2026-06-03T11:07:23+08:00"
+    actor: "meta-po"
+    action: "cr030-s07-cp7-dispatched"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "CR030-S07 CP6 PASS 后，通过 multi_agent_v1.spawn_agent 调度 meta-qa/qa-yan 执行 S07 CP7，agent_id=019e8b73-1a7b-72a0-b2d6-760665d5de93。当前仅表示 verify_running，不表示 CP7 已通过。"
+    artifacts:
+      - "process/stories/CR030-S07-strategy-admission-package-handoff.md"
+      - "process/changes/CR-INDEX.yaml"
+      - "process/STATE.md"
+    next_gate: "CP7 CR030-S07 verification done"
+    safety_confirmations:
+      dependency_change_authorized: false
+      external_repo_clone_install_run_authorized: false
+      source_migration_authorized: false
+      provider_fetch_authorized: false
+      lake_write_authorized: false
+      publish_authorized: false
+      qmt_simulation_live_authorized: false
+      credential_access_authorized: false
+  - at: "2026-06-03T11:03:59+08:00"
+    actor: "meta-po"
+    action: "cr030-s07-cp6-pass-ready-for-verification"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "meta-dev/dev-lv 完成 CR030-S07 CP6 PASS；meta-po 主线程关闭 dev agent，回填 CP6/handoff dispatch evidence，并复跑 S07 测试 7 passed、S01-S07 组合回归 42 passed、py_compile PASS。S07 进入 ready-for-verification。"
+    artifacts:
+      - "engine/strategy_admission_package.py"
+      - "tests/test_cr030_strategy_admission_package.py"
+      - "process/checks/CP6-CR030-S07-strategy-admission-package-handoff-CODING-DONE.md"
+      - "process/handoffs/META-DEV-CR030-S07-IMPLEMENT-2026-06-03.md"
+      - "process/stories/CR030-S07-strategy-admission-package-handoff.md"
+      - "process/changes/CR-INDEX.yaml"
+      - "process/STATE.md"
+    next_gate: "CP7 CR030-S07 verification done"
+    safety_confirmations:
+      dependency_change_authorized: false
+      external_repo_clone_install_run_authorized: false
+      source_migration_authorized: false
+      provider_fetch_authorized: false
+      lake_write_authorized: false
+      publish_authorized: false
+      qmt_simulation_live_authorized: false
+      credential_access_authorized: false
+  - at: "2026-06-03T10:54:05+08:00"
+    actor: "meta-po"
+    action: "cr030-s07-dev-dispatched"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "CR030-S07 依赖和文件 owner 重检通过后，通过 multi_agent_v1.spawn_agent 调度 meta-dev/dev-lv 受控实现 S07，agent_id=019e8b66-de6b-70e0-aeca-c94b1b9d07c6。当前仅表示 dev_running，不表示 CP6 已通过。"
+    artifacts:
+      - "process/stories/CR030-S07-strategy-admission-package-handoff.md"
+      - "process/changes/CR-INDEX.yaml"
+      - "process/STATE.md"
+    next_gate: "CP6 CR030-S07 coding done"
+    safety_confirmations:
+      dependency_change_authorized: false
+      external_repo_clone_install_run_authorized: false
+      source_migration_authorized: false
+      provider_fetch_authorized: false
+      lake_write_authorized: false
+      publish_authorized: false
+      qmt_simulation_live_authorized: false
+      credential_access_authorized: false
+  - at: "2026-06-03T10:47:33+08:00"
+    actor: "meta-po"
+    action: "cr030-s05-s06-cp7-pass-s07-dev-ready"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "meta-qa/qa-kong 完成 CR030-S05 CP7 PASS，meta-qa/qa-cao 完成 CR030-S06 CP7 PASS；meta-po 主线程关闭两个 QA agent，回填 CP7/handoff dispatch evidence，并复跑 S05/S06 验证命令和 S01-S06 当前组合回归通过。S05/S06 标记 verified；按 DAG 和文件 owner 重检，CR030-S07 进入 dev_ready。"
+    artifacts:
+      - "process/checks/CP7-CR030-S05-multifactor-combiner-portfolio-plan-VERIFICATION-DONE.md"
+      - "process/checks/CP7-CR030-S06-experiment-manifest-report-catalog-VERIFICATION-DONE.md"
+      - "process/handoffs/META-QA-CR030-S05-CP7-VERIFY-2026-06-03.md"
+      - "process/handoffs/META-QA-CR030-S06-CP7-VERIFY-2026-06-03.md"
+      - "process/stories/CR030-S05-multifactor-combiner-portfolio-plan.md"
+      - "process/stories/CR030-S06-experiment-manifest-report-catalog.md"
+      - "process/stories/CR030-S07-strategy-admission-package-handoff.md"
+      - "process/changes/CR-INDEX.yaml"
+      - "process/STATE.md"
+    next_gate: "CP6 CR030-S07 coding done"
+    safety_confirmations:
+      dependency_change_authorized: false
+      external_repo_clone_install_run_authorized: false
+      source_migration_authorized: false
+      provider_fetch_authorized: false
+      lake_write_authorized: false
+      publish_authorized: false
+      qmt_simulation_live_authorized: false
+      credential_access_authorized: false
+  - at: "2026-06-03T10:42:02+08:00"
+    actor: "meta-po"
+    action: "cr030-s05-s06-cp7-dispatched"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "CR030-S05 与 CR030-S06 CP6 PASS 后，通过 multi_agent_v1.spawn_agent 并行调度 meta-qa/qa-kong 验证 S05、meta-qa/qa-cao 验证 S06。当前仅表示 verify_running，不表示 CP7 已通过。"
+    artifacts:
+      - "process/stories/CR030-S05-multifactor-combiner-portfolio-plan.md"
+      - "process/stories/CR030-S06-experiment-manifest-report-catalog.md"
+      - "process/changes/CR-INDEX.yaml"
+      - "process/STATE.md"
+    dispatch:
+      - story_id: "CR030-S05-multifactor-combiner-portfolio-plan"
+        mode: "spawn_agent"
+        agent_id: "019e8b5b-e2a5-7ee1-ac1d-ce832731cccf"
+        agent_name: "qa-kong"
+        tool_name: "multi_agent_v1.spawn_agent"
+        spawned_at: "2026-06-03T10:42:02+08:00"
+      - story_id: "CR030-S06-experiment-manifest-report-catalog"
+        mode: "spawn_agent"
+        agent_id: "019e8b5b-e30a-7641-aaf2-0aa22f9860cb"
+        agent_name: "qa-cao"
+        tool_name: "multi_agent_v1.spawn_agent"
+        spawned_at: "2026-06-03T10:42:02+08:00"
+    next_gate: "CP7 CR030-S05/S06 verification done"
+    safety_confirmations:
+      dependency_change_authorized: false
+      external_repo_clone_install_run_authorized: false
+      source_migration_authorized: false
+      provider_fetch_authorized: false
+      lake_write_authorized: false
+      publish_authorized: false
+      qmt_simulation_live_authorized: false
+      credential_access_authorized: false
+  - at: "2026-06-03T10:38:08+08:00"
+    actor: "meta-po"
+    action: "cr030-s05-s06-cp6-pass-ready-for-verification"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "meta-dev/dev-qin 完成 CR030-S05 CP6 PASS，meta-dev/dev-xu 完成 CR030-S06 CP6 PASS；meta-po 主线程关闭两个 dev agent，回填 CP6/handoff dispatch evidence，并复跑 S05 单测 6 passed、S06 单测 6 passed、S05/S06 各自组合回归 29 passed、S01-S06 当前组合 35 passed、py_compile PASS。S05/S06 进入 ready-for-verification。"
+    artifacts:
+      - "engine/multifactor_combiner.py"
+      - "engine/research_manifest.py"
+      - "reports/research_catalog/README.md"
+      - "tests/test_cr030_multifactor_combiner.py"
+      - "tests/test_cr030_experiment_manifest_catalog.py"
+      - "process/checks/CP6-CR030-S05-multifactor-combiner-portfolio-plan-CODING-DONE.md"
+      - "process/checks/CP6-CR030-S06-experiment-manifest-report-catalog-CODING-DONE.md"
+      - "process/handoffs/META-DEV-CR030-S05-IMPLEMENT-2026-06-03.md"
+      - "process/handoffs/META-DEV-CR030-S06-IMPLEMENT-2026-06-03.md"
+      - "process/stories/CR030-S05-multifactor-combiner-portfolio-plan.md"
+      - "process/stories/CR030-S06-experiment-manifest-report-catalog.md"
+      - "process/changes/CR-INDEX.yaml"
+      - "process/STATE.md"
+    next_gate: "CP7 CR030-S05/S06 verification done"
+    safety_confirmations:
+      dependency_change_authorized: false
+      external_repo_clone_install_run_authorized: false
+      source_migration_authorized: false
+      provider_fetch_authorized: false
+      lake_write_authorized: false
+      publish_authorized: false
+      qmt_simulation_live_authorized: false
+      credential_access_authorized: false
+  - at: "2026-06-03T10:27:37+08:00"
+    actor: "meta-po"
+    action: "cr030-s05-s06-dev-dispatched"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "CR030-S05 与 CR030-S06 依赖和文件 owner 重检通过后，通过 multi_agent_v1.spawn_agent 并行调度 meta-dev/dev-qin 实现 S05、meta-dev/dev-xu 实现 S06。当前仅表示 dev_running，不表示 CP6 已通过。"
+    artifacts:
+      - "process/stories/CR030-S05-multifactor-combiner-portfolio-plan.md"
+      - "process/stories/CR030-S06-experiment-manifest-report-catalog.md"
+      - "process/changes/CR-INDEX.yaml"
+      - "process/STATE.md"
+    dispatch:
+      - story_id: "CR030-S05-multifactor-combiner-portfolio-plan"
+        mode: "spawn_agent"
+        agent_id: "019e8b4e-a692-7f00-aa91-7c748ddd6a33"
+        agent_name: "dev-qin"
+        tool_name: "multi_agent_v1.spawn_agent"
+        spawned_at: "2026-06-03T10:27:37+08:00"
+      - story_id: "CR030-S06-experiment-manifest-report-catalog"
+        mode: "spawn_agent"
+        agent_id: "019e8b4e-a6e3-71f0-9e60-df022490ef26"
+        agent_name: "dev-xu"
+        tool_name: "multi_agent_v1.spawn_agent"
+        spawned_at: "2026-06-03T10:27:37+08:00"
+    next_gate: "CP6 CR030-S05/S06 coding done"
+    safety_confirmations:
+      dependency_change_authorized: false
+      external_repo_clone_install_run_authorized: false
+      source_migration_authorized: false
+      provider_fetch_authorized: false
+      lake_write_authorized: false
+      publish_authorized: false
+      qmt_simulation_live_authorized: false
+      credential_access_authorized: false
+  - at: "2026-06-03T10:21:23+08:00"
+    actor: "meta-po"
+    action: "cr030-s04-cp7-pass-s05-s06-dev-ready"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "meta-qa/qa-wei 完成 CR030-S04 CP7 PASS，agent_id=019e8b43-be99-7ca0-bf38-841cfc7f928c；meta-po 主线程关闭 QA agent，回填 CP7/handoff dispatch evidence，并复跑 S04 测试 6 passed、S01-S04 组合回归 23 passed、py_compile PASS。S04 标记 verified；按 DAG、上游状态和文件 owner 重检，当前无 dev_running，CR030-S05 与 CR030-S06 进入 dev_ready，可并行实现。"
+    artifacts:
+      - "process/checks/CP7-CR030-S04-factor-evaluation-report-VERIFICATION-DONE.md"
+      - "process/handoffs/META-QA-CR030-S04-CP7-VERIFY-2026-06-03.md"
+      - "process/stories/CR030-S04-factor-evaluation-report.md"
+      - "process/stories/CR030-S05-multifactor-combiner-portfolio-plan.md"
+      - "process/stories/CR030-S06-experiment-manifest-report-catalog.md"
+      - "process/changes/CR-INDEX.yaml"
+      - "process/STATE.md"
+    next_gate: "CP6 CR030-S05/S06 coding done"
+    safety_confirmations:
+      dependency_change_authorized: false
+      external_repo_clone_install_run_authorized: false
+      source_migration_authorized: false
+      provider_fetch_authorized: false
+      lake_write_authorized: false
+      publish_authorized: false
+      qmt_simulation_live_authorized: false
+      credential_access_authorized: false
+  - at: "2026-06-03T10:15:39+08:00"
+    actor: "meta-po"
+    action: "cr030-s04-cp7-dispatched"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "CR030-S04 CP6 PASS 后，通过 multi_agent_v1.spawn_agent 调度 meta-qa/qa-wei 执行 S04 CP7，agent_id=019e8b43-be99-7ca0-bf38-841cfc7f928c。当前仅表示 verify_running，不表示 S04 已 verified。"
+    artifacts:
+      - "process/stories/CR030-S04-factor-evaluation-report.md"
+      - "process/changes/CR-INDEX.yaml"
+      - "process/STATE.md"
+    next_gate: "CP7 CR030-S04 verification done"
+    safety_confirmations:
+      dependency_change_authorized: false
+      external_repo_clone_install_run_authorized: false
+      source_migration_authorized: false
+      provider_fetch_authorized: false
+      lake_write_authorized: false
+      publish_authorized: false
+      qmt_simulation_live_authorized: false
+      credential_access_authorized: false
+  - at: "2026-06-03T10:12:20+08:00"
+    actor: "meta-po"
+    action: "cr030-s04-cp6-pass-ready-for-verification"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "meta-dev/dev-zhu 完成 CR030-S04 CP6 PASS，meta-po 主线程关闭 dev agent，回填 CP6/handoff dispatch evidence，并复跑 S04 测试 6 passed、S01-S04 组合回归 23 passed、py_compile PASS。S04 进入 ready-for-verification。"
+    artifacts:
+      - "engine/factor_evaluation.py"
+      - "reports/factor_evaluation/README.md"
+      - "tests/test_cr030_factor_evaluation_report.py"
+      - "process/checks/CP6-CR030-S04-factor-evaluation-report-CODING-DONE.md"
+      - "process/handoffs/META-DEV-CR030-S04-IMPLEMENT-2026-06-03.md"
+      - "process/stories/CR030-S04-factor-evaluation-report.md"
+      - "process/changes/CR-INDEX.yaml"
+      - "process/STATE.md"
+    next_gate: "CP7 CR030-S04 verification done"
+    safety_confirmations:
+      dependency_change_authorized: false
+      external_repo_clone_install_run_authorized: false
+      source_migration_authorized: false
+      provider_fetch_authorized: false
+      lake_write_authorized: false
+      publish_authorized: false
+      qmt_simulation_live_authorized: false
+      credential_access_authorized: false
+  - at: "2026-06-03T10:02:39+08:00"
+    actor: "meta-po"
+    action: "cr030-s04-dev-dispatched"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "CR030-S04 依赖和文件 owner 重检通过后，通过 multi_agent_v1.spawn_agent 调度 meta-dev/dev-zhu 受控实现 S04，agent_id=019e8b37-d4a9-72e2-a4ac-4d532e6317db。当前仅表示 dev_running，不表示 CP6 已通过。"
+    artifacts:
+      - "process/stories/CR030-S04-factor-evaluation-report.md"
+      - "process/changes/CR-INDEX.yaml"
+      - "process/STATE.md"
+    next_gate: "CP6 CR030-S04 coding done"
+    safety_confirmations:
+      dependency_change_authorized: false
+      external_repo_clone_install_run_authorized: false
+      source_migration_authorized: false
+      provider_fetch_authorized: false
+      lake_write_authorized: false
+      publish_authorized: false
+      qmt_simulation_live_authorized: false
+      credential_access_authorized: false
+  - at: "2026-06-03T09:58:35+08:00"
+    actor: "meta-po"
+    action: "cr030-s03-cp7-pass-s04-dev-ready"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "meta-qa/qa-lv 完成 CR030-S03 CP7 PASS，meta-po 主线程关闭 QA agent，回填 CP7/handoff dispatch evidence，并复跑 S03 测试 6 passed、S01-S03 组合回归 17 passed、py_compile PASS。S03 标记 verified；按 DAG 和文件 owner 重检，当前无 dev_running，CR030-S04 进入 dev_ready。"
+    artifacts:
+      - "process/checks/CP7-CR030-S03-factor-panel-label-window-fail-closed-VERIFICATION-DONE.md"
+      - "process/handoffs/META-QA-CR030-S03-CP7-VERIFY-2026-06-03.md"
+      - "process/stories/CR030-S03-factor-panel-label-window-fail-closed.md"
+      - "process/stories/CR030-S04-factor-evaluation-report.md"
+      - "process/changes/CR-INDEX.yaml"
+      - "process/STATE.md"
+    next_gate: "CP6 CR030-S04 coding done"
+    safety_confirmations:
+      dependency_change_authorized: false
+      external_repo_clone_install_run_authorized: false
+      source_migration_authorized: false
+      provider_fetch_authorized: false
+      lake_write_authorized: false
+      publish_authorized: false
+      qmt_simulation_live_authorized: false
+      credential_access_authorized: false
+  - at: "2026-06-03T09:53:57+08:00"
+    actor: "meta-po"
+    action: "cr030-s03-cp7-dispatched"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "CR030-S03 CP6 PASS 后，通过 multi_agent_v1.spawn_agent 调度 meta-qa/qa-lv 执行 S03 CP7，agent_id=019e8b2f-de23-7db2-8219-1d856c40efb4。当前仅表示 verify_running，不表示 S03 已 verified。"
+    artifacts:
+      - "process/stories/CR030-S03-factor-panel-label-window-fail-closed.md"
+      - "process/changes/CR-INDEX.yaml"
+      - "process/STATE.md"
+    next_gate: "CP7 CR030-S03 verification done"
+    safety_confirmations:
+      dependency_change_authorized: false
+      external_repo_clone_install_run_authorized: false
+      source_migration_authorized: false
+      provider_fetch_authorized: false
+      lake_write_authorized: false
+      publish_authorized: false
+      qmt_simulation_live_authorized: false
+      credential_access_authorized: false
+  - at: "2026-06-03T09:50:33+08:00"
+    actor: "meta-po"
+    action: "cr030-s03-cp6-pass-ready-for-verification"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "meta-dev/dev-kong 完成 CR030-S03 CP6 PASS，meta-po 主线程关闭 dev agent，回填 CP6/handoff dispatch evidence，并复跑 S03 测试 6 passed、S01-S03 组合回归 17 passed、py_compile PASS。S03 进入 ready-for-verification。"
+    artifacts:
+      - "engine/factor_panel_contracts.py"
+      - "tests/test_cr030_factor_panel_label_window_gates.py"
+      - "process/checks/CP6-CR030-S03-factor-panel-label-window-fail-closed-CODING-DONE.md"
+      - "process/handoffs/META-DEV-CR030-S03-IMPLEMENT-2026-06-03.md"
+      - "process/stories/CR030-S03-factor-panel-label-window-fail-closed.md"
+      - "process/changes/CR-INDEX.yaml"
+      - "process/STATE.md"
+    next_gate: "CP7 CR030-S03 verification done"
+    safety_confirmations:
+      dependency_change_authorized: false
+      external_repo_clone_install_run_authorized: false
+      source_migration_authorized: false
+      provider_fetch_authorized: false
+      lake_write_authorized: false
+      publish_authorized: false
+      qmt_simulation_live_authorized: false
+      credential_access_authorized: false
+  - at: "2026-06-03T09:42:19+08:00"
+    actor: "meta-po"
+    action: "cr030-s03-dev-dispatched"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "CR030-S03 依赖和文件 owner 重检通过后，通过 multi_agent_v1.spawn_agent 调度 meta-dev/dev-kong 受控实现 S03，agent_id=019e8b25-337a-7850-b3d7-03dc84840435。当前仅表示 dev_running，不表示 CP6 已通过。"
+    artifacts:
+      - "process/stories/CR030-S03-factor-panel-label-window-fail-closed.md"
+      - "process/changes/CR-INDEX.yaml"
+      - "process/STATE.md"
+    next_gate: "CP6 CR030-S03 coding done"
+    safety_confirmations:
+      dependency_change_authorized: false
+      external_repo_clone_install_run_authorized: false
+      source_migration_authorized: false
+      provider_fetch_authorized: false
+      lake_write_authorized: false
+      publish_authorized: false
+      qmt_simulation_live_authorized: false
+      credential_access_authorized: false
+  - at: "2026-06-03T09:37:08+08:00"
+    actor: "meta-po"
+    action: "cr030-s02-cp7-pass-s03-dev-ready"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "meta-qa/qa-jin 完成 CR030-S02 CP7 验证 PASS，meta-po 主线程关闭 QA agent 并回填真实 dispatch evidence；S02 标记 verified。按 DAG 和文件 owner 重检，当前无 dev_running，CR030-S03 进入 dev_ready。"
+    artifacts:
+      - "process/checks/CP7-CR030-S02-factor-spec-run-spec-contract-VERIFICATION-DONE.md"
+      - "process/handoffs/META-QA-CR030-S02-CP7-VERIFY-2026-06-03.md"
+      - "process/stories/CR030-S02-factor-spec-run-spec-contract.md"
+      - "process/stories/CR030-S03-factor-panel-label-window-fail-closed.md"
+      - "process/changes/CR-INDEX.yaml"
+      - "process/STATE.md"
+    next_gate: "CP6 CR030-S03 coding done"
+    safety_confirmations:
+      dependency_change_authorized: false
+      external_repo_clone_install_run_authorized: false
+      source_migration_authorized: false
+      provider_fetch_authorized: false
+      lake_write_authorized: false
+      publish_authorized: false
+      qmt_simulation_live_authorized: false
+      credential_access_authorized: false
+  - at: "2026-06-03T08:55:53+08:00"
+    actor: "meta-po"
+    action: "cr030-cp5-approved-enter-story-execution"
+    from_phase: "story-planning"
+    to_phase: "story-execution"
+    reason: "用户回复“@meta-po 同意，继续”，按 CP5 approve 处理。已回填 CP5 人工检查点 approved，确认 CR030-S01..S08 八份 LLD，更新 Story 卡片和 CR 跟踪状态；当前仅 CR030-S01 满足 dev_ready，CR030-S02..S08 按 DAG、上游状态和文件 owner 解锁。"
+    artifacts:
+      - "checkpoints/CP5-CR030-MULTIFACTOR-RESEARCH-LOOP-BATCH-A-LLD-BATCH.md"
+      - "process/stories/CR030-S01-external-reference-matrix-and-loop-contract-LLD.md"
+      - "process/stories/CR030-S02-factor-spec-run-spec-contract-LLD.md"
+      - "process/stories/CR030-S03-factor-panel-label-window-fail-closed-LLD.md"
+      - "process/stories/CR030-S04-factor-evaluation-report-LLD.md"
+      - "process/stories/CR030-S05-multifactor-combiner-portfolio-plan-LLD.md"
+      - "process/stories/CR030-S06-experiment-manifest-report-catalog-LLD.md"
+      - "process/stories/CR030-S07-strategy-admission-package-handoff-LLD.md"
+      - "process/stories/CR030-S08-safety-docs-and-follow-up-boundary-LLD.md"
+      - "process/changes/CR-030-MULTIFACTOR-RESEARCH-FRAMEWORK-REFERENCE-AND-RESEARCH-LOOP-STANDARDIZATION-2026-06-02.md"
+      - "process/changes/CR-INDEX.yaml"
+      - "process/STATE.md"
+    decisions_accepted:
+      - "DQ-CP5-CR030-01"
+      - "DQ-CP5-CR030-02"
+      - "DQ-CP5-CR030-03"
+      - "DQ-CP5-CR030-04"
+      - "DQ-CP5-CR030-05"
+    safety_confirmations:
+      dependency_change_authorized: false
+      external_repo_clone_install_run_authorized: false
+      source_migration_authorized: false
+      provider_fetch_authorized: false
+      lake_write_authorized: false
+      publish_authorized: false
+      qmt_simulation_live_authorized: false
+      credential_access_authorized: false
+  - at: "2026-06-02T23:10:16+08:00"
+    actor: "meta-po"
+    action: "cr025-cp8-approved-closed"
+    from_phase: "documentation"
+    to_phase: "delivered"
+    reason: "用户回复“好的关闭CR025”，按 CP8 approve 处理。CR-025 当前 research execution semantic alignment、Backtrader optional semantic reference、clean feed gate、semantic diff、order_intent_draft_v1、no-copy guardrail、no-real-operation safety 和 follow-up route boundary 已关闭；关闭当时 CR-030、CR-026、CR-020..CR-024、CR-027、CR-028 保持候选 / Spike，启动前必须重新冲突预检和人工门控。本轮已按用户要求将 CR-030 转为 active-cp2-intake，其他候选 / Spike 状态不变。"
+    artifacts:
+      - "checkpoints/CP8-CR025-DELIVERY-READINESS.md"
+      - "process/checks/CP8-CR025-DELIVERY-READINESS.md"
+      - "process/changes/CR-025-BACKTRADER-OPTIONAL-EXECUTION-BACKEND-HARDENING-2026-05-31.md"
+      - "process/changes/CR-019-FOLLOW-UP-TRACKING-2026-05-31.md"
+      - "process/changes/CR-INDEX.yaml"
+      - "process/STATE.md"
+    decisions_accepted:
+      - "DQ-CP8-CR025-01"
+      - "DQ-CP8-CR025-02"
+      - "DQ-CP8-CR025-03"
+      - "DQ-CP8-CR025-04"
+    safety_confirmations:
+      dependency_change_authorized: false
+      backtrader_runtime_authorized: false
+      backtrader_source_read_or_copy_authorized: false
+      source_migration_authorized: false
+      real_broker_authorized: false
+      real_qmt_operation_authorized: false
+      provider_fetch_authorized: false
+      lake_write_authorized: false
+      publish_authorized: false
+      simulation_or_live_run_authorized: false
+      credential_read_authorized: false
+      multifactor_research_framework_authorized: false
+  - at: "2026-06-01T23:11:56+08:00"
+    actor: "meta-po"
+    action: "cr025-cp5-lld-batch-ready-for-human-review"
+    from_phase: "story-planning"
+    to_phase: "story-planning"
+    reason: "meta-dev/dev-zhang 与 meta-dev/dev-qin 完成 CR025-S01..S06 全量 LLD 与 6 份 CP5 自动预检，全部 PASS，未回答阻断问题 0，禁止操作计数 0。meta-po 已关闭两个 dev 线程，生成 CP5 批次人工确认稿和发起消息，并将 orchestrator_session 置为 awaiting-user。CP5 approve 只授权受控离线 / fixture / 静态合同实现，不授权依赖变更、Backtrader 运行、源码移植或真实 broker/QMT/provider/lake/publish/simulation/live/credential 操作。"
+    artifacts:
+      - "process/stories/CR025-S01-clean-feed-gate-backend-selector-LLD.md"
+      - "process/stories/CR025-S02-semantic-diff-schema-artifact-LLD.md"
+      - "process/stories/CR025-S03-order-intent-draft-qmt-boundary-LLD.md"
+      - "process/stories/CR025-S04-backtrader-module-reference-no-copy-guardrail-LLD.md"
+      - "process/stories/CR025-S05-no-real-operation-safety-verification-LLD.md"
+      - "process/stories/CR025-S06-route-docs-and-follow-up-handoff-LLD.md"
+      - "process/checks/CP5-CR025-S01-clean-feed-gate-backend-selector-LLD-IMPLEMENTABILITY.md"
+      - "process/checks/CP5-CR025-S02-semantic-diff-schema-artifact-LLD-IMPLEMENTABILITY.md"
+      - "process/checks/CP5-CR025-S03-order-intent-draft-qmt-boundary-LLD-IMPLEMENTABILITY.md"
+      - "process/checks/CP5-CR025-S04-backtrader-module-reference-no-copy-guardrail-LLD-IMPLEMENTABILITY.md"
+      - "process/checks/CP5-CR025-S05-no-real-operation-safety-verification-LLD-IMPLEMENTABILITY.md"
+      - "process/checks/CP5-CR025-S06-route-docs-and-follow-up-handoff-LLD-IMPLEMENTABILITY.md"
+      - "checkpoints/CP5-CR025-RESEARCH-EXECUTION-SEMANTIC-ALIGNMENT-BATCH-A-LLD-BATCH.md"
+      - "process/checks/CP5-CR025-HUMAN-GATE-LAUNCH-MESSAGE.md"
+    dispatch:
+      lld_batch_a:
+        tool_name: "multi_agent_v1.spawn_agent + wait_agent + close_agent"
+        agent_role: "meta-dev"
+        agent_id: "019e83b3-a392-7892-a311-49e6a7e571c9"
+        agent_name: "dev-zhang"
+        handoff_path: "process/handoffs/META-DEV-CR025-LLD-BATCH-A-2026-06-01.md"
+      lld_batch_b:
+        tool_name: "multi_agent_v1.spawn_agent + wait_agent + close_agent"
+        agent_role: "meta-dev"
+        agent_id: "019e83b3-beb0-7b62-951e-cd2b60e0ff17"
+        agent_name: "dev-qin"
+        handoff_path: "process/handoffs/META-DEV-CR025-LLD-BATCH-B-2026-06-01.md"
+    checkpoints_updated:
+      lld_count: 6
+      cp5_auto_pass_count: 6
+      cp5_manual_status: "pending"
+      pending_gate: "CP5-CR025-RESEARCH-EXECUTION-SEMANTIC-ALIGNMENT-BATCH-A-LLD-BATCH"
+    safety_confirmations:
+      implementation_authorized_before_cp5: false
+      dependency_change_authorized: false
+      backtrader_runtime_authorized: false
+      backtrader_source_copy_authorized: false
+      source_migration_authorized: false
+      real_broker_authorized: false
+      real_qmt_operation_authorized: false
+      provider_fetch_authorized: false
+      lake_write_authorized: false
+      publish_authorized: false
+      simulation_or_live_run_authorized: false
+      credential_read_authorized: false
+  - at: "2026-06-01T23:00:59+08:00"
+    actor: "meta-po"
+    action: "cr025-cp4-pass-lld-batches-dispatched"
+    from_phase: "story-planning"
+    to_phase: "story-planning"
+    reason: "meta-se/se-shen 完成 CR-025 Story Plan / CP4，CP4 自动预检 PASS：6 Stories、4 Waves、1 个全量 LLD 批次，DAG cycles=0，invalid references=0，unauthorized operation executed count=0。meta-po 已关闭 se 线程后按 max_parallel_lld=3 将 CR025-S01/S02/S04 与 CR025-S03/S05/S06 分成两个 meta-dev LLD 批次并行执行；各批次只允许写对应 LLD 与 CP5 自动预检，不允许实现、依赖变更、Backtrader 运行、源码迁移或真实操作。"
+    artifacts:
+      - "process/checks/CP4-CR025-STORY-DAG-PARALLEL-SAFETY.md"
+      - "process/handoffs/META-SE-CR025-STORY-PLANNING-CP4-2026-06-01.md"
+      - "process/handoffs/META-DEV-CR025-LLD-BATCH-A-2026-06-01.md"
+      - "process/handoffs/META-DEV-CR025-LLD-BATCH-B-2026-06-01.md"
+      - "process/STATE.md"
+      - "process/changes/CR-INDEX.yaml"
+      - "process/changes/CR-025-BACKTRADER-OPTIONAL-EXECUTION-BACKEND-HARDENING-2026-05-31.md"
+    dispatch:
+      cp4_agent:
+        tool_name: "multi_agent_v1.spawn_agent + wait_agent + close_agent"
+        agent_role: "meta-se"
+        agent_id: "019e839f-a973-7781-bed7-5261c695b887"
+        agent_name: "se-shen"
+        handoff_path: "process/handoffs/META-SE-CR025-STORY-PLANNING-CP4-2026-06-01.md"
+      lld_batch_a:
+        tool_name: "multi_agent_v1.spawn_agent"
+        agent_role: "meta-dev"
+        agent_id: "019e83b3-a392-7892-a311-49e6a7e571c9"
+        agent_name: "dev-zhang"
+        handoff_path: "process/handoffs/META-DEV-CR025-LLD-BATCH-A-2026-06-01.md"
+      lld_batch_b:
+        tool_name: "multi_agent_v1.spawn_agent"
+        agent_role: "meta-dev"
+        agent_id: "019e83b3-beb0-7b62-951e-cd2b60e0ff17"
+        agent_name: "dev-qin"
+        handoff_path: "process/handoffs/META-DEV-CR025-LLD-BATCH-B-2026-06-01.md"
+    checkpoints_updated:
+      cp4_auto_status: "PASS"
+      lld_status: "running"
+      cp5_auto_status: "pending-lld"
+    safety_confirmations:
+      implementation_authorized: false
+      dependency_change_authorized: false
+      backtrader_runtime_authorized: false
+      backtrader_source_copy_authorized: false
+      source_migration_authorized: false
+      real_broker_authorized: false
+      real_qmt_operation_authorized: false
+      provider_fetch_authorized: false
+      lake_write_authorized: false
+      publish_authorized: false
+      simulation_or_live_run_authorized: false
+      credential_read_authorized: false
+  - at: "2026-06-01T22:39:04+08:00"
+    actor: "meta-po"
+    action: "cr025-cp3-approved-dispatch-story-planning-cp4"
+    from_phase: "solution-design"
+    to_phase: "story-planning"
+    reason: "用户回复“同意。继续”，接受 CR-025 CP3 HLD 人工审查的 6 项推荐方案。meta-po 已回填 `checkpoints/CP3-CR025-HLD-REVIEW.md` 为 approved，确认 CP3 只批准 HLD/ADR，不授权实现、依赖变更、Backtrader 运行、源码移植或真实 broker/QMT/provider/lake/publish/simulation/live/credential 操作；已创建 Story Plan / CP4 handoff 并通过 spawn_agent 真实调度 meta-se/se-shen。"
+    artifacts:
+      - "checkpoints/CP3-CR025-HLD-REVIEW.md"
+      - "process/handoffs/META-SE-CR025-STORY-PLANNING-CP4-2026-06-01.md"
+      - "process/STATE.md"
+      - "process/changes/CR-025-BACKTRADER-OPTIONAL-EXECUTION-BACKEND-HARDENING-2026-05-31.md"
+      - "process/changes/CR-INDEX.yaml"
+      - "process/changes/CR-019-FOLLOW-UP-TRACKING-2026-05-31.md"
+    dispatch:
+      tool_name: "multi_agent_v1.spawn_agent"
+      agent_role: "meta-se"
+      agent_id: "019e839f-a973-7781-bed7-5261c695b887"
+      agent_name: "se-shen"
+      thread_id: "019e839f-a973-7781-bed7-5261c695b887"
+      handoff_path: "process/handoffs/META-SE-CR025-STORY-PLANNING-CP4-2026-06-01.md"
+    tests:
+      pending: "Story Plan / CP4 running; validation will occur after meta-se handoff completion."
+  - at: "2026-06-01T22:10:17+08:00"
+    actor: "meta-po"
+    action: "cr025-cp3-hld-ready-for-human-review"
+    from_phase: "solution-design"
+    to_phase: "solution-design"
+    reason: "meta-se/se-chu 已完成 CR-025 CP3 HLD / ADR 并关闭；HLD §34 按用户要求静态分析 `/home/hyde/download/backtrader`，记录 GPLv3 / GPLv3+ license、Backtrader 模块级 reference-only / adapt-interface / exclude 分类、默认 migration_candidate 为空、clean feed gate、semantic diff schema 和 order_intent_draft_v1。CP3 自动预检 PASS，meta-po 已准备发起 CP3 人工审查；CP3 approve 只批准 HLD/ADR，不授权实现、依赖变更、Backtrader 运行、源码移植或 QMT / simulation / live。"
+    artifacts:
+      - "process/HLD.md"
+      - "process/HLD-QMT-TRADING.md"
+      - "process/ARCHITECTURE-DECISION.md"
+      - "process/discussions/CP3-CR025-HLD-DISCUSSION-LOG.md"
+      - "process/checks/CP3-CR025-DISCUSSION-CHECKPOINT.json"
+      - "process/checks/CP3-CR025-HLD-CONSISTENCY.md"
+      - "process/checks/CP3-CR025-HUMAN-GATE-LAUNCH-MESSAGE.md"
+      - "checkpoints/CP3-CR025-HLD-REVIEW.md"
+      - "process/handoffs/META-SE-CR025-HLD-ADR-2026-06-01.md"
+      - "process/STATE.md"
+    dispatch:
+      tool_name: "multi_agent_v1.wait_agent + multi_agent_v1.close_agent"
+      agent_role: "meta-se"
+      agent_id: "019e8373-266b-7212-a2a9-76c74a2410f5"
+      agent_name: "se-chu"
+      thread_id: "019e8373-266b-7212-a2a9-76c74a2410f5"
+      handoff_path: "process/handoffs/META-SE-CR025-HLD-ADR-2026-06-01.md"
+    tests:
+      cp3_auto_precheck: "PASS: process/checks/CP3-CR025-HLD-CONSISTENCY.md"
+      cp3_discussion_json: "PASS: python3 -m json.tool process/checks/CP3-CR025-DISCUSSION-CHECKPOINT.json"
+      diff_check: "PASS: git diff --check -- CR-025 CP3 target files"
+  - at: "2026-06-01T21:43:54+08:00"
+    actor: "meta-po"
+    action: "cr025-cp2-approved-dispatch-meta-se-hld"
+    from_phase: "requirement-clarification"
+    to_phase: "solution-design"
+    reason: "用户批准按 meta-po 建议推进 CR-025，并要求 meta-se 在 CP3/HLD 充分分析 `/home/hyde/download/backtrader`，对比可借鉴、可适配、可移植候选和禁止移植模块。meta-po 已回填 CP2 人工审查 approved，确认 USE-CASES v1.13 与 REQUIREMENTS v1.14，创建 meta-se handoff，并通过 spawn_agent 真实调度 meta-se/se-chu 执行 CR-025 CP3 HLD / ADR。CP3 approved 前不得进入 Story Plan、LLD、实现、依赖变更、源码级移植、Backtrader 运行或 QMT / simulation / live。"
+    artifacts:
+      - "checkpoints/CP2-CR025-REQUIREMENTS-BASELINE.md"
+      - "process/USE-CASES.md"
+      - "process/REQUIREMENTS.md"
+      - "process/changes/CR-025-BACKTRADER-OPTIONAL-EXECUTION-BACKEND-HARDENING-2026-05-31.md"
+      - "process/handoffs/META-SE-CR025-HLD-ADR-2026-06-01.md"
+      - "process/STATE.md"
+    dispatch:
+      tool_name: "multi_agent_v1.spawn_agent"
+      agent_role: "meta-se"
+      agent_id: "019e8373-266b-7212-a2a9-76c74a2410f5"
+      agent_name: "se-chu"
+      thread_id: "019e8373-266b-7212-a2a9-76c74a2410f5"
+      handoff_path: "process/handoffs/META-SE-CR025-HLD-ADR-2026-06-01.md"
+    tests:
+      pending: "CP3 HLD / ADR running; validation will occur after meta-se handoff completion."
+  - at: "2026-05-29T22:16:12+08:00"
+    actor: "meta-po"
+    action: "cr018-production-current-truth-real-rerun-failed-qmt-blocked"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "基于已发布 production current truth 执行阶段三到阶段五核心研究真实重跑；命令执行完成且数据湖 production_strict readiness 复验 PASS，但 low-vol Top20 未跑赢沪深300且最大回撤更差，production rerun status=fail，QMT admission allowed count=0。"
+    artifacts:
+      - "scripts/cr018_run_production_current_truth_research.py"
+      - "scripts/cr018_release_catalog_publish.py"
+      - "process/checks/REAL-TUSHARE-CR018-PRODUCTION-RERUN-2026-05-29.md"
+      - "reports/production_current_truth/release-cr018-production-current-truth-20150101-20260528-20260529/run-cr018-production-rerun-20150101-20260528-20260529-01/rerun-report.json"
+      - "reports/production_current_truth/release-cr018-production-current-truth-20150101-20260528-20260529/run-cr018-production-rerun-20150101-20260528-20260529-01/qmt-admission-evidence.json"
+      - "DEV-LOG.md"
+      - "process/STATE.md"
+    tests:
+      py_compile: "PASS: uv run --python 3.11 python -m py_compile scripts/cr018_run_production_current_truth_research.py scripts/cr018_release_catalog_publish.py"
+      diff_check_scripts: "PASS: git diff --check -- scripts/cr018_run_production_current_truth_research.py scripts/cr018_release_catalog_publish.py"
+      production_rerun: "DONE: status=fail, strategy_pass=false, qmt_admission_allowed_count=0"
+      readiness_recheck: "PASS: production_strict status=pass, blockers=[], candidate_unpublished_count=0, published_count=10"
+    metrics:
+      low_vol_top20_annual_return: 0.02693702069455295
+      hs300_annual_return: 0.02767291484316603
+      low_vol_minus_hs300_annual_return: -0.000735894148613081
+      low_vol_top20_max_drawdown: -0.5587489827318772
+      hs300_max_drawdown: -0.46696138837984813
+      low_vol_rank_ic_mean: 0.08839059147967537
+    safety_confirmations:
+      provider_fetch_executed: false
+      credential_read_executed: false
+      real_lake_write_executed: false
+      catalog_current_pointer_publish_executed_during_rerun: false
+      qmt_operation_executed: false
+      duckdb_dependency_change_executed: false
+    next_gate: "Analyze rerun failure or add P1/risk-model inputs before any QMT admission; CR018-S09 remains blocked."
+  - at: "2026-05-29T11:23:36+08:00"
+    actor: "meta-po"
+    action: "cr018-s08-state-consistency-check"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "meta-po 完成 CR018-S08 verified 后状态一致性校验：当前 dev_ready/dev_running/verify_ready/verify_running 均为空，S01-S08 已 verified，S09 仅由后续 per-run QMT authorization 阻塞；修正 S07/S08 CP6 后中间态字段名，避免与最终 verified 状态同名。"
+    artifacts:
+      - "process/STATE.md"
+      - "process/STORY-STATUS.md"
+      - "process/DEVELOPMENT-PLAN.yaml"
+    tests:
+      state_stale_scan: "PASS: no current CR018 S08 running or stale S07 next gate token"
+      diff_check: "PASS: git diff --check on STATE/STORY-STATUS/DEVELOPMENT-PLAN/S08 handoff/CP7 scope"
+    next_gate: "CR018-S09 later-gated pending explicit per-run QMT authorization"
+  - at: "2026-05-29T11:19:04+08:00"
+    actor: "meta-po"
+    action: "cr018-s08-cp7-pass-s09-later-gated"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "meta-qa/qa-hua the 2nd 完成 CR018-S08 CP7 独立验证并 PASS；主线程复跑 S08+S07+S06+S05+S02+S03+S04+S01+catalog publish gate 回归 60 passed，py_compile、diff check、依赖边界和缓存检查均通过。meta-po 已关闭 QA 线程，回填 handoff completed/closed 与 CP7 Agent Dispatch Evidence，将 S08 收敛为 verified。S09 的 S08 runtime 依赖已满足，但仍缺后续 per-run QMT authorization，保持 later-gated。"
+    artifacts:
+      - "process/checks/CP7-CR018-S08-production-current-truth-research-rerun-VERIFICATION-DONE.md"
+      - "process/handoffs/META-QA-CR018-S08-CP7-VERIFY-2026-05-29.md"
+      - "process/stories/CR018-S08-production-current-truth-research-rerun.md"
+      - "process/stories/CR018-S09-qmt-simulation-admission-boundary-after-data-lake.md"
+      - "process/STORY-STATUS.md"
+      - "process/DEVELOPMENT-PLAN.yaml"
+      - "process/STATE.md"
+    tests:
+      s08_cp7_targeted_and_regression: "PASS: 60 passed in 0.67s"
+      py_compile: "PASS"
+      diff_check: "PASS"
+      dependency_diff: "PASS: pyproject.toml / uv.lock unchanged"
+      cache_check: "PASS: no .pytest_cache / __pycache__ status output"
+    dispatches:
+      - role: "meta-qa"
+        story_id: "CR018-S08-production-current-truth-research-rerun"
+        agent_name: "qa-hua the 2nd"
+        agent_id: "019e71b7-4807-7e41-8d5e-f846b07b8bdf"
+        thread_id: "019e71b7-4807-7e41-8d5e-f846b07b8bdf"
+        tool_name: "multi_agent_v1.spawn_agent/close_agent"
+        status: "completed-closed"
+    safety_confirmations:
+      provider_fetch_authorized: false
+      credential_read_authorized: false
+      real_lake_write_authorized: false
+      catalog_publish_authorized: false
+      qmt_simulation_or_live_authorized: false
+      duckdb_dependency_change_authorized: false
+  - at: "2026-05-29T11:11:41+08:00"
+    actor: "meta-po"
+    action: "cr018-s08-cp6-pass-cp7-qa-dispatched"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "meta-dev/dev-zhang the 2nd 完成 CR018-S08 受控离线实现并写入 CP6 PASS；主线程复跑 S08+S07+S06+S05+S02+S03+S04+S01+catalog publish gate 回归 60 passed，py_compile、diff check、依赖边界和缓存检查均通过。meta-po 已关闭 dev 线程，回填 handoff completed/closed 与 CP6 Agent Dispatch Evidence，并通过 spawn_agent 调度 meta-qa/qa-hua the 2nd 执行 S08 CP7。"
+    artifacts:
+      - "process/checks/CP6-CR018-S08-production-current-truth-research-rerun-CODING-DONE.md"
+      - "process/handoffs/META-DEV-CR018-S08-IMPLEMENT-2026-05-29.md"
+      - "process/handoffs/META-QA-CR018-S08-CP7-VERIFY-2026-05-29.md"
+      - "process/stories/CR018-S08-production-current-truth-research-rerun.md"
+      - "process/STORY-STATUS.md"
+      - "process/DEVELOPMENT-PLAN.yaml"
+      - "process/STATE.md"
+    tests:
+      s08_targeted_and_regression: "PASS: 60 passed in 0.66s"
+      py_compile: "PASS"
+      diff_check: "PASS"
+      dependency_diff: "PASS: pyproject.toml / uv.lock unchanged"
+      cache_check: "PASS: no .pytest_cache / __pycache__ status output"
+    dispatches:
+      - role: "meta-dev"
+        story_id: "CR018-S08-production-current-truth-research-rerun"
+        agent_name: "dev-zhang the 2nd"
+        agent_id: "019e71a9-6c49-79f1-aa78-b569801046d6"
+        thread_id: "019e71a9-6c49-79f1-aa78-b569801046d6"
+        tool_name: "multi_agent_v1.spawn_agent/close_agent"
+        status: "completed-closed"
+      - role: "meta-qa"
+        story_id: "CR018-S08-production-current-truth-research-rerun"
+        agent_name: "qa-hua the 2nd"
+        agent_id: "019e71b7-4807-7e41-8d5e-f846b07b8bdf"
+        thread_id: "019e71b7-4807-7e41-8d5e-f846b07b8bdf"
+        tool_name: "multi_agent_v1.spawn_agent"
+        status: "running"
+    safety_confirmations:
+      provider_fetch_authorized: false
+      credential_read_authorized: false
+      real_lake_write_authorized: false
+      catalog_publish_authorized: false
+      qmt_simulation_or_live_authorized: false
+      duckdb_dependency_change_authorized: false
+  - at: "2026-05-29T10:56:39+08:00"
+    actor: "meta-po"
+    action: "cr018-s07-verified-s08-implementation-dispatched"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "CR018-S07 CP7 已 PASS 且 Story 收敛为 verified；S08 的 S07 runtime 依赖、CP5、LLD 和文件所有权门均满足。meta-po 创建 S08 实现 handoff，并通过 spawn_agent 调度 meta-dev/dev-zhang the 2nd 执行受控离线实现。S08 不授权真实阶段三到阶段五长任务、provider fetch、lake write、publish、凭据读取或 QMT。"
+    artifacts:
+      - "process/stories/CR018-S07-explicit-publish-gate-and-current-reader-smoke.md"
+      - "process/stories/CR018-S08-production-current-truth-research-rerun.md"
+      - "process/handoffs/META-DEV-CR018-S08-IMPLEMENT-2026-05-29.md"
+      - "process/STORY-STATUS.md"
+      - "process/DEVELOPMENT-PLAN.yaml"
+      - "process/STATE.md"
+    dispatches:
+      - role: "meta-dev"
+        story_id: "CR018-S08-production-current-truth-research-rerun"
+        agent_name: "dev-zhang the 2nd"
+        agent_id: "019e71a9-6c49-79f1-aa78-b569801046d6"
+        thread_id: "019e71a9-6c49-79f1-aa78-b569801046d6"
+        tool_name: "multi_agent_v1.spawn_agent"
+        status: "running"
+    safety_confirmations:
+      provider_fetch_authorized: false
+      credential_read_authorized: false
+      real_lake_write_authorized: false
+      catalog_publish_authorized: false
+      qmt_simulation_or_live_authorized: false
+      duckdb_dependency_change_authorized: false
+  - at: "2026-05-29T10:53:06+08:00"
+    actor: "meta-po"
+    action: "cr018-s07-cp7-pass-s08-dev-ready"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "meta-qa/qa-cao 完成 CR018-S07 CP7 独立验证并 PASS；主线程复跑 S07+S06+S05+S02+S03+S04+S01+catalog publish gate 回归 49 passed，py_compile、diff check、依赖边界和缓存检查均通过。meta-po 已关闭 QA 线程，回填 handoff completed/closed 与 CP7 Agent Dispatch Evidence，将 S07 收敛为 verified。S08 的 S07 runtime 依赖与文件所有权门已满足，进入 dev-ready。"
+    artifacts:
+      - "process/checks/CP7-CR018-S07-explicit-publish-gate-and-current-reader-smoke-VERIFICATION-DONE.md"
+      - "process/handoffs/META-QA-CR018-S07-CP7-VERIFY-2026-05-29.md"
+      - "process/stories/CR018-S07-explicit-publish-gate-and-current-reader-smoke.md"
+      - "process/stories/CR018-S08-production-current-truth-research-rerun.md"
+      - "process/STORY-STATUS.md"
+      - "process/DEVELOPMENT-PLAN.yaml"
+      - "process/STATE.md"
+    tests:
+      s07_cp7_targeted_and_regression: "PASS: 49 passed in 0.66s"
+      py_compile: "PASS"
+      diff_check: "PASS"
+      dependency_diff: "PASS: pyproject.toml / uv.lock unchanged"
+      cache_check: "PASS: no .pytest_cache / __pycache__ status output"
+    dispatches:
+      - role: "meta-qa"
+        story_id: "CR018-S07-explicit-publish-gate-and-current-reader-smoke"
+        agent_name: "qa-cao"
+        agent_id: "019e719f-f89b-70a1-98f7-b5c70015fb31"
+        thread_id: "019e719f-f89b-70a1-98f7-b5c70015fb31"
+        tool_name: "multi_agent_v1.spawn_agent/close_agent"
+        status: "completed-closed"
+    safety_confirmations:
+      provider_fetch_authorized: false
+      credential_read_authorized: false
+      real_lake_write_authorized: false
+      catalog_publish_authorized: false
+      qmt_simulation_or_live_authorized: false
+      duckdb_dependency_change_authorized: false
+  - at: "2026-05-29T10:46:13+08:00"
+    actor: "meta-po"
+    action: "cr018-s07-cp6-pass-cp7-qa-dispatched"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "meta-dev/dev-zhang 完成 CR018-S07 受控离线实现并写入 CP6 PASS；主线程复跑 S07+S06+S05+S02+S03+S04+S01+catalog publish gate 回归 49 passed，py_compile、diff check、依赖边界和缓存检查均通过。meta-po 已关闭 dev 线程，回填 handoff completed/closed 与 CP6 Agent Dispatch Evidence，并通过 spawn_agent 调度 meta-qa/qa-cao 执行 S07 CP7。"
+    artifacts:
+      - "process/checks/CP6-CR018-S07-explicit-publish-gate-and-current-reader-smoke-CODING-DONE.md"
+      - "process/handoffs/META-DEV-CR018-S07-IMPLEMENT-2026-05-29.md"
+      - "process/handoffs/META-QA-CR018-S07-CP7-VERIFY-2026-05-29.md"
+      - "process/stories/CR018-S07-explicit-publish-gate-and-current-reader-smoke.md"
+      - "process/STORY-STATUS.md"
+      - "process/DEVELOPMENT-PLAN.yaml"
+      - "process/STATE.md"
+    tests:
+      s07_targeted_and_regression: "PASS: 49 passed in 0.71s"
+      py_compile: "PASS"
+      diff_check: "PASS"
+      dependency_diff: "PASS: pyproject.toml / uv.lock unchanged"
+      cache_check: "PASS: no .pytest_cache / __pycache__ status output"
+    dispatches:
+      - role: "meta-dev"
+        story_id: "CR018-S07-explicit-publish-gate-and-current-reader-smoke"
+        agent_name: "dev-zhang"
+        agent_id: "019e7190-bef4-77c0-aefa-e247d20ed6de"
+        thread_id: "019e7190-bef4-77c0-aefa-e247d20ed6de"
+        tool_name: "multi_agent_v1.spawn_agent/close_agent"
+        status: "completed-closed"
+      - role: "meta-qa"
+        story_id: "CR018-S07-explicit-publish-gate-and-current-reader-smoke"
+        agent_name: "qa-cao"
+        agent_id: "019e719f-f89b-70a1-98f7-b5c70015fb31"
+        thread_id: "019e719f-f89b-70a1-98f7-b5c70015fb31"
+        tool_name: "multi_agent_v1.spawn_agent"
+        status: "running"
+    safety_confirmations:
+      provider_fetch_authorized: false
+      credential_read_authorized: false
+      real_lake_write_authorized: false
+      catalog_publish_authorized: false
+      qmt_simulation_or_live_authorized: false
+      duckdb_dependency_change_authorized: false
+  - at: "2026-05-29T10:24:36+08:00"
+    actor: "meta-po"
+    action: "cr018-s06-cp7-pass-s07-dev-ready"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "meta-qa/qa-hua 完成 CR018-S06 CP7 独立验证并 PASS；主线程复跑 S06+S05+S02+S03+S04+S01+catalog publish 回归 42 passed，py_compile、diff check、依赖边界和缓存检查均通过。meta-po 已关闭 QA 线程，回填 handoff completed/closed 与 CP7 Agent Dispatch Evidence，将 S06 收敛为 verified。S07 的上游依赖与文件所有权门已满足，进入 dev-ready。"
+    artifacts:
+      - "process/checks/CP7-CR018-S06-production-quality-readiness-audit-and-rollback-gate-VERIFICATION-DONE.md"
+      - "process/handoffs/META-QA-CR018-S06-CP7-VERIFY-2026-05-29.md"
+      - "process/stories/CR018-S06-production-quality-readiness-audit-and-rollback-gate.md"
+      - "process/STORY-STATUS.md"
+      - "process/DEVELOPMENT-PLAN.yaml"
+      - "process/STATE.md"
+    tests:
+      s06_cp7_targeted_and_regression: "PASS: 42 passed in 0.65s"
+      py_compile: "PASS"
+      diff_check: "PASS"
+      dependency_diff: "PASS: pyproject.toml / uv.lock unchanged"
+      cache_check: "PASS: no .pytest_cache / __pycache__ status output"
+    dispatches:
+      - role: "meta-qa"
+        story_id: "CR018-S06-production-quality-readiness-audit-and-rollback-gate"
+        agent_name: "qa-hua"
+        agent_id: "019e7186-d771-7fa0-8622-958915a43d98"
+        thread_id: "019e7186-d771-7fa0-8622-958915a43d98"
+        tool_name: "multi_agent_v1.spawn_agent/close_agent"
+        status: "completed-closed"
+    safety_confirmations:
+      provider_fetch_authorized: false
+      credential_read_authorized: false
+      real_lake_write_authorized: false
+      catalog_publish_authorized: false
+      qmt_simulation_or_live_authorized: false
+      duckdb_dependency_change_authorized: false
+  - at: "2026-05-29T10:18:47+08:00"
+    actor: "meta-po"
+    action: "cr018-s06-cp6-pass-cp7-qa-dispatched"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "meta-dev/dev-zhu 完成 CR018-S06 受控离线实现并写入 CP6 PASS；主线程复跑 S06+S05+S02+S03+S04+S01+catalog publish 回归 42 passed，py_compile、diff check、依赖边界和缓存检查均通过。meta-po 已关闭 dev 线程，回填 handoff completed/closed 与 CP6 Agent Dispatch Evidence，并通过 spawn_agent 调度 meta-qa/qa-hua 执行 S06 CP7。"
+    artifacts:
+      - "process/checks/CP6-CR018-S06-production-quality-readiness-audit-and-rollback-gate-CODING-DONE.md"
+      - "process/handoffs/META-DEV-CR018-S06-IMPLEMENT-2026-05-29.md"
+      - "process/handoffs/META-QA-CR018-S06-CP7-VERIFY-2026-05-29.md"
+      - "process/stories/CR018-S06-production-quality-readiness-audit-and-rollback-gate.md"
+      - "process/STORY-STATUS.md"
+      - "process/DEVELOPMENT-PLAN.yaml"
+      - "process/STATE.md"
+    tests:
+      s06_targeted_and_regression: "PASS: 42 passed in 0.66s"
+      py_compile: "PASS"
+      diff_check: "PASS"
+      dependency_diff: "PASS: pyproject.toml / uv.lock unchanged"
+      cache_check: "PASS: no .pytest_cache / __pycache__ status output"
+    dispatches:
+      - role: "meta-dev"
+        story_id: "CR018-S06-production-quality-readiness-audit-and-rollback-gate"
+        agent_name: "dev-zhu"
+        agent_id: "019e7179-7a76-7441-97e8-aa043e067fa3"
+        thread_id: "019e7179-7a76-7441-97e8-aa043e067fa3"
+        tool_name: "multi_agent_v1.spawn_agent/close_agent"
+        status: "completed-closed"
+      - role: "meta-qa"
+        story_id: "CR018-S06-production-quality-readiness-audit-and-rollback-gate"
+        agent_name: "qa-hua"
+        agent_id: "019e7186-d771-7fa0-8622-958915a43d98"
+        thread_id: "019e7186-d771-7fa0-8622-958915a43d98"
+        tool_name: "multi_agent_v1.spawn_agent"
+        status: "running"
+    safety_confirmations:
+      provider_fetch_authorized: false
+      credential_read_authorized: false
+      real_lake_write_authorized: false
+      catalog_publish_authorized: false
+      qmt_simulation_or_live_authorized: false
+      duckdb_dependency_change_authorized: false
+  - at: "2026-05-29T10:04:10+08:00"
+    actor: "meta-po"
+    action: "cr018-s05-cp7-pass-s06-dispatched"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "meta-qa/qa-kong 通过 spawn_agent 完成 CR018-S05 CP7 独立验证并 PASS；meta-po 已关闭 QA 线程，回填 handoff completed/closed 与 CP7 Agent Dispatch Evidence，将 S05 收敛为 verified。S06 的 S02/S03/S05 上游依赖满足，当前无 dev_running 文件冲突；meta-po 创建 S06 实现 handoff，并通过 spawn_agent 调度 meta-dev/dev-zhu 执行受控离线实现。"
+    artifacts:
+      - "process/checks/CP7-CR018-S05-adjustment-dual-view-quality-and-qfq-hfq-publish-readiness-VERIFICATION-DONE.md"
+      - "process/handoffs/META-QA-CR018-S05-CP7-VERIFY-2026-05-29.md"
+      - "process/stories/CR018-S05-adjustment-dual-view-quality-and-qfq-hfq-publish-readiness.md"
+      - "process/stories/CR018-S06-production-quality-readiness-audit-and-rollback-gate.md"
+      - "process/handoffs/META-DEV-CR018-S06-IMPLEMENT-2026-05-29.md"
+      - "process/STORY-STATUS.md"
+      - "process/DEVELOPMENT-PLAN.yaml"
+      - "process/STATE.md"
+    tests:
+      s05_cp7_targeted_and_regression: "PASS: 43 passed in 0.66s"
+    dispatches:
+      - role: "meta-qa"
+        story_id: "CR018-S05-adjustment-dual-view-quality-and-qfq-hfq-publish-readiness"
+        agent_name: "qa-kong"
+        agent_id: "019e7170-3bc8-79d0-917d-23cc7b41b9e6"
+        thread_id: "019e7170-3bc8-79d0-917d-23cc7b41b9e6"
+        tool_name: "multi_agent_v1.spawn_agent/close_agent"
+        status: "completed-closed"
+      - role: "meta-dev"
+        story_id: "CR018-S06-production-quality-readiness-audit-and-rollback-gate"
+        agent_name: "dev-zhu"
+        agent_id: "019e7179-7a76-7441-97e8-aa043e067fa3"
+        thread_id: "019e7179-7a76-7441-97e8-aa043e067fa3"
+        tool_name: "multi_agent_v1.spawn_agent"
+        status: "running"
+    safety_confirmations:
+      provider_fetch_authorized: false
+      credential_read_authorized: false
+      real_lake_write_authorized: false
+      catalog_publish_authorized: false
+      qmt_simulation_or_live_authorized: false
+      duckdb_dependency_change_authorized: false
+  - at: "2026-05-29T09:54:07+08:00"
+    actor: "meta-po"
+    action: "cr018-s05-cp6-pass-cp7-qa-dispatched"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "meta-dev/dev-he 完成 CR018-S05 受控离线实现并写入 CP6 PASS；主线程复跑 S05+S02+S03+S04+S01+CR017 adjustment 回归 43 passed，py_compile 和 diff check 均通过，并将 CP6 的 Agent Dispatch Evidence 修正为真实 spawn_agent 证据。meta-po 已通过 spawn_agent 调度 meta-qa/qa-kong 执行 S05 CP7。"
+    artifacts:
+      - "process/checks/CP6-CR018-S05-adjustment-dual-view-quality-and-qfq-hfq-publish-readiness-CODING-DONE.md"
+      - "process/handoffs/META-DEV-CR018-S05-IMPLEMENT-2026-05-29.md"
+      - "process/handoffs/META-QA-CR018-S05-CP7-VERIFY-2026-05-29.md"
+      - "process/stories/CR018-S05-adjustment-dual-view-quality-and-qfq-hfq-publish-readiness.md"
+      - "process/STORY-STATUS.md"
+      - "process/DEVELOPMENT-PLAN.yaml"
+      - "process/STATE.md"
+    tests:
+      s05_targeted_and_regression: "PASS: 43 passed in 0.65s"
+      py_compile: "PASS"
+      diff_check: "PASS"
+    dispatches:
+      - role: "meta-dev"
+        story_id: "CR018-S05-adjustment-dual-view-quality-and-qfq-hfq-publish-readiness"
+        agent_name: "dev-he"
+        agent_id: "019e7163-bfe3-7601-8a48-a5e229e346dc"
+        thread_id: "019e7163-bfe3-7601-8a48-a5e229e346dc"
+        tool_name: "multi_agent_v1.spawn_agent/close_agent"
+        status: "completed-closed"
+      - role: "meta-qa"
+        story_id: "CR018-S05-adjustment-dual-view-quality-and-qfq-hfq-publish-readiness"
+        agent_name: "qa-kong"
+        agent_id: "019e7170-3bc8-79d0-917d-23cc7b41b9e6"
+        thread_id: "019e7170-3bc8-79d0-917d-23cc7b41b9e6"
+        tool_name: "multi_agent_v1.spawn_agent/close_agent"
+        status: "completed-closed"
+    safety_confirmations:
+      provider_fetch_authorized: false
+      credential_read_authorized: false
+      real_lake_write_authorized: false
+      catalog_publish_authorized: false
+      qmt_simulation_or_live_authorized: false
+      duckdb_dependency_change_authorized: false
+  - at: "2026-05-29T09:40:27+08:00"
+    actor: "meta-po"
+    action: "cr018-s02-cp7-pass-s05-dispatched"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "meta-qa/qa-wei 完成 CR018-S02 CP7 PASS；主线程复跑 S02+S03+S04+S01 回归 25 passed，并修正 CP7 文件中的 Agent Dispatch Evidence 为真实 spawn_agent 证据。S05 上游 S01/S02/S03/S04/CR017-S05 均满足，当前无 dev_running 文件冲突；meta-po 已通过 spawn_agent 调度 meta-dev/dev-he 执行 S05 受控离线实现。"
+    artifacts:
+      - "process/checks/CP7-CR018-S02-pit-universe-lifecycle-st-trade-status-price-limit-backfill-VERIFICATION-DONE.md"
+      - "process/handoffs/META-QA-CR018-S02-CP7-VERIFY-2026-05-29.md"
+      - "process/handoffs/META-DEV-CR018-S05-IMPLEMENT-2026-05-29.md"
+      - "process/stories/CR018-S02-pit-universe-lifecycle-st-trade-status-price-limit-backfill.md"
+      - "process/stories/CR018-S05-adjustment-dual-view-quality-and-qfq-hfq-publish-readiness.md"
+      - "process/STORY-STATUS.md"
+      - "process/DEVELOPMENT-PLAN.yaml"
+      - "process/STATE.md"
+    tests:
+      s02_cp7_rerun: "PASS: 25 passed in 0.61s"
+      diff_check: "PASS"
+    dispatches:
+      - role: "meta-qa"
+        story_id: "CR018-S02-pit-universe-lifecycle-st-trade-status-price-limit-backfill"
+        agent_name: "qa-wei"
+        agent_id: "019e715e-3443-7c10-a04e-07e9b87b92bb"
+        thread_id: "019e715e-3443-7c10-a04e-07e9b87b92bb"
+        tool_name: "multi_agent_v1.spawn_agent/close_agent"
+        status: "completed-closed"
+      - role: "meta-dev"
+        story_id: "CR018-S05-adjustment-dual-view-quality-and-qfq-hfq-publish-readiness"
+        agent_name: "dev-he"
+        agent_id: "019e7163-bfe3-7601-8a48-a5e229e346dc"
+        thread_id: "019e7163-bfe3-7601-8a48-a5e229e346dc"
+        tool_name: "multi_agent_v1.spawn_agent"
+        status: "running"
+    safety_confirmations:
+      provider_fetch_authorized: false
+      credential_read_authorized: false
+      real_lake_write_authorized: false
+      catalog_publish_authorized: false
+      qmt_simulation_or_live_authorized: false
+      duckdb_dependency_change_authorized: false
+  - at: "2026-05-29T09:34:23+08:00"
+    actor: "meta-po"
+    action: "cr018-s02-cp6-pass-cp7-qa-dispatched"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "meta-dev/dev-shi 完成 CR018-S02 受控离线实现并写入 CP6 PASS；主线程复跑 S02+S03+S04+S01 回归 25 passed，py_compile 和 diff check 均通过，并将 CP6 的 Agent Dispatch Evidence 修正为真实 spawn_agent 证据。meta-po 已通过 spawn_agent 调度 meta-qa/qa-wei 执行 S02 CP7。"
+    artifacts:
+      - "process/checks/CP6-CR018-S02-pit-universe-lifecycle-st-trade-status-price-limit-backfill-CODING-DONE.md"
+      - "process/handoffs/META-DEV-CR018-S02-IMPLEMENT-2026-05-29.md"
+      - "process/handoffs/META-QA-CR018-S02-CP7-VERIFY-2026-05-29.md"
+      - "process/stories/CR018-S02-pit-universe-lifecycle-st-trade-status-price-limit-backfill.md"
+      - "process/STORY-STATUS.md"
+      - "process/DEVELOPMENT-PLAN.yaml"
+      - "process/STATE.md"
+    tests:
+      s02_targeted_and_regression: "PASS: 25 passed in 0.58s"
+      py_compile: "PASS"
+      diff_check: "PASS"
+    dispatches:
+      - role: "meta-dev"
+        story_id: "CR018-S02-pit-universe-lifecycle-st-trade-status-price-limit-backfill"
+        agent_name: "dev-shi"
+        agent_id: "019e7152-23c8-7b42-b4e5-29bb8c6be49b"
+        thread_id: "019e7152-23c8-7b42-b4e5-29bb8c6be49b"
+        tool_name: "multi_agent_v1.spawn_agent/close_agent"
+        status: "completed-closed"
+      - role: "meta-qa"
+        story_id: "CR018-S02-pit-universe-lifecycle-st-trade-status-price-limit-backfill"
+        agent_name: "qa-wei"
+        agent_id: "019e715e-3443-7c10-a04e-07e9b87b92bb"
+        thread_id: "019e715e-3443-7c10-a04e-07e9b87b92bb"
+        tool_name: "multi_agent_v1.spawn_agent"
+        status: "running"
+    safety_confirmations:
+      provider_fetch_authorized: false
+      credential_read_authorized: false
+      real_lake_write_authorized: false
+      catalog_publish_authorized: false
+      qmt_simulation_or_live_authorized: false
+      duckdb_dependency_change_authorized: false
+  - at: "2026-05-29T09:21:13+08:00"
+    actor: "meta-po"
+    action: "cr018-s03-s04-verified-s02-dispatched"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "CR018-S03 与 CR018-S04 CP7 均 PASS，主线程复跑 S03/S04/S01 合并回归 16 passed，并修正 CP7 文件中的 Agent Dispatch Evidence 为真实 spawn_agent 证据。S02 的上游 S01/S03/S04 已 verified，当前无 dev_running 文件冲突；S05 与 S02 共享 validation/readers，继续等待。meta-po 已通过 spawn_agent 调度 meta-dev/dev-shi 执行 S02 受控离线实现。"
+    artifacts:
+      - "process/checks/CP7-CR018-S03-real-benchmark-index-components-weights-backfill-VERIFICATION-DONE.md"
+      - "process/checks/CP7-CR018-S04-industry-market-cap-liquidity-and-exposure-data-VERIFICATION-DONE.md"
+      - "process/handoffs/META-QA-CR018-S03-CP7-VERIFY-2026-05-29.md"
+      - "process/handoffs/META-QA-CR018-S04-CP7-VERIFY-2026-05-29.md"
+      - "process/handoffs/META-DEV-CR018-S02-IMPLEMENT-2026-05-29.md"
+      - "process/stories/CR018-S02-pit-universe-lifecycle-st-trade-status-price-limit-backfill.md"
+      - "process/stories/CR018-S03-real-benchmark-index-components-weights-backfill.md"
+      - "process/stories/CR018-S04-industry-market-cap-liquidity-and-exposure-data.md"
+      - "process/STORY-STATUS.md"
+      - "process/DEVELOPMENT-PLAN.yaml"
+      - "process/STATE.md"
+    tests:
+      s03_cp7_rerun: "PASS: 13 passed in 0.47s"
+      s04_cp7_rerun: "PASS: 10 passed in 0.53s"
+      combined_s01_s03_s04: "PASS: 16 passed in 0.57s"
+      diff_check: "PASS"
+    dispatches:
+      - role: "meta-qa"
+        story_id: "CR018-S03-real-benchmark-index-components-weights-backfill"
+        agent_name: "qa-lv"
+        agent_id: "019e714b-3597-7e31-b0d0-207f12130b47"
+        thread_id: "019e714b-3597-7e31-b0d0-207f12130b47"
+        tool_name: "multi_agent_v1.spawn_agent/close_agent"
+        status: "completed-closed"
+      - role: "meta-qa"
+        story_id: "CR018-S04-industry-market-cap-liquidity-and-exposure-data"
+        agent_name: "qa-shi"
+        agent_id: "019e714b-56ab-7532-9051-0952cadb1da3"
+        thread_id: "019e714b-56ab-7532-9051-0952cadb1da3"
+        tool_name: "multi_agent_v1.spawn_agent/close_agent"
+        status: "completed-closed"
+      - role: "meta-dev"
+        story_id: "CR018-S02-pit-universe-lifecycle-st-trade-status-price-limit-backfill"
+        agent_name: "dev-shi"
+        agent_id: "019e7152-23c8-7b42-b4e5-29bb8c6be49b"
+        thread_id: "019e7152-23c8-7b42-b4e5-29bb8c6be49b"
+        tool_name: "multi_agent_v1.spawn_agent"
+        status: "running"
+    safety_confirmations:
+      provider_fetch_authorized: false
+      credential_read_authorized: false
+      real_lake_write_authorized: false
+      catalog_publish_authorized: false
+      qmt_simulation_or_live_authorized: false
+      duckdb_dependency_change_authorized: false
+  - at: "2026-05-29T09:13:46+08:00"
+    actor: "meta-po"
+    action: "cr018-s03-s04-cp7-qa-dispatched"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "CR018-S03 与 CR018-S04 均已 CP6 PASS 且 ready-for-verification；meta-po 按文件写入互不冲突的 CP7 输出并行调度 meta-qa/qa-lv 与 meta-qa/qa-shi。CP7 只允许离线 / fixture / dry-run 验证，不授权真实 provider fetch、真实 lake write、catalog publish、凭据读取、DuckDB 依赖变更或 QMT 操作。"
+    artifacts:
+      - "process/handoffs/META-QA-CR018-S03-CP7-VERIFY-2026-05-29.md"
+      - "process/handoffs/META-QA-CR018-S04-CP7-VERIFY-2026-05-29.md"
+      - "process/stories/CR018-S03-real-benchmark-index-components-weights-backfill.md"
+      - "process/stories/CR018-S04-industry-market-cap-liquidity-and-exposure-data.md"
+      - "process/STORY-STATUS.md"
+      - "process/STATE.md"
+    dispatches:
+      - role: "meta-qa"
+        story_id: "CR018-S03-real-benchmark-index-components-weights-backfill"
+        agent_name: "qa-lv"
+        agent_id: "019e714b-3597-7e31-b0d0-207f12130b47"
+        thread_id: "019e714b-3597-7e31-b0d0-207f12130b47"
+        tool_name: "multi_agent_v1.spawn_agent"
+        status: "running"
+      - role: "meta-qa"
+        story_id: "CR018-S04-industry-market-cap-liquidity-and-exposure-data"
+        agent_name: "qa-shi"
+        agent_id: "019e714b-56ab-7532-9051-0952cadb1da3"
+        thread_id: "019e714b-56ab-7532-9051-0952cadb1da3"
+        tool_name: "multi_agent_v1.spawn_agent"
+        status: "running"
+    safety_confirmations:
+      provider_fetch_authorized: false
+      credential_read_authorized: false
+      real_lake_write_authorized: false
+      catalog_publish_authorized: false
+      qmt_simulation_or_live_authorized: false
+      duckdb_dependency_change_authorized: false
+  - at: "2026-05-29T09:10:00+08:00"
+    actor: "meta-po"
+    action: "cr018-s03-s04-cp6-pass-ready-for-cp7"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "meta-dev/dev-qin 完成 CR018-S03 CP6 PASS，meta-dev/dev-xu 完成 CR018-S04 CP6 PASS；主线程分别复跑目标测试、py_compile 与 git diff --check 均通过。S03 agent 已关闭；S04 close_agent 返回 not_found，因此记录 close_attempt，不伪造 closed_at。"
+    artifacts:
+      - "process/checks/CP6-CR018-S03-real-benchmark-index-components-weights-backfill-CODING-DONE.md"
+      - "process/checks/CP6-CR018-S04-industry-market-cap-liquidity-and-exposure-data-CODING-DONE.md"
+      - "process/handoffs/META-DEV-CR018-S03-IMPLEMENT-2026-05-29.md"
+      - "process/handoffs/META-DEV-CR018-S04-IMPLEMENT-2026-05-29.md"
+      - "process/stories/CR018-S03-real-benchmark-index-components-weights-backfill.md"
+      - "process/stories/CR018-S04-industry-market-cap-liquidity-and-exposure-data.md"
+      - "process/STORY-STATUS.md"
+      - "process/DEVELOPMENT-PLAN.yaml"
+      - "process/STATE.md"
+    tests:
+      s03_targeted: "PASS: 13 passed in 0.41s"
+      s04_targeted: "PASS: 10 passed in 0.45s"
+      py_compile: "PASS"
+      diff_check: "PASS"
+    dispatches:
+      - role: "meta-dev"
+        story_id: "CR018-S03-real-benchmark-index-components-weights-backfill"
+        agent_name: "dev-qin"
+        agent_id: "019e713c-10d0-76f2-a55b-01aace3cc4d5"
+        thread_id: "019e713c-10d0-76f2-a55b-01aace3cc4d5"
+        tool_name: "multi_agent_v1.spawn_agent"
+        status: "completed-closed"
+      - role: "meta-dev"
+        story_id: "CR018-S04-industry-market-cap-liquidity-and-exposure-data"
+        agent_name: "dev-xu"
+        agent_id: "019e713c-4439-7ed1-acbf-ab5f4b77c2fc"
+        thread_id: "019e713c-4439-7ed1-acbf-ab5f4b77c2fc"
+        tool_name: "multi_agent_v1.spawn_agent"
+        status: "completed-close-unavailable"
+    safety_confirmations:
+      provider_fetch_authorized: false
+      credential_read_authorized: false
+      real_lake_write_authorized: false
+      catalog_publish_authorized: false
+      qmt_simulation_or_live_authorized: false
+      duckdb_dependency_change_authorized: false
+  - at: "2026-05-29T08:57:20+08:00"
+    actor: "meta-po"
+    action: "cr018-s03-s04-meta-dev-parallel-dispatched"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "CR018-S01 verified 后，S03 与 S04 的写入范围不重叠：S03 负责 market_data/benchmarks.py、contracts.py、validation.py 与 benchmark 测试；S04 负责 market_data/readers.py、engine/research_dataset.py 与 P1 auxiliary 测试。meta-po 按 max_parallel_dev=2 并行调度 meta-dev/dev-qin 与 meta-dev/dev-xu。"
+    artifacts:
+      - "process/handoffs/META-DEV-CR018-S03-IMPLEMENT-2026-05-29.md"
+      - "process/handoffs/META-DEV-CR018-S04-IMPLEMENT-2026-05-29.md"
+      - "process/stories/CR018-S03-real-benchmark-index-components-weights-backfill.md"
+      - "process/stories/CR018-S04-industry-market-cap-liquidity-and-exposure-data.md"
+      - "process/STORY-STATUS.md"
+      - "process/STATE.md"
+    dispatches:
+      - role: "meta-dev"
+        story_id: "CR018-S03-real-benchmark-index-components-weights-backfill"
+        agent_name: "dev-qin"
+        agent_id: "019e713c-10d0-76f2-a55b-01aace3cc4d5"
+        thread_id: "019e713c-10d0-76f2-a55b-01aace3cc4d5"
+        tool_name: "multi_agent_v1.spawn_agent"
+        status: "running"
+      - role: "meta-dev"
+        story_id: "CR018-S04-industry-market-cap-liquidity-and-exposure-data"
+        agent_name: "dev-xu"
+        agent_id: "019e713c-4439-7ed1-acbf-ab5f4b77c2fc"
+        thread_id: "019e713c-4439-7ed1-acbf-ab5f4b77c2fc"
+        tool_name: "multi_agent_v1.spawn_agent"
+        status: "running"
+    blocked_parallel_candidates:
+      - story_id: "CR018-S02-pit-universe-lifecycle-st-trade-status-price-limit-backfill"
+        reason: "shares contracts/validation/readers with current wave"
+      - story_id: "CR018-S05-adjustment-dual-view-quality-and-qfq-hfq-publish-readiness"
+        reason: "shares validation/readers with current wave"
+    safety_confirmations:
+      provider_fetch_authorized: false
+      credential_read_authorized: false
+      real_lake_write_authorized: false
+      catalog_publish_authorized: false
+      qmt_simulation_or_live_authorized: false
+      duckdb_dependency_change_authorized: false
+  - at: "2026-05-29T08:53:20+08:00"
+    actor: "meta-po"
+    action: "cr018-s01-verified-s03-s04-dev-ready"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "meta-qa/qa-zhang 完成 CR018-S01 CP7 验证 PASS；主线程复跑 S01 + CR014 catalog publish gate 回归 14 passed，并关闭 QA 线程。S01 已标记 verified；S03 与 S04 因文件 owner 不冲突进入 dev_ready，S02/S05 继续因 shared contracts/validation/readers 冲突等待。"
+    artifacts:
+      - "process/checks/CP7-CR018-S01-production-current-truth-definition-and-dataset-groups-VERIFICATION-DONE.md"
+      - "process/handoffs/META-QA-CR018-S01-CP7-VERIFY-2026-05-29.md"
+      - "process/stories/CR018-S01-production-current-truth-definition-and-dataset-groups.md"
+      - "process/stories/CR018-S03-real-benchmark-index-components-weights-backfill.md"
+      - "process/stories/CR018-S04-industry-market-cap-liquidity-and-exposure-data.md"
+      - "process/STATE.md"
+    verification:
+      cp7_status: "PASS"
+      target_regression: "PASS: 14 passed in 0.08s"
+      dependency_diff: "PASS: pyproject.toml/uv.lock unchanged"
+      diff_check: "PASS"
+    next_dev_ready:
+      - "CR018-S03-real-benchmark-index-components-weights-backfill"
+      - "CR018-S04-industry-market-cap-liquidity-and-exposure-data"
+    safety_confirmations:
+      provider_fetch_authorized: false
+      credential_read_authorized: false
+      real_lake_write_authorized: false
+      catalog_publish_authorized: false
+      qmt_simulation_or_live_authorized: false
+      duckdb_dependency_change_authorized: false
+  - at: "2026-05-29T08:47:19+08:00"
+    actor: "meta-po"
+    action: "cr018-s01-cp7-meta-qa-dispatched"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "CR018-S01 CP6 PASS 后，meta-po 通过 spawn_agent 调度 meta-qa/qa-zhang 执行 CP7 验证。验证范围覆盖 S01 目标测试、catalog publish gate 回归、diff check 和真实操作边界。"
+    artifacts:
+      - "process/handoffs/META-QA-CR018-S01-CP7-VERIFY-2026-05-29.md"
+      - "process/checks/CP6-CR018-S01-production-current-truth-definition-and-dataset-groups-CODING-DONE.md"
+      - "process/STATE.md"
+    dispatch:
+      role: "meta-qa"
+      agent_name: "qa-zhang"
+      agent_id: "019e7133-1e11-7041-aace-fbe30de97fea"
+      thread_id: "019e7133-1e11-7041-aace-fbe30de97fea"
+      tool_name: "multi_agent_v1.spawn_agent"
+      status: "running"
+    safety_confirmations:
+      provider_fetch_authorized: false
+      credential_read_authorized: false
+      real_lake_write_authorized: false
+      catalog_publish_authorized: false
+      qmt_simulation_or_live_authorized: false
+      duckdb_dependency_change_authorized: false
+  - at: "2026-05-29T08:45:06+08:00"
+    actor: "meta-po"
+    action: "cr018-s01-cp6-pass-ready-for-cp7"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "meta-dev/dev-you 完成 CR018-S01 受控离线实现并写入 CP6 PASS；主线程复跑 S01 目标测试、py_compile、git diff --check 和缓存扫描均 PASS，已关闭 dev 线程。"
+    artifacts:
+      - "market_data/release_scope.py"
+      - "market_data/dataset_groups.py"
+      - "market_data/catalog.py"
+      - "tests/test_cr018_release_scope_dataset_groups.py"
+      - "process/checks/CP6-CR018-S01-production-current-truth-definition-and-dataset-groups-CODING-DONE.md"
+      - "process/handoffs/META-DEV-CR018-S01-IMPLEMENT-2026-05-29.md"
+      - "process/stories/CR018-S01-production-current-truth-definition-and-dataset-groups.md"
+      - "process/STATE.md"
+    verification:
+      target_tests: "PASS: 7 passed in 0.04s"
+      py_compile: "PASS"
+      diff_check: "PASS"
+      cache_scan: "PASS"
+    safety_confirmations:
+      provider_fetch_authorized: false
+      credential_read_authorized: false
+      real_lake_write_authorized: false
+      catalog_publish_authorized: false
+      qmt_simulation_or_live_authorized: false
+      duckdb_dependency_change_authorized: false
+  - at: "2026-05-29T08:33:38+08:00"
+    actor: "meta-po"
+    action: "cr018-s01-meta-dev-dispatched"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "CR018 CP5 已 approved；按 Wave 串行主线调度 meta-dev/dev-you 实现 CR018-S01。写入范围限制为 release scope、dataset group、catalog metadata helper、离线测试和必要说明文档；真实 provider fetch、真实 lake 写入、catalog current pointer publish、凭据读取、DuckDB 依赖变更和 QMT operation 均继续 blocked。"
+    artifacts:
+      - "process/handoffs/META-DEV-CR018-S01-IMPLEMENT-2026-05-29.md"
+      - "process/stories/CR018-S01-production-current-truth-definition-and-dataset-groups.md"
+      - "process/STORY-STATUS.md"
+      - "process/STATE.md"
+    dispatch:
+      role: "meta-dev"
+      agent_name: "dev-you"
+      agent_id: "019e7126-854e-7891-8e54-738187c8f2a6"
+      thread_id: "019e7126-854e-7891-8e54-738187c8f2a6"
+      tool_name: "multi_agent_v1.spawn_agent"
+      status: "running"
+    safety_confirmations:
+      provider_fetch_authorized: false
+      credential_read_authorized: false
+      real_lake_write_authorized: false
+      catalog_publish_authorized: false
+      qmt_simulation_or_live_authorized: false
+      code_implementation_authorized: "offline/fixture/dry-run only"
+  - at: "2026-05-29T08:25:12+08:00"
+    actor: "meta-po"
+    action: "cr018-cp5-approved-enter-story-execution"
+    from_phase: "story-planning"
+    to_phase: "story-execution"
+    reason: "用户回复“同意”，等价接受 CP5-CR018-DQ-01..DQ-04 推荐方案；9 个 CR018 LLD 已批量确认，允许受控离线 / fixture / dry-run 代码实现。真实 provider fetch、真实 lake 写入、catalog publish、凭据读取、DuckDB 依赖变更和 QMT operation 继续 blocked。"
+    artifacts:
+      - "checkpoints/CP5-CR018-PRODUCTION-DATA-LAKE-CLOSURE-BATCH-A-LLD-BATCH.md"
+      - "process/STORY-STATUS.md"
+      - "process/DEVELOPMENT-PLAN.yaml"
+      - "process/STATE.md"
+      - "process/stories/CR018-S01-production-current-truth-definition-and-dataset-groups.md"
+      - "process/stories/CR018-S01-production-current-truth-definition-and-dataset-groups-LLD.md"
+    decision_items:
+      - "CP5-CR018-DQ-01 approved"
+      - "CP5-CR018-DQ-02 approved"
+      - "CP5-CR018-DQ-03 approved"
+      - "CP5-CR018-DQ-04 approved"
+    dev_ready:
+      - "CR018-S01-production-current-truth-definition-and-dataset-groups"
+    safety_confirmations:
+      provider_fetch_authorized: false
+      credential_read_authorized: false
+      real_lake_write_authorized: false
+      catalog_publish_authorized: false
+      qmt_simulation_or_live_authorized: false
+      code_implementation_authorized: "offline/fixture/dry-run only"
+  - at: "2026-05-29T08:04:50+08:00"
+    actor: "meta-po"
+    action: "cr018-cp5-manual-review-created"
+    from_phase: "story-planning"
+    to_phase: "story-planning"
+    reason: "CR018-S01..S09 全量 LLD 已完成，9 个 Story 级 CP5 自动预检均 PASS；meta-po 已生成 CP5 全量 LLD 人工审查稿并进入 awaiting-user。"
+    artifacts:
+      - "checkpoints/CP5-CR018-PRODUCTION-DATA-LAKE-CLOSURE-BATCH-A-LLD-BATCH.md"
+      - "process/STORY-STATUS.md"
+      - "process/STATE.md"
+    decision_items:
+      - "CP5-CR018-DQ-01"
+      - "CP5-CR018-DQ-02"
+      - "CP5-CR018-DQ-03"
+      - "CP5-CR018-DQ-04"
+    safety_confirmations:
+      provider_fetch_authorized: false
+      credential_read_authorized: false
+      real_lake_write_authorized: false
+      catalog_publish_authorized: false
+      qmt_simulation_or_live_authorized: false
+      code_implementation_authorized: false
+  - at: "2026-05-29T08:04:50+08:00"
+    actor: "meta-po"
+    action: "cr018-lld-g1-completed-all-lld-ready"
+    from_phase: "story-planning"
+    to_phase: "story-planning"
+    reason: "meta-dev/dev-lv 完成 CR018-S01/S02/S03 LLD 与 CP5 自动预检 PASS；至此 CR018-S01..S09 全量 LLD 与 CP5 自动预检均已完成，下一步生成 CP5 全量 LLD 人工审查稿。"
+    artifacts:
+      - "process/handoffs/META-DEV-CR018-LLD-G1-2026-05-29.md"
+      - "process/stories/CR018-S01-production-current-truth-definition-and-dataset-groups-LLD.md"
+      - "process/stories/CR018-S02-pit-universe-lifecycle-st-trade-status-price-limit-backfill-LLD.md"
+      - "process/stories/CR018-S03-real-benchmark-index-components-weights-backfill-LLD.md"
+      - "process/checks/CP5-CR018-S01-production-current-truth-definition-and-dataset-groups-LLD-IMPLEMENTABILITY.md"
+      - "process/checks/CP5-CR018-S02-pit-universe-lifecycle-st-trade-status-price-limit-backfill-LLD-IMPLEMENTABILITY.md"
+      - "process/checks/CP5-CR018-S03-real-benchmark-index-components-weights-backfill-LLD-IMPLEMENTABILITY.md"
+      - "process/STATE.md"
+    dispatch_evidence:
+      mode: "close_agent-after-completed"
+      tool_name: "multi_agent_v1.close_agent"
+      agent_id: "019e7102-dc44-7382-baaa-524b3667b2f3"
+      thread_id: "019e7102-dc44-7382-baaa-524b3667b2f3"
+      agent_name: "dev-lv"
+      batch_id: "CR018-LLD-G1"
+      closed_at: "2026-05-29T08:04:50+08:00"
+      status: "completed-closed"
+    safety_confirmations:
+      provider_fetch_authorized: false
+      credential_read_authorized: false
+      real_lake_write_authorized: false
+      catalog_publish_authorized: false
+      qmt_simulation_or_live_authorized: false
+      code_implementation_authorized: false
+  - at: "2026-05-29T08:03:42+08:00"
+    actor: "meta-po"
+    action: "cr018-lld-g2-g3-completed"
+    from_phase: "story-planning"
+    to_phase: "story-planning"
+    reason: "meta-dev/dev-yang 完成 CR018-S04/S05/S06 LLD 与 CP5 自动预检 PASS；meta-dev/dev-kong 完成 CR018-S07/S08/S09 LLD 与 CP5 自动预检 PASS，并保留 S09 QMT later-gated 边界。meta-po 已关闭对应线程并回填 handoff / lifecycle 证据。"
+    artifacts:
+      - "process/handoffs/META-DEV-CR018-LLD-G2-2026-05-29.md"
+      - "process/handoffs/META-DEV-CR018-LLD-G3-2026-05-29.md"
+      - "process/stories/CR018-S04-industry-market-cap-liquidity-and-exposure-data-LLD.md"
+      - "process/stories/CR018-S05-adjustment-dual-view-quality-and-qfq-hfq-publish-readiness-LLD.md"
+      - "process/stories/CR018-S06-production-quality-readiness-audit-and-rollback-gate-LLD.md"
+      - "process/stories/CR018-S07-explicit-publish-gate-and-current-reader-smoke-LLD.md"
+      - "process/stories/CR018-S08-production-current-truth-research-rerun-LLD.md"
+      - "process/stories/CR018-S09-qmt-simulation-admission-boundary-after-data-lake-LLD.md"
+      - "process/checks/CP5-CR018-S04-industry-market-cap-liquidity-and-exposure-data-LLD-IMPLEMENTABILITY.md"
+      - "process/checks/CP5-CR018-S05-adjustment-dual-view-quality-and-qfq-hfq-publish-readiness-LLD-IMPLEMENTABILITY.md"
+      - "process/checks/CP5-CR018-S06-production-quality-readiness-audit-and-rollback-gate-LLD-IMPLEMENTABILITY.md"
+      - "process/checks/CP5-CR018-S07-explicit-publish-gate-and-current-reader-smoke-LLD-IMPLEMENTABILITY.md"
+      - "process/checks/CP5-CR018-S08-production-current-truth-research-rerun-LLD-IMPLEMENTABILITY.md"
+      - "process/checks/CP5-CR018-S09-qmt-simulation-admission-boundary-after-data-lake-LLD-IMPLEMENTABILITY.md"
+      - "process/STATE.md"
+    dispatch_evidence:
+      mode: "close_agent-after-completed"
+      tool_name: "multi_agent_v1.close_agent"
+      agents:
+        - agent_id: "019e7102-dc8b-75e3-9a66-c94dbc4b30ba"
+          agent_name: "dev-yang"
+          batch_id: "CR018-LLD-G2"
+          closed_at: "2026-05-29T08:03:18+08:00"
+          status: "completed-closed"
+        - agent_id: "019e7102-dce0-7901-b877-afec4c09dc36"
+          agent_name: "dev-kong"
+          batch_id: "CR018-LLD-G3"
+          closed_at: "2026-05-29T08:03:42+08:00"
+          status: "completed-closed"
+    safety_confirmations:
+      provider_fetch_authorized: false
+      credential_read_authorized: false
+      real_lake_write_authorized: false
+      catalog_publish_authorized: false
+      qmt_simulation_or_live_authorized: false
+      code_implementation_authorized: false
+  - at: "2026-05-29T07:54:37+08:00"
+    actor: "meta-po"
+    action: "cr018-parallel-lld-meta-dev-dispatched"
+    from_phase: "story-planning"
+    to_phase: "story-planning"
+    reason: "CR018 CP4 已 PASS，meta-po 按 max_parallel_lld=3 将 9 个 Story LLD 拆为 G1/S01-S03、G2/S04-S06、G3/S07-S09 三个并行 meta-dev 批次；每个批次只允许写自己的 LLD 与 CP5 自动预检，不允许实现或真实操作。"
+    artifacts:
+      - "process/handoffs/META-DEV-CR018-LLD-G1-2026-05-29.md"
+      - "process/handoffs/META-DEV-CR018-LLD-G2-2026-05-29.md"
+      - "process/handoffs/META-DEV-CR018-LLD-G3-2026-05-29.md"
+      - "process/STATE.md"
+    dispatch_evidence:
+      mode: "spawn_agent-parallel"
+      tool_name: "multi_agent_v1.spawn_agent"
+      agents:
+        - agent_id: "019e7102-dc44-7382-baaa-524b3667b2f3"
+          thread_id: "019e7102-dc44-7382-baaa-524b3667b2f3"
+          agent_name: "dev-lv"
+          batch_id: "CR018-LLD-G1"
+        - agent_id: "019e7102-dc8b-75e3-9a66-c94dbc4b30ba"
+          thread_id: "019e7102-dc8b-75e3-9a66-c94dbc4b30ba"
+          agent_name: "dev-yang"
+          batch_id: "CR018-LLD-G2"
+        - agent_id: "019e7102-dce0-7901-b877-afec4c09dc36"
+          thread_id: "019e7102-dce0-7901-b877-afec4c09dc36"
+          agent_name: "dev-kong"
+          batch_id: "CR018-LLD-G3"
+      spawned_at: "2026-05-29T07:54:37+08:00"
+      status: "running"
+    safety_confirmations:
+      provider_fetch_authorized: false
+      credential_read_authorized: false
+      real_lake_write_authorized: false
+      catalog_publish_authorized: false
+      qmt_simulation_or_live_authorized: false
+      code_implementation_authorized: false
+  - at: "2026-05-29T07:44:33+08:00"
+    actor: "meta-po"
+    action: "cr018-story-cards-cp4-recovered-pass"
+    from_phase: "story-planning"
+    to_phase: "story-planning"
+    reason: "meta-se/se-shen 在等待期内未返回完成摘要且未创建 CR018 Story 卡片；meta-po 关闭该线程并按已批准的 Story Backlog / Development Plan recovery 创建 CR018-S01..S09 Story 卡片，更新 STORY-STATUS 与 DEVELOPMENT-PLAN，并将 CP4 rerun 结论写为 PASS。"
+    artifacts:
+      - "process/stories/CR018-S01-production-current-truth-definition-and-dataset-groups.md"
+      - "process/stories/CR018-S02-pit-universe-lifecycle-st-trade-status-price-limit-backfill.md"
+      - "process/stories/CR018-S03-real-benchmark-index-components-weights-backfill.md"
+      - "process/stories/CR018-S04-industry-market-cap-liquidity-and-exposure-data.md"
+      - "process/stories/CR018-S05-adjustment-dual-view-quality-and-qfq-hfq-publish-readiness.md"
+      - "process/stories/CR018-S06-production-quality-readiness-audit-and-rollback-gate.md"
+      - "process/stories/CR018-S07-explicit-publish-gate-and-current-reader-smoke.md"
+      - "process/stories/CR018-S08-production-current-truth-research-rerun.md"
+      - "process/stories/CR018-S09-qmt-simulation-admission-boundary-after-data-lake.md"
+      - "process/STORY-STATUS.md"
+      - "process/DEVELOPMENT-PLAN.yaml"
+      - "process/checks/CP4-CR018-STORY-DAG-PARALLEL-SAFETY.md"
+      - "process/handoffs/META-SE-CR018-STORY-CARDS-CP4-2026-05-29.md"
+      - "process/STATE.md"
+    dispatch_evidence:
+      mode: "spawn_agent+close_agent+meta-po-recovery"
+      agent_id: "019e70f2-5584-7de0-ad39-a2479592bf1c"
+      thread_id: "019e70f2-5584-7de0-ad39-a2479592bf1c"
+      agent_name: "se-shen"
+      tool_name: "multi_agent_v1.spawn_agent/close_agent"
+      spawned_at: "2026-05-29T07:34:40+08:00"
+      closed_at: "2026-05-29T07:44:33+08:00"
+      previous_status: "running"
+      status: "shutdown-incomplete"
+    safety_confirmations:
+      provider_fetch_authorized: false
+      credential_read_authorized: false
+      real_lake_write_authorized: false
+      catalog_publish_authorized: false
+      qmt_simulation_or_live_authorized: false
+      code_implementation_authorized: false
+  - at: "2026-05-29T07:34:40+08:00"
+    actor: "meta-po"
+    action: "cr018-story-cards-cp4-meta-se-dispatched"
+    from_phase: "story-planning"
+    to_phase: "story-planning"
+    reason: "CP3 已 approved，meta-po 通过真实子 agent 调度 meta-se/se-shen 创建 CR018-S01..S09 Story 卡片、同步 STORY-STATUS / DEVELOPMENT-PLAN，并重跑 CP4。"
+    artifacts:
+      - "process/handoffs/META-SE-CR018-STORY-CARDS-CP4-2026-05-29.md"
+      - "process/STATE.md"
+    dispatch_evidence:
+      mode: "spawn_agent"
+      agent_id: "019e70f2-5584-7de0-ad39-a2479592bf1c"
+      thread_id: "019e70f2-5584-7de0-ad39-a2479592bf1c"
+      agent_name: "se-shen"
+      tool_name: "multi_agent_v1.spawn_agent"
+      spawned_at: "2026-05-29T07:34:40+08:00"
+      status: "running"
+    safety_confirmations:
+      provider_fetch_authorized: false
+      credential_read_authorized: false
+      real_lake_write_authorized: false
+      catalog_publish_authorized: false
+      qmt_simulation_or_live_authorized: false
+      code_implementation_authorized: false
+  - at: "2026-05-29T07:34:40+08:00"
+    actor: "meta-po"
+    action: "cr018-cp3-approved-enter-story-planning"
+    from_phase: "solution-design"
+    to_phase: "story-planning"
+    reason: "用户回复“批准”，等价接受 CP3-CR018-DQ-01、CP3-CR018-DQ-02、CP3-CR018-DQ-03 推荐方案。meta-po 已将 checkpoints/CP3-CR018-HLD-REVIEW.md 回填为 approved；下一步创建 CR018-S01..S09 Story 卡片并重跑 CP4。"
+    artifacts:
+      - "checkpoints/CP3-CR018-HLD-REVIEW.md"
+      - "process/STATE.md"
+    safety_confirmations:
+      provider_fetch_authorized: false
+      credential_read_authorized: false
+      real_lake_write_authorized: false
+      catalog_publish_authorized: false
+      qmt_simulation_or_live_authorized: false
+      code_implementation_authorized: false
+  - at: "2026-05-29T07:25:48+08:00"
+    actor: "meta-po"
+    action: "cr018-cp3-generated-cp4-blocked-awaiting-user"
+    from_phase: "solution-design"
+    to_phase: "solution-design"
+    reason: "replacement meta-se/se-wei 已部分落盘 CR018 Development Plan 但未完整返回 CP3/CP4；meta-po 基于已落盘 HLD / ADR / Story Backlog / Development Plan 收敛 CP3 自动预检和人工审查稿，CP3 自动预检 PASS。CP4 预检因 CP3 pending 与 CR018 Story 卡片缺失而 BLOCKED；这是流程门控，不是设计失败。"
+    artifacts:
+      - "process/HLD-DATA-LAKE.md"
+      - "process/HLD.md"
+      - "process/ARCHITECTURE-DECISION.md"
+      - "process/STORY-BACKLOG.md"
+      - "process/DEVELOPMENT-PLAN.yaml"
+      - "process/checks/CP3-CR018-HLD-CONSISTENCY.md"
+      - "checkpoints/CP3-CR018-HLD-REVIEW.md"
+      - "process/checks/CP4-CR018-STORY-DAG-PARALLEL-SAFETY.md"
+      - "process/handoffs/META-SE-CR018-HLD-ADR-STORY-REPLACEMENT-2026-05-29.md"
+      - "process/STATE.md"
+    dispatch_evidence:
+      mode: "spawn_agent+close_agent+meta-po-checkpoint-recovery"
+      agent_id: "019e70dd-1902-7883-a3c7-35466a4f19ab"
+      thread_id: "019e70dd-1902-7883-a3c7-35466a4f19ab"
+      agent_name: "se-wei"
+      tool_name: "multi_agent_v1.spawn_agent/close_agent"
+      spawned_at: "2026-05-29T07:13:00+08:00"
+      closed_at: "2026-05-29T07:25:48+08:00"
+      status: "shutdown-partial"
+    safety_confirmations:
+      provider_fetch_authorized: false
+      credential_read_authorized: false
+      real_lake_write_authorized: false
+      catalog_publish_authorized: false
+      qmt_simulation_or_live_authorized: false
+      code_implementation_authorized: false
+  - at: "2026-05-29T07:13:00+08:00"
+    actor: "meta-po"
+    action: "cr018-se-replacement-dispatched-after-partial-shutdown"
+    from_phase: "solution-design"
+    to_phase: "solution-design"
+    reason: "首个 meta-se/se-han 线程已落盘 CR018 HLD / ADR / Story Backlog 主体，但未返回最终完成状态且缺少 Development Plan、CP3 和 CP4 文件；meta-po 关闭该线程并调度 replacement meta-se/se-wei 只补齐缺失产物。"
+    artifacts:
+      - "process/handoffs/META-SE-CR018-HLD-ADR-STORY-2026-05-29.md"
+      - "process/handoffs/META-SE-CR018-HLD-ADR-STORY-REPLACEMENT-2026-05-29.md"
+      - "process/HLD-DATA-LAKE.md"
+      - "process/HLD.md"
+      - "process/ARCHITECTURE-DECISION.md"
+      - "process/STORY-BACKLOG.md"
+      - "process/STATE.md"
+    dispatch_evidence:
+      mode: "spawn_agent"
+      agent_id: "019e70dd-1902-7883-a3c7-35466a4f19ab"
+      thread_id: "019e70dd-1902-7883-a3c7-35466a4f19ab"
+      agent_name: "se-wei"
+      tool_name: "multi_agent_v1.spawn_agent"
+      spawned_at: "2026-05-29T07:13:00+08:00"
+      previous_agent_id: "019e70ce-9ac4-70c1-b6c5-deab04c28ab0"
+      previous_status: "shutdown-partial"
+      status: "running"
+    safety_confirmations:
+      provider_fetch_authorized: false
+      credential_read_authorized: false
+      real_lake_write_authorized: false
+      catalog_publish_authorized: false
+      qmt_simulation_or_live_authorized: false
+      code_implementation_authorized: false
+  - at: "2026-05-29T06:48:42+08:00"
+    actor: "meta-po"
+    action: "cr018-cp2-approved-and-se-dispatched"
+    from_phase: "requirement-clarification"
+    to_phase: "solution-design"
+    reason: "meta-pm/pm-wu 已返回 CR018 场景和需求增量建议；meta-po 回填 USE-CASES v1.8、REQUIREMENTS v1.9，生成 CP1/CP2 检查结果和 CP2 Decision Brief，并依据用户原文批准 D1-D6 将 CP2 人工结论回填为 approved。随后通过 spawn_agent 调度 meta-se/se-han 输出 CR018 HLD / ADR / Story Plan、CP3 和 CP4。"
+    artifacts:
+      - "process/USE-CASES.md"
+      - "process/REQUIREMENTS.md"
+      - "process/checks/CP1-CR018-USE-CASE-COMPLETENESS.md"
+      - "process/checks/CP2-CR018-REQUIREMENTS-BASELINE.md"
+      - "checkpoints/CP2-CR018-PRODUCTION-DATA-LAKE-CLOSURE-DECISION-BRIEF.md"
+      - "process/handoffs/META-PM-CR018-REQ-CLARIFICATION-2026-05-29.md"
+      - "process/handoffs/META-SE-CR018-HLD-ADR-STORY-2026-05-29.md"
+      - "process/STATE.md"
+    dispatch_evidence:
+      mode: "spawn_agent"
+      agent_id: "019e70ce-9ac4-70c1-b6c5-deab04c28ab0"
+      thread_id: "019e70ce-9ac4-70c1-b6c5-deab04c28ab0"
+      agent_name: "se-han"
+      tool_name: "multi_agent_v1.spawn_agent"
+      spawned_at: "2026-05-29T06:48:42+08:00"
+      status: "running"
+    safety_confirmations:
+      provider_fetch_authorized: false
+      credential_read_authorized: false
+      real_lake_write_authorized: false
+      catalog_publish_authorized: false
+      qmt_simulation_or_live_authorized: false
+      code_implementation_authorized: false
+  - at: "2026-05-29T06:42:36+08:00"
+    actor: "meta-po"
+    action: "cr018-production-data-lake-closure-created-and-pm-dispatched"
+    from_phase: "documentation"
+    to_phase: "requirement-clarification"
+    reason: "用户批准 D1-D6 推荐方案，将最高优先级切换为数据湖 production current truth，并要求 QMT simulation 在数据湖 publish + 研究重跑通过后再推进。meta-po 创建 CR018 并通过 spawn_agent 调度 meta-pm/pm-wu 做场景与需求增量建议；本步不授权 provider fetch、真实 lake 写入、凭据读取、catalog publish 或 QMT 真实运行。"
+    artifacts:
+      - "process/changes/CR-018-PRODUCTION-DATA-LAKE-CLOSURE-2026-05-29.md"
+      - "process/handoffs/META-PM-CR018-REQ-CLARIFICATION-2026-05-29.md"
+      - "process/STATE.md"
+    dispatch_evidence:
+      mode: "spawn_agent"
+      agent_id: "019e70c0-a2b0-7a11-add3-86766e09bd0c"
+      thread_id: "019e70c0-a2b0-7a11-add3-86766e09bd0c"
+      agent_name: "pm-wu"
+      tool_name: "multi_agent_v1.spawn_agent"
+      spawned_at: "2026-05-29T06:42:36+08:00"
+      status: "running"
+    safety_confirmations:
+      provider_fetch_authorized: false
+      credential_read_authorized: false
+      real_lake_write_authorized: false
+      catalog_publish_authorized: false
+      qmt_simulation_or_live_authorized: false
+      duckdb_dependency_change_authorized: false
+  - at: "2026-05-28T11:16:25+08:00"
+    actor: "meta-po"
+    action: "cr016-s04-cp7-qa-dispatched"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "CR016-S04 CP6 PASS 且主线程回归通过；meta-po 通过 spawn_agent 调度 meta-qa/qa-shi the 2nd 执行 CP7 验证。QA 只允许写 CP7 结果文件，不允许真实 broker 操作、simulation/live/small_live/scale_up、账户查询、凭据读取或任何真实运行授权声明。"
+    artifacts:
+      - "process/handoffs/META-QA-CR016-S04-CP7-VERIFY-2026-05-28.md"
+      - "process/checks/CP6-CR016-S04-simulation-live-runbook-and-approval-gates-CODING-DONE.md"
+      - "process/stories/CR016-S04-simulation-live-runbook-and-approval-gates.md"
+      - "process/STORY-STATUS.md"
+      - "process/STATE.md"
+    dispatch:
+      - role: "meta-qa"
+        agent_id: "019e6c95-337c-7851-8f1f-0c558da719b4"
+        agent_name: "qa-shi the 2nd"
+        story_id: "CR016-S04-simulation-live-runbook-and-approval-gates"
+        status: "running"
+    safety_confirmations:
+      qmt_api_authorized: false
+      real_order_authorized: false
+      real_cancel_authorized: false
+      real_account_query_authorized: false
+      credential_read_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      real_broker_lake_write_authorized: false
+      incident_persist_authorized: false
+      current_pointer_publish_authorized: false
+      simulation_run_authorized: false
+      live_run_authorized: false
+      small_live_run_authorized: false
+      scale_up_run_authorized: false
+  - at: "2026-05-28T11:14:39+08:00"
+    actor: "meta-po"
+    action: "cr016-s04-cp6-pass-ready-for-verification"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "meta-dev/dev-qin the 2nd 完成 CR016-S04 simulation/live runbook 与 approval gate 文档合同实现并写入 CP6 PASS；主线程复跑指定回归 41 passed。Story 进入 ready-for-verification，等待 CP7。"
+    artifacts:
+      - "docs/QMT-SIMULATION-LIVE-RUNBOOK.md"
+      - "tests/test_cr016_runbook_approval_gates.py"
+      - "docs/QMT-TRADING-RUNBOOK.md"
+      - "README.md"
+      - "docs/USER-MANUAL.md"
+      - "process/checks/CP6-CR016-S04-simulation-live-runbook-and-approval-gates-CODING-DONE.md"
+      - "process/handoffs/META-DEV-CR016-S04-IMPLEMENT-2026-05-28.md"
+      - "process/stories/CR016-S04-simulation-live-runbook-and-approval-gates.md"
+      - "process/STORY-STATUS.md"
+      - "process/STATE.md"
+    dispatch:
+      - role: "meta-dev"
+        agent_id: "019e6c89-715f-7472-8b69-e20d1e9e4aa0"
+        agent_name: "dev-qin the 2nd"
+        story_id: "CR016-S04-simulation-live-runbook-and-approval-gates"
+        status: "closed"
+    test_result: "PYTHONDONTWRITEBYTECODE=1 PYTEST_ADDOPTS='-p no:cacheprovider' uv run --python 3.11 pytest -q tests/test_cr016_runbook_approval_gates.py tests/test_cr015_foundation_runbook_boundary.py tests/test_cr016_monitoring_kill_switch.py tests/test_cr016_reconciliation_service_reports.py tests/test_cr016_simulation_order_enable_gate.py -> 41 passed in 0.21s"
+    safety_confirmations:
+      qmt_api_authorized: false
+      real_order_authorized: false
+      real_cancel_authorized: false
+      real_account_query_authorized: false
+      credential_read_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      real_broker_lake_write_authorized: false
+      incident_persist_authorized: false
+      current_pointer_publish_authorized: false
+      simulation_run_authorized: false
+      live_run_authorized: false
+      small_live_run_authorized: false
+      scale_up_run_authorized: false
+  - at: "2026-05-28T11:03:33+08:00"
+    actor: "meta-po"
+    action: "cr016-s04-dev-dispatched"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "CR016-S04 dev_gate 已满足；meta-po 通过 spawn_agent 调度 meta-dev/dev-qin the 2nd 执行 simulation/live runbook 与 approval gate 文档合同离线实现。该调度不授权真实 broker 操作、simulation/live/small_live/scale_up、真实发单、撤单、账户查询或凭据读取。"
+    artifacts:
+      - "process/handoffs/META-DEV-CR016-S04-IMPLEMENT-2026-05-28.md"
+      - "process/stories/CR016-S04-simulation-live-runbook-and-approval-gates.md"
+      - "process/STORY-STATUS.md"
+      - "process/STATE.md"
+    dispatch:
+      - role: "meta-dev"
+        agent_id: "019e6c89-715f-7472-8b69-e20d1e9e4aa0"
+        agent_name: "dev-qin the 2nd"
+        story_id: "CR016-S04-simulation-live-runbook-and-approval-gates"
+        status: "running"
+    safety_confirmations:
+      qmt_api_authorized: false
+      real_order_authorized: false
+      real_cancel_authorized: false
+      real_account_query_authorized: false
+      credential_read_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      real_broker_lake_write_authorized: false
+      incident_persist_authorized: false
+      current_pointer_publish_authorized: false
+      simulation_run_authorized: false
+      live_run_authorized: false
+      small_live_run_authorized: false
+      scale_up_run_authorized: false
+  - at: "2026-05-28T11:00:54+08:00"
+    actor: "meta-po"
+    action: "cr016-s03-verified-cr016-s04-dev-ready"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "meta-qa/qa-wei the 2nd 完成 CR016-S03 CP7 PASS；指定回归 54 passed，静态扫描 violations=0，18 项真实操作计数均为 0。S03 收敛为 verified；CR016-S04 依赖 CR016-S01/S02/S03 均已 verified，且当前无 runbook/docs/test 文件冲突，进入 dev-ready。runbook 实现只写文档合同和静态测试，不授权 simulation/live/small_live/scale_up 或任何真实 broker 操作。"
+    artifacts:
+      - "process/checks/CP7-CR016-S03-monitoring-heartbeat-and-kill-switch-VERIFICATION-DONE.md"
+      - "process/handoffs/META-QA-CR016-S03-CP7-VERIFY-2026-05-28.md"
+      - "process/stories/CR016-S03-monitoring-heartbeat-and-kill-switch.md"
+      - "process/stories/CR016-S04-simulation-live-runbook-and-approval-gates.md"
+      - "process/STORY-STATUS.md"
+      - "process/STATE.md"
+    dispatch:
+      - role: "meta-qa"
+        agent_id: "019e6c80-3ba9-76f3-878c-b577f342cca4"
+        agent_name: "qa-wei the 2nd"
+        story_id: "CR016-S03-monitoring-heartbeat-and-kill-switch"
+        status: "closed"
+    test_result: "PYTHONDONTWRITEBYTECODE=1 PYTEST_ADDOPTS='-p no:cacheprovider' uv run --python 3.11 pytest -q tests/test_cr016_monitoring_kill_switch.py tests/test_cr015_qmt_adapter_contract.py tests/test_cr015_oms_state_machine.py tests/test_cr016_reconciliation_service_reports.py tests/test_cr016_simulation_order_enable_gate.py -> 54 passed in 0.19s"
+    safety_confirmations:
+      qmt_api_authorized: false
+      real_order_authorized: false
+      real_cancel_authorized: false
+      real_account_query_authorized: false
+      credential_read_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      real_broker_lake_write_authorized: false
+      incident_persist_authorized: false
+      current_pointer_publish_authorized: false
+      simulation_run_authorized: false
+  - at: "2026-05-28T10:53:30+08:00"
+    actor: "meta-po"
+    action: "cr016-s03-cp7-qa-dispatched"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "CR016-S03 CP6 PASS 且主线程回归通过；meta-po 通过 spawn_agent 调度 meta-qa/qa-wei the 2nd 执行 CP7 验证。QA 只允许写 CP7 结果文件，不允许真实撤单、真实 broker 操作、账户查询、incident 持久化或 simulation/live run。"
+    artifacts:
+      - "process/handoffs/META-QA-CR016-S03-CP7-VERIFY-2026-05-28.md"
+      - "process/checks/CP6-CR016-S03-monitoring-heartbeat-and-kill-switch-CODING-DONE.md"
+      - "process/stories/CR016-S03-monitoring-heartbeat-and-kill-switch.md"
+      - "process/STORY-STATUS.md"
+      - "process/STATE.md"
+    dispatch:
+      - role: "meta-qa"
+        agent_id: "019e6c80-3ba9-76f3-878c-b577f342cca4"
+        agent_name: "qa-wei the 2nd"
+        story_id: "CR016-S03-monitoring-heartbeat-and-kill-switch"
+        status: "running"
+    safety_confirmations:
+      qmt_api_authorized: false
+      real_order_authorized: false
+      real_cancel_authorized: false
+      real_account_query_authorized: false
+      credential_read_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      real_broker_lake_write_authorized: false
+      incident_persist_authorized: false
+      current_pointer_publish_authorized: false
+      simulation_run_authorized: false
+  - at: "2026-05-28T10:51:44+08:00"
+    actor: "meta-po"
+    action: "cr016-s03-cp6-pass-ready-for-verification"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "meta-dev/dev-xu the 2nd 完成 CR016-S03 fixture-only monitoring heartbeat / kill switch contract 离线实现并写入 CP6 PASS；主线程复跑指定回归 54 passed。Story 进入 ready-for-verification，等待 CP7。"
+    artifacts:
+      - "trading/monitoring.py"
+      - "trading/kill_switch.py"
+      - "tests/test_cr016_monitoring_kill_switch.py"
+      - "process/checks/CP6-CR016-S03-monitoring-heartbeat-and-kill-switch-CODING-DONE.md"
+      - "process/handoffs/META-DEV-CR016-S03-IMPLEMENT-2026-05-28.md"
+      - "process/stories/CR016-S03-monitoring-heartbeat-and-kill-switch.md"
+      - "process/STORY-STATUS.md"
+      - "process/STATE.md"
+    dispatch:
+      - role: "meta-dev"
+        agent_id: "019e6c74-54ef-7cb2-ac70-163c253c785a"
+        agent_name: "dev-xu the 2nd"
+        story_id: "CR016-S03-monitoring-heartbeat-and-kill-switch"
+        status: "closed"
+    test_result: "PYTHONDONTWRITEBYTECODE=1 PYTEST_ADDOPTS='-p no:cacheprovider' uv run --python 3.11 pytest -q tests/test_cr016_monitoring_kill_switch.py tests/test_cr015_qmt_adapter_contract.py tests/test_cr015_oms_state_machine.py tests/test_cr016_reconciliation_service_reports.py tests/test_cr016_simulation_order_enable_gate.py -> 54 passed in 0.19s"
+    safety_confirmations:
+      qmt_api_authorized: false
+      real_order_authorized: false
+      real_cancel_authorized: false
+      real_account_query_authorized: false
+      credential_read_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      real_broker_lake_write_authorized: false
+      current_pointer_publish_authorized: false
+      simulation_run_authorized: false
+  - at: "2026-05-28T10:40:29+08:00"
+    actor: "meta-po"
+    action: "cr016-s03-dev-dispatched"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "CR016-S03 dev_gate 已满足；meta-po 通过 spawn_agent 调度 meta-dev/dev-xu the 2nd 执行 fixture-only monitoring heartbeat / kill switch contract 离线实现。该调度不授权真实撤单、真实发单、真实账户查询、真实 broker 操作或 simulation/live run。"
+    artifacts:
+      - "process/handoffs/META-DEV-CR016-S03-IMPLEMENT-2026-05-28.md"
+      - "process/stories/CR016-S03-monitoring-heartbeat-and-kill-switch.md"
+      - "process/STORY-STATUS.md"
+      - "process/STATE.md"
+    dispatch:
+      - role: "meta-dev"
+        agent_id: "019e6c74-54ef-7cb2-ac70-163c253c785a"
+        agent_name: "dev-xu the 2nd"
+        story_id: "CR016-S03-monitoring-heartbeat-and-kill-switch"
+        status: "running"
+    safety_confirmations:
+      qmt_api_authorized: false
+      real_order_authorized: false
+      real_cancel_authorized: false
+      real_account_query_authorized: false
+      credential_read_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      real_broker_lake_write_authorized: false
+      current_pointer_publish_authorized: false
+      simulation_run_authorized: false
+  - at: "2026-05-28T10:37:45+08:00"
+    actor: "meta-po"
+    action: "cr016-s02-verified-cr016-s03-dev-ready"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "meta-qa/qa-cao the 2nd 完成 CR016-S02 CP7 PASS；指定回归 38 passed，静态扫描 violations=0，16 项真实操作计数均为 0。S02 收敛为 verified；CR016-S03 依赖 CR015-S02/S03 与 CR016-S02 均已 verified，且当前无 monitoring / kill_switch / oms / qmt_adapter 文件冲突，进入 dev-ready。per-run authorization 只授权未来真实撤单、broker 操作或 run，不是离线 contract 实现前置。"
+    artifacts:
+      - "process/checks/CP7-CR016-S02-reconciliation-service-and-reports-VERIFICATION-DONE.md"
+      - "process/handoffs/META-QA-CR016-S02-CP7-VERIFY-2026-05-28.md"
+      - "process/stories/CR016-S02-reconciliation-service-and-reports.md"
+      - "process/stories/CR016-S03-monitoring-heartbeat-and-kill-switch.md"
+      - "process/STORY-STATUS.md"
+      - "process/STATE.md"
+    dispatch:
+      - role: "meta-qa"
+        agent_id: "019e6c6b-0c7e-7183-988f-251715d88a47"
+        agent_name: "qa-cao the 2nd"
+        story_id: "CR016-S02-reconciliation-service-and-reports"
+        status: "closed"
+    test_result: "PYTHONDONTWRITEBYTECODE=1 PYTEST_ADDOPTS='-p no:cacheprovider' uv run --python 3.11 pytest -q tests/test_cr016_reconciliation_service_reports.py tests/test_cr015_oms_state_machine.py tests/test_cr015_broker_lake_schema_writer.py tests/test_cr016_simulation_order_enable_gate.py -> 38 passed in 0.19s"
+    safety_confirmations:
+      qmt_api_authorized: false
+      real_order_authorized: false
+      real_cancel_authorized: false
+      real_account_query_authorized: false
+      credential_read_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      real_broker_lake_write_authorized: false
+      current_pointer_publish_authorized: false
+      simulation_run_authorized: false
+  - at: "2026-05-28T10:30:23+08:00"
+    actor: "meta-po"
+    action: "cr016-s02-cp7-qa-dispatched"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "CR016-S02 CP6 PASS 且主线程回归通过；meta-po 通过 spawn_agent 调度 meta-qa/qa-cao the 2nd 执行 CP7 验证。QA 只允许写 CP7 结果文件，不允许真实账户查询、snapshot 拉取、broker lake 写入、旧报告覆盖、真实交易或 simulation/live run。"
+    artifacts:
+      - "process/handoffs/META-QA-CR016-S02-CP7-VERIFY-2026-05-28.md"
+      - "process/checks/CP6-CR016-S02-reconciliation-service-and-reports-CODING-DONE.md"
+      - "process/stories/CR016-S02-reconciliation-service-and-reports.md"
+      - "process/STORY-STATUS.md"
+      - "process/STATE.md"
+    dispatch:
+      - role: "meta-qa"
+        agent_id: "019e6c6b-0c7e-7183-988f-251715d88a47"
+        agent_name: "qa-cao the 2nd"
+        story_id: "CR016-S02-reconciliation-service-and-reports"
+        status: "running"
+    safety_confirmations:
+      qmt_api_authorized: false
+      real_order_authorized: false
+      real_cancel_authorized: false
+      real_account_query_authorized: false
+      credential_read_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      real_broker_lake_write_authorized: false
+      current_pointer_publish_authorized: false
+      simulation_run_authorized: false
+  - at: "2026-05-28T10:28:33+08:00"
+    actor: "meta-po"
+    action: "cr016-s02-cp6-pass-ready-for-verification"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "meta-dev/dev-yang the 2nd 完成 CR016-S02 fixture-only reconciliation service/report contract 离线实现并写入 CP6 PASS；主线程复跑指定回归 38 passed。Story 进入 ready-for-verification，等待 CP7。"
+    artifacts:
+      - "trading/reconciliation.py"
+      - "tests/test_cr016_reconciliation_service_reports.py"
+      - "process/checks/CP6-CR016-S02-reconciliation-service-and-reports-CODING-DONE.md"
+      - "process/handoffs/META-DEV-CR016-S02-IMPLEMENT-2026-05-28.md"
+      - "process/stories/CR016-S02-reconciliation-service-and-reports.md"
+      - "process/STORY-STATUS.md"
+      - "process/STATE.md"
+    dispatch:
+      - role: "meta-dev"
+        agent_id: "019e6c5e-da6a-71c2-a7ef-71f49245c2e7"
+        agent_name: "dev-yang the 2nd"
+        story_id: "CR016-S02-reconciliation-service-and-reports"
+        status: "closed"
+    test_result: "PYTHONDONTWRITEBYTECODE=1 PYTEST_ADDOPTS='-p no:cacheprovider' uv run --python 3.11 pytest -q tests/test_cr016_reconciliation_service_reports.py tests/test_cr015_oms_state_machine.py tests/test_cr015_broker_lake_schema_writer.py tests/test_cr016_simulation_order_enable_gate.py -> 38 passed in 0.16s"
+    safety_confirmations:
+      qmt_api_authorized: false
+      real_order_authorized: false
+      real_cancel_authorized: false
+      real_account_query_authorized: false
+      credential_read_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      real_broker_lake_write_authorized: false
+      current_pointer_publish_authorized: false
+      simulation_run_authorized: false
+  - at: "2026-05-28T10:20:16+08:00"
+    actor: "meta-po"
+    action: "cr016-s02-dev-dispatched"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "CR016-S02 dev_gate 已满足；meta-po 通过 spawn_agent 调度 meta-dev/dev-yang the 2nd 执行 fixture-only reconciliation service/report contract 离线实现。该调度不授权真实账户查询、真实 broker snapshot 拉取、真实 broker lake 写入、旧报告覆盖、真实交易或 simulation/live run。"
+    artifacts:
+      - "process/handoffs/META-DEV-CR016-S02-IMPLEMENT-2026-05-28.md"
+      - "process/stories/CR016-S02-reconciliation-service-and-reports.md"
+      - "process/STORY-STATUS.md"
+      - "process/STATE.md"
+    dispatch:
+      - role: "meta-dev"
+        agent_id: "019e6c5e-da6a-71c2-a7ef-71f49245c2e7"
+        agent_name: "dev-yang the 2nd"
+        story_id: "CR016-S02-reconciliation-service-and-reports"
+        status: "running"
+    safety_confirmations:
+      qmt_api_authorized: false
+      real_order_authorized: false
+      real_cancel_authorized: false
+      real_account_query_authorized: false
+      credential_read_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      real_broker_lake_write_authorized: false
+      current_pointer_publish_authorized: false
+      simulation_run_authorized: false
+  - at: "2026-05-28T10:14:24+08:00"
+    actor: "meta-po"
+    action: "cr016-s01-verified-cr016-s02-dev-ready"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "meta-qa/qa-jin the 2nd 完成 CR016-S01 CP7 PASS，stage gate / CR015 adapter 回归 24 passed，15 项安全计数均为 0。S01 收敛为 verified；CR016-S02 依赖 CR015-S03/S05 与 CR016-S01 均已 verified，且当前无 reconciliation / broker_lake / oms 文件冲突，进入 dev-ready。per-run authorization 只授权未来真实 snapshot / run，不是离线 reconciliation contract 实现前置。"
+    artifacts:
+      - "process/checks/CP7-CR016-S01-simulation-account-order-enable-gate-VERIFICATION-DONE.md"
+      - "process/handoffs/META-QA-CR016-S01-CP7-VERIFY-2026-05-28.md"
+      - "process/stories/CR016-S01-simulation-account-order-enable-gate.md"
+      - "process/stories/CR016-S02-reconciliation-service-and-reports.md"
+      - "process/STORY-STATUS.md"
+      - "process/STATE.md"
+    dispatch:
+      - role: "meta-qa"
+        agent_id: "019e6c57-6aac-7762-98e4-c5cc22d583e2"
+        agent_name: "qa-jin the 2nd"
+        story_id: "CR016-S01-simulation-account-order-enable-gate"
+        status: "closed"
+    test_result: "PYTHONDONTWRITEBYTECODE=1 PYTEST_ADDOPTS='-p no:cacheprovider' uv run --python 3.11 pytest -q tests/test_cr016_simulation_order_enable_gate.py tests/test_cr015_qmt_adapter_contract.py -> 24 passed in 0.07s"
+    safety_confirmations:
+      qmt_api_authorized: false
+      real_order_authorized: false
+      real_cancel_authorized: false
+      real_account_query_authorized: false
+      credential_read_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      real_broker_lake_write_authorized: false
+      current_pointer_publish_authorized: false
+      simulation_run_authorized: false
+  - at: "2026-05-28T10:08:54+08:00"
+    actor: "meta-po"
+    action: "cr016-s01-cp6-pass-cp7-dispatched"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "meta-dev/dev-zhang the 2nd 完成 CR016-S01 CP6 PASS，新增 stage gate、adapter precheck、runbook simulation admission 和测试；meta-po 复跑 stage gate / CR015 adapter 回归 24 passed，回填 dev handoff lifecycle，并调度 meta-qa/qa-jin the 2nd 执行 CP7。simulation run 和真实 QMT 操作仍不授权。"
+    artifacts:
+      - "trading/stage_gate.py"
+      - "tests/test_cr016_simulation_order_enable_gate.py"
+      - "process/checks/CP6-CR016-S01-simulation-account-order-enable-gate-CODING-DONE.md"
+      - "process/handoffs/META-DEV-CR016-S01-IMPLEMENT-2026-05-28.md"
+      - "process/handoffs/META-QA-CR016-S01-CP7-VERIFY-2026-05-28.md"
+      - "process/stories/CR016-S01-simulation-account-order-enable-gate.md"
+      - "process/STORY-STATUS.md"
+      - "process/STATE.md"
+    dispatch:
+      - role: "meta-dev"
+        agent_id: "019e6c4c-4259-7841-8741-9cc533d26950"
+        agent_name: "dev-zhang the 2nd"
+        story_id: "CR016-S01-simulation-account-order-enable-gate"
+        status: "closed"
+      - role: "meta-qa"
+        agent_id: "019e6c57-6aac-7762-98e4-c5cc22d583e2"
+        agent_name: "qa-jin the 2nd"
+        story_id: "CR016-S01-simulation-account-order-enable-gate"
+        status: "running"
+    test_result: "PYTHONDONTWRITEBYTECODE=1 PYTEST_ADDOPTS='-p no:cacheprovider' uv run --python 3.11 pytest -q tests/test_cr016_simulation_order_enable_gate.py tests/test_cr015_qmt_adapter_contract.py -> 24 passed in 0.07s"
+    safety_confirmations:
+      qmt_api_authorized: false
+      real_order_authorized: false
+      real_cancel_authorized: false
+      real_account_query_authorized: false
+      credential_read_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      real_broker_lake_write_authorized: false
+      current_pointer_publish_authorized: false
+      simulation_run_authorized: false
+  - at: "2026-05-28T09:56:41+08:00"
+    actor: "meta-po"
+    action: "cr016-s01-dev-dispatched"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "CR016-S01 的依赖 CR015-S07 与 CR017-S06 均已 verified，CP5 已 approved，当前无 trading/stage_gate.py、trading/qmt_adapter.py 或 docs/QMT-TRADING-RUNBOOK.md 文件冲突。meta-po 调度 meta-dev/dev-zhang the 2nd 执行离线 stage gate 合同实现；任何 simulation run 或真实 QMT 操作仍不授权。"
+    artifacts:
+      - "process/handoffs/META-DEV-CR016-S01-IMPLEMENT-2026-05-28.md"
+      - "process/stories/CR016-S01-simulation-account-order-enable-gate.md"
+      - "process/STORY-STATUS.md"
+      - "process/STATE.md"
+    dispatch:
+      - role: "meta-dev"
+        agent_id: "019e6c4c-4259-7841-8741-9cc533d26950"
+        agent_name: "dev-zhang the 2nd"
+        story_id: "CR016-S01-simulation-account-order-enable-gate"
+        status: "running"
+    safety_confirmations:
+      qmt_api_authorized: false
+      real_order_authorized: false
+      real_cancel_authorized: false
+      real_account_query_authorized: false
+      credential_read_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      real_broker_lake_write_authorized: false
+      current_pointer_publish_authorized: false
+      simulation_run_authorized: false
+  - at: "2026-05-28T09:54:11+08:00"
+    actor: "meta-po"
+    action: "cr015-s07-verified-cr016-s01-dev-ready"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "meta-qa/qa-zhang the 2nd 完成 CR015-S07 CP7 PASS，文档边界测试 6 passed，真实交易正向声明、微观结构 allowed claim、敏感值和真实操作计数均为 0。CR015 foundation S01..S07 全部 verified；CR016-S01 依赖 CR015-S07 与 CR017-S06 均已 verified，且当前无文件冲突，进入 dev-ready。per-run authorization 只授权未来实际 simulation run，不是离线 stage gate 代码实现前置。"
+    artifacts:
+      - "process/checks/CP7-CR015-S07-docs-and-foundation-runbook-boundary-VERIFICATION-DONE.md"
+      - "process/handoffs/META-QA-CR015-S07-CP7-VERIFY-2026-05-28.md"
+      - "process/stories/CR015-S07-docs-and-foundation-runbook-boundary.md"
+      - "process/stories/CR016-S01-simulation-account-order-enable-gate.md"
+      - "process/STORY-STATUS.md"
+      - "process/STATE.md"
+    dispatch:
+      - role: "meta-qa"
+        agent_id: "019e6c45-42f0-7ad2-a5a0-4754f184eee9"
+        agent_name: "qa-zhang the 2nd"
+        story_id: "CR015-S07-docs-and-foundation-runbook-boundary"
+        status: "closed"
+    test_result: "PYTHONDONTWRITEBYTECODE=1 PYTEST_ADDOPTS='-p no:cacheprovider' uv run --python 3.11 pytest -q tests/test_cr015_foundation_runbook_boundary.py -> 6 passed in 0.04s"
+    safety_confirmations:
+      qmt_api_authorized: false
+      real_order_authorized: false
+      real_cancel_authorized: false
+      real_account_query_authorized: false
+      credential_read_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      real_broker_lake_write_authorized: false
+      current_pointer_publish_authorized: false
+      simulation_run_authorized: false
+  - at: "2026-05-28T09:49:02+08:00"
+    actor: "meta-po"
+    action: "cr015-s07-cp6-pass-cp7-dispatched"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "meta-dev/dev-kong the 2nd 完成 CR015-S07 CP6 PASS，新增 QMT foundation runbook、README/USER-MANUAL 文档边界与静态测试；meta-po 复跑 S07 指定测试 6 passed，回填 dev handoff lifecycle，并调度 meta-qa/qa-zhang the 2nd 执行 CP7。simulation/live 激活仍不授权。"
+    artifacts:
+      - "docs/QMT-TRADING-RUNBOOK.md"
+      - "tests/test_cr015_foundation_runbook_boundary.py"
+      - "process/checks/CP6-CR015-S07-docs-and-foundation-runbook-boundary-CODING-DONE.md"
+      - "process/handoffs/META-DEV-CR015-S07-IMPLEMENT-2026-05-28.md"
+      - "process/handoffs/META-QA-CR015-S07-CP7-VERIFY-2026-05-28.md"
+      - "process/stories/CR015-S07-docs-and-foundation-runbook-boundary.md"
+      - "process/STORY-STATUS.md"
+      - "process/STATE.md"
+    dispatch:
+      - role: "meta-dev"
+        agent_id: "019e6c3b-de29-77c3-92e3-91c9a82a3115"
+        agent_name: "dev-kong the 2nd"
+        story_id: "CR015-S07-docs-and-foundation-runbook-boundary"
+        status: "closed"
+      - role: "meta-qa"
+        agent_id: "019e6c45-42f0-7ad2-a5a0-4754f184eee9"
+        agent_name: "qa-zhang the 2nd"
+        story_id: "CR015-S07-docs-and-foundation-runbook-boundary"
+        status: "running"
+    test_result: "PYTHONDONTWRITEBYTECODE=1 PYTEST_ADDOPTS='-p no:cacheprovider' uv run --python 3.11 pytest -q tests/test_cr015_foundation_runbook_boundary.py -> 6 passed in 0.04s"
+    safety_confirmations:
+      qmt_api_authorized: false
+      real_order_authorized: false
+      real_cancel_authorized: false
+      real_account_query_authorized: false
+      credential_read_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      real_broker_lake_write_authorized: false
+      current_pointer_publish_authorized: false
+  - at: "2026-05-28T09:38:47+08:00"
+    actor: "meta-po"
+    action: "cr015-s07-dev-dispatched"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "CR015-S07 的依赖 CR015-S01..S06 与 CR017-S06 均已 verified，CP5 已 approved，当前无 README、USER-MANUAL 或 runbook 文档文件冲突。meta-po 调度 meta-dev/dev-kong the 2nd 执行 foundation runbook 文档实现；simulation/live 激活仍不授权。"
+    artifacts:
+      - "process/handoffs/META-DEV-CR015-S07-IMPLEMENT-2026-05-28.md"
+      - "process/stories/CR015-S07-docs-and-foundation-runbook-boundary.md"
+      - "process/STORY-STATUS.md"
+      - "process/STATE.md"
+    dispatch:
+      - role: "meta-dev"
+        agent_id: "019e6c3b-de29-77c3-92e3-91c9a82a3115"
+        agent_name: "dev-kong the 2nd"
+        story_id: "CR015-S07-docs-and-foundation-runbook-boundary"
+        status: "running"
+    safety_confirmations:
+      qmt_api_authorized: false
+      real_order_authorized: false
+      real_cancel_authorized: false
+      real_account_query_authorized: false
+      credential_read_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      real_broker_lake_write_authorized: false
+      current_pointer_publish_authorized: false
+  - at: "2026-05-28T09:32:40+08:00"
+    actor: "meta-po"
+    action: "cr015-s06-verified-cr015-s07-dev-ready"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "meta-qa/qa-lv the 2nd 完成 CR015-S06 CP7 PASS，指定 S03/S04/S05/S06 回归 38 passed，14 项安全计数均为 0。S06 收敛为 verified；CR015-S07 依赖 CR015-S01..S06 与 CR017-S06 均已 verified，且当前无文档文件冲突，进入 dev-ready。"
+    artifacts:
+      - "process/checks/CP7-CR015-S06-target-portfolio-to-order-intent-shadow-mode-VERIFICATION-DONE.md"
+      - "process/handoffs/META-QA-CR015-S06-CP7-VERIFY-2026-05-28.md"
+      - "process/stories/CR015-S06-target-portfolio-to-order-intent-shadow-mode.md"
+      - "process/stories/CR015-S07-docs-and-foundation-runbook-boundary.md"
+      - "process/STORY-STATUS.md"
+      - "process/STATE.md"
+    dispatch:
+      - role: "meta-qa"
+        agent_id: "019e6c30-47c4-7972-86ff-2f9a24a743bf"
+        agent_name: "qa-lv the 2nd"
+        story_id: "CR015-S06-target-portfolio-to-order-intent-shadow-mode"
+        status: "closed"
+    test_result: "PYTHONDONTWRITEBYTECODE=1 PYTEST_ADDOPTS='-p no:cacheprovider' uv run --python 3.11 pytest -q tests/test_cr015_oms_state_machine.py tests/test_cr015_pretrade_risk_gate.py tests/test_cr015_broker_lake_schema_writer.py tests/test_cr015_shadow_order_intent_pipeline.py -> 38 passed in 0.16s"
+    safety_confirmations:
+      qmt_api_authorized: false
+      real_order_authorized: false
+      real_cancel_authorized: false
+      real_account_query_authorized: false
+      credential_read_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      real_broker_lake_write_authorized: false
+      current_pointer_publish_authorized: false
+  - at: "2026-05-28T09:26:07+08:00"
+    actor: "meta-po"
+    action: "cr015-s06-cp6-pass-cp7-dispatched"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "meta-dev/dev-you the 2nd 完成 CR015-S06 CP6 PASS，新增 shadow pipeline 与 9 个 S06 测试；meta-po 复跑 S03/S04/S05/S06 指定回归 38 passed，回填 dev handoff lifecycle，并调度 meta-qa/qa-lv the 2nd 执行 CP7。simulation/live 激活仍不授权。"
+    artifacts:
+      - "trading/shadow_pipeline.py"
+      - "tests/test_cr015_shadow_order_intent_pipeline.py"
+      - "process/checks/CP6-CR015-S06-target-portfolio-to-order-intent-shadow-mode-CODING-DONE.md"
+      - "process/handoffs/META-DEV-CR015-S06-IMPLEMENT-2026-05-28.md"
+      - "process/handoffs/META-QA-CR015-S06-CP7-VERIFY-2026-05-28.md"
+      - "process/stories/CR015-S06-target-portfolio-to-order-intent-shadow-mode.md"
+      - "process/STORY-STATUS.md"
+      - "process/STATE.md"
+    dispatch:
+      - role: "meta-dev"
+        agent_id: "019e6c24-a307-73a2-9354-2039863031f9"
+        agent_name: "dev-you the 2nd"
+        story_id: "CR015-S06-target-portfolio-to-order-intent-shadow-mode"
+        status: "closed"
+      - role: "meta-qa"
+        agent_id: "019e6c30-47c4-7972-86ff-2f9a24a743bf"
+        agent_name: "qa-lv the 2nd"
+        story_id: "CR015-S06-target-portfolio-to-order-intent-shadow-mode"
+        status: "running"
+    test_result: "PYTHONDONTWRITEBYTECODE=1 PYTEST_ADDOPTS='-p no:cacheprovider' uv run --python 3.11 pytest -q tests/test_cr015_oms_state_machine.py tests/test_cr015_pretrade_risk_gate.py tests/test_cr015_broker_lake_schema_writer.py tests/test_cr015_shadow_order_intent_pipeline.py -> 38 passed in 0.16s"
+    safety_confirmations:
+      qmt_api_authorized: false
+      real_order_authorized: false
+      real_cancel_authorized: false
+      real_account_query_authorized: false
+      credential_read_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      real_broker_lake_write_authorized: false
+      current_pointer_publish_authorized: false
+  - at: "2026-05-28T09:13:25+08:00"
+    actor: "meta-po"
+    action: "cr015-s06-dev-dispatched"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "CR015-S06 的依赖 CR015-S03/S04/S05 与 CR017-S04 均已 verified，CP5 已 approved，当前无共享 trading 文件冲突。meta-po 调度 meta-dev/dev-you the 2nd 执行 shadow pipeline 离线实现；simulation/live 激活仍不授权。"
+    artifacts:
+      - "process/handoffs/META-DEV-CR015-S06-IMPLEMENT-2026-05-28.md"
+      - "process/stories/CR015-S06-target-portfolio-to-order-intent-shadow-mode.md"
+      - "process/STORY-STATUS.md"
+      - "process/STATE.md"
+    dispatch:
+      - role: "meta-dev"
+        agent_id: "019e6c24-a307-73a2-9354-2039863031f9"
+        agent_name: "dev-you the 2nd"
+        story_id: "CR015-S06-target-portfolio-to-order-intent-shadow-mode"
+        status: "running"
+    safety_confirmations:
+      qmt_api_authorized: false
+      real_order_authorized: false
+      real_cancel_authorized: false
+      real_account_query_authorized: false
+      credential_read_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      real_broker_lake_write_authorized: false
+      current_pointer_publish_authorized: false
+  - at: "2026-05-28T09:11:25+08:00"
+    actor: "meta-po"
+    action: "cr015-s05-verified-cr015-s06-dev-ready"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "meta-qa/qa-kong the 2nd 完成 CR015-S05 CP7 PASS，8 类 broker lake schema、schema 合同、dry-run writer、redaction gate、forbidden target、S03/S04 回归和安全计数均通过。S05 收敛为 verified；CR015-S06 依赖的 CR015-S03/S04/S05 与 CR017-S04 均已 verified，且当前无共享 trading 文件冲突，进入 dev-ready。"
+    artifacts:
+      - "process/checks/CP7-CR015-S05-broker-lake-schema-and-writer-VERIFICATION-DONE.md"
+      - "process/handoffs/META-QA-CR015-S05-CP7-VERIFY-2026-05-28.md"
+      - "process/stories/CR015-S05-broker-lake-schema-and-writer.md"
+      - "process/stories/CR015-S06-target-portfolio-to-order-intent-shadow-mode.md"
+      - "process/STORY-STATUS.md"
+      - "process/STATE.md"
+    dispatch:
+      - role: "meta-qa"
+        agent_id: "019e6c1d-ab63-7130-98a8-ecf802425771"
+        agent_name: "qa-kong the 2nd"
+        story_id: "CR015-S05-broker-lake-schema-and-writer"
+        status: "closed"
+    safety_confirmations:
+      qmt_api_authorized: false
+      real_order_authorized: false
+      real_cancel_authorized: false
+      real_account_query_authorized: false
+      credential_read_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      real_broker_lake_write_authorized: false
+      current_pointer_publish_authorized: false
+  - at: "2026-05-28T09:05:47+08:00"
+    actor: "meta-po"
+    action: "cr015-s05-cp7-dispatched"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "meta-dev/dev-he the 2nd 完成 CR015-S05 CP6 PASS，S03/S04/S05 回归 29 passed，broker lake schema registry、redaction gate、dry-run writer、安全计数均完成。meta-po 已修正 CP6 平台调度证据并调度 meta-qa/qa-kong the 2nd 执行 CP7。"
+    artifacts:
+      - "process/checks/CP6-CR015-S05-broker-lake-schema-and-writer-CODING-DONE.md"
+      - "process/handoffs/META-DEV-CR015-S05-IMPLEMENT-2026-05-28.md"
+      - "process/handoffs/META-QA-CR015-S05-CP7-VERIFY-2026-05-28.md"
+      - "process/stories/CR015-S05-broker-lake-schema-and-writer.md"
+      - "process/STORY-STATUS.md"
+      - "process/STATE.md"
+    dispatch:
+      - role: "meta-qa"
+        agent_id: "019e6c1d-ab63-7130-98a8-ecf802425771"
+        agent_name: "qa-kong the 2nd"
+        story_id: "CR015-S05-broker-lake-schema-and-writer"
+        status: "running"
+    safety_confirmations:
+      qmt_api_authorized: false
+      real_order_authorized: false
+      real_cancel_authorized: false
+      real_account_query_authorized: false
+      credential_read_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      real_broker_lake_write_authorized: false
+      current_pointer_publish_authorized: false
+  - at: "2026-05-28T08:53:21+08:00"
+    actor: "meta-po"
+    action: "cr015-s05-dev-dispatched"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "CR015-S05 的上游 CR015-S03/S04 均已 verified，CP5 已 approved，且当前无 `trading/oms.py` dev/verify 冲突。meta-po 调度 meta-dev/dev-he the 2nd 执行 broker lake schema、redaction gate 和 dry-run writer 离线实现；真实 broker lake 写入仍未授权。"
+    artifacts:
+      - "process/handoffs/META-DEV-CR015-S05-IMPLEMENT-2026-05-28.md"
+      - "process/stories/CR015-S05-broker-lake-schema-and-writer.md"
+      - "process/STORY-STATUS.md"
+      - "process/STATE.md"
+    dispatch:
+      - role: "meta-dev"
+        agent_id: "019e6c12-451b-73e0-9621-09c8750e6b81"
+        agent_name: "dev-he the 2nd"
+        story_id: "CR015-S05-broker-lake-schema-and-writer"
+        status: "running"
+    safety_confirmations:
+      qmt_api_authorized: false
+      real_order_authorized: false
+      real_cancel_authorized: false
+      real_account_query_authorized: false
+      credential_read_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      real_broker_lake_write_authorized: false
+      current_pointer_publish_authorized: false
+  - at: "2026-05-28T08:48:50+08:00"
+    actor: "meta-po"
+    action: "cr015-s04-cr017-s06-verified-cr015-s05-dev-ready"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "meta-qa/qa-yan the 2nd 完成 CR015-S04 CP7 PASS，九类 ADR-058 风控规则、adapter_calls=0、非 raw/qfq/hfq execution blocked、S03 OMS 回归和安全计数均通过；meta-qa/qa-hua the 2nd 完成 CR017-S06 CP7 PASS，consumer matrix、QMT raw-only、blocked claims、legacy qfq 保留、unsupported execution 边界和 CR017 回归均通过。两个 Story 收敛为 verified，CR015-S05 与 S04 的 `trading/oms.py` 冲突解除并进入 dev-ready。"
+    artifacts:
+      - "process/checks/CP7-CR015-S04-pretrade-risk-gate-VERIFICATION-DONE.md"
+      - "process/checks/CP7-CR017-S06-research-qmt-consumer-docs-and-migration-guide-VERIFICATION-DONE.md"
+      - "process/handoffs/META-QA-CR015-S04-CP7-VERIFY-2026-05-28.md"
+      - "process/handoffs/META-QA-CR017-S06-CP7-VERIFY-2026-05-28.md"
+      - "process/stories/CR015-S04-pretrade-risk-gate.md"
+      - "process/stories/CR017-S06-research-qmt-consumer-docs-and-migration-guide.md"
+      - "process/stories/CR015-S05-broker-lake-schema-and-writer.md"
+      - "process/STORY-STATUS.md"
+      - "process/STATE.md"
+    dispatch:
+      - role: "meta-qa"
+        agent_id: "019e6c08-71c1-7f22-b5ce-80726a751f30"
+        agent_name: "qa-yan the 2nd"
+        story_id: "CR015-S04-pretrade-risk-gate"
+        status: "closed"
+      - role: "meta-qa"
+        agent_id: "019e6c08-720d-77c0-89e4-1d5c8a57a66b"
+        agent_name: "qa-hua the 2nd"
+        story_id: "CR017-S06-research-qmt-consumer-docs-and-migration-guide"
+        status: "closed"
+    safety_confirmations:
+      qmt_api_authorized: false
+      real_order_authorized: false
+      real_cancel_authorized: false
+      real_account_query_authorized: false
+      credential_read_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      real_broker_lake_write_authorized: false
+      current_pointer_publish_authorized: false
+  - at: "2026-05-28T08:42:37+08:00"
+    actor: "meta-po"
+    action: "cr015-s04-cr017-s06-cp7-dispatched"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "CR015-S04 与 CR017-S06 均已 CP6 PASS，meta-po 已修正 CP6 中的平台调度证据并复跑本地目标测试；两个 Story 文件所有权在 QA 阶段不冲突，max_parallel_qa=2，因此并行调度 meta-qa 执行 CP7。CR015-S05 等待 S04 CP7 PASS 后再启动，避免验证期间变更 `trading/oms.py`。"
+    artifacts:
+      - "process/checks/CP6-CR015-S04-pretrade-risk-gate-CODING-DONE.md"
+      - "process/checks/CP6-CR017-S06-research-qmt-consumer-docs-and-migration-guide-CODING-DONE.md"
+      - "process/handoffs/META-QA-CR015-S04-CP7-VERIFY-2026-05-28.md"
+      - "process/handoffs/META-QA-CR017-S06-CP7-VERIFY-2026-05-28.md"
+      - "process/STORY-STATUS.md"
+      - "process/STATE.md"
+    dispatch:
+      - role: "meta-qa"
+        agent_id: "019e6c08-71c1-7f22-b5ce-80726a751f30"
+        agent_name: "qa-yan the 2nd"
+        story_id: "CR015-S04-pretrade-risk-gate"
+        status: "running"
+      - role: "meta-qa"
+        agent_id: "019e6c08-720d-77c0-89e4-1d5c8a57a66b"
+        agent_name: "qa-hua the 2nd"
+        story_id: "CR017-S06-research-qmt-consumer-docs-and-migration-guide"
+        status: "running"
+    safety_confirmations:
+      qmt_api_authorized: false
+      real_order_authorized: false
+      real_cancel_authorized: false
+      real_account_query_authorized: false
+      credential_read_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      current_pointer_publish_authorized: false
+  - at: "2026-05-28T08:29:17+08:00"
+    actor: "meta-po"
+    action: "cr017-s06-and-cr015-s04-dev-dispatched"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "CR017-S06 与 CR015-S04 文件所有权不冲突，且 max_parallel_dev=2，因此并行调度两个 meta-dev。CR015-S05 虽依赖满足，但与 CR015-S04 共享 `trading/oms.py`，按 file-conflict 串行等待 S04 完成。"
+    artifacts:
+      - "process/handoffs/META-DEV-CR017-S06-IMPLEMENT-2026-05-28.md"
+      - "process/handoffs/META-DEV-CR015-S04-IMPLEMENT-2026-05-28.md"
+      - "process/stories/CR017-S06-research-qmt-consumer-docs-and-migration-guide.md"
+      - "process/stories/CR015-S04-pretrade-risk-gate.md"
+      - "process/stories/CR015-S05-broker-lake-schema-and-writer.md"
+      - "process/STORY-STATUS.md"
+      - "process/STATE.md"
+    dispatch:
+      - role: "meta-dev"
+        agent_id: "019e6bfc-348d-7730-b9a1-cec5434a2646"
+        agent_name: "dev-lv the 2nd"
+        story_id: "CR017-S06-research-qmt-consumer-docs-and-migration-guide"
+        status: "running"
+      - role: "meta-dev"
+        agent_id: "019e6bfc-34e1-7c93-9358-1b97db2cb08a"
+        agent_name: "dev-shi the 2nd"
+        story_id: "CR015-S04-pretrade-risk-gate"
+        status: "running"
+    safety_confirmations:
+      qmt_api_authorized: false
+      real_order_authorized: false
+      real_cancel_authorized: false
+      real_account_query_authorized: false
+      credential_read_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      current_pointer_publish_authorized: false
+  - at: "2026-05-28T08:25:16+08:00"
+    actor: "meta-po"
+    action: "cr015-s03-verified-cr015-s04-s05-dev-ready"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "meta-qa/qa-lv 完成 CR015-S03 CP7 PASS，25 个相关测试通过；policy/raw gate、稳定幂等 key、状态集合、合法/非法迁移、unknown/timeout/cancel_failed 非成功、manual_review、freeze local-only 和安全计数均通过。S03 收敛为 verified，CR015-S04/S05 依赖满足并解锁为 dev-ready；S04/S05 共享 `trading/oms.py`，后续不得并行实现。"
+    artifacts:
+      - "process/checks/CP7-CR015-S03-oms-order-state-machine-VERIFICATION-DONE.md"
+      - "process/handoffs/META-QA-CR015-S03-CP7-VERIFY-2026-05-28.md"
+      - "process/stories/CR015-S03-oms-order-state-machine.md"
+      - "process/stories/CR015-S04-pretrade-risk-gate.md"
+      - "process/stories/CR015-S05-broker-lake-schema-and-writer.md"
+      - "process/STORY-STATUS.md"
+      - "process/STATE.md"
+    dispatch:
+      - role: "meta-qa"
+        agent_id: "019e6bf4-7b26-7801-9b7b-4343b653315a"
+        agent_name: "qa-lv"
+        story_id: "CR015-S03-oms-order-state-machine"
+        status: "closed"
+    safety_confirmations:
+      qmt_api_authorized: false
+      real_order_authorized: false
+      real_cancel_authorized: false
+      real_account_query_authorized: false
+      credential_read_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      current_pointer_publish_authorized: false
+  - at: "2026-05-28T08:21:43+08:00"
+    actor: "meta-po"
+    action: "cr017-s05-verified-cr017-s06-dev-ready"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "meta-qa/qa-yan 完成 CR017-S05 CP7 PASS，46 个相关测试通过；TS-017-01/02/03 正向和失败场景、warning-not-production-pass、结构化 reason、execution leakage 和零真实操作计数均通过。S05 收敛为 verified，CR017-S06 依赖满足并解锁为 dev-ready。"
+    artifacts:
+      - "process/checks/CP7-CR017-S05-validation-quality-parity-and-leakage-tests-VERIFICATION-DONE.md"
+      - "process/handoffs/META-QA-CR017-S05-CP7-VERIFY-2026-05-28.md"
+      - "process/stories/CR017-S05-validation-quality-parity-and-leakage-tests.md"
+      - "process/stories/CR017-S06-research-qmt-consumer-docs-and-migration-guide.md"
+      - "process/STORY-STATUS.md"
+      - "process/STATE.md"
+    dispatch:
+      - role: "meta-qa"
+        agent_id: "019e6bf1-96ce-7f02-ae98-50bd7cbc86db"
+        agent_name: "qa-yan"
+        story_id: "CR017-S05-validation-quality-parity-and-leakage-tests"
+        status: "closed"
+    safety_confirmations:
+      qmt_api_authorized: false
+      real_order_authorized: false
+      credential_read_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      current_pointer_publish_authorized: false
+  - at: "2026-05-28T08:20:48+08:00"
+    actor: "meta-po"
+    action: "cr015-s03-cp7-dispatched"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "CR015-S03 CP6 PASS 且 Story ready-for-verification。meta-po 调度 meta-qa/qa-lv 执行 CP7，验证 OMS 状态机、unknown/timeout/cancel_failed 非成功、manual_review、freeze local-only 和真实操作计数。"
+    artifacts:
+      - "process/handoffs/META-QA-CR015-S03-CP7-VERIFY-2026-05-28.md"
+      - "process/STORY-STATUS.md"
+      - "process/STATE.md"
+    dispatch:
+      - role: "meta-qa"
+        agent_id: "019e6bf4-7b26-7801-9b7b-4343b653315a"
+        agent_name: "qa-lv"
+        story_id: "CR015-S03-oms-order-state-machine"
+        status: "running"
+    safety_confirmations:
+      qmt_api_authorized: false
+      real_order_authorized: false
+      real_cancel_authorized: false
+      real_account_query_authorized: false
+      credential_read_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      current_pointer_publish_authorized: false
+  - at: "2026-05-28T08:18:51+08:00"
+    actor: "meta-po"
+    action: "cr015-s03-cp6-pass-ready-for-verification"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "meta-dev/dev-shi 完成 CR015-S03 CP6 PASS，S03 目标测试 11 passed，S02/S03 回归 25 passed，meta-po 复跑 25 passed；qmt_api/real_order/real_cancel/account/credential/broker_lake/lake/provider/publish/dependency_change 均为 0，unknown_success_count=0，timeout_success_count=0。Story 进入 ready-for-verification。"
+    artifacts:
+      - "process/checks/CP6-CR015-S03-oms-order-state-machine-CODING-DONE.md"
+      - "process/handoffs/META-DEV-CR015-S03-IMPLEMENT-2026-05-28.md"
+      - "process/stories/CR015-S03-oms-order-state-machine.md"
+      - "process/STORY-STATUS.md"
+      - "process/STATE.md"
+    dispatch:
+      - role: "meta-dev"
+        agent_id: "019e6be9-9023-7d52-b1f2-9f93acea500a"
+        agent_name: "dev-shi"
+        story_id: "CR015-S03-oms-order-state-machine"
+        status: "closed"
+    safety_confirmations:
+      qmt_api_authorized: false
+      real_order_authorized: false
+      real_cancel_authorized: false
+      real_account_query_authorized: false
+      credential_read_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      current_pointer_publish_authorized: false
+  - at: "2026-05-28T08:17:38+08:00"
+    actor: "meta-po"
+    action: "cr017-s05-cp7-dispatched"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "CR017-S05 CP6 PASS 且 Story ready-for-verification。meta-po 调度 meta-qa/qa-yan 执行 CP7，验证 TS-017-01/02/03 矩阵、warning-not-production-pass、结构化 reason 和零真实操作计数。"
+    artifacts:
+      - "process/handoffs/META-QA-CR017-S05-CP7-VERIFY-2026-05-28.md"
+      - "process/STORY-STATUS.md"
+      - "process/STATE.md"
+    dispatch:
+      - role: "meta-qa"
+        agent_id: "019e6bf1-96ce-7f02-ae98-50bd7cbc86db"
+        agent_name: "qa-yan"
+        story_id: "CR017-S05-validation-quality-parity-and-leakage-tests"
+        status: "running"
+    safety_confirmations:
+      qmt_api_authorized: false
+      real_order_authorized: false
+      credential_read_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      current_pointer_publish_authorized: false
+  - at: "2026-05-28T08:16:00+08:00"
+    actor: "meta-po"
+    action: "cr017-s05-cp6-pass-ready-for-verification"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "meta-dev/dev-lv 完成 CR017-S05 CP6 PASS，S05 目标测试 12 passed，CR017 相关回归 46 passed，meta-po 复跑 46 passed；provider/lake/credential/publish/dependency/legacy_qfq/qmt_api/real_order/old_report_read/real_lake_read 均为 0。Story 进入 ready-for-verification。"
+    artifacts:
+      - "process/checks/CP6-CR017-S05-validation-quality-parity-and-leakage-tests-CODING-DONE.md"
+      - "process/handoffs/META-DEV-CR017-S05-IMPLEMENT-2026-05-28.md"
+      - "process/stories/CR017-S05-validation-quality-parity-and-leakage-tests.md"
+      - "process/STORY-STATUS.md"
+      - "process/STATE.md"
+    dispatch:
+      - role: "meta-dev"
+        agent_id: "019e6be6-532d-78b1-a61a-39c71140e152"
+        agent_name: "dev-lv"
+        story_id: "CR017-S05-validation-quality-parity-and-leakage-tests"
+        status: "closed"
+    safety_confirmations:
+      qmt_api_authorized: false
+      real_order_authorized: false
+      credential_read_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      current_pointer_publish_authorized: false
+  - at: "2026-05-28T08:08:55+08:00"
+    actor: "meta-po"
+    action: "cr015-s03-dev-dispatched"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "CR015-S03 依赖的 CR015-S02 与 CR017-S01 均已 verified，且当前 dev_running 只有 CR017-S05，文件所有权不冲突。meta-po 调度 meta-dev/dev-shi 执行本地 OMS 状态机离线实现。"
+    artifacts:
+      - "process/handoffs/META-DEV-CR015-S03-IMPLEMENT-2026-05-28.md"
+      - "process/stories/CR015-S03-oms-order-state-machine.md"
+      - "process/STORY-STATUS.md"
+      - "process/STATE.md"
+    dispatch:
+      - role: "meta-dev"
+        agent_id: "019e6be9-9023-7d52-b1f2-9f93acea500a"
+        agent_name: "dev-shi"
+        story_id: "CR015-S03-oms-order-state-machine"
+        status: "running"
+    safety_confirmations:
+      qmt_api_authorized: false
+      real_order_authorized: false
+      real_cancel_authorized: false
+      real_account_query_authorized: false
+      credential_read_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      current_pointer_publish_authorized: false
+  - at: "2026-05-28T08:06:26+08:00"
+    actor: "meta-po"
+    action: "cr015-s02-verified-cr015-s03-dev-ready"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "meta-qa/qa-zhang 完成 CR015-S02 CP7 PASS，S01/S02 回归 22 passed；shadow/dry_run/mock 离线允许，simulation/live_readonly/small_live blocked，非 raw execution blocked 且 adjusted_execution_pass_count=0，真实 QMT / broker / 账户 / 凭据 / 写湖 / provider / publish / dependency 计数均为 0。S02 收敛为 verified，CR015-S03 依赖满足并解锁为 dev-ready。"
+    artifacts:
+      - "process/checks/CP7-CR015-S02-qmt-broker-adapter-contract-VERIFICATION-DONE.md"
+      - "process/handoffs/META-QA-CR015-S02-CP7-VERIFY-2026-05-28.md"
+      - "process/stories/CR015-S02-qmt-broker-adapter-contract.md"
+      - "process/stories/CR015-S03-oms-order-state-machine.md"
+      - "process/STORY-STATUS.md"
+      - "process/STATE.md"
+    dispatch:
+      - role: "meta-qa"
+        agent_id: "019e6be3-369f-7f11-bed0-7e01d3555089"
+        agent_name: "qa-zhang"
+        story_id: "CR015-S02-qmt-broker-adapter-contract"
+        status: "closed"
+    safety_confirmations:
+      qmt_api_authorized: false
+      real_order_authorized: false
+      real_cancel_authorized: false
+      real_account_query_authorized: false
+      credential_read_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      current_pointer_publish_authorized: false
+  - at: "2026-05-28T08:05:20+08:00"
+    actor: "meta-po"
+    action: "cr017-s05-dev-dispatched"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "CR017-S05 依赖的 CR017-S02/S03/S04 均已 verified，且当前 dev_running 为空。meta-po 调度 meta-dev/dev-lv 执行 fixture-only quality / parity / leakage 验证矩阵实现。"
+    artifacts:
+      - "process/handoffs/META-DEV-CR017-S05-IMPLEMENT-2026-05-28.md"
+      - "process/stories/CR017-S05-validation-quality-parity-and-leakage-tests.md"
+      - "process/STORY-STATUS.md"
+      - "process/STATE.md"
+    dispatch:
+      - role: "meta-dev"
+        agent_id: "019e6be6-532d-78b1-a61a-39c71140e152"
+        agent_name: "dev-lv"
+        story_id: "CR017-S05-validation-quality-parity-and-leakage-tests"
+        status: "running"
+    safety_confirmations:
+      qmt_api_authorized: false
+      real_order_authorized: false
+      credential_read_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      current_pointer_publish_authorized: false
+  - at: "2026-05-28T08:02:53+08:00"
+    actor: "meta-po"
+    action: "cr017-s04-verified-cr017-s05-dev-ready"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "meta-qa/qa-hua 完成 CR017-S04 CP7 PASS，34 个相关测试通过；missing/mixed policy blocked、metadata 必填、unpublished candidate blocked、QMT raw-only 和 adjusted_execution_price_pass_count=0 均通过。DEV-LOG.md S04 追加被判定为非阻断过程偏差。S04 收敛为 verified，CR017-S05 依赖满足并解锁为 dev-ready。"
+    artifacts:
+      - "process/checks/CP7-CR017-S04-reader-api-and-policy-gates-VERIFICATION-DONE.md"
+      - "process/handoffs/META-QA-CR017-S04-CP7-VERIFY-2026-05-28.md"
+      - "process/stories/CR017-S04-reader-api-and-policy-gates.md"
+      - "process/stories/CR017-S05-validation-quality-parity-and-leakage-tests.md"
+      - "process/STORY-STATUS.md"
+      - "process/STATE.md"
+    dispatch:
+      - role: "meta-qa"
+        agent_id: "019e6bdf-8f4b-7553-a3ad-7124fc7fb276"
+        agent_name: "qa-hua"
+        story_id: "CR017-S04-reader-api-and-policy-gates"
+        status: "closed"
+    safety_confirmations:
+      qmt_api_authorized: false
+      real_order_authorized: false
+      real_account_query_authorized: false
+      credential_read_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      current_pointer_publish_authorized: false
+  - at: "2026-05-28T08:01:56+08:00"
+    actor: "meta-po"
+    action: "cr015-s02-cp7-dispatched"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "CR015-S02 CP6 PASS 且 Story ready-for-verification。meta-po 调度 meta-qa/qa-zhang 执行 CP7，验证 shadow/dry-run/mock adapter 合同、非 raw execution hard block、mock events、cancel dry-run/blocked 和真实操作计数。"
+    artifacts:
+      - "process/handoffs/META-QA-CR015-S02-CP7-VERIFY-2026-05-28.md"
+      - "process/STORY-STATUS.md"
+      - "process/STATE.md"
+    dispatch:
+      - role: "meta-qa"
+        agent_id: "019e6be3-369f-7f11-bed0-7e01d3555089"
+        agent_name: "qa-zhang"
+        story_id: "CR015-S02-qmt-broker-adapter-contract"
+        status: "running"
+    safety_confirmations:
+      qmt_api_authorized: false
+      real_order_authorized: false
+      real_cancel_authorized: false
+      real_account_query_authorized: false
+      credential_read_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      current_pointer_publish_authorized: false
+  - at: "2026-05-28T08:00:07+08:00"
+    actor: "meta-po"
+    action: "cr015-s02-cp6-pass-ready-for-verification"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "meta-dev/dev-you 完成 CR015-S02 CP6 PASS，S02 目标测试 14 passed，S01/S02 回归 22 passed，meta-po 复跑 22 passed；qmt_api/real_order/real_cancel/account/credential/broker_lake/lake/provider/publish/dependency_change 均为 0，adjusted_execution_pass_count=0。Story 进入 ready-for-verification。"
+    artifacts:
+      - "process/checks/CP6-CR015-S02-qmt-broker-adapter-contract-CODING-DONE.md"
+      - "process/handoffs/META-DEV-CR015-S02-IMPLEMENT-2026-05-28.md"
+      - "process/stories/CR015-S02-qmt-broker-adapter-contract.md"
+      - "process/STORY-STATUS.md"
+      - "process/STATE.md"
+    dispatch:
+      - role: "meta-dev"
+        agent_id: "019e6bd8-b70c-7970-a1eb-dd71e647e6d0"
+        agent_name: "dev-you"
+        story_id: "CR015-S02-qmt-broker-adapter-contract"
+        status: "closed"
+    safety_confirmations:
+      qmt_api_authorized: false
+      real_order_authorized: false
+      real_cancel_authorized: false
+      real_account_query_authorized: false
+      credential_read_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      current_pointer_publish_authorized: false
+  - at: "2026-05-28T07:57:56+08:00"
+    actor: "meta-po"
+    action: "cr017-s04-cp7-dispatched"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "CR017-S04 CP6 PASS 且 Story ready-for-verification。meta-po 调度 meta-qa/qa-hua 执行 CP7，验证 reader/gate/QMT raw-only 合同和 DEV-LOG.md 额外写入范围偏差。"
+    artifacts:
+      - "process/handoffs/META-QA-CR017-S04-CP7-VERIFY-2026-05-28.md"
+      - "process/STORY-STATUS.md"
+      - "process/STATE.md"
+    dispatch:
+      - role: "meta-qa"
+        agent_id: "019e6bdf-8f4b-7553-a3ad-7124fc7fb276"
+        agent_name: "qa-hua"
+        story_id: "CR017-S04-reader-api-and-policy-gates"
+        status: "running"
+    safety_confirmations:
+      qmt_api_authorized: false
+      real_order_authorized: false
+      real_account_query_authorized: false
+      credential_read_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      current_pointer_publish_authorized: false
+  - at: "2026-05-28T07:56:05+08:00"
+    actor: "meta-po"
+    action: "cr017-s04-cp6-pass-ready-for-verification"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "meta-dev/dev-yang 完成 CR017-S04 CP6 PASS，目标测试 5 passed，CR017 相关回归 34 passed，meta-po 复跑 34 passed；provider_fetch/lake_write/credential_read/publish/dependency_change/legacy_qfq_overwrite/qmt_api/real_order 均为 0。DEV-LOG.md 额外写入超出 handoff allowed write scope，已记录为非阻断过程范围偏差，交由 CP7 复核。"
+    artifacts:
+      - "process/checks/CP6-CR017-S04-reader-api-and-policy-gates-CODING-DONE.md"
+      - "process/handoffs/META-DEV-CR017-S04-IMPLEMENT-2026-05-28.md"
+      - "process/stories/CR017-S04-reader-api-and-policy-gates.md"
+      - "process/STORY-STATUS.md"
+      - "process/STATE.md"
+    dispatch:
+      - role: "meta-dev"
+        agent_id: "019e6bd3-3af1-7d23-b48a-1b7a70d06ab2"
+        agent_name: "dev-yang"
+        story_id: "CR017-S04-reader-api-and-policy-gates"
+        status: "closed"
+    safety_confirmations:
+      qmt_api_authorized: false
+      real_order_authorized: false
+      real_account_query_authorized: false
+      credential_read_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      current_pointer_publish_authorized: false
+  - at: "2026-05-28T07:50:28+08:00"
+    actor: "meta-po"
+    action: "cr015-s02-dev-dispatched"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "max_parallel_dev=2，当前仅 CR017-S04 处于 dev_running；CR015-S02 与 CR017-S04 文件所有权不冲突，且 CR015-S01 与 CR017-S01 均已 verified。meta-po 调度 meta-dev/dev-you 执行 CR015-S02 shadow/dry-run/mock adapter contract 离线实现。"
+    artifacts:
+      - "process/handoffs/META-DEV-CR015-S02-IMPLEMENT-2026-05-28.md"
+      - "process/stories/CR015-S02-qmt-broker-adapter-contract.md"
+      - "process/STORY-STATUS.md"
+      - "process/STATE.md"
+    dispatch:
+      - role: "meta-dev"
+        agent_id: "019e6bd8-b70c-7970-a1eb-dd71e647e6d0"
+        agent_name: "dev-you"
+        story_id: "CR015-S02-qmt-broker-adapter-contract"
+        status: "running"
+    safety_confirmations:
+      qmt_api_authorized: false
+      real_order_authorized: false
+      real_account_query_authorized: false
+      credential_read_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      current_pointer_publish_authorized: false
+  - at: "2026-05-28T07:48:21+08:00"
+    actor: "meta-po"
+    action: "cr015-s01-verified-cr015-s02-dev-ready"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "meta-qa/qa-shi 完成 CR015-S01 CP7 PASS，8 个离线 QMT 边界测试通过，真实 QMT / broker API / 发单 / 撤单 / 账户 / 凭据 / 写湖 / provider / publish 计数均为 0；S01 收敛为 verified。CR015-S02 依赖的 CR015-S01 与 CR017-S01 均已 verified，且当前无文件冲突，解锁为 dev-ready。"
+    artifacts:
+      - "process/checks/CP7-CR015-S01-qmt-environment-and-interface-spike-VERIFICATION-DONE.md"
+      - "process/handoffs/META-QA-CR015-S01-CP7-VERIFY-2026-05-28.md"
+      - "process/stories/CR015-S01-qmt-environment-and-interface-spike.md"
+      - "process/stories/CR015-S02-qmt-broker-adapter-contract.md"
+      - "process/STORY-STATUS.md"
+      - "process/STATE.md"
+    dispatch:
+      - role: "meta-qa"
+        agent_id: "019e6bd3-3ab0-7672-8f95-0ca4ed22fa48"
+        agent_name: "qa-shi"
+        story_id: "CR015-S01-qmt-environment-and-interface-spike"
+        status: "closed"
+    safety_confirmations:
+      qmt_api_authorized: false
+      real_order_authorized: false
+      real_account_query_authorized: false
+      credential_read_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      current_pointer_publish_authorized: false
+  - at: "2026-05-28T07:44:29+08:00"
+    actor: "meta-po"
+    action: "cr015-s01-cp7-and-cr017-s04-dev-dispatched"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "CR015-S01 已 CP6 PASS 且 ready-for-verification；CR017-S04 的上游 CR017-S03 已 verified，文件所有权与 CR015-S01 CP7 不冲突。meta-po 并行调度 meta-qa/qa-shi 执行 CR015-S01 CP7，meta-dev/dev-yang 执行 CR017-S04 离线实现。"
+    artifacts:
+      - "process/handoffs/META-QA-CR015-S01-CP7-VERIFY-2026-05-28.md"
+      - "process/handoffs/META-DEV-CR017-S04-IMPLEMENT-2026-05-28.md"
+      - "process/stories/CR017-S04-reader-api-and-policy-gates.md"
+      - "process/STORY-STATUS.md"
+      - "process/STATE.md"
+    dispatch:
+      - role: "meta-qa"
+        agent_id: "019e6bd3-3ab0-7672-8f95-0ca4ed22fa48"
+        agent_name: "qa-shi"
+        story_id: "CR015-S01-qmt-environment-and-interface-spike"
+        status: "running"
+      - role: "meta-dev"
+        agent_id: "019e6bd3-3af1-7d23-b48a-1b7a70d06ab2"
+        agent_name: "dev-yang"
+        story_id: "CR017-S04-reader-api-and-policy-gates"
+        status: "running"
+    safety_confirmations:
+      qmt_api_authorized: false
+      real_order_authorized: false
+      real_account_query_authorized: false
+      credential_read_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      current_pointer_publish_authorized: false
+  - at: "2026-05-28T07:41:26+08:00"
+    actor: "meta-po"
+    action: "cr017-s03-verified-cr015-s01-ready-for-verification"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "CR017-S03 由 meta-dev/dev-zhang 完成 CP6 PASS 后，meta-qa/qa-wei 完成 CP7 PASS，29 个相关测试通过，provider_fetch/lake_write/credential_read/publish/dependency_change/legacy_qfq_overwrite 均为 0，Story 收敛为 verified；CR015-S01 由 meta-dev/dev-zhu 完成 CP6 PASS，8 个离线 QMT 边界测试通过，进入 ready-for-verification。"
+    artifacts:
+      - "process/checks/CP6-CR017-S03-qfq-hfq-derived-view-normalization-CODING-DONE.md"
+      - "process/checks/CP7-CR017-S03-qfq-hfq-derived-view-normalization-VERIFICATION-DONE.md"
+      - "process/checks/CP6-CR015-S01-qmt-environment-and-interface-spike-CODING-DONE.md"
+      - "process/handoffs/META-QA-CR017-S03-CP7-VERIFY-2026-05-28.md"
+      - "process/handoffs/META-DEV-CR015-S01-IMPLEMENT-2026-05-28.md"
+      - "process/stories/CR017-S03-qfq-hfq-derived-view-normalization.md"
+      - "process/STORY-STATUS.md"
+      - "process/STATE.md"
+    dispatch:
+      - role: "meta-qa"
+        agent_id: "019e6bcb-f813-7d71-bbcb-9a1091b0f96e"
+        agent_name: "qa-wei"
+        story_id: "CR017-S03-qfq-hfq-derived-view-normalization"
+        status: "closed"
+      - role: "meta-dev"
+        agent_id: "019e6bb1-f956-7a02-9d78-78904c52bfdb"
+        agent_name: "dev-zhu"
+        story_id: "CR015-S01-qmt-environment-and-interface-spike"
+        status: "closed"
+    safety_confirmations:
+      qmt_api_authorized: false
+      real_order_authorized: false
+      real_account_query_authorized: false
+      credential_read_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      current_pointer_publish_authorized: false
+  - at: "2026-05-28T06:40:12+08:00"
+    actor: "meta-po"
+    action: "cr015-cr016-cr017-all-lld-cp5-manual-pending"
+    from_phase: "story-planning"
+    to_phase: "story-planning"
+    reason: "CR017、CR015、CR016 三个 LLD 批次均由真实 meta-dev 子 agent 完成；20 份 LLD 已生成，20 份 Story 级 CP5 自动预检均 PASS。meta-po 已关闭 dev 线程并生成统一 CP5 人工审查稿，等待用户决策。"
+    artifacts:
+      - "process/stories/CR017-S01..S06-*-LLD.md"
+      - "process/stories/CR015-S01..S07-*-LLD.md"
+      - "process/stories/CR016-S01..S07-*-LLD.md"
+      - "process/checks/CP5-CR017-S01..S06-*-LLD-IMPLEMENTABILITY.md"
+      - "process/checks/CP5-CR015-S01..S07-*-LLD-IMPLEMENTABILITY.md"
+      - "process/checks/CP5-CR016-S01..S07-*-LLD-IMPLEMENTABILITY.md"
+      - "checkpoints/CP5-CR015-CR016-CR017-ALL-STORIES-LLD-BATCH.md"
+      - "process/STATE.md"
+    checkpoint:
+      cp4_auto_status: "PASS"
+      cp5_auto_status: "PASS"
+      cp5_auto_pass_count: 20
+      cp5_manual_status: "pending"
+      pending_gate: "CP5-CR015-CR016-CR017-ALL-STORIES-LLD-BATCH"
+    dispatch:
+      - role: "meta-dev"
+        agent_id: "019e6b87-a390-7921-86fb-9c573a924ff4"
+        agent_name: "dev-kong"
+        batch_id: "CR017-ADJUSTMENT-DUAL-VIEW-BATCH-A"
+        status: "closed"
+      - role: "meta-dev"
+        agent_id: "019e6b87-c21d-7491-a1b4-6277d19a71a5"
+        agent_name: "dev-qin"
+        batch_id: "CR015-QMT-FOUNDATION-BATCH-A"
+        status: "closed"
+      - role: "meta-dev"
+        agent_id: "019e6b87-e130-7811-bdf4-7e92e974ed65"
+        agent_name: "dev-xu"
+        batch_id: "CR016-QMT-ACTIVATION-BATCH-A"
+        status: "closed"
+    safety_confirmations:
+      cp5_manual_approval_required_before_implementation: true
+      implementation_authorized: false
+      qmt_api_authorized: false
+      real_order_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      env_or_credentials_read_or_printed_authorized: false
+  - at: "2026-05-28T06:22:10+08:00"
+    actor: "meta-po"
+    action: "cr015-cr016-cr017-cp4-pass-lld-batches-dispatched"
+    from_phase: "story-planning"
+    to_phase: "story-planning"
+    reason: "meta-se/se-han 完成 Story Plan / CP4，CP4 自动预检 PASS；meta-po 关闭 se 线程后并行调度 3 个 meta-dev 批次输出 CR017、CR015、CR016 共 20 个 Story 的 LLD 与 Story 级 CP5 自动预检。"
+    artifacts:
+      - "process/STORY-BACKLOG.md"
+      - "process/DEVELOPMENT-PLAN.yaml"
+      - "process/STORY-STATUS.md"
+      - "process/checks/CP4-CR015-CR016-CR017-STORY-DAG-PARALLEL-SAFETY.md"
+      - "process/handoffs/META-SE-CR015-CR016-CR017-STORY-PLANNING-2026-05-28.md"
+      - "process/handoffs/META-DEV-CR017-LLD-BATCH-A-2026-05-28.md"
+      - "process/handoffs/META-DEV-CR015-LLD-BATCH-A-2026-05-28.md"
+      - "process/handoffs/META-DEV-CR016-LLD-BATCH-A-2026-05-28.md"
+      - "process/STATE.md"
+    checkpoint:
+      cp4_auto_status: "PASS"
+      cp5_manual_status: "not-created"
+      lld_batches_running: 3
+      target_story_count: 20
+    dispatch:
+      - role: "meta-dev"
+        agent_id: "019e6b87-a390-7921-86fb-9c573a924ff4"
+        agent_name: "dev-kong"
+        batch_id: "CR017-ADJUSTMENT-DUAL-VIEW-BATCH-A"
+        tool_name: "multi_agent_v1.spawn_agent"
+      - role: "meta-dev"
+        agent_id: "019e6b87-c21d-7491-a1b4-6277d19a71a5"
+        agent_name: "dev-qin"
+        batch_id: "CR015-QMT-FOUNDATION-BATCH-A"
+        tool_name: "multi_agent_v1.spawn_agent"
+      - role: "meta-dev"
+        agent_id: "019e6b87-e130-7811-bdf4-7e92e974ed65"
+        agent_name: "dev-xu"
+        batch_id: "CR016-QMT-ACTIVATION-BATCH-A"
+        tool_name: "multi_agent_v1.spawn_agent"
+    safety_confirmations:
+      lld_authorized: true
+      implementation_authorized: false
+      qmt_api_authorized: false
+      real_order_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      env_or_credentials_read_or_printed_authorized: false
+  - at: "2026-05-28T05:51:12+08:00"
+    actor: "meta-po"
+    action: "cr015-cr016-cr017-cp3-approved-story-planning-dispatched"
+    from_phase: "solution-design"
+    to_phase: "story-planning"
+    reason: "用户回复通过审批，接受 CP3 HLD/ADR 推荐方案；meta-po 已回填 CP3 人工审查 approved，收敛 Q-030..Q-038 和 AD-Q50..AD-Q58，并通过 spawn_agent 调度 meta-se/se-han 执行 Story Plan / CP4。"
+    artifacts:
+      - "checkpoints/CP3-CR015-CR016-CR017-HLD-REVIEW.md"
+      - "process/CLARIFICATION-LOG.md"
+      - "process/ARCHITECTURE-DECISION.md"
+      - "process/handoffs/META-SE-CR015-CR016-CR017-STORY-PLANNING-2026-05-28.md"
+      - "process/STATE.md"
+    checkpoint:
+      cp3_auto_status: "PASS"
+      cp3_manual_status: "approved"
+      pending_gate: "CP4-CR015-CR016-CR017-STORY-DAG-PARALLEL-SAFETY"
+    dispatch:
+      role: "meta-se"
+      agent_id: "019e6b6b-8496-7371-bcaf-4368f0de8f41"
+      agent_name: "se-han"
+      tool_name: "multi_agent_v1.spawn_agent"
+      handoff_path: "process/handoffs/META-SE-CR015-CR016-CR017-STORY-PLANNING-2026-05-28.md"
+    safety_confirmations:
+      story_plan_authorized: true
+      lld_authorized: false
+      implementation_authorized: false
+      qmt_api_authorized: false
+      real_order_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      env_or_credentials_read_or_printed_authorized: false
   - at: "2026-05-26T23:12:53+08:00"
     actor: "user"
     action: "cr014-cp3-no-valid-decision"
@@ -13199,18 +20517,3448 @@ history:
       old_data_operations_executed: false
       env_or_credentials_read_or_printed: false
       old_report_overwritten: false
-last_updated: "2026-05-24T17:41:32+08:00"
+  - at: "2026-05-28T11:43:56+08:00"
+    actor: "meta-po"
+    action: "cr016-s04-cp7-pass-verified-cr016-s07-dev-ready"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "meta-qa/qa-shi the 2nd 完成 CR016-S04 CP7 并给出 PASS；指定回归 41 passed，20 项安全计数均为 0。主线程尝试 close_agent 时平台返回 agent not found，因此仅记录 QA completed 与 close_attempt，不伪造 closed_at。S04 收敛为 verified；CR016-S07 的 contract 依赖满足，其中 S05/S06 保持 later-gated 且 implementation_allowed=false，只作为文档合同输入。"
+    artifacts:
+      - "process/checks/CP7-CR016-S04-simulation-live-runbook-and-approval-gates-VERIFICATION-DONE.md"
+      - "process/handoffs/META-QA-CR016-S04-CP7-VERIFY-2026-05-28.md"
+      - "process/stories/CR016-S04-simulation-live-runbook-and-approval-gates.md"
+      - "process/stories/CR016-S07-docs-user-manual-and-incident-playbooks.md"
+      - "process/STATE.md"
+      - "process/STORY-STATUS.md"
+    cp_results:
+      s04_cp6_status: "PASS"
+      s04_cp7_status: "PASS"
+      s04_story_status: "verified"
+      s07_story_status: "dev-ready"
+      s05_later_gated: true
+      s06_later_gated: true
+    validation:
+      s04_test_result: "PASS: 41 passed in 0.19s"
+      safety_counters_zero: true
+      close_agent_result: "not_found"
+    dispatch_evidence:
+      qa_agent_id: "019e6c95-337c-7851-8f1f-0c558da719b4"
+      qa_agent_name: "qa-shi the 2nd"
+      tool_name: "multi_agent_v1.spawn_agent/wait_agent/close_agent-attempt"
+      spawned_at: "2026-05-28T11:16:25+08:00"
+      completed_at: "2026-05-28T11:18:54+08:00"
+      closed_at: ""
+      close_attempt_at: "2026-05-28T11:43:56+08:00"
+      close_attempt_result: "agent not found"
+    safety_confirmations:
+      real_qmt_operation_executed: false
+      real_order_executed: false
+      real_cancel_executed: false
+      real_account_query_executed: false
+      credential_read_executed: false
+      real_broker_lake_write_executed: false
+      provider_fetch_executed: false
+      real_lake_write_executed: false
+      publish_executed: false
+      simulation_or_live_run_executed: false
+  - at: "2026-05-28T11:47:11+08:00"
+    actor: "meta-po"
+    action: "cr016-s07-implementation-dispatched"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "CR016-S07 dev_gate 已满足；meta-po 创建实现 handoff 并通过 spawn_agent 调度 meta-dev/dev-zhu the 2nd 执行文档与静态测试实现。S05/S06 仅作为 later-gated 合同输入，implementation_allowed=false，不进入实现。"
+    artifacts:
+      - "process/handoffs/META-DEV-CR016-S07-IMPLEMENT-2026-05-28.md"
+      - "process/stories/CR016-S07-docs-user-manual-and-incident-playbooks.md"
+      - "process/STATE.md"
+      - "process/STORY-STATUS.md"
+    dispatch_evidence:
+      mode: "spawn_agent"
+      agent_id: "019e6cb1-70eb-72c2-bdf7-94a59009789f"
+      thread_id: "019e6cb1-70eb-72c2-bdf7-94a59009789f"
+      agent_name: "dev-zhu the 2nd"
+      tool_name: "multi_agent_v1.spawn_agent"
+      spawned_at: "2026-05-28T11:47:11+08:00"
+      status: "running"
+    safety_confirmations:
+      cr016_s05_implementation_authorized: false
+      cr016_s06_implementation_authorized: false
+      real_qmt_operation_authorized: false
+      real_order_authorized: false
+      real_cancel_authorized: false
+      real_account_query_authorized: false
+      credential_read_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      publish_authorized: false
+      simulation_or_live_run_authorized: false
+  - at: "2026-05-28T11:56:41+08:00"
+    actor: "meta-po"
+    action: "cr016-s07-cp6-pass-ready-for-verification"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "meta-dev/dev-zhu the 2nd 完成 CR016-S07 文档与静态测试实现并写入 CP6 PASS；meta-po 关闭 dev 线程，回填 handoff completed/closed 和 CP6 Agent Dispatch Evidence，主线程复跑 handoff 指定回归 29 passed，将 S07 推进到 ready-for-verification。"
+    artifacts:
+      - "process/checks/CP6-CR016-S07-docs-user-manual-and-incident-playbooks-CODING-DONE.md"
+      - "process/handoffs/META-DEV-CR016-S07-IMPLEMENT-2026-05-28.md"
+      - "process/stories/CR016-S07-docs-user-manual-and-incident-playbooks.md"
+      - "docs/QMT-INCIDENT-PLAYBOOK.md"
+      - "tests/test_cr016_docs_incident_playbooks.py"
+      - "README.md"
+      - "docs/USER-MANUAL.md"
+      - "docs/QMT-SIMULATION-LIVE-RUNBOOK.md"
+      - "process/STATE.md"
+      - "process/STORY-STATUS.md"
+    cp_results:
+      s07_cp6_status: "PASS"
+      s07_story_status: "ready-for-verification"
+    validation:
+      s07_main_thread_regression: "PASS: 29 passed in 0.19s"
+      safety_counters_zero: true
+    dispatch_evidence:
+      dev_agent_id: "019e6cb1-70eb-72c2-bdf7-94a59009789f"
+      dev_agent_name: "dev-zhu the 2nd"
+      tool_name: "multi_agent_v1.spawn_agent/wait_agent/close_agent"
+      spawned_at: "2026-05-28T11:47:11+08:00"
+      completed_at: "2026-05-28T11:52:52+08:00"
+      closed_at: "2026-05-28T11:56:41+08:00"
+    safety_confirmations:
+      cr016_s05_implemented: false
+      cr016_s06_implemented: false
+      real_qmt_operation_executed: false
+      real_order_executed: false
+      real_cancel_executed: false
+      real_account_query_executed: false
+      credential_read_executed: false
+      provider_fetch_executed: false
+      real_lake_write_executed: false
+      publish_executed: false
+      simulation_or_live_run_executed: false
+  - at: "2026-05-28T11:59:06+08:00"
+    actor: "meta-po"
+    action: "cr016-s07-cp7-verification-dispatched"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "CR016-S07 CP6 PASS 且 Story 为 ready-for-verification；meta-po 创建 CP7 QA handoff，并通过 spawn_agent 调度 meta-qa/qa-he the 2nd 执行独立验证。QA 只允许写 CP7 结果文件，不允许修改 Story、源码、测试、文档或任何真实操作。"
+    artifacts:
+      - "process/handoffs/META-QA-CR016-S07-CP7-VERIFY-2026-05-28.md"
+      - "process/checks/CP6-CR016-S07-docs-user-manual-and-incident-playbooks-CODING-DONE.md"
+      - "process/stories/CR016-S07-docs-user-manual-and-incident-playbooks.md"
+      - "process/STATE.md"
+      - "process/STORY-STATUS.md"
+    dispatch_evidence:
+      mode: "spawn_agent"
+      agent_id: "019e6cbc-5bed-7273-87a7-a6d11a36ac88"
+      thread_id: "019e6cbc-5bed-7273-87a7-a6d11a36ac88"
+      agent_name: "qa-he the 2nd"
+      tool_name: "multi_agent_v1.spawn_agent"
+      spawned_at: "2026-05-28T11:59:06+08:00"
+      status: "running"
+    safety_confirmations:
+      qa_started: true
+      cr016_s05_implementation_authorized: false
+      cr016_s06_implementation_authorized: false
+      real_qmt_operation_authorized: false
+      real_order_authorized: false
+      real_cancel_authorized: false
+      real_account_query_authorized: false
+      credential_read_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      publish_authorized: false
+      simulation_or_live_run_authorized: false
+  - at: "2026-05-28T12:04:05+08:00"
+    actor: "meta-po"
+    action: "cr016-s07-cp7-pass-controlled-batch-verified"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "meta-qa/qa-he the 2nd 完成 CR016-S07 CP7 并给出 PASS；指定回归 29 passed，21 项安全计数均为 0。meta-po 关闭 QA 线程，回填 handoff completed/closed 与 CP7 Agent Dispatch Evidence，将 S07 收敛为 verified。CR017-S01..S06、CR015-S01..S07、CR016-S01..S04 与 S07 均已 verified；CR016-S05/S06 保持 later-gated 且 implementation_allowed=false。"
+    artifacts:
+      - "process/checks/CP7-CR016-S07-docs-user-manual-and-incident-playbooks-VERIFICATION-DONE.md"
+      - "process/handoffs/META-QA-CR016-S07-CP7-VERIFY-2026-05-28.md"
+      - "process/stories/CR016-S07-docs-user-manual-and-incident-playbooks.md"
+      - "process/STATE.md"
+      - "process/STORY-STATUS.md"
+    cp_results:
+      s07_cp6_status: "PASS"
+      s07_cp7_status: "PASS"
+      s07_story_status: "verified"
+      controlled_batch_status: "verified-with-later-gated-s05-s06"
+      cr016_s05_status: "lld-approved-later-gated"
+      cr016_s06_status: "lld-approved-later-gated"
+    validation:
+      s07_test_result: "PASS: 29 passed in 0.16s"
+      safety_counters_zero: true
+    dispatch_evidence:
+      qa_agent_id: "019e6cbc-5bed-7273-87a7-a6d11a36ac88"
+      qa_agent_name: "qa-he the 2nd"
+      tool_name: "multi_agent_v1.spawn_agent/wait_agent/close_agent"
+      spawned_at: "2026-05-28T11:59:06+08:00"
+      completed_at: "2026-05-28T12:01:00+08:00"
+      closed_at: "2026-05-28T12:04:05+08:00"
+    safety_confirmations:
+      cr016_s05_implemented: false
+      cr016_s06_implemented: false
+      real_qmt_operation_executed: false
+      real_order_executed: false
+      real_cancel_executed: false
+      real_account_query_executed: false
+      credential_read_executed: false
+      provider_fetch_executed: false
+      real_lake_write_executed: false
+      publish_executed: false
+      simulation_or_live_run_executed: false
+  - at: "2026-05-28T12:06:47+08:00"
+    actor: "meta-po"
+    action: "cr015-cr016-cr017-documentation-dispatched"
+    from_phase: "story-execution"
+    to_phase: "documentation"
+    reason: "CR015/CR016/CR017 受控离线实现范围已完成 CP7 收敛：CR017-S01..S06、CR015-S01..S07、CR016-S01..S04 与 S07 均 verified；CR016-S05/S06 later-gated。meta-po 发现 README / USER-MANUAL / TEST-STRATEGY 存在 pending CP7 和 CR017 验证前置旧表述，已通过 spawn_agent 调度 meta-doc/doc-jin the 2nd 做交付前文档收敛。"
+    artifacts:
+      - "process/handoffs/META-DOC-CR015-CR016-CR017-DOCUMENTATION-2026-05-28.md"
+      - "README.md"
+      - "docs/USER-MANUAL.md"
+      - "process/TEST-STRATEGY.md"
+      - "process/STATE.md"
+    dispatch_evidence:
+      mode: "spawn_agent"
+      agent_id: "019e6cc3-61e0-7d21-a1bf-4f8b7996a867"
+      thread_id: "019e6cc3-61e0-7d21-a1bf-4f8b7996a867"
+      agent_name: "doc-jin the 2nd"
+      tool_name: "multi_agent_v1.spawn_agent"
+      spawned_at: "2026-05-28T12:06:47+08:00"
+      status: "running"
+    safety_confirmations:
+      cr016_s05_implementation_authorized: false
+      cr016_s06_implementation_authorized: false
+      real_qmt_operation_authorized: false
+      real_order_authorized: false
+      real_cancel_authorized: false
+      real_account_query_authorized: false
+      credential_read_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      publish_authorized: false
+      simulation_or_live_run_authorized: false
+  - at: "2026-05-28T12:15:37+08:00"
+    actor: "meta-po"
+    action: "cr015-cr016-cr017-documentation-complete-pending-cp8"
+    from_phase: "documentation"
+    to_phase: "documentation"
+    reason: "meta-doc/doc-jin the 2nd 完成 CR015/CR016/CR017 README、USER-MANUAL 和 TEST-STRATEGY 文档收敛；meta-po 已关闭 doc 线程，回填 handoff / STATE，复核 stale wording scan、diff check 与 19 个 CR015/CR016/CR017 测试文件，结果 154 passed。CP8 自动预检 PASS，自动终验授权为 false，等待用户人工确认。"
+    artifacts:
+      - "process/handoffs/META-DOC-CR015-CR016-CR017-DOCUMENTATION-2026-05-28.md"
+      - "process/checks/CP8-CR015-CR016-CR017-DELIVERY-READINESS.md"
+      - "checkpoints/CP8-CR015-CR016-CR017-DELIVERY-READINESS.md"
+      - "process/STORY-STATUS.md"
+      - "process/DEVELOPMENT-PLAN.yaml"
+      - "process/STATE.md"
+    cp_results:
+      cp8_auto_status: "PASS"
+      cp8_manual_status: "pending"
+      controlled_batch_status: "ready-for-user-cp8-review"
+      cr016_s05_status: "lld-approved-later-gated"
+      cr016_s06_status: "lld-approved-later-gated"
+    validation:
+      cr015_cr016_cr017_regression: "PASS: 154 passed in 0.92s"
+      documentation_diff_check: "PASS"
+      stale_wording_scan: "PASS"
+      safety_counters_zero: true
+    dispatch_evidence:
+      doc_agent_id: "019e6cc3-61e0-7d21-a1bf-4f8b7996a867"
+      doc_agent_name: "doc-jin the 2nd"
+      tool_name: "multi_agent_v1.spawn_agent/wait_agent/close_agent"
+      spawned_at: "2026-05-28T12:06:47+08:00"
+      completed_at: "2026-05-28T12:13:04+08:00"
+      closed_at: "2026-05-28T12:13:04+08:00"
+      status: "completed-closed"
+    safety_confirmations:
+      cr016_s05_implemented: false
+      cr016_s06_implemented: false
+      real_qmt_operation_executed: false
+      real_order_executed: false
+      real_cancel_executed: false
+      real_account_query_executed: false
+      credential_read_executed: false
+      provider_fetch_executed: false
+      real_lake_write_executed: false
+      publish_executed: false
+      simulation_or_live_run_executed: false
+  - at: "2026-05-30T15:05:00+08:00"
+    actor: "meta-po"
+    action: "g1-cr004-batch-d-cp7-pass-and-route-to-cr019-g2"
+    from_phase: "story-execution"
+    to_phase: "requirement-clarification"
+    reason: "CR-004 Batch D / G1 的 STORY-004 Data Loader 与 STORY-018 实验只读 benchmark 已完成 CP6 / CP7；meta-qa 独立验证结论 PASS，G1 聚合回归 48 passed。meta-po 将 CR-004 Batch D 标记为 verified，不关闭 CR-004 总 CR，并按用户确认的推荐顺序切换到 CR-019 CP2/CP3/CP4/CP5 设计链路。"
+    artifacts:
+      - "process/checks/CP6-STORY-004-cr004-batch-d-dataloader-CODING-DONE.md"
+      - "process/checks/CP7-STORY-004-cr004-batch-d-dataloader-VERIFICATION-DONE.md"
+      - "process/checks/CP6-STORY-018-cr004-experiment-readonly-benchmark-CODING-DONE.md"
+      - "process/checks/CP7-STORY-018-cr004-experiment-readonly-benchmark-VERIFICATION-DONE.md"
+      - "process/checks/CP7-CR004-BATCH-D-VERIFICATION-SUMMARY-2026-05-30.md"
+      - "process/handoffs/META-QA-CR004-BATCH-D-CP7-VERIFY-2026-05-30.md"
+      - "process/changes/CR-004-MARKET-DATA-COMPONENT-2026-05-17.md"
+      - "process/STORY-STATUS.md"
+      - "process/STATE.md"
+    validation:
+      cr004_batch_d_story_004_cp7: "PASS"
+      cr004_batch_d_story_018_cp7: "PASS"
+      aggregate_regression: "PASS: 48 passed in 3.28s"
+      py_compile: "PASS"
+      diff_check: "PASS"
+      forbidden_import_scan: "PASS"
+      no_real_side_effect: true
+    safety_confirmations:
+      provider_fetch_executed: false
+      real_lake_write_executed: false
+      current_pointer_publish_executed: false
+      credential_read_executed: false
+      qmt_operation_executed: false
+      fastapi_implementation_authorized: false
+      dependency_change_authorized: false
+  - at: "2026-05-30T15:08:00+08:00"
+    actor: "meta-po"
+    action: "cr019-cp2-meta-pm-dispatched"
+    from_phase: "requirement-clarification"
+    to_phase: "requirement-clarification"
+    reason: "按 G2 计划启动 CR-019 CP2 需求 / 场景基线刷新；通过 spawn_agent 调度 meta-pm/pm-wang，只允许更新 USE-CASES、REQUIREMENTS、CLARIFICATION-LOG、CP1/CP2 检查和 handoff，不允许实现 FastAPI、改依赖、读取凭据、调用真实 QMT 或写真实数据。"
+    artifacts:
+      - "process/handoffs/META-PM-CR019-REQ-CLARIFICATION-2026-05-30.md"
+      - "process/USE-CASES.md"
+      - "process/REQUIREMENTS.md"
+      - "process/CLARIFICATION-LOG.md"
+      - "process/checks/CP1-CR019-USE-CASE-COMPLETENESS.md"
+      - "process/checks/CP2-CR019-REQUIREMENTS-BASELINE.md"
+    dispatch_evidence:
+      mode: "spawn_agent"
+      agent_id: "019e77ac-22e1-7d22-b75d-0a18cfcb9744"
+      thread_id: "019e77ac-22e1-7d22-b75d-0a18cfcb9744"
+      agent_name: "pm-wang"
+      tool_name: "multi_agent_v1.spawn_agent"
+      spawned_at: "2026-05-30T15:08:00+08:00"
+      status: "running"
+    safety_confirmations:
+      fastapi_implementation_authorized: false
+      dependency_change_authorized: false
+      real_qmt_operation_authorized: false
+      credential_read_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      simulation_or_live_run_authorized: false
+  - at: "2026-05-30T15:18:00+08:00"
+    actor: "meta-po"
+    action: "cr019-cp2-auto-pass-manual-review-created"
+    from_phase: "requirement-clarification"
+    to_phase: "requirement-clarification"
+    reason: "meta-pm/pm-wang 完成 CR-019 场景与需求增量、CLARIFICATION-LOG、CP1、CP2 自动预检和 handoff；CP1 PASS、CP2 自动预检 PASS。meta-po 已关闭 pm 线程、回填 dispatch evidence，并创建 CP2 人工审查稿等待用户确认。"
+    artifacts:
+      - "process/USE-CASES.md"
+      - "process/REQUIREMENTS.md"
+      - "process/CLARIFICATION-LOG.md"
+      - "process/discussions/CP2-CR019-SCENARIO-DISCUSSION-LOG.md"
+      - "process/checks/CP2-CR019-DISCUSSION-CHECKPOINT.json"
+      - "process/checks/CP1-CR019-USE-CASE-COMPLETENESS.md"
+      - "process/checks/CP2-CR019-REQUIREMENTS-BASELINE.md"
+      - "process/handoffs/META-PM-CR019-REQ-CLARIFICATION-2026-05-30.md"
+      - "checkpoints/CP2-CR019-REQUIREMENTS-BASELINE.md"
+      - "process/STATE.md"
+      - "process/STORY-STATUS.md"
+      - "process/changes/CR-019-STAGE6-MULTIFACTOR-SIMULATION-ARCHITECTURE-2026-05-30.md"
+    cp_results:
+      cp1_auto_status: "PASS"
+      cp2_auto_status: "PASS"
+      cp2_manual_status: "pending"
+      cp2_manual_review: "checkpoints/CP2-CR019-REQUIREMENTS-BASELINE.md"
+    dispatch_evidence:
+      mode: "spawn_agent"
+      agent_id: "019e77ac-22e1-7d22-b75d-0a18cfcb9744"
+      thread_id: "019e77ac-22e1-7d22-b75d-0a18cfcb9744"
+      agent_name: "pm-wang"
+      tool_name: "multi_agent_v1.spawn_agent/wait_agent/close_agent"
+      spawned_at: "2026-05-30T15:08:00+08:00"
+      completed_at: "2026-05-30T15:17:38+08:00"
+      closed_at: "2026-05-30T15:17:38+08:00"
+      status: "completed-closed"
+    safety_confirmations:
+      fastapi_implementation_authorized: false
+      dependency_change_authorized: false
+      real_qmt_operation_authorized: false
+      credential_read_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      publish_authorized: false
+      simulation_or_live_run_authorized: false
+  - at: "2026-05-30T15:45:00+08:00"
+    actor: "meta-po"
+    action: "cr019-cp2-user-correction-full-qmt-gateway"
+    from_phase: "requirement-clarification"
+    to_phase: "requirement-clarification"
+    reason: "用户纠正 meta-po 对 QMT gateway 的理解：不做应用层鉴权不等于不做 QMT 功能；gateway 必须支持完整 QMT simulation、实盘、账户、撤单、查询等功能接口，并从回测框架摘离为 Windows 系统可运行 / 可安装命令。meta-po 已修订 USE-CASES、REQUIREMENTS、CLARIFICATION-LOG、CP1/CP2 检查、discussion log、checkpoint JSON、CR-019 和 CP2 人工审查稿。"
+    artifacts:
+      - "process/USE-CASES.md"
+      - "process/REQUIREMENTS.md"
+      - "process/CLARIFICATION-LOG.md"
+      - "process/discussions/CP2-CR019-SCENARIO-DISCUSSION-LOG.md"
+      - "process/checks/CP2-CR019-DISCUSSION-CHECKPOINT.json"
+      - "process/checks/CP1-CR019-USE-CASE-COMPLETENESS.md"
+      - "process/checks/CP2-CR019-REQUIREMENTS-BASELINE.md"
+      - "checkpoints/CP2-CR019-REQUIREMENTS-BASELINE.md"
+      - "process/changes/CR-019-STAGE6-MULTIFACTOR-SIMULATION-ARCHITECTURE-2026-05-30.md"
+      - "process/STATE.md"
+      - "process/STORY-STATUS.md"
+    decisions_updated:
+      q039: "受控局域网可无应用层鉴权；若需要则采用最简 token/HMAC。"
+      q040: "CP2 人工确认需选择 benchmark / tracking / freeze fields 方案，推荐多基准看板 + primary benchmark 规则。"
+      q041: "完整 QMT endpoint 支持与运行门控分离；真实转发由 run mode / stage gate / risk gate / kill-switch 控制。"
+      q042: "fallback 默认 blocked-only 或人工 dry-run，不自动绕过 gateway 触发真实 QMT。"
+      q043: "用户同意 Backtrader/Qlib/minute/Level2 后置顺序。"
+    safety_confirmations:
+      fastapi_implementation_authorized: false
+      dependency_change_authorized: false
+      real_qmt_operation_authorized: false
+      credential_read_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      publish_authorized: false
+      simulation_or_live_run_authorized: false
+  - at: "2026-05-30T16:05:00+08:00"
+    actor: "meta-po"
+    action: "cr019-cp2-user-confirmed-q40-and-qmt-cs-module"
+    from_phase: "requirement-clarification"
+    to_phase: "requirement-clarification"
+    reason: "用户确认 Q40 采用推荐的多基准 + primary benchmark 方案，并补充 QMT 模块必须是独立 C/S 模块：C 侧位于 local_backtest 并对框架暴露统一 Python 接口，S 侧部署在 Windows 电脑上，接收 C 侧 REST API 请求并转换成 QMT 接口调用。meta-po 已修订 USE-CASES、REQUIREMENTS、CLARIFICATION-LOG、CP1/CP2 检查、discussion log、checkpoint JSON、CR-019 和 CP2 人工审查稿。"
+    artifacts:
+      - "process/USE-CASES.md"
+      - "process/REQUIREMENTS.md"
+      - "process/CLARIFICATION-LOG.md"
+      - "process/discussions/CP2-CR019-SCENARIO-DISCUSSION-LOG.md"
+      - "process/checks/CP2-CR019-DISCUSSION-CHECKPOINT.json"
+      - "process/checks/CP1-CR019-USE-CASE-COMPLETENESS.md"
+      - "process/checks/CP2-CR019-REQUIREMENTS-BASELINE.md"
+      - "checkpoints/CP2-CR019-REQUIREMENTS-BASELINE.md"
+      - "process/changes/CR-019-STAGE6-MULTIFACTOR-SIMULATION-ARCHITECTURE-2026-05-30.md"
+      - "process/STATE.md"
+      - "process/STORY-STATUS.md"
+    decisions_updated:
+      q040: "用户确认多基准看板 + primary benchmark 规则。"
+      q044: "新增 C 侧接口形态决策：推荐 Python client / 函数调用为主 + 薄 CLI。"
+      qmt_module: "QMT 模块采用独立 C/S 模块；C 侧 local_backtest client，S 侧 Windows gateway。"
+    safety_confirmations:
+      fastapi_implementation_authorized: false
+      dependency_change_authorized: false
+      real_qmt_operation_authorized: false
+      credential_read_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      publish_authorized: false
+      simulation_or_live_run_authorized: false
+  - at: "2026-05-30T17:14:51+08:00"
+    actor: "meta-po"
+    action: "cr019-cp2-approved-and-meta-se-spawned"
+    from_phase: "requirement-clarification"
+    to_phase: "solution-design"
+    reason: "用户回复“同意你的方案，你拉起meta-po组织并推进项目”，等价批准 CR-019 CP2 Decision Brief 全部推荐方案。meta-po 已回填 CP2 人工审查 approved，创建 meta-se HLD/ADR handoff，并通过 multi_agent_v1.spawn_agent 真实调度 meta-se/se-wei 执行 CR-019 CP3 HLD / ADR 设计。"
+    artifacts:
+      - "checkpoints/CP2-CR019-REQUIREMENTS-BASELINE.md"
+      - "process/handoffs/META-SE-CR019-HLD-ADR-2026-05-30.md"
+      - "process/STATE.md"
+    agent_dispatch:
+      role: "meta-se"
+      agent_id: "019e782a-2097-7112-a0da-9f0a692a06fd"
+      agent_name: "se-wei"
+      thread_id: "019e782a-2097-7112-a0da-9f0a692a06fd"
+      tool_name: "multi_agent_v1.spawn_agent"
+      spawned_at: "2026-05-30T17:14:51+08:00"
+      handoff_path: "process/handoffs/META-SE-CR019-HLD-ADR-2026-05-30.md"
+    checkpoints_updated:
+      cp2_manual_review: "approved"
+      cp2_manual_review_path: "checkpoints/CP2-CR019-REQUIREMENTS-BASELINE.md"
+      cp2_approved_by: "user"
+      cp2_approved_at: "2026-05-30T17:12:54+08:00"
+    safety_confirmations:
+      fastapi_implementation_authorized: false
+      dependency_change_authorized: false
+      real_qmt_operation_authorized: false
+      credential_read_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      publish_authorized: false
+      simulation_or_live_run_authorized: false
+  - at: "2026-05-30T17:31:52+08:00"
+    actor: "meta-po"
+    action: "cr019-cp3-hld-adr-auto-pass-manual-review-launched"
+    from_phase: "solution-design"
+    to_phase: "solution-design"
+    reason: "meta-se/se-wei 完成 CR-019 CP3 HLD / ADR 增量、QMT companion HLD 同步、ADR 增量、CP3 discussion log/checkpoint、CP3 自动预检和 CP3 人工审查稿草案。CP3 自动预检 PASS，阻断项 0。meta-po 已关闭子 agent 并发起 CP3 人工确认；用户 approve 前不得进入 Story Plan、LLD 或实现。"
+    artifacts:
+      - "process/HLD.md"
+      - "process/HLD-QMT-TRADING.md"
+      - "process/ARCHITECTURE-DECISION.md"
+      - "process/discussions/CP3-CR019-HLD-DISCUSSION-LOG.md"
+      - "process/checks/CP3-CR019-DISCUSSION-CHECKPOINT.json"
+      - "process/checks/CP3-CR019-HLD-CONSISTENCY.md"
+      - "checkpoints/CP3-CR019-HLD-REVIEW.md"
+      - "process/handoffs/META-SE-CR019-HLD-ADR-2026-05-30.md"
+      - "process/STATE.md"
+    agent_dispatch:
+      role: "meta-se"
+      agent_id: "019e782a-2097-7112-a0da-9f0a692a06fd"
+      agent_name: "se-wei"
+      thread_id: "019e782a-2097-7112-a0da-9f0a692a06fd"
+      tool_name: "multi_agent_v1.spawn_agent / multi_agent_v1.close_agent"
+      spawned_at: "2026-05-30T17:14:51+08:00"
+      completed_at: "2026-05-30T17:31:52+08:00"
+      closed_at: "2026-05-30T17:31:52+08:00"
+      handoff_path: "process/handoffs/META-SE-CR019-HLD-ADR-2026-05-30.md"
+    checkpoints_updated:
+      cp3_auto_result: "process/checks/CP3-CR019-HLD-CONSISTENCY.md"
+      cp3_auto_status: "PASS"
+      cp3_manual_review: "checkpoints/CP3-CR019-HLD-REVIEW.md"
+      cp3_manual_status: "pending"
+      cp3_pending_decisions:
+        - "CP3-CR019-DQ-01"
+        - "CP3-CR019-DQ-02"
+        - "CP3-CR019-DQ-03"
+        - "CP3-CR019-DQ-04"
+        - "CP3-CR019-DQ-05"
+        - "CP3-CR019-DQ-06"
+        - "CP3-CR019-DQ-07"
+    safety_confirmations:
+      story_plan_authorized: false
+      lld_authorized: false
+      implementation_authorized: false
+      fastapi_implementation_authorized: false
+      dependency_change_authorized: false
+      real_qmt_operation_authorized: false
+      credential_read_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      publish_authorized: false
+      simulation_or_live_run_authorized: false
+  - at: "2026-05-30T17:45:21+08:00"
+    actor: "meta-po"
+    action: "cr019-cp3-dq04-pairing-hmac-revision-dispatched"
+    from_phase: "solution-design"
+    to_phase: "solution-design"
+    reason: "用户在 CP3 人工审查中要求解释 signed file drop、完整 QMT endpoint matrix 与运行门控分离，并倾向于通过命令行配对实现 token/HMAC 鉴权；随后用户确认将 DQ-04 修订为配对式 token/HMAC 默认启用。meta-po 已创建 DQ-04 修订 handoff，恢复 meta-se/se-wei，并通过 send_input 调度修订 HLD / ADR / CP3 review。"
+    artifacts:
+      - "process/handoffs/META-SE-CR019-DQ04-AUTH-REVISION-2026-05-30.md"
+      - "process/STATE.md"
+      - "process/STORY-STATUS.md"
+    agent_dispatch:
+      role: "meta-se"
+      agent_id: "019e782a-2097-7112-a0da-9f0a692a06fd"
+      agent_name: "se-wei"
+      thread_id: "019e782a-2097-7112-a0da-9f0a692a06fd"
+      tool_name: "multi_agent_v1.resume_agent / multi_agent_v1.send_input"
+      resumed_at: "2026-05-30T17:44:36+08:00"
+      submission_id: "019e7846-12cf-7372-8d5f-b81d29c2dd92"
+      handoff_path: "process/handoffs/META-SE-CR019-DQ04-AUTH-REVISION-2026-05-30.md"
+    checkpoints_updated:
+      cp3_manual_review: "checkpoints/CP3-CR019-HLD-REVIEW.md"
+      cp3_manual_status: "revision-running"
+      dq04_revision_decision: "approved by user: pairing token/HMAC default"
+    safety_confirmations:
+      story_plan_authorized: false
+      lld_authorized: false
+      implementation_authorized: false
+      fastapi_implementation_authorized: false
+      dependency_change_authorized: false
+      real_qmt_operation_authorized: false
+      credential_read_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      publish_authorized: false
+      simulation_or_live_run_authorized: false
+  - at: "2026-05-30T17:54:01+08:00"
+    actor: "meta-po"
+    action: "cr019-cp3-dq04-revision-completed-manual-review-relaunched"
+    from_phase: "solution-design"
+    to_phase: "solution-design"
+    reason: "meta-se/se-wei 已完成 CR-019 CP3 DQ-04 鉴权修订：HLD / QMT companion HLD / ADR / CP3 discussion / checkpoint / review draft 均已更新为配对式 token/HMAC 默认启用，no-auth 仅本机 debug / fixture / 显式临时。CP3 自动预检仍为 PASS，阻断项 0。meta-po 已关闭子 agent 并重新发起 CP3 人工确认；用户 approve 前不得进入 Story Plan、LLD 或实现。"
+    artifacts:
+      - "process/HLD.md"
+      - "process/HLD-QMT-TRADING.md"
+      - "process/ARCHITECTURE-DECISION.md"
+      - "process/discussions/CP3-CR019-HLD-DISCUSSION-LOG.md"
+      - "process/checks/CP3-CR019-DISCUSSION-CHECKPOINT.json"
+      - "process/checks/CP3-CR019-HLD-CONSISTENCY.md"
+      - "checkpoints/CP3-CR019-HLD-REVIEW.md"
+      - "process/handoffs/META-SE-CR019-DQ04-AUTH-REVISION-2026-05-30.md"
+      - "process/STATE.md"
+    agent_dispatch:
+      role: "meta-se"
+      agent_id: "019e782a-2097-7112-a0da-9f0a692a06fd"
+      agent_name: "se-wei"
+      thread_id: "019e782a-2097-7112-a0da-9f0a692a06fd"
+      tool_name: "multi_agent_v1.resume_agent / multi_agent_v1.send_input / multi_agent_v1.close_agent"
+      resumed_at: "2026-05-30T17:44:36+08:00"
+      completed_at: "2026-05-30T17:54:01+08:00"
+      closed_at: "2026-05-30T17:54:01+08:00"
+      submission_id: "019e7846-12cf-7372-8d5f-b81d29c2dd92"
+      handoff_path: "process/handoffs/META-SE-CR019-DQ04-AUTH-REVISION-2026-05-30.md"
+    checkpoints_updated:
+      cp3_auto_result: "process/checks/CP3-CR019-HLD-CONSISTENCY.md"
+      cp3_auto_status: "PASS"
+      cp3_manual_review: "checkpoints/CP3-CR019-HLD-REVIEW.md"
+      cp3_manual_status: "pending"
+      dq04_revision_decision: "approved by user: pairing token/HMAC default"
+    safety_confirmations:
+      story_plan_authorized: false
+      lld_authorized: false
+      implementation_authorized: false
+      fastapi_implementation_authorized: false
+      dependency_change_authorized: false
+      real_qmt_operation_authorized: false
+      credential_read_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      publish_authorized: false
+      simulation_or_live_run_authorized: false
+  - at: "2026-05-30T18:05:47+08:00"
+    actor: "meta-po"
+    action: "cr019-cp3-approved-story-planning-cp4-dispatched"
+    from_phase: "solution-design"
+    to_phase: "story-planning"
+    reason: "用户在修订后的 CP3 审查中选择 approve，接受 CP3-CR019-DQ-01 至 DQ-07 全部推荐方案。meta-po 已回填 CP3 人工审查 approved，创建 CR-019 Story Plan / CP4 handoff，并通过 resume_agent + send_input 真实调度 meta-se/se-wei 执行 Story 拆解和 CP4 自动预检。"
+    artifacts:
+      - "checkpoints/CP3-CR019-HLD-REVIEW.md"
+      - "process/handoffs/META-SE-CR019-STORY-PLANNING-CP4-2026-05-30.md"
+      - "process/STATE.md"
+      - "process/STORY-STATUS.md"
+    agent_dispatch:
+      role: "meta-se"
+      agent_id: "019e782a-2097-7112-a0da-9f0a692a06fd"
+      agent_name: "se-wei"
+      thread_id: "019e782a-2097-7112-a0da-9f0a692a06fd"
+      tool_name: "multi_agent_v1.resume_agent / multi_agent_v1.send_input"
+      resumed_at: "2026-05-30T18:05:47+08:00"
+      submission_id: "019e7858-c8a3-7e40-966a-2b880f64eb7e"
+      handoff_path: "process/handoffs/META-SE-CR019-STORY-PLANNING-CP4-2026-05-30.md"
+    checkpoints_updated:
+      cp3_manual_review: "checkpoints/CP3-CR019-HLD-REVIEW.md"
+      cp3_manual_status: "approved"
+      cp3_approved_by: "user"
+      cp3_approved_at: "2026-05-30T18:04:03+08:00"
+      cp4_status: "running"
+    safety_confirmations:
+      lld_authorized: false
+      implementation_authorized: false
+      fastapi_implementation_authorized: false
+      dependency_change_authorized: false
+      real_qmt_operation_authorized: false
+      credential_read_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      publish_authorized: false
+      simulation_or_live_run_authorized: false
+  - at: "2026-05-30T18:27:49+08:00"
+    actor: "meta-po"
+    action: "cr019-cp4-pass-lld-batches-spawned"
+    from_phase: "story-planning"
+    to_phase: "story-planning"
+    reason: "meta-se/se-wei 完成 CR-019 Story Plan / CP4，CP4 自动预检 PASS：10 Stories、5 Waves、1 个全量 LLD 批次，阻断项 0。meta-po 已关闭 meta-se，并按 max_parallel_lld=3 将 CR019-S01..S10 分为 3 个 meta-dev LLD 批次并行执行；各批次写集仅限对应 Story 卡片、LLD 和 CP5 自动预检。"
+    artifacts:
+      - "process/checks/CP4-CR019-STORY-DAG-PARALLEL-SAFETY.md"
+      - "process/handoffs/META-SE-CR019-STORY-PLANNING-CP4-2026-05-30.md"
+      - "process/handoffs/META-DEV-CR019-LLD-BATCH-A-2026-05-30.md"
+      - "process/handoffs/META-DEV-CR019-LLD-BATCH-B-2026-05-30.md"
+      - "process/handoffs/META-DEV-CR019-LLD-BATCH-C-2026-05-30.md"
+      - "process/STATE.md"
+      - "process/STORY-STATUS.md"
+    agent_dispatch:
+      meta_se:
+        role: "meta-se"
+        agent_id: "019e782a-2097-7112-a0da-9f0a692a06fd"
+        agent_name: "se-wei"
+        completed_at: "2026-05-30T18:25:09+08:00"
+        closed_at: "2026-05-30T18:25:09+08:00"
+      lld_batches:
+        - batch_id: "CR019-LLD-BATCH-A"
+          role: "meta-dev"
+          agent_id: "019e786c-c6c5-71d1-83d9-0af5a4457eb3"
+          agent_name: "dev-he"
+          stories:
+            - "CR019-S01-stage6-admission-gate-package"
+            - "CR019-S02-primary-benchmark-dashboard"
+            - "CR019-S03-qmt-cside-client-cli-contract"
+            - "CR019-S04-windows-gateway-lifecycle-deployment"
+          handoff_path: "process/handoffs/META-DEV-CR019-LLD-BATCH-A-2026-05-30.md"
+        - batch_id: "CR019-LLD-BATCH-B"
+          role: "meta-dev"
+          agent_id: "019e786c-de7b-71a0-87b6-201abd1fb39c"
+          agent_name: "dev-xu"
+          stories:
+            - "CR019-S05-pairing-hmac-auth-redaction"
+            - "CR019-S06-qmt-endpoint-matrix-contract"
+            - "CR019-S07-run-gate-blocked-reason-integration"
+          handoff_path: "process/handoffs/META-DEV-CR019-LLD-BATCH-B-2026-05-30.md"
+        - batch_id: "CR019-LLD-BATCH-C"
+          role: "meta-dev"
+          agent_id: "019e786c-f248-72d2-be57-5ba1a18ed23b"
+          agent_name: "dev-shi"
+          stories:
+            - "CR019-S08-fallback-incident-signed-file-boundary"
+            - "CR019-S09-deferred-capability-register"
+            - "CR019-S10-docs-runbook-user-manual-boundary"
+          handoff_path: "process/handoffs/META-DEV-CR019-LLD-BATCH-C-2026-05-30.md"
+    checkpoints_updated:
+      cp4_auto_result: "process/checks/CP4-CR019-STORY-DAG-PARALLEL-SAFETY.md"
+      cp4_auto_status: "PASS"
+      lld_batch_id: "CR019-STAGE6-QMT-BRIDGE-BATCH-A"
+      lld_batch_status: "running"
+    safety_confirmations:
+      implementation_authorized: false
+      fastapi_implementation_authorized: false
+      dependency_change_authorized: false
+      real_qmt_operation_authorized: false
+      credential_read_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      publish_authorized: false
+      simulation_or_live_run_authorized: false
+  - at: "2026-05-30T18:38:43+08:00"
+    actor: "meta-po"
+    action: "cr019-lld-batch-c-completed"
+    from_phase: "story-planning"
+    to_phase: "story-planning"
+    reason: "meta-dev/dev-shi 完成 CR-019 LLD Batch C：CR019-S08、CR019-S09、CR019-S10 三份 LLD 和对应 CP5 自动预检均已生成，CP5 结论 PASS，阻断项 0。仅存在 1 个非阻断 OPEN `LCQ-CR019-S10-01`，建议在 CP5 approve 时接受：S10 实现阶段必须复核 S01..S09 confirmed LLD 的最终字段名和输出路径。"
+    artifacts:
+      - "process/stories/CR019-S08-fallback-incident-signed-file-boundary-LLD.md"
+      - "process/stories/CR019-S09-deferred-capability-register-LLD.md"
+      - "process/stories/CR019-S10-docs-runbook-user-manual-boundary-LLD.md"
+      - "process/checks/CP5-CR019-S08-fallback-incident-signed-file-boundary-LLD-IMPLEMENTABILITY.md"
+      - "process/checks/CP5-CR019-S09-deferred-capability-register-LLD-IMPLEMENTABILITY.md"
+      - "process/checks/CP5-CR019-S10-docs-runbook-user-manual-boundary-LLD-IMPLEMENTABILITY.md"
+      - "process/handoffs/META-DEV-CR019-LLD-BATCH-C-2026-05-30.md"
+    agent_dispatch:
+      role: "meta-dev"
+      agent_id: "019e786c-f248-72d2-be57-5ba1a18ed23b"
+      agent_name: "dev-shi"
+      thread_id: "019e786c-f248-72d2-be57-5ba1a18ed23b"
+      tool_name: "multi_agent_v1.spawn_agent / multi_agent_v1.close_agent"
+      spawned_at: "2026-05-30T18:27:49+08:00"
+      completed_at: "2026-05-30T18:38:43+08:00"
+      closed_at: "2026-05-30T18:38:43+08:00"
+      handoff_path: "process/handoffs/META-DEV-CR019-LLD-BATCH-C-2026-05-30.md"
+    checkpoints_updated:
+      cp5_batch_c_auto_status: "PASS"
+      cp5_batch_c_story_count: 3
+      blocking_open_items: 0
+      non_blocking_open_items:
+        - "LCQ-CR019-S10-01"
+    safety_confirmations:
+      implementation_authorized: false
+      dependency_change_authorized: false
+      real_qmt_operation_authorized: false
+      credential_read_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      publish_authorized: false
+      simulation_or_live_run_authorized: false
+  - at: "2026-05-30T18:42:39+08:00"
+    actor: "meta-po"
+    action: "cr019-lld-batch-a-completed"
+    from_phase: "story-planning"
+    to_phase: "story-planning"
+    reason: "meta-dev/dev-he 完成 CR-019 LLD Batch A：CR019-S01、CR019-S02、CR019-S03、CR019-S04 四份 LLD 和对应 CP5 自动预检均已生成，CP5 结论 PASS，阻断项 0。仅存在 1 个非阻断 OPEN `O-CR019-S04-01`，需在 CP5 Decision Brief 暴露：真实 FastAPI runtime 依赖、安装脚本和 service start 授权不在 S04 本 Story 范围内，S04 仅冻结生命周期 / 部署合同。"
+    artifacts:
+      - "process/stories/CR019-S01-stage6-admission-gate-package-LLD.md"
+      - "process/stories/CR019-S02-primary-benchmark-dashboard-LLD.md"
+      - "process/stories/CR019-S03-qmt-cside-client-cli-contract-LLD.md"
+      - "process/stories/CR019-S04-windows-gateway-lifecycle-deployment-LLD.md"
+      - "process/checks/CP5-CR019-S01-stage6-admission-gate-package-LLD-IMPLEMENTABILITY.md"
+      - "process/checks/CP5-CR019-S02-primary-benchmark-dashboard-LLD-IMPLEMENTABILITY.md"
+      - "process/checks/CP5-CR019-S03-qmt-cside-client-cli-contract-LLD-IMPLEMENTABILITY.md"
+      - "process/checks/CP5-CR019-S04-windows-gateway-lifecycle-deployment-LLD-IMPLEMENTABILITY.md"
+      - "process/handoffs/META-DEV-CR019-LLD-BATCH-A-2026-05-30.md"
+    agent_dispatch:
+      role: "meta-dev"
+      agent_id: "019e786c-c6c5-71d1-83d9-0af5a4457eb3"
+      agent_name: "dev-he"
+      thread_id: "019e786c-c6c5-71d1-83d9-0af5a4457eb3"
+      tool_name: "multi_agent_v1.spawn_agent / multi_agent_v1.close_agent"
+      spawned_at: "2026-05-30T18:27:49+08:00"
+      completed_at: "2026-05-30T18:42:39+08:00"
+      closed_at: "2026-05-30T18:42:39+08:00"
+      handoff_path: "process/handoffs/META-DEV-CR019-LLD-BATCH-A-2026-05-30.md"
+    checkpoints_updated:
+      cp5_batch_a_auto_status: "PASS"
+      cp5_batch_a_story_count: 4
+      blocking_open_items: 0
+      non_blocking_open_items:
+        - "O-CR019-S04-01"
+    safety_confirmations:
+      implementation_authorized: false
+      dependency_change_authorized: false
+      real_qmt_operation_authorized: false
+      credential_read_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      publish_authorized: false
+      simulation_or_live_run_authorized: false
+  - at: "2026-05-30T18:45:33+08:00"
+    actor: "meta-po"
+    action: "cr019-lld-batch-b-completed"
+    from_phase: "story-planning"
+    to_phase: "story-planning"
+    reason: "meta-dev/dev-xu 完成 CR-019 LLD Batch B：CR019-S05、CR019-S06、CR019-S07 三份 LLD 和对应 CP5 自动预检均已生成，CP5 结论 PASS，阻断项 0。无阻断 OPEN / Spike；S05 TTL / skew / nonce 默认值、S06 完整 endpoint matrix 范围、S07 blocked reason priority 作为非阻断设计取舍汇入 CP5 Decision Brief，由用户统一接受或修改。"
+    artifacts:
+      - "process/stories/CR019-S05-pairing-hmac-auth-redaction-LLD.md"
+      - "process/stories/CR019-S06-qmt-endpoint-matrix-contract-LLD.md"
+      - "process/stories/CR019-S07-run-gate-blocked-reason-integration-LLD.md"
+      - "process/checks/CP5-CR019-S05-pairing-hmac-auth-redaction-LLD-IMPLEMENTABILITY.md"
+      - "process/checks/CP5-CR019-S06-qmt-endpoint-matrix-contract-LLD-IMPLEMENTABILITY.md"
+      - "process/checks/CP5-CR019-S07-run-gate-blocked-reason-integration-LLD-IMPLEMENTABILITY.md"
+      - "process/handoffs/META-DEV-CR019-LLD-BATCH-B-2026-05-30.md"
+    agent_dispatch:
+      role: "meta-dev"
+      agent_id: "019e786c-de7b-71a0-87b6-201abd1fb39c"
+      agent_name: "dev-xu"
+      thread_id: "019e786c-de7b-71a0-87b6-201abd1fb39c"
+      tool_name: "multi_agent_v1.spawn_agent / multi_agent_v1.close_agent"
+      spawned_at: "2026-05-30T18:27:49+08:00"
+      completed_at: "2026-05-30T18:45:33+08:00"
+      closed_at: "2026-05-30T18:45:33+08:00"
+      handoff_path: "process/handoffs/META-DEV-CR019-LLD-BATCH-B-2026-05-30.md"
+    checkpoints_updated:
+      cp5_batch_b_auto_status: "PASS"
+      cp5_batch_b_story_count: 3
+      blocking_open_items: 0
+      non_blocking_open_items:
+        - "CR019-S05 TTL/skew/nonce 默认值：600/300/300/600 秒"
+        - "CR019-S06 完整 endpoint matrix 范围"
+        - "CR019-S07 blocked reason priority"
+    safety_confirmations:
+      implementation_authorized: false
+      dependency_change_authorized: false
+      real_qmt_operation_authorized: false
+      credential_read_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      publish_authorized: false
+      simulation_or_live_run_authorized: false
+  - at: "2026-05-30T18:46:52+08:00"
+    actor: "meta-po"
+    action: "cr019-cp5-manual-review-created"
+    from_phase: "story-planning"
+    to_phase: "story-planning"
+    reason: "CR-019 全量 LLD 批次已完成：10 份 LLD 均为 ready-for-review / confirmed=false，10 个 Story 级 CP5 自动预检均 PASS，阻断 clarification 为 0。meta-po 已生成 CP5 全量人工审查稿并汇总 7 个待人工决策项；用户 approve 前不得实现、改依赖、启动服务、读取凭据或执行真实 QMT / provider / lake / publish / simulation / live 操作。"
+    artifacts:
+      - "checkpoints/CP5-CR019-STAGE6-QMT-BRIDGE-BATCH-A-LLD-BATCH.md"
+      - "process/STORY-STATUS.md"
+      - "process/STATE.md"
+    checkpoints_updated:
+      cp5_manual_review: "checkpoints/CP5-CR019-STAGE6-QMT-BRIDGE-BATCH-A-LLD-BATCH.md"
+      cp5_manual_status: "pending"
+      cp5_auto_status: "PASS"
+      cp5_auto_pass_count: 10
+      lld_count: 10
+      blocking_open_items: 0
+      pending_decisions:
+        - "CP5-CR019-DQ-01"
+        - "CP5-CR019-DQ-02"
+        - "CP5-CR019-DQ-03"
+        - "CP5-CR019-DQ-04"
+        - "CP5-CR019-DQ-05"
+        - "CP5-CR019-DQ-06"
+        - "CP5-CR019-DQ-07"
+    safety_confirmations:
+      implementation_authorized: false
+      dependency_change_authorized: false
+      fastapi_service_start_authorized: false
+      real_qmt_operation_authorized: false
+      credential_read_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      broker_lake_write_authorized: false
+      publish_authorized: false
+      simulation_or_live_run_authorized: false
+  - at: "2026-05-30T18:51:29+08:00"
+    actor: "meta-po"
+    action: "cr019-story-cards-lld-review-sync"
+    from_phase: "story-planning"
+    to_phase: "story-planning"
+    reason: "meta-po 复核发现 CR019-S01..S04 与 CR019-S08..S10 的 Story 卡片仍停留在 draft / lld_gate=not-started，但对应 LLD 与 CP5 自动预检已完成。已将 10 张 CR-019 Story 卡片状态统一为 lld-ready-for-review / lld_gate=ready-for-review；implementation_allowed 仍为 false，CP5 approved 前不得实现。"
+    artifacts:
+      - "process/stories/CR019-S01-stage6-admission-gate-package.md"
+      - "process/stories/CR019-S02-primary-benchmark-dashboard.md"
+      - "process/stories/CR019-S03-qmt-cside-client-cli-contract.md"
+      - "process/stories/CR019-S04-windows-gateway-lifecycle-deployment.md"
+      - "process/stories/CR019-S05-pairing-hmac-auth-redaction.md"
+      - "process/stories/CR019-S06-qmt-endpoint-matrix-contract.md"
+      - "process/stories/CR019-S07-run-gate-blocked-reason-integration.md"
+      - "process/stories/CR019-S08-fallback-incident-signed-file-boundary.md"
+      - "process/stories/CR019-S09-deferred-capability-register.md"
+      - "process/stories/CR019-S10-docs-runbook-user-manual-boundary.md"
+      - "process/STORY-STATUS.md"
+      - "process/STATE.md"
+    checkpoints_updated:
+      story_card_status: "lld-ready-for-review"
+      lld_gate_status: "ready-for-review"
+      implementation_allowed: false
+      cp5_manual_status: "pending"
+    safety_confirmations:
+      implementation_authorized: false
+      dependency_change_authorized: false
+      fastapi_service_start_authorized: false
+      real_qmt_operation_authorized: false
+      credential_read_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      broker_lake_write_authorized: false
+      publish_authorized: false
+      simulation_or_live_run_authorized: false
+  - at: "2026-05-30T18:56:50+08:00"
+    actor: "meta-po"
+    action: "cr019-cp5-approved-story-execution-entered"
+    from_phase: "story-planning"
+    to_phase: "story-execution"
+    reason: "用户通过结构化选择 `approve (Recommended)` 批准 CR-019 CP5 全量 LLD 审查，接受 CP5-CR019-DQ-01 至 DQ-07 的推荐方案。meta-po 已回填 CP5 人工审查稿 approved，将 10 份 LLD 标记为 approved / confirmed=true，并将 10 张 Story 卡片标记为 lld-approved。CP5 通过仅授权受控离线 / fixture / dry-run 合同实现，不授权真实 QMT、凭据读取、provider fetch、lake / broker lake write、publish、simulation/live。"
+    artifacts:
+      - "checkpoints/CP5-CR019-STAGE6-QMT-BRIDGE-BATCH-A-LLD-BATCH.md"
+      - "process/stories/CR019-S01-stage6-admission-gate-package-LLD.md"
+      - "process/stories/CR019-S02-primary-benchmark-dashboard-LLD.md"
+      - "process/stories/CR019-S03-qmt-cside-client-cli-contract-LLD.md"
+      - "process/stories/CR019-S04-windows-gateway-lifecycle-deployment-LLD.md"
+      - "process/stories/CR019-S05-pairing-hmac-auth-redaction-LLD.md"
+      - "process/stories/CR019-S06-qmt-endpoint-matrix-contract-LLD.md"
+      - "process/stories/CR019-S07-run-gate-blocked-reason-integration-LLD.md"
+      - "process/stories/CR019-S08-fallback-incident-signed-file-boundary-LLD.md"
+      - "process/stories/CR019-S09-deferred-capability-register-LLD.md"
+      - "process/stories/CR019-S10-docs-runbook-user-manual-boundary-LLD.md"
+      - "process/STORY-STATUS.md"
+      - "process/STATE.md"
+    checkpoints_updated:
+      cp5_manual_review: "checkpoints/CP5-CR019-STAGE6-QMT-BRIDGE-BATCH-A-LLD-BATCH.md"
+      cp5_manual_status: "approved"
+      cp5_approved_by: "user"
+      cp5_approved_at: "2026-05-30T18:56:50+08:00"
+      lld_status: "approved"
+      story_card_status: "lld-approved"
+      next_dev_candidate: "CR019-S01-stage6-admission-gate-package"
+    safety_confirmations:
+      controlled_implementation_authorized: true
+      dependency_change_authorized: false
+      fastapi_service_start_authorized: false
+      real_qmt_operation_authorized: false
+      credential_read_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      broker_lake_write_authorized: false
+      publish_authorized: false
+      simulation_or_live_run_authorized: false
+  - at: "2026-05-30T19:05:30+08:00"
+    actor: "meta-po"
+    action: "cr019-s01-implementation-dispatched"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "meta-po 创建 CR019-S01 受控离线实现 handoff，并通过 spawn_agent 调度 meta-dev/dev-zhang 执行 S01。S01 Story 卡片推进到 in-development。实现范围仅限 `engine/stage6_admission.py`、`tests/test_cr019_stage6_admission_gate.py`、`trading/stage_gate.py`、`reports/stage6_admission/**` 和 S01 CP6；不得进入 S02..S10，不得改依赖、启动服务、读取凭据或执行真实 QMT / provider / lake / publish / simulation / live 操作。"
+    artifacts:
+      - "process/handoffs/META-DEV-CR019-S01-IMPLEMENT-2026-05-30.md"
+      - "process/stories/CR019-S01-stage6-admission-gate-package.md"
+      - "process/STORY-STATUS.md"
+      - "process/STATE.md"
+    agent_dispatch:
+      role: "meta-dev"
+      agent_id: "019e788f-6821-7b73-a542-f73eca256c98"
+      agent_name: "dev-zhang"
+      thread_id: "019e788f-6821-7b73-a542-f73eca256c98"
+      tool_name: "multi_agent_v1.spawn_agent"
+      spawned_at: "2026-05-30T19:05:30+08:00"
+      handoff_path: "process/handoffs/META-DEV-CR019-S01-IMPLEMENT-2026-05-30.md"
+    checkpoints_updated:
+      story_id: "CR019-S01-stage6-admission-gate-package"
+      story_status: "in-development"
+      cp6_status: "running"
+      next_forbidden_until_cp6: "CR019-S02"
+    safety_confirmations:
+      controlled_implementation_authorized: true
+      dependency_change_authorized: false
+      fastapi_service_start_authorized: false
+      real_qmt_operation_authorized: false
+      credential_read_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      broker_lake_write_authorized: false
+      publish_authorized: false
+      simulation_or_live_run_authorized: false
+  - at: "2026-05-30T19:15:53+08:00"
+    actor: "meta-po"
+    action: "cr019-s01-cp6-pass-ready-for-cp7"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "meta-dev/dev-zhang 完成 CR019-S01 受控离线实现并生成 CP6，结论 PASS。meta-po 已关闭 dev agent，回填 handoff / CP6 dispatch evidence，并在主线程复跑 py_compile、S01 + CR016 回归和 diff check，均 PASS。S01 Story 已为 ready-for-verification；CP7 PASS 前不得调度 S02。"
+    artifacts:
+      - "engine/stage6_admission.py"
+      - "trading/stage_gate.py"
+      - "tests/test_cr019_stage6_admission_gate.py"
+      - "reports/stage6_admission/README.md"
+      - "reports/stage6_admission/admission_package_schema.md"
+      - "process/checks/CP6-CR019-S01-stage6-admission-gate-package-CODING-DONE.md"
+      - "process/handoffs/META-DEV-CR019-S01-IMPLEMENT-2026-05-30.md"
+      - "process/stories/CR019-S01-stage6-admission-gate-package.md"
+      - "process/STORY-STATUS.md"
+      - "process/STATE.md"
+    agent_dispatch:
+      role: "meta-dev"
+      agent_id: "019e788f-6821-7b73-a542-f73eca256c98"
+      agent_name: "dev-zhang"
+      thread_id: "019e788f-6821-7b73-a542-f73eca256c98"
+      tool_name: "multi_agent_v1.spawn_agent / multi_agent_v1.close_agent"
+      spawned_at: "2026-05-30T19:05:30+08:00"
+      completed_at: "2026-05-30T19:15:53+08:00"
+      closed_at: "2026-05-30T19:15:53+08:00"
+      handoff_path: "process/handoffs/META-DEV-CR019-S01-IMPLEMENT-2026-05-30.md"
+    checkpoints_updated:
+      cp6_result: "process/checks/CP6-CR019-S01-stage6-admission-gate-package-CODING-DONE.md"
+      cp6_status: "PASS"
+      story_status: "ready-for-verification"
+      next_step: "meta-qa CP7"
+    main_thread_validation:
+      py_compile: "PASS: PYTHONPYCACHEPREFIX=/tmp/cr019-s01-pycompile-main uv run --python 3.11 python -m py_compile engine/stage6_admission.py trading/stage_gate.py tests/test_cr019_stage6_admission_gate.py"
+      pytest: "PASS: 18 passed in 0.07s for tests/test_cr019_stage6_admission_gate.py tests/test_cr016_simulation_order_enable_gate.py"
+      diff_check: "PASS: git diff --check for S01 implementation, CP6, handoff, STATE and STORY-STATUS"
+    safety_confirmations:
+      controlled_implementation_authorized: true
+      dependency_change_authorized: false
+      fastapi_service_start_authorized: false
+      real_qmt_operation_authorized: false
+      credential_read_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      broker_lake_write_authorized: false
+      publish_authorized: false
+      simulation_or_live_run_authorized: false
+  - at: "2026-05-30T19:20:20+08:00"
+    actor: "meta-po"
+    action: "cr019-s01-cp7-dispatched"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "meta-po 创建 CR019-S01 CP7 验证 handoff，并通过 spawn_agent 调度 meta-qa/qa-cao 执行受控离线验证。QA 写入范围仅限 CP7 结果文件；不得改依赖、启动服务、读取凭据或执行真实 QMT / provider / lake / publish / simulation / live 操作。"
+    artifacts:
+      - "process/handoffs/META-QA-CR019-S01-CP7-VERIFY-2026-05-30.md"
+      - "process/STORY-STATUS.md"
+      - "process/STATE.md"
+    agent_dispatch:
+      role: "meta-qa"
+      agent_id: "019e789d-05c2-7b62-bb76-deab5c911c4b"
+      agent_name: "qa-cao"
+      thread_id: "019e789d-05c2-7b62-bb76-deab5c911c4b"
+      tool_name: "multi_agent_v1.spawn_agent"
+      spawned_at: "2026-05-30T19:20:20+08:00"
+      handoff_path: "process/handoffs/META-QA-CR019-S01-CP7-VERIFY-2026-05-30.md"
+    checkpoints_updated:
+      cp7_status: "running"
+      story_status: "verify-running"
+      next_step: "wait-meta-qa-cp7"
+    safety_confirmations:
+      controlled_implementation_authorized: true
+      dependency_change_authorized: false
+      fastapi_service_start_authorized: false
+      real_qmt_operation_authorized: false
+      credential_read_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      broker_lake_write_authorized: false
+      publish_authorized: false
+      simulation_or_live_run_authorized: false
+  - at: "2026-05-30T19:25:30+08:00"
+    actor: "meta-po"
+    action: "cr019-s01-verified-s02-dev-ready"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "meta-qa/qa-cao 完成 CR019-S01 CP7 验证并返回 PASS：必跑 pytest 18 passed、py_compile、diff check、依赖 diff、缓存状态、reports 目录检查、禁区扫描和 gate/counter 探针均 PASS，forbidden operation counters 全部为 0。meta-po 已关闭 QA agent，回填 handoff / CP7 dispatch evidence，将 S01 收敛为 verified，并确认 S02 依赖 S01 与 CR018-S03 均满足，S02 进入 dev-ready。"
+    artifacts:
+      - "process/checks/CP7-CR019-S01-stage6-admission-gate-package-VERIFICATION-DONE.md"
+      - "process/handoffs/META-QA-CR019-S01-CP7-VERIFY-2026-05-30.md"
+      - "process/stories/CR019-S01-stage6-admission-gate-package.md"
+      - "process/stories/CR019-S02-primary-benchmark-dashboard.md"
+      - "process/STORY-STATUS.md"
+      - "process/STATE.md"
+    agent_dispatch:
+      role: "meta-qa"
+      agent_id: "019e789d-05c2-7b62-bb76-deab5c911c4b"
+      agent_name: "qa-cao"
+      thread_id: "019e789d-05c2-7b62-bb76-deab5c911c4b"
+      tool_name: "multi_agent_v1.spawn_agent / multi_agent_v1.close_agent"
+      spawned_at: "2026-05-30T19:20:20+08:00"
+      completed_at: "2026-05-30T19:25:30+08:00"
+      closed_at: "2026-05-30T19:25:30+08:00"
+      handoff_path: "process/handoffs/META-QA-CR019-S01-CP7-VERIFY-2026-05-30.md"
+    checkpoints_updated:
+      cp7_result: "process/checks/CP7-CR019-S01-stage6-admission-gate-package-VERIFICATION-DONE.md"
+      cp7_status: "PASS"
+      s01_story_status: "verified"
+      s02_story_status: "dev-ready"
+      next_step: "meta-dev S02 implementation"
+    qa_validation:
+      pytest: "PASS: 18 passed in 0.06s"
+      py_compile: "PASS"
+      diff_check: "PASS"
+      dependency_diff: "PASS: pyproject.toml / uv.lock / .env no diff"
+      forbidden_counters: "PASS: all zero"
+    safety_confirmations:
+      controlled_implementation_authorized: true
+      dependency_change_authorized: false
+      fastapi_service_start_authorized: false
+      real_qmt_operation_authorized: false
+      credential_read_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      broker_lake_write_authorized: false
+      publish_authorized: false
+      simulation_or_live_run_authorized: false
+  - at: "2026-05-30T19:28:38+08:00"
+    actor: "meta-po"
+    action: "cr019-s02-implementation-dispatched"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "S01 已 verified，CR018-S03 benchmark readiness 已 verified，S02 CP5/LLD/dev_gate 均满足。meta-po 创建 CR019-S02 受控离线实现 handoff，并通过 spawn_agent 调度 meta-dev/dev-you 执行 S02。实现范围仅限 `engine/benchmark_policy.py`、`tests/test_cr019_primary_benchmark_policy.py`、`reports/stage6_admission/benchmark_dashboard_schema.md`、S02 CP6 和 S02 Story 状态证据；不得真实补 benchmark、provider fetch、lake write、publish、读取凭据或调用 QMT。"
+    artifacts:
+      - "process/handoffs/META-DEV-CR019-S02-IMPLEMENT-2026-05-30.md"
+      - "process/stories/CR019-S02-primary-benchmark-dashboard.md"
+      - "process/STORY-STATUS.md"
+      - "process/STATE.md"
+    agent_dispatch:
+      role: "meta-dev"
+      agent_id: "019e78a4-9720-7133-bb77-26978f45be69"
+      agent_name: "dev-you"
+      thread_id: "019e78a4-9720-7133-bb77-26978f45be69"
+      tool_name: "multi_agent_v1.spawn_agent"
+      spawned_at: "2026-05-30T19:28:38+08:00"
+      handoff_path: "process/handoffs/META-DEV-CR019-S02-IMPLEMENT-2026-05-30.md"
+    checkpoints_updated:
+      story_id: "CR019-S02-primary-benchmark-dashboard"
+      story_status: "in-development"
+      cp6_status: "running"
+      next_forbidden_until_cp6: "CR019-S03"
+    safety_confirmations:
+      controlled_implementation_authorized: true
+      dependency_change_authorized: false
+      fastapi_service_start_authorized: false
+      real_qmt_operation_authorized: false
+      credential_read_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      broker_lake_write_authorized: false
+      publish_authorized: false
+      simulation_or_live_run_authorized: false
+  - at: "2026-05-30T19:41:55+08:00"
+    actor: "meta-po"
+    action: "cr019-s02-cp6-pass-ready-for-cp7"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "meta-dev/dev-you 完成 CR019-S02 受控离线实现并生成 CP6，结论 PASS。meta-po 已关闭 dev agent，回填 handoff / CP6 dispatch evidence，并在主线程复跑 py_compile、S02 + S01 回归、diff check、reports schema no-index whitespace、依赖 diff、缓存状态、counter probe 和禁区扫描，均 PASS。S02 Story 已为 ready-for-verification；CP7 PASS 前不得调度 S03。"
+    artifacts:
+      - "engine/benchmark_policy.py"
+      - "tests/test_cr019_primary_benchmark_policy.py"
+      - "reports/stage6_admission/benchmark_dashboard_schema.md"
+      - "process/checks/CP6-CR019-S02-primary-benchmark-dashboard-CODING-DONE.md"
+      - "process/handoffs/META-DEV-CR019-S02-IMPLEMENT-2026-05-30.md"
+      - "process/stories/CR019-S02-primary-benchmark-dashboard.md"
+      - "process/STORY-STATUS.md"
+      - "process/STATE.md"
+    agent_dispatch:
+      role: "meta-dev"
+      agent_id: "019e78a4-9720-7133-bb77-26978f45be69"
+      agent_name: "dev-you"
+      thread_id: "019e78a4-9720-7133-bb77-26978f45be69"
+      tool_name: "multi_agent_v1.spawn_agent / multi_agent_v1.close_agent"
+      spawned_at: "2026-05-30T19:28:38+08:00"
+      completed_at: "2026-05-30T19:41:55+08:00"
+      closed_at: "2026-05-30T19:41:55+08:00"
+      handoff_path: "process/handoffs/META-DEV-CR019-S02-IMPLEMENT-2026-05-30.md"
+    checkpoints_updated:
+      cp6_result: "process/checks/CP6-CR019-S02-primary-benchmark-dashboard-CODING-DONE.md"
+      cp6_status: "PASS"
+      story_status: "ready-for-verification"
+      next_step: "meta-qa CP7"
+    main_thread_validation:
+      py_compile: "PASS: PYTHONPYCACHEPREFIX=/tmp/cr019-s02-pycompile-main uv run --python 3.11 python -m py_compile engine/benchmark_policy.py tests/test_cr019_primary_benchmark_policy.py"
+      pytest: "PASS: 17 passed in 0.06s for tests/test_cr019_primary_benchmark_policy.py tests/test_cr019_stage6_admission_gate.py"
+      diff_check: "PASS: git diff --check for S02 implementation, CP6, handoff and Story card"
+      schema_no_index_diff_check: "PASS: no whitespace output; exit code 1 expected because reports/stage6_admission/benchmark_dashboard_schema.md differs from /dev/null and is ignored by reports/"
+      dependency_diff: "PASS: pyproject.toml / uv.lock / .env no diff"
+      cache_status: "PASS: no .pytest_cache or __pycache__ visible status"
+      forbidden_counters: "PASS: all zero"
+    safety_confirmations:
+      controlled_implementation_authorized: true
+      dependency_change_authorized: false
+      fastapi_service_start_authorized: false
+      real_qmt_operation_authorized: false
+      credential_read_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      broker_lake_write_authorized: false
+      publish_authorized: false
+      simulation_or_live_run_authorized: false
+  - at: "2026-05-30T19:46:03+08:00"
+    actor: "meta-po"
+    action: "cr019-s02-cp7-dispatched"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "meta-po 创建 CR019-S02 CP7 验证 handoff，并通过 spawn_agent 调度 meta-qa/qa-zhang 执行受控离线验证。QA 写入范围仅限 CP7 结果文件；不得真实补 benchmark、改依赖、启动服务、读取凭据或执行真实 QMT / provider / lake / publish / simulation / live 操作。"
+    artifacts:
+      - "process/handoffs/META-QA-CR019-S02-CP7-VERIFY-2026-05-30.md"
+      - "process/STORY-STATUS.md"
+      - "process/STATE.md"
+    agent_dispatch:
+      role: "meta-qa"
+      agent_id: "019e78b4-95cb-7e53-b841-719d0f0f530b"
+      agent_name: "qa-zhang"
+      thread_id: "019e78b4-95cb-7e53-b841-719d0f0f530b"
+      tool_name: "multi_agent_v1.spawn_agent"
+      spawned_at: "2026-05-30T19:46:03+08:00"
+      handoff_path: "process/handoffs/META-QA-CR019-S02-CP7-VERIFY-2026-05-30.md"
+    checkpoints_updated:
+      cp7_status: "running"
+      story_status: "verify-running"
+      next_step: "wait-meta-qa-cp7"
+    safety_confirmations:
+      controlled_implementation_authorized: true
+      dependency_change_authorized: false
+      fastapi_service_start_authorized: false
+      real_qmt_operation_authorized: false
+      credential_read_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      broker_lake_write_authorized: false
+      publish_authorized: false
+      simulation_or_live_run_authorized: false
+  - at: "2026-05-30T19:51:32+08:00"
+    actor: "meta-po"
+    action: "cr019-s02-verified-s03-dev-ready"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "meta-qa/qa-zhang 完成 CR019-S02 CP7 验证并返回 PASS：必跑 pytest 17 passed、py_compile、diff check、reports schema no-index whitespace、依赖 diff、缓存状态、counter probe、check-ignore、focused 禁区扫描和凭据关键词扫描均 PASS，forbidden operation counters 全部为 0。meta-po 已关闭 QA agent，回填 handoff / CP7 dispatch evidence，将 S02 收敛为 verified，并确认 S03 依赖 CR015-S02、CR016-S04 与 W1 S01/S02 均满足，S03 进入 dev-ready。"
+    artifacts:
+      - "process/checks/CP7-CR019-S02-primary-benchmark-dashboard-VERIFICATION-DONE.md"
+      - "process/handoffs/META-QA-CR019-S02-CP7-VERIFY-2026-05-30.md"
+      - "process/stories/CR019-S02-primary-benchmark-dashboard.md"
+      - "process/stories/CR019-S03-qmt-cside-client-cli-contract.md"
+      - "process/STORY-STATUS.md"
+      - "process/STATE.md"
+    agent_dispatch:
+      role: "meta-qa"
+      agent_id: "019e78b4-95cb-7e53-b841-719d0f0f530b"
+      agent_name: "qa-zhang"
+      thread_id: "019e78b4-95cb-7e53-b841-719d0f0f530b"
+      tool_name: "multi_agent_v1.spawn_agent / multi_agent_v1.close_agent"
+      spawned_at: "2026-05-30T19:46:03+08:00"
+      completed_at: "2026-05-30T19:51:32+08:00"
+      closed_at: "2026-05-30T19:51:32+08:00"
+      handoff_path: "process/handoffs/META-QA-CR019-S02-CP7-VERIFY-2026-05-30.md"
+    checkpoints_updated:
+      cp7_result: "process/checks/CP7-CR019-S02-primary-benchmark-dashboard-VERIFICATION-DONE.md"
+      cp7_status: "PASS"
+      s02_story_status: "verified"
+      s03_story_status: "dev-ready"
+      next_step: "meta-dev S03 implementation"
+    qa_validation:
+      pytest: "PASS: 17 passed in 0.06s"
+      py_compile: "PASS"
+      diff_check: "PASS"
+      schema_no_index_diff_check: "PASS"
+      dependency_diff: "PASS: pyproject.toml / uv.lock / .env no diff"
+      forbidden_counters: "PASS: all zero"
+    safety_confirmations:
+      controlled_implementation_authorized: true
+      dependency_change_authorized: false
+      fastapi_service_start_authorized: false
+      real_qmt_operation_authorized: false
+      credential_read_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      broker_lake_write_authorized: false
+      publish_authorized: false
+      simulation_or_live_run_authorized: false
+  - at: "2026-05-30T20:42:15+08:00"
+    actor: "meta-po"
+    action: "cr019-s04-cp7-dispatched"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "meta-po 创建 CR019-S04 CP7 验证 handoff，并通过 spawn_agent 调度 meta-qa/qa-wei 执行受控离线验证。QA 写入范围仅限 CP7 结果文件；不得改依赖、启动 FastAPI 服务、绑定端口、读取凭据或执行真实 QMT / provider / lake / broker / publish / simulation / live 操作。"
+    artifacts:
+      - "process/handoffs/META-QA-CR019-S04-CP7-VERIFY-2026-05-30.md"
+      - "process/STORY-STATUS.md"
+      - "process/STATE.md"
+      - "process/stories/CR019-S04-windows-gateway-lifecycle-deployment.md"
+    agent_dispatch:
+      role: "meta-qa"
+      agent_id: "019e78e8-037c-78c1-81e8-050ec8d844f5"
+      agent_name: "qa-wei"
+      thread_id: "019e78e8-037c-78c1-81e8-050ec8d844f5"
+      tool_name: "multi_agent_v1.spawn_agent"
+      spawned_at: "2026-05-30T20:42:15+08:00"
+      handoff_path: "process/handoffs/META-QA-CR019-S04-CP7-VERIFY-2026-05-30.md"
+    checkpoints_updated:
+      cp7_status: "running"
+      story_status: "verify-running"
+      next_step: "wait-meta-qa-cp7"
+    safety_confirmations:
+      controlled_implementation_authorized: true
+      dependency_change_authorized: false
+      fastapi_service_start_authorized: false
+      real_qmt_operation_authorized: false
+      credential_read_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      broker_lake_write_authorized: false
+      publish_authorized: false
+      simulation_or_live_run_authorized: false
+  - at: "2026-05-30T20:49:47+08:00"
+    actor: "meta-po"
+    action: "cr019-s04-verified-s05-dev-ready"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "meta-qa/qa-wei 完成 CR019-S04 CP7 验证并返回 PASS：必跑 pytest 16 passed、py_compile、diff check、依赖 diff、缓存状态、counter probe、forbidden import/runtime scan 和文档敏感字面量扫描均 PASS，forbidden operation counters 全部为 0。meta-po 已关闭 QA agent，回填 handoff / CP7 dispatch evidence，将 S04 收敛为 verified，并确认 S05 依赖 S03/S04 均满足，S05 进入 dev-ready。"
+    artifacts:
+      - "process/checks/CP7-CR019-S04-windows-gateway-lifecycle-deployment-VERIFICATION-DONE.md"
+      - "process/handoffs/META-QA-CR019-S04-CP7-VERIFY-2026-05-30.md"
+      - "process/stories/CR019-S04-windows-gateway-lifecycle-deployment.md"
+      - "process/stories/CR019-S05-pairing-hmac-auth-redaction.md"
+      - "process/STORY-STATUS.md"
+      - "process/STATE.md"
+    agent_dispatch:
+      role: "meta-qa"
+      agent_id: "019e78e8-037c-78c1-81e8-050ec8d844f5"
+      agent_name: "qa-wei"
+      thread_id: "019e78e8-037c-78c1-81e8-050ec8d844f5"
+      tool_name: "multi_agent_v1.spawn_agent / multi_agent_v1.close_agent"
+      spawned_at: "2026-05-30T20:42:15+08:00"
+      completed_at: "2026-05-30T20:45:16+08:00"
+      closed_at: "2026-05-30T20:49:47+08:00"
+      handoff_path: "process/handoffs/META-QA-CR019-S04-CP7-VERIFY-2026-05-30.md"
+    checkpoints_updated:
+      cp7_result: "process/checks/CP7-CR019-S04-windows-gateway-lifecycle-deployment-VERIFICATION-DONE.md"
+      cp7_status: "PASS"
+      s04_story_status: "verified"
+      s05_story_status: "dev-ready"
+      next_step: "meta-dev S05 implementation"
+    qa_validation:
+      pytest: "PASS: 16 passed in 0.11s"
+      py_compile: "PASS"
+      diff_check: "PASS"
+      dependency_diff: "PASS: pyproject.toml / uv.lock / .env no diff"
+      forbidden_counters: "PASS: all zero"
+    safety_confirmations:
+      controlled_implementation_authorized: true
+      dependency_change_authorized: false
+      fastapi_service_start_authorized: false
+      real_qmt_operation_authorized: false
+      credential_read_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      broker_lake_write_authorized: false
+      publish_authorized: false
+      simulation_or_live_run_authorized: false
+  - at: "2026-05-30T20:55:19+08:00"
+    actor: "meta-po"
+    action: "cr019-s05-implementation-dispatched"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "S03/S04 已 verified，S05 CP5/LLD/dev_gate 均满足。meta-po 创建 CR019-S05 受控离线实现 handoff，并通过 spawn_agent 调度 meta-dev/dev-yang 执行 S05。实现范围仅限 `trading/qmt_auth.py`、`trading/qmt_redaction.py`、`tests/test_cr019_qmt_pairing_hmac_auth.py`、`trading/qmt_gateway_config.py` auth 配置追加、S05 CP6 和 S05 Story 状态证据；不得生成或读取真实 secret，不得读取 .env/凭据、启动服务、调用真实 QMT 或绕过 run gate。"
+    artifacts:
+      - "process/handoffs/META-DEV-CR019-S05-IMPLEMENT-2026-05-30.md"
+      - "process/stories/CR019-S05-pairing-hmac-auth-redaction.md"
+      - "process/STORY-STATUS.md"
+      - "process/STATE.md"
+    agent_dispatch:
+      role: "meta-dev"
+      agent_id: "019e78f3-f659-7760-8a21-84d1b14832d4"
+      agent_name: "dev-yang"
+      thread_id: "019e78f3-f659-7760-8a21-84d1b14832d4"
+      tool_name: "multi_agent_v1.spawn_agent"
+      spawned_at: "2026-05-30T20:55:19+08:00"
+      handoff_path: "process/handoffs/META-DEV-CR019-S05-IMPLEMENT-2026-05-30.md"
+    checkpoints_updated:
+      story_id: "CR019-S05-pairing-hmac-auth-redaction"
+      story_status: "in-development"
+      cp6_status: "running"
+      next_forbidden_until_cp6: "CR019-S06"
+    safety_confirmations:
+      controlled_implementation_authorized: true
+      dependency_change_authorized: false
+      fastapi_service_start_authorized: false
+      real_qmt_operation_authorized: false
+      credential_read_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      broker_lake_write_authorized: false
+      publish_authorized: false
+      simulation_or_live_run_authorized: false
+  - at: "2026-05-30T21:08:16+08:00"
+    actor: "meta-po"
+    action: "cr019-s05-cp6-pass-ready-for-cp7"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "meta-dev/dev-yang 完成 CR019-S05 受控离线实现并生成 CP6，结论 PASS。meta-po 已关闭 dev agent，回填 handoff / CP6 dispatch evidence，并在主线程复跑 py_compile、S05 + S04 + S03 回归、依赖 diff、缓存状态、counter probe、forbidden import scan、宽泛危险调用扫描和 diff check，均 PASS。S05 Story 已为 ready-for-verification；CP7 PASS 前不得推进 S06。"
+    artifacts:
+      - "trading/qmt_auth.py"
+      - "trading/qmt_redaction.py"
+      - "trading/qmt_gateway_config.py"
+      - "tests/test_cr019_qmt_pairing_hmac_auth.py"
+      - "process/checks/CP6-CR019-S05-pairing-hmac-auth-redaction-CODING-DONE.md"
+      - "process/handoffs/META-DEV-CR019-S05-IMPLEMENT-2026-05-30.md"
+      - "process/stories/CR019-S05-pairing-hmac-auth-redaction.md"
+      - "process/STORY-STATUS.md"
+      - "process/STATE.md"
+    agent_dispatch:
+      role: "meta-dev"
+      agent_id: "019e78f3-f659-7760-8a21-84d1b14832d4"
+      agent_name: "dev-yang"
+      thread_id: "019e78f3-f659-7760-8a21-84d1b14832d4"
+      tool_name: "multi_agent_v1.spawn_agent / multi_agent_v1.close_agent"
+      spawned_at: "2026-05-30T20:55:19+08:00"
+      completed_at: "2026-05-30T21:07:46+08:00"
+      closed_at: "2026-05-30T21:07:46+08:00"
+      handoff_path: "process/handoffs/META-DEV-CR019-S05-IMPLEMENT-2026-05-30.md"
+    checkpoints_updated:
+      cp6_result: "process/checks/CP6-CR019-S05-pairing-hmac-auth-redaction-CODING-DONE.md"
+      cp6_status: "PASS"
+      story_status: "ready-for-verification"
+      next_step: "meta-qa CP7"
+    main_thread_validation:
+      py_compile: "PASS"
+      pytest: "PASS: 27 passed in 0.16s"
+      diff_check: "PASS"
+      dependency_diff: "PASS: pyproject.toml / uv.lock / .env no diff"
+      forbidden_counters: "PASS: auth and gateway all zero"
+    safety_confirmations:
+      controlled_implementation_authorized: true
+      dependency_change_authorized: false
+      fastapi_service_start_authorized: false
+      real_qmt_operation_authorized: false
+      credential_read_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      broker_lake_write_authorized: false
+      publish_authorized: false
+      simulation_or_live_run_authorized: false
+  - at: "2026-05-30T21:14:03+08:00"
+    actor: "meta-po"
+    action: "cr019-s05-cp7-verification-dispatched"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "CR019-S05 CP6 PASS 且 Story 为 ready-for-verification。meta-po 创建 S05 CP7 QA handoff，并通过 spawn_agent 调度 meta-qa/qa-yan 执行独立验证；CP7 PASS 前不得标记 S05 verified 或调度 S06。"
+    artifacts:
+      - "process/handoffs/META-QA-CR019-S05-CP7-VERIFY-2026-05-30.md"
+      - "process/checks/CP6-CR019-S05-pairing-hmac-auth-redaction-CODING-DONE.md"
+      - "process/stories/CR019-S05-pairing-hmac-auth-redaction.md"
+      - "process/STORY-STATUS.md"
+      - "process/STATE.md"
+    agent_dispatch:
+      role: "meta-qa"
+      agent_id: "019e7905-1ec5-77d3-b270-784c0fb0a48f"
+      agent_name: "qa-yan"
+      thread_id: "019e7905-1ec5-77d3-b270-784c0fb0a48f"
+      tool_name: "multi_agent_v1.spawn_agent"
+      spawned_at: "2026-05-30T21:14:03+08:00"
+      handoff_path: "process/handoffs/META-QA-CR019-S05-CP7-VERIFY-2026-05-30.md"
+    checkpoints_updated:
+      cp7_status: "running"
+      story_status: "verify-running"
+      next_step: "wait-meta-qa-cp7"
+    safety_confirmations:
+      controlled_implementation_authorized: true
+      dependency_change_authorized: false
+      fastapi_service_start_authorized: false
+      real_qmt_operation_authorized: false
+      credential_read_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      broker_lake_write_authorized: false
+      publish_authorized: false
+      simulation_or_live_run_authorized: false
+  - at: "2026-05-31T08:02:53+08:00"
+    actor: "meta-po"
+    action: "cr019-s05-verified-s06-implementation-dispatched"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "meta-qa/qa-yan 完成 CR019-S05 CP7 验证并返回 PASS；meta-po 已关闭 QA agent，回填 handoff / CP7 dispatch evidence，并在主线程复跑 py_compile、S05 + S04 + S03 回归、依赖 diff、缓存状态、counter probe、forbidden import scan、宽泛危险调用扫描和 diff check，均 PASS。S05 收敛为 verified。S06 依赖 S03/S04/S05 均满足且无文件冲突，meta-po 创建 S06 实现 handoff 并通过 spawn_agent 调度 meta-dev/dev-you 执行。"
+    artifacts:
+      - "process/checks/CP7-CR019-S05-pairing-hmac-auth-redaction-VERIFICATION-DONE.md"
+      - "process/handoffs/META-QA-CR019-S05-CP7-VERIFY-2026-05-30.md"
+      - "process/stories/CR019-S05-pairing-hmac-auth-redaction.md"
+      - "process/stories/CR019-S06-qmt-endpoint-matrix-contract.md"
+      - "process/handoffs/META-DEV-CR019-S06-IMPLEMENT-2026-05-31.md"
+      - "process/STORY-STATUS.md"
+      - "process/STATE.md"
+    agent_dispatch:
+      closed_qa:
+        role: "meta-qa"
+        agent_id: "019e7905-1ec5-77d3-b270-784c0fb0a48f"
+        agent_name: "qa-yan"
+        thread_id: "019e7905-1ec5-77d3-b270-784c0fb0a48f"
+        tool_name: "multi_agent_v1.spawn_agent / multi_agent_v1.close_agent"
+        spawned_at: "2026-05-30T21:14:03+08:00"
+        completed_at: "2026-05-30T21:17:14+08:00"
+        closed_at: "2026-05-30T21:21:14+08:00"
+        handoff_path: "process/handoffs/META-QA-CR019-S05-CP7-VERIFY-2026-05-30.md"
+      spawned_dev:
+        role: "meta-dev"
+        agent_id: "019e7b57-2b50-7353-a782-a0f6ddc513af"
+        agent_name: "dev-you"
+        thread_id: "019e7b57-2b50-7353-a782-a0f6ddc513af"
+        tool_name: "multi_agent_v1.spawn_agent"
+        spawned_at: "2026-05-31T08:02:53+08:00"
+        handoff_path: "process/handoffs/META-DEV-CR019-S06-IMPLEMENT-2026-05-31.md"
+    checkpoints_updated:
+      s05_cp7_result: "process/checks/CP7-CR019-S05-pairing-hmac-auth-redaction-VERIFICATION-DONE.md"
+      s05_cp7_status: "PASS"
+      s05_story_status: "verified"
+      s06_story_status: "in-development"
+      s06_cp6_status: "running"
+      next_step: "wait-meta-dev-s06-cp6"
+    main_thread_validation:
+      py_compile: "PASS"
+      pytest: "PASS: 27 passed in 0.15s"
+      diff_check: "PASS"
+      dependency_diff: "PASS: pyproject.toml / uv.lock / .env no diff"
+      forbidden_counters: "PASS: auth and gateway all zero"
+    safety_confirmations:
+      controlled_implementation_authorized: true
+      dependency_change_authorized: false
+      fastapi_service_start_authorized: false
+      real_qmt_operation_authorized: false
+      credential_read_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      broker_lake_write_authorized: false
+      publish_authorized: false
+      simulation_or_live_run_authorized: false
+  - at: "2026-05-31T08:17:35+08:00"
+    actor: "meta-po"
+    action: "cr019-s06-cp6-pass-ready-for-cp7"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "meta-dev/dev-you 完成 CR019-S06 受控离线实现并生成 CP6，结论 PASS。meta-po 已关闭 dev agent，回填 handoff / CP6 dispatch evidence，并在主线程复跑 py_compile、S06 + S03 + S04 + S05 回归、依赖 diff、缓存状态、counter probe、forbidden import scan、宽泛危险调用扫描和 diff check，均 PASS。S06 Story 已为 ready-for-verification，随后创建 S06 CP7 QA handoff 并通过 spawn_agent 调度 meta-qa/qa-wei 执行独立验证；CP7 PASS 前不得推进 S07。"
+    artifacts:
+      - "trading/qmt_endpoint_matrix.py"
+      - "trading/qmt_gateway_contracts.py"
+      - "trading/qmt_client.py"
+      - "tests/test_cr019_qmt_endpoint_matrix.py"
+      - "process/checks/CP6-CR019-S06-qmt-endpoint-matrix-contract-CODING-DONE.md"
+      - "process/handoffs/META-DEV-CR019-S06-IMPLEMENT-2026-05-31.md"
+      - "process/handoffs/META-QA-CR019-S06-CP7-VERIFY-2026-05-31.md"
+      - "process/stories/CR019-S06-qmt-endpoint-matrix-contract.md"
+      - "process/STORY-STATUS.md"
+      - "process/STATE.md"
+    agent_dispatch:
+      closed_dev:
+        role: "meta-dev"
+        agent_id: "019e7b57-2b50-7353-a782-a0f6ddc513af"
+        agent_name: "dev-you"
+        thread_id: "019e7b57-2b50-7353-a782-a0f6ddc513af"
+        tool_name: "multi_agent_v1.spawn_agent / multi_agent_v1.close_agent"
+        spawned_at: "2026-05-31T08:02:53+08:00"
+        completed_at: "2026-05-31T08:12:36+08:00"
+        closed_at: "2026-05-31T08:15:43+08:00"
+        handoff_path: "process/handoffs/META-DEV-CR019-S06-IMPLEMENT-2026-05-31.md"
+      spawned_qa:
+        role: "meta-qa"
+        agent_id: "019e7b64-9eb5-7193-99d1-57466159d32d"
+        agent_name: "qa-wei"
+        thread_id: "019e7b64-9eb5-7193-99d1-57466159d32d"
+        tool_name: "multi_agent_v1.spawn_agent"
+        spawned_at: "2026-05-31T08:17:35+08:00"
+        handoff_path: "process/handoffs/META-QA-CR019-S06-CP7-VERIFY-2026-05-31.md"
+    checkpoints_updated:
+      s06_cp6_result: "process/checks/CP6-CR019-S06-qmt-endpoint-matrix-contract-CODING-DONE.md"
+      s06_cp6_status: "PASS"
+      s06_story_status: "verify-running"
+      s06_cp7_status: "running"
+      next_step: "wait-meta-qa-s06-cp7"
+    main_thread_validation:
+      py_compile: "PASS"
+      pytest: "PASS: 36 passed in 0.17s"
+      diff_check: "PASS"
+      dependency_diff: "PASS: pyproject.toml / uv.lock / .env no diff"
+      forbidden_counters: "PASS: client and contracts all zero"
+    safety_confirmations:
+      controlled_implementation_authorized: true
+      dependency_change_authorized: false
+      fastapi_service_start_authorized: false
+      real_qmt_operation_authorized: false
+      credential_read_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      broker_lake_write_authorized: false
+      publish_authorized: false
+      simulation_or_live_run_authorized: false
+  - at: "2026-05-31T08:27:22+08:00"
+    actor: "meta-po"
+    action: "cr019-s06-verified-s07-dispatched"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "meta-qa/qa-wei 完成 CR019-S06 CP7 验证并返回 PASS。meta-po 关闭 QA agent，补齐 CP7 close evidence，并在主线程复跑 py_compile、S06 + S03/S04/S05 回归、依赖 diff、缓存状态、counter probe、forbidden import scan、宽泛危险调用扫描、dangerous command scan 和 prompt injection scan，均 PASS。S06 收敛为 verified；S07 依赖 S01/S06/CR015-S04/CR016-S03/CR016-S04 均已满足，当前无 dev_running 文件冲突，已创建 S07 实现 handoff 并通过 spawn_agent 调度 meta-dev/dev-he 执行 CP6。"
+    artifacts:
+      - "process/checks/CP7-CR019-S06-qmt-endpoint-matrix-contract-VERIFICATION-DONE.md"
+      - "process/handoffs/META-QA-CR019-S06-CP7-VERIFY-2026-05-31.md"
+      - "process/stories/CR019-S06-qmt-endpoint-matrix-contract.md"
+      - "process/stories/CR019-S07-run-gate-blocked-reason-integration.md"
+      - "process/handoffs/META-DEV-CR019-S07-IMPLEMENT-2026-05-31.md"
+      - "process/STORY-STATUS.md"
+      - "process/STATE.md"
+    agent_dispatch:
+      closed_qa:
+        role: "meta-qa"
+        agent_id: "019e7b64-9eb5-7193-99d1-57466159d32d"
+        agent_name: "qa-wei"
+        thread_id: "019e7b64-9eb5-7193-99d1-57466159d32d"
+        tool_name: "multi_agent_v1.spawn_agent / multi_agent_v1.wait_agent / multi_agent_v1.close_agent"
+        spawned_at: "2026-05-31T08:17:35+08:00"
+        completed_at: "2026-05-31T08:19:59+08:00"
+        closed_at: "2026-05-31T08:25:16+08:00"
+        handoff_path: "process/handoffs/META-QA-CR019-S06-CP7-VERIFY-2026-05-31.md"
+      spawned_dev:
+        role: "meta-dev"
+        agent_id: "019e7b6d-929e-7bd2-be73-cbdad9a94a36"
+        agent_name: "dev-he"
+        thread_id: "019e7b6d-929e-7bd2-be73-cbdad9a94a36"
+        tool_name: "multi_agent_v1.spawn_agent"
+        spawned_at: "2026-05-31T08:27:22+08:00"
+        handoff_path: "process/handoffs/META-DEV-CR019-S07-IMPLEMENT-2026-05-31.md"
+    checkpoints_updated:
+      s06_cp7_result: "process/checks/CP7-CR019-S06-qmt-endpoint-matrix-contract-VERIFICATION-DONE.md"
+      s06_cp7_status: "PASS"
+      s06_story_status: "verified"
+      s07_story_status: "in-development"
+      s07_cp6_status: "running"
+      next_step: "wait-meta-dev-s07-cp6"
+    main_thread_validation:
+      py_compile: "PASS"
+      pytest: "PASS: 36 passed in 0.19s"
+      dependency_diff: "PASS: pyproject.toml / uv.lock / .env no diff"
+      cache_check: "PASS: no .pytest_cache or __pycache__ changes"
+      forbidden_import_scan: "PASS: no forbidden imports"
+      broad_forbidden_call_scan: "PASS: only benign credential_read counter fields and query_account contract method"
+      dangerous_command_scan: "PASS: only test forbidden roots strings"
+      prompt_injection_scan: "PASS: no output"
+      forbidden_counters: "PASS: client and contracts all zero"
+    safety_confirmations:
+      controlled_implementation_authorized: true
+      dependency_change_authorized: false
+      fastapi_service_start_authorized: false
+      real_qmt_operation_authorized: false
+      credential_read_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      broker_lake_write_authorized: false
+      publish_authorized: false
+      simulation_or_live_run_authorized: false
+  - at: "2026-05-31T08:44:33+08:00"
+    actor: "meta-po"
+    action: "cr019-s07-cp6-pass-ready-for-cp7"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "meta-dev/dev-he 完成 CR019-S07 受控离线实现并生成 CP6，结论 PASS。meta-po 已关闭 dev agent，回填 handoff / CP6 dispatch evidence，并在主线程复跑 py_compile、S07 + S06/S05/CR015/CR016 回归、依赖 diff、缓存状态、counter probe、forbidden import scan、宽泛危险调用扫描、dangerous command scan、prompt injection scan 和 diff check，均 PASS。S07 Story 已为 ready-for-verification，随后创建 S07 CP7 QA handoff 并通过 spawn_agent 调度 meta-qa/qa-yan 执行独立验证；CP7 PASS 前不得推进 S08。"
+    artifacts:
+      - "trading/qmt_gateway_gates.py"
+      - "trading/stage_gate.py"
+      - "trading/pretrade_risk.py"
+      - "trading/kill_switch.py"
+      - "tests/test_cr019_qmt_gateway_run_gates.py"
+      - "process/checks/CP6-CR019-S07-run-gate-blocked-reason-integration-CODING-DONE.md"
+      - "process/handoffs/META-DEV-CR019-S07-IMPLEMENT-2026-05-31.md"
+      - "process/handoffs/META-QA-CR019-S07-CP7-VERIFY-2026-05-31.md"
+      - "process/stories/CR019-S07-run-gate-blocked-reason-integration.md"
+      - "process/STORY-STATUS.md"
+      - "process/STATE.md"
+    agent_dispatch:
+      closed_dev:
+        role: "meta-dev"
+        agent_id: "019e7b6d-929e-7bd2-be73-cbdad9a94a36"
+        agent_name: "dev-he"
+        thread_id: "019e7b6d-929e-7bd2-be73-cbdad9a94a36"
+        tool_name: "multi_agent_v1.spawn_agent / multi_agent_v1.wait_agent / multi_agent_v1.close_agent"
+        spawned_at: "2026-05-31T08:27:22+08:00"
+        completed_at: "2026-05-31T08:37:31+08:00"
+        closed_at: "2026-05-31T08:42:42+08:00"
+        handoff_path: "process/handoffs/META-DEV-CR019-S07-IMPLEMENT-2026-05-31.md"
+      spawned_qa:
+        role: "meta-qa"
+        agent_id: "019e7b7d-4f34-7fe0-9678-bf8f8b8f26ae"
+        agent_name: "qa-yan"
+        thread_id: "019e7b7d-4f34-7fe0-9678-bf8f8b8f26ae"
+        tool_name: "multi_agent_v1.spawn_agent"
+        spawned_at: "2026-05-31T08:44:33+08:00"
+        handoff_path: "process/handoffs/META-QA-CR019-S07-CP7-VERIFY-2026-05-31.md"
+    checkpoints_updated:
+      s07_cp6_result: "process/checks/CP6-CR019-S07-run-gate-blocked-reason-integration-CODING-DONE.md"
+      s07_cp6_status: "PASS"
+      s07_story_status: "verify-running"
+      s07_cp7_status: "running"
+      next_step: "wait-meta-qa-s07-cp7"
+    main_thread_validation:
+      py_compile: "PASS"
+      pytest: "PASS: 70 passed in 0.31s"
+      dependency_diff: "PASS: pyproject.toml / uv.lock / .env no diff"
+      cache_check: "PASS: no .pytest_cache or __pycache__ changes"
+      forbidden_import_scan: "PASS: no forbidden imports"
+      broad_forbidden_call_scan: "PASS: only benign credential_read counter fields"
+      dangerous_command_scan: "PASS: only test forbidden roots strings"
+      prompt_injection_scan: "PASS: no output"
+      diff_check: "PASS"
+      forbidden_counters: "PASS: gateway gate counters all zero"
+    safety_confirmations:
+      controlled_implementation_authorized: true
+      dependency_change_authorized: false
+      fastapi_service_start_authorized: false
+      real_qmt_operation_authorized: false
+      credential_read_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      broker_lake_write_authorized: false
+      publish_authorized: false
+      simulation_or_live_run_authorized: false
+  - at: "2026-05-31T08:53:24+08:00"
+    actor: "meta-po"
+    action: "cr019-s07-verified-s08-dev-ready"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "meta-qa/qa-yan 完成 CR019-S07 CP7 并给出 PASS；meta-po 已关闭 QA agent，回填 handoff / CP7 dispatch evidence，并在主线程复跑 py_compile、S07 + S06/S05/CR015/CR016 回归、依赖 diff、缓存状态、counter probe、forbidden import scan、宽泛危险调用扫描、dangerous command scan、prompt injection scan 和 diff check，均 PASS。S07 收敛为 verified；S08 依赖 S04/S05/S06/S07 均已 verified，当前无 dev_running 文件冲突，已创建 S08 实现 handoff。"
+    artifacts:
+      - "process/checks/CP7-CR019-S07-run-gate-blocked-reason-integration-VERIFICATION-DONE.md"
+      - "process/handoffs/META-QA-CR019-S07-CP7-VERIFY-2026-05-31.md"
+      - "process/stories/CR019-S07-run-gate-blocked-reason-integration.md"
+      - "process/handoffs/META-DEV-CR019-S08-IMPLEMENT-2026-05-31.md"
+      - "process/STORY-STATUS.md"
+      - "process/STATE.md"
+    agent_dispatch:
+      closed_qa:
+        role: "meta-qa"
+        agent_id: "019e7b7d-4f34-7fe0-9678-bf8f8b8f26ae"
+        agent_name: "qa-yan"
+        thread_id: "019e7b7d-4f34-7fe0-9678-bf8f8b8f26ae"
+        tool_name: "multi_agent_v1.spawn_agent / multi_agent_v1.wait_agent / multi_agent_v1.close_agent"
+        spawned_at: "2026-05-31T08:44:33+08:00"
+        completed_at: "2026-05-31T08:46:57+08:00"
+        closed_at: "2026-05-31T08:50:59+08:00"
+        handoff_path: "process/handoffs/META-QA-CR019-S07-CP7-VERIFY-2026-05-31.md"
+    checkpoints_updated:
+      s07_cp7_result: "process/checks/CP7-CR019-S07-run-gate-blocked-reason-integration-VERIFICATION-DONE.md"
+      s07_cp7_status: "PASS"
+      s07_story_status: "verified"
+      s08_story_status: "dev-ready"
+      next_step: "dispatch-meta-dev-s08-cp6"
+    main_thread_validation:
+      py_compile: "PASS"
+      pytest: "PASS: 70 passed in 0.27s"
+      dependency_diff: "PASS: pyproject.toml / uv.lock / .env no diff"
+      cache_check: "PASS: no .pytest_cache or __pycache__ changes"
+      forbidden_import_scan: "PASS: no forbidden imports"
+      broad_forbidden_call_scan: "PASS: only benign credential_read counter fields"
+      dangerous_command_scan: "PASS: only test forbidden roots strings"
+      prompt_injection_scan: "PASS: no output"
+      diff_check: "PASS"
+      forbidden_counters: "PASS: gateway gate counters all zero"
+    safety_confirmations:
+      controlled_implementation_authorized: true
+      dependency_change_authorized: false
+      fastapi_service_start_authorized: false
+      real_qmt_operation_authorized: false
+      credential_read_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      broker_lake_write_authorized: false
+      publish_authorized: false
+      simulation_or_live_run_authorized: false
+  - at: "2026-05-31T08:56:52+08:00"
+    actor: "meta-po"
+    action: "cr019-s08-implementation-dispatched"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "S08 依赖 S04/S05/S06/S07 均已 verified，CP5/LLD/dev_gate 均满足。meta-po 创建 CR019-S08 受控离线实现 handoff，并通过 spawn_agent 调度 meta-dev/dev-yang 执行 S08。实现范围仅限 `trading/qmt_gateway_fallback.py`、`tests/test_cr019_qmt_gateway_fallback.py`、`docs/QMT-INCIDENT-PLAYBOOK.md`、S08 CP6 和 S08 Story 状态证据；不得真实 fallback、不得读取凭据、启动服务、调用 QMT 或执行 provider/lake/publish/simulation/live。"
+    artifacts:
+      - "process/handoffs/META-DEV-CR019-S08-IMPLEMENT-2026-05-31.md"
+      - "process/stories/CR019-S08-fallback-incident-signed-file-boundary.md"
+      - "process/STORY-STATUS.md"
+      - "process/STATE.md"
+    agent_dispatch:
+      spawned_dev:
+        role: "meta-dev"
+        agent_id: "019e7b88-93ba-7223-b0f1-859c712eaf25"
+        agent_name: "dev-yang"
+        thread_id: "019e7b88-93ba-7223-b0f1-859c712eaf25"
+        tool_name: "multi_agent_v1.spawn_agent"
+        spawned_at: "2026-05-31T08:56:52+08:00"
+        handoff_path: "process/handoffs/META-DEV-CR019-S08-IMPLEMENT-2026-05-31.md"
+    checkpoints_updated:
+      s08_story_status: "in-development"
+      s08_cp6_status: "running"
+      next_step: "wait-meta-dev-s08-cp6"
+    safety_confirmations:
+      controlled_implementation_authorized: true
+      dependency_change_authorized: false
+      fastapi_service_start_authorized: false
+      real_qmt_operation_authorized: false
+      credential_read_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      broker_lake_write_authorized: false
+      publish_authorized: false
+      simulation_or_live_run_authorized: false
+  - at: "2026-05-31T09:13:33+08:00"
+    actor: "meta-po"
+    action: "cr019-s08-cp6-pass-ready-for-cp7"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "meta-dev/dev-yang 完成 CR019-S08 受控离线实现并生成 CP6，结论 PASS。meta-po 已关闭 dev agent，回填 handoff / CP6 dispatch evidence，并在主线程复跑 py_compile、S08 + S07/S04/S05/S06 回归、依赖 diff、缓存状态、counter probe、forbidden import scan、宽泛危险调用扫描、敏感字面量扫描、dangerous command scan、prompt injection scan 和 diff check，均 PASS。S08 Story 已为 ready-for-verification，随后创建 S08 CP7 QA handoff 并通过 spawn_agent 调度 meta-qa/qa-hua 执行独立验证；CP7 PASS 前不得推进 S09。"
+    artifacts:
+      - "trading/qmt_gateway_fallback.py"
+      - "tests/test_cr019_qmt_gateway_fallback.py"
+      - "docs/QMT-INCIDENT-PLAYBOOK.md"
+      - "process/checks/CP6-CR019-S08-fallback-incident-signed-file-boundary-CODING-DONE.md"
+      - "process/handoffs/META-DEV-CR019-S08-IMPLEMENT-2026-05-31.md"
+      - "process/handoffs/META-QA-CR019-S08-CP7-VERIFY-2026-05-31.md"
+      - "process/stories/CR019-S08-fallback-incident-signed-file-boundary.md"
+      - "process/STORY-STATUS.md"
+      - "process/STATE.md"
+    agent_dispatch:
+      closed_dev:
+        role: "meta-dev"
+        agent_id: "019e7b88-93ba-7223-b0f1-859c712eaf25"
+        agent_name: "dev-yang"
+        thread_id: "019e7b88-93ba-7223-b0f1-859c712eaf25"
+        tool_name: "multi_agent_v1.spawn_agent / multi_agent_v1.wait_agent / multi_agent_v1.close_agent"
+        spawned_at: "2026-05-31T08:56:52+08:00"
+        completed_at: "2026-05-31T09:04:53+08:00"
+        closed_at: "2026-05-31T09:10:25+08:00"
+        handoff_path: "process/handoffs/META-DEV-CR019-S08-IMPLEMENT-2026-05-31.md"
+      spawned_qa:
+        role: "meta-qa"
+        agent_id: "019e7b97-e047-7673-ab10-e375d3ce62e0"
+        agent_name: "qa-hua"
+        thread_id: "019e7b97-e047-7673-ab10-e375d3ce62e0"
+        tool_name: "multi_agent_v1.spawn_agent"
+        spawned_at: "2026-05-31T09:13:33+08:00"
+        handoff_path: "process/handoffs/META-QA-CR019-S08-CP7-VERIFY-2026-05-31.md"
+    checkpoints_updated:
+      s08_cp6_result: "process/checks/CP6-CR019-S08-fallback-incident-signed-file-boundary-CODING-DONE.md"
+      s08_cp6_status: "PASS"
+      s08_story_status: "verify-running"
+      s08_cp7_status: "running"
+      next_step: "wait-meta-qa-s08-cp7"
+    main_thread_validation:
+      py_compile: "PASS"
+      pytest: "PASS: 54 passed in 0.25s"
+      dependency_diff: "PASS: pyproject.toml / uv.lock / .env no diff"
+      cache_check: "PASS: no .pytest_cache or __pycache__ changes"
+      forbidden_import_scan: "PASS: no forbidden imports"
+      broad_forbidden_call_scan: "PASS: only existing playbook prohibition text and credential_read counter field"
+      sensitive_literal_scan: "PASS: only existing playbook prohibition text; no real values"
+      dangerous_command_scan: "PASS: no output"
+      prompt_injection_scan: "PASS: only scan_for_qmt_sensitive_leaks function name / stats fields"
+      diff_check: "PASS"
+      forbidden_counters: "PASS: fallback counters all zero"
+    safety_confirmations:
+      controlled_implementation_authorized: true
+      dependency_change_authorized: false
+      fastapi_service_start_authorized: false
+      real_qmt_operation_authorized: false
+      credential_read_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      broker_lake_write_authorized: false
+      publish_authorized: false
+      simulation_or_live_run_authorized: false
+  - at: "2026-05-31T09:23:13+08:00"
+    actor: "meta-po"
+    action: "cr019-s08-verified-s09-dev-ready"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "meta-qa/qa-hua 完成 CR019-S08 CP7 并给出 PASS；meta-po 已关闭 QA agent，回填 handoff / CP7 dispatch evidence，并在主线程复跑 py_compile、S08 + S07/S04/S05/S06 回归、依赖 diff、缓存状态、counter probe、forbidden import scan、宽泛危险调用扫描、敏感字面量扫描、dangerous command scan、prompt injection scan 和 diff check，均 PASS。S08 收敛为 verified；S09 依赖 S01/S02 均已 verified，当前无 dev_running 文件冲突，已创建 S09 实现 handoff。"
+    artifacts:
+      - "process/checks/CP7-CR019-S08-fallback-incident-signed-file-boundary-VERIFICATION-DONE.md"
+      - "process/handoffs/META-QA-CR019-S08-CP7-VERIFY-2026-05-31.md"
+      - "process/stories/CR019-S08-fallback-incident-signed-file-boundary.md"
+      - "process/stories/CR019-S09-deferred-capability-register.md"
+      - "process/handoffs/META-DEV-CR019-S09-IMPLEMENT-2026-05-31.md"
+      - "process/STORY-STATUS.md"
+      - "process/STATE.md"
+    agent_dispatch:
+      closed_qa:
+        role: "meta-qa"
+        agent_id: "019e7b97-e047-7673-ab10-e375d3ce62e0"
+        agent_name: "qa-hua"
+        thread_id: "019e7b97-e047-7673-ab10-e375d3ce62e0"
+        tool_name: "multi_agent_v1.spawn_agent / multi_agent_v1.wait_agent / multi_agent_v1.close_agent"
+        spawned_at: "2026-05-31T09:13:33+08:00"
+        completed_at: "2026-05-31T09:16:42+08:00"
+        closed_at: "2026-05-31T09:23:13+08:00"
+        handoff_path: "process/handoffs/META-QA-CR019-S08-CP7-VERIFY-2026-05-31.md"
+    checkpoints_updated:
+      s08_cp7_result: "process/checks/CP7-CR019-S08-fallback-incident-signed-file-boundary-VERIFICATION-DONE.md"
+      s08_cp7_status: "PASS"
+      s08_story_status: "verified"
+      s09_story_status: "dev-ready"
+      next_step: "dispatch-meta-dev-s09-cp6"
+    main_thread_validation:
+      py_compile: "PASS"
+      pytest: "PASS: 54 passed in 0.25s"
+      dependency_diff: "PASS: pyproject.toml / uv.lock / .env no diff"
+      cache_check: "PASS: no .pytest_cache or __pycache__ changes"
+      forbidden_import_scan: "PASS: no forbidden imports"
+      broad_forbidden_call_scan: "PASS: only existing playbook prohibition text and credential_read counter field"
+      sensitive_literal_scan: "PASS: only existing playbook prohibition text; no real values"
+      dangerous_command_scan: "PASS: no output"
+      prompt_injection_scan: "PASS: only scan_for_qmt_sensitive_leaks function name / stats fields"
+      diff_check: "PASS"
+      forbidden_counters: "PASS: fallback counters all zero"
+    safety_confirmations:
+      controlled_implementation_authorized: true
+      dependency_change_authorized: false
+      fastapi_service_start_authorized: false
+      real_qmt_operation_authorized: false
+      credential_read_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      broker_lake_write_authorized: false
+      publish_authorized: false
+      simulation_or_live_run_authorized: false
+  - at: "2026-05-31T09:27:52+08:00"
+    actor: "meta-po"
+    action: "cr019-s09-implementation-dispatched"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "S09 依赖 S01/S02 均已 verified，CP5/LLD/dev_gate 均满足。meta-po 创建 CR019-S09 受控离线实现 handoff，并通过 spawn_agent 调度 meta-dev/dev-xu 执行 S09。实现范围仅限 `docs/CR019-DEFERRED-CAPABILITIES.md`、`tests/test_cr019_deferred_capabilities.py`、`README.md` 的静态边界增量、S09 CP6 和 S09 Story 状态证据；不得新增依赖、接入 Qlib provider、抓取 minute/Level2 数据、读取凭据或扩大阶段六 P0 范围。"
+    artifacts:
+      - "process/handoffs/META-DEV-CR019-S09-IMPLEMENT-2026-05-31.md"
+      - "process/stories/CR019-S09-deferred-capability-register.md"
+      - "process/STORY-STATUS.md"
+      - "process/STATE.md"
+    agent_dispatch:
+      spawned_dev:
+        role: "meta-dev"
+        agent_id: "019e7ba4-f915-7df2-9443-99586f4e7676"
+        agent_name: "dev-xu"
+        thread_id: "019e7ba4-f915-7df2-9443-99586f4e7676"
+        tool_name: "multi_agent_v1.spawn_agent"
+        spawned_at: "2026-05-31T09:27:52+08:00"
+        handoff_path: "process/handoffs/META-DEV-CR019-S09-IMPLEMENT-2026-05-31.md"
+    checkpoints_updated:
+      s09_story_status: "in-development"
+      s09_cp6_status: "running"
+      next_step: "wait-meta-dev-s09-cp6"
+    safety_confirmations:
+      controlled_implementation_authorized: true
+      dependency_change_authorized: false
+      qlib_provider_authorized: false
+      minute_or_level2_fetch_authorized: false
+      stage6_p0_scope_expansion_authorized: false
+      credential_read_authorized: false
+      real_qmt_operation_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      publish_authorized: false
+      simulation_or_live_run_authorized: false
+  - at: "2026-05-31T09:38:44+08:00"
+    actor: "meta-po"
+    action: "cr019-s09-cp6-pass-ready-for-verification"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "meta-dev/dev-xu 完成 CR019-S09 CP6 并返回 PASS；meta-po 已关闭 dev agent，回填 handoff completed-closed 与 CP6 Agent Dispatch Evidence，并在主线程复跑 py_compile、S09+S01/S02 回归、依赖 diff、缓存状态、focused real-config scan、misleading enablement scan、dangerous command scan、prompt injection scan 和 diff check，均 PASS。S09 进入 ready-for-verification，下一步创建并调度 meta-qa CP7。"
+    artifacts:
+      - "docs/CR019-DEFERRED-CAPABILITIES.md"
+      - "tests/test_cr019_deferred_capabilities.py"
+      - "README.md"
+      - "process/checks/CP6-CR019-S09-deferred-capability-register-CODING-DONE.md"
+      - "process/handoffs/META-DEV-CR019-S09-IMPLEMENT-2026-05-31.md"
+      - "process/stories/CR019-S09-deferred-capability-register.md"
+      - "process/STORY-STATUS.md"
+      - "process/STATE.md"
+    agent_dispatch:
+      closed_dev:
+        role: "meta-dev"
+        agent_id: "019e7ba4-f915-7df2-9443-99586f4e7676"
+        agent_name: "dev-xu"
+        thread_id: "019e7ba4-f915-7df2-9443-99586f4e7676"
+        tool_name: "multi_agent_v1.spawn_agent / multi_agent_v1.wait_agent / multi_agent_v1.close_agent"
+        spawned_at: "2026-05-31T09:27:52+08:00"
+        completed_at: "2026-05-31T09:34:30+08:00"
+        closed_at: "2026-05-31T09:38:44+08:00"
+        handoff_path: "process/handoffs/META-DEV-CR019-S09-IMPLEMENT-2026-05-31.md"
+    checkpoints_updated:
+      s09_cp6_result: "process/checks/CP6-CR019-S09-deferred-capability-register-CODING-DONE.md"
+      s09_cp6_status: "PASS"
+      s09_story_status: "ready-for-verification"
+      next_step: "dispatch-meta-qa-s09-cp7"
+    main_thread_validation:
+      py_compile: "PASS"
+      pytest: "PASS: 22 passed in 0.08s"
+      dependency_diff: "PASS: pyproject.toml / uv.lock / .env no diff"
+      cache_check: "PASS: no .pytest_cache or __pycache__ changes"
+      focused_real_config_scan: "PASS: no output"
+      misleading_enablement_scan: "PASS: no output"
+      dangerous_command_scan: "PASS: only README existing uv sync examples"
+      prompt_injection_scan: "PASS: no output"
+      diff_check: "PASS"
+    safety_confirmations:
+      controlled_implementation_authorized: true
+      dependency_change_authorized: false
+      qlib_provider_authorized: false
+      minute_or_level2_fetch_authorized: false
+      stage6_p0_scope_expansion_authorized: false
+      credential_read_authorized: false
+      real_qmt_operation_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      publish_authorized: false
+      simulation_or_live_run_authorized: false
+  - at: "2026-05-31T09:43:03+08:00"
+    actor: "meta-po"
+    action: "cr019-s09-cp7-dispatched"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "S09 CP6 已 PASS 且主线程复验通过；meta-po 创建 CR019-S09 CP7 QA handoff，并通过 spawn_agent 调度 meta-qa/qa-he 执行独立验证。CP7 PASS 前不得标记 S09 verified，不得调度 S10；真实 QMT / provider / lake / publish / simulation / live 仍未授权。"
+    artifacts:
+      - "process/handoffs/META-QA-CR019-S09-CP7-VERIFY-2026-05-31.md"
+      - "process/stories/CR019-S09-deferred-capability-register.md"
+      - "process/STORY-STATUS.md"
+      - "process/STATE.md"
+    agent_dispatch:
+      spawned_qa:
+        role: "meta-qa"
+        agent_id: "019e7bb2-d91e-7513-8a5e-a16a0e6528c9"
+        agent_name: "qa-he"
+        thread_id: "019e7bb2-d91e-7513-8a5e-a16a0e6528c9"
+        tool_name: "multi_agent_v1.spawn_agent"
+        spawned_at: "2026-05-31T09:43:03+08:00"
+        handoff_path: "process/handoffs/META-QA-CR019-S09-CP7-VERIFY-2026-05-31.md"
+    checkpoints_updated:
+      s09_story_status: "verify-running"
+      s09_cp7_status: "running"
+      next_step: "wait-meta-qa-s09-cp7"
+    safety_confirmations:
+      controlled_implementation_authorized: true
+      dependency_change_authorized: false
+      qlib_provider_authorized: false
+      minute_or_level2_fetch_authorized: false
+      stage6_p0_scope_expansion_authorized: false
+      credential_read_authorized: false
+      real_qmt_operation_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      publish_authorized: false
+      simulation_or_live_run_authorized: false
+  - at: "2026-05-31T09:52:21+08:00"
+    actor: "meta-po"
+    action: "cr019-s09-verified-s10-dev-ready"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "meta-qa/qa-he 完成 CR019-S09 CP7 并给出 PASS；meta-po 已关闭 QA agent，回填 handoff / CP7 dispatch evidence，并在主线程复跑 py_compile、S09+S01/S02 回归、依赖 diff、缓存状态、focused real-config scan、misleading enablement scan、dangerous command scan、prompt injection scan 和 diff check，均 PASS。S09 收敛为 verified；S10 依赖 S01..S09 全部 verified，当前无 dev_running 文件冲突，S10 进入 dev-ready。"
+    artifacts:
+      - "process/checks/CP7-CR019-S09-deferred-capability-register-VERIFICATION-DONE.md"
+      - "process/handoffs/META-QA-CR019-S09-CP7-VERIFY-2026-05-31.md"
+      - "process/stories/CR019-S09-deferred-capability-register.md"
+      - "process/stories/CR019-S10-docs-runbook-user-manual-boundary.md"
+      - "process/STORY-STATUS.md"
+      - "process/STATE.md"
+    agent_dispatch:
+      closed_qa:
+        role: "meta-qa"
+        agent_id: "019e7bb2-d91e-7513-8a5e-a16a0e6528c9"
+        agent_name: "qa-he"
+        thread_id: "019e7bb2-d91e-7513-8a5e-a16a0e6528c9"
+        tool_name: "multi_agent_v1.spawn_agent / multi_agent_v1.wait_agent / multi_agent_v1.close_agent"
+        spawned_at: "2026-05-31T09:43:03+08:00"
+        completed_at: "2026-05-31T09:45:23+08:00"
+        closed_at: "2026-05-31T09:50:40+08:00"
+        handoff_path: "process/handoffs/META-QA-CR019-S09-CP7-VERIFY-2026-05-31.md"
+    checkpoints_updated:
+      s09_cp7_result: "process/checks/CP7-CR019-S09-deferred-capability-register-VERIFICATION-DONE.md"
+      s09_cp7_status: "PASS"
+      s09_story_status: "verified"
+      s10_story_status: "dev-ready"
+      next_step: "dispatch-meta-dev-s10-cp6"
+    main_thread_validation:
+      py_compile: "PASS"
+      pytest: "PASS: 22 passed in 0.08s"
+      dependency_diff: "PASS: pyproject.toml / uv.lock / .env no diff"
+      cache_check: "PASS: no .pytest_cache or __pycache__ changes"
+      focused_real_config_scan: "PASS: no output"
+      misleading_enablement_scan: "PASS: no output"
+      dangerous_command_scan: "PASS: only README existing uv sync examples"
+      prompt_injection_scan: "PASS: no output"
+      diff_check: "PASS"
+    safety_confirmations:
+      controlled_implementation_authorized: true
+      dependency_change_authorized: false
+      fastapi_service_start_authorized: false
+      credential_read_authorized: false
+      real_qmt_operation_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      broker_lake_write_authorized: false
+      publish_authorized: false
+      simulation_or_live_run_authorized: false
+  - at: "2026-05-31T09:55:07+08:00"
+    actor: "meta-po"
+    action: "cr019-s10-implementation-dispatched"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "S10 依赖 S01..S09 均已 verified，CP5/LLD/dev_gate 均满足。meta-po 创建 CR019-S10 受控离线文档实现 handoff，并通过 spawn_agent 调度 meta-dev/dev-qin 执行 S10。实现范围仅限 QMT C/S bridge runbook、README / USER-MANUAL / existing QMT runbook 增量、S10 静态测试、S10 CP6 和 S10 Story 状态证据；不得启动服务、读取凭据、执行真实 QMT / provider / lake / publish / simulation / live 操作。"
+    artifacts:
+      - "process/handoffs/META-DEV-CR019-S10-IMPLEMENT-2026-05-31.md"
+      - "process/stories/CR019-S10-docs-runbook-user-manual-boundary.md"
+      - "process/STORY-STATUS.md"
+      - "process/STATE.md"
+    agent_dispatch:
+      spawned_dev:
+        role: "meta-dev"
+        agent_id: "019e7bbd-ebb5-74a3-8745-f3dc74cfc1f0"
+        agent_name: "dev-qin"
+        thread_id: "019e7bbd-ebb5-74a3-8745-f3dc74cfc1f0"
+        tool_name: "multi_agent_v1.spawn_agent"
+        spawned_at: "2026-05-31T09:55:07+08:00"
+        handoff_path: "process/handoffs/META-DEV-CR019-S10-IMPLEMENT-2026-05-31.md"
+    checkpoints_updated:
+      s10_story_status: "in-development"
+      s10_cp6_status: "running"
+      next_step: "wait-meta-dev-s10-cp6"
+    safety_confirmations:
+      controlled_implementation_authorized: true
+      dependency_change_authorized: false
+      fastapi_service_start_authorized: false
+      credential_read_authorized: false
+      real_qmt_operation_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      broker_lake_write_authorized: false
+      publish_authorized: false
+      simulation_or_live_run_authorized: false
+  - at: "2026-05-31T10:10:20+08:00"
+    actor: "meta-po"
+    action: "cr019-s10-cp6-pass-ready-for-verification"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "meta-dev/dev-qin 完成 CR019-S10 CP6 并返回 PASS；meta-po 已关闭 dev agent，回填 handoff completed-closed 与 CP6 Agent Dispatch Evidence，并在主线程复跑 py_compile、S10+S09+S08+S07 回归、依赖 diff、缓存状态、sensitive/misleading permission scan、real-config scan、dangerous command scan、prompt injection scan 和 diff check，均 PASS。S10 进入 ready-for-verification，下一步创建并调度 meta-qa CP7。"
+    artifacts:
+      - "docs/QMT-C-S-BRIDGE-RUNBOOK.md"
+      - "README.md"
+      - "docs/USER-MANUAL.md"
+      - "docs/QMT-SIMULATION-LIVE-RUNBOOK.md"
+      - "docs/QMT-INCIDENT-PLAYBOOK.md"
+      - "tests/test_cr019_docs_runbook_boundary.py"
+      - "process/checks/CP6-CR019-S10-docs-runbook-user-manual-boundary-CODING-DONE.md"
+      - "process/handoffs/META-DEV-CR019-S10-IMPLEMENT-2026-05-31.md"
+      - "process/stories/CR019-S10-docs-runbook-user-manual-boundary.md"
+      - "process/STORY-STATUS.md"
+      - "process/STATE.md"
+    agent_dispatch:
+      closed_dev:
+        role: "meta-dev"
+        agent_id: "019e7bbd-ebb5-74a3-8745-f3dc74cfc1f0"
+        agent_name: "dev-qin"
+        thread_id: "019e7bbd-ebb5-74a3-8745-f3dc74cfc1f0"
+        tool_name: "multi_agent_v1.spawn_agent / multi_agent_v1.wait_agent / multi_agent_v1.close_agent"
+        spawned_at: "2026-05-31T09:55:07+08:00"
+        completed_at: "2026-05-31T10:04:36+08:00"
+        closed_at: "2026-05-31T10:10:20+08:00"
+        handoff_path: "process/handoffs/META-DEV-CR019-S10-IMPLEMENT-2026-05-31.md"
+    checkpoints_updated:
+      s10_cp6_result: "process/checks/CP6-CR019-S10-docs-runbook-user-manual-boundary-CODING-DONE.md"
+      s10_cp6_status: "PASS"
+      s10_story_status: "ready-for-verification"
+      next_step: "dispatch-meta-qa-s10-cp7"
+    main_thread_validation:
+      py_compile: "PASS"
+      pytest: "PASS: 38 passed in 0.17s"
+      dependency_diff: "PASS: pyproject.toml / uv.lock / .env no diff"
+      cache_check: "PASS: no .pytest_cache or __pycache__ changes"
+      sensitive_permission_scan: "REVIEWED: only existing no-auto-authorization text/placeholders/denylist fields"
+      real_config_scan: "REVIEWED: only required blocked QMT/MiniQMT/XtQuant text and existing pip-install prohibition"
+      dangerous_command_scan: "REVIEWED: only README/USER-MANUAL existing uv sync examples"
+      prompt_injection_scan: "PASS: no output"
+      diff_check: "PASS"
+    safety_confirmations:
+      controlled_implementation_authorized: true
+      dependency_change_authorized: false
+      fastapi_service_start_authorized: false
+      credential_read_authorized: false
+      real_qmt_operation_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      broker_lake_write_authorized: false
+      publish_authorized: false
+      simulation_or_live_run_authorized: false
+  - at: "2026-05-31T10:15:57+08:00"
+    actor: "meta-po"
+    action: "cr019-s10-cp7-dispatched"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "CR019-S10 CP6 PASS 且 Story 为 ready-for-verification。meta-po 创建 S10 CP7 QA handoff，并通过 spawn_agent 调度 meta-qa/qa-kong 执行独立验证。QA 只允许写 CP7 结果文件，不允许修改 Story、源码、测试、文档、STATE、STORY-STATUS、依赖、.env 或 delivery；不得启动服务、读取凭据、执行真实 QMT / provider / lake / publish / simulation / live 操作。"
+    artifacts:
+      - "process/handoffs/META-QA-CR019-S10-CP7-VERIFY-2026-05-31.md"
+      - "process/stories/CR019-S10-docs-runbook-user-manual-boundary.md"
+      - "process/STORY-STATUS.md"
+      - "process/STATE.md"
+    agent_dispatch:
+      spawned_qa:
+        role: "meta-qa"
+        agent_id: "019e7bd0-f92b-7550-be16-3a8fe67f77de"
+        agent_name: "qa-kong"
+        thread_id: "019e7bd0-f92b-7550-be16-3a8fe67f77de"
+        tool_name: "multi_agent_v1.spawn_agent"
+        spawned_at: "2026-05-31T10:15:57+08:00"
+        handoff_path: "process/handoffs/META-QA-CR019-S10-CP7-VERIFY-2026-05-31.md"
+    checkpoints_updated:
+      s10_cp7_status: "running"
+      s10_story_status: "verify-running"
+      next_step: "wait-meta-qa-s10-cp7"
+    safety_confirmations:
+      controlled_verification_authorized: true
+      dependency_change_authorized: false
+      fastapi_service_start_authorized: false
+      credential_read_authorized: false
+      real_qmt_operation_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      broker_lake_write_authorized: false
+      publish_authorized: false
+      simulation_or_live_run_authorized: false
+  - at: "2026-05-31T10:21:33+08:00"
+    actor: "meta-po"
+    action: "cr019-s10-cp7-pass-verified"
+    from_phase: "story-execution"
+    to_phase: "documentation"
+    reason: "meta-qa/qa-kong 完成 CR019-S10 CP7 并给出 PASS；meta-po 已关闭 QA agent，回填 handoff completed-closed 与 CP7 Agent Dispatch Evidence，并在主线程复跑 py_compile、S10+S09+S08+S07 回归、依赖 diff、缓存状态、sensitive/permission scan、real-config scan、dangerous command scan、prompt injection scan 和 diff check，均 PASS 或 REVIEWED。S10 收敛为 verified；CR019 S01..S10 全部 verified，下一步准备 CP8 交付就绪检查和人工终验稿。"
+    artifacts:
+      - "process/checks/CP7-CR019-S10-docs-runbook-user-manual-boundary-VERIFICATION-DONE.md"
+      - "process/handoffs/META-QA-CR019-S10-CP7-VERIFY-2026-05-31.md"
+      - "process/stories/CR019-S10-docs-runbook-user-manual-boundary.md"
+      - "process/STORY-STATUS.md"
+      - "process/STATE.md"
+    agent_dispatch:
+      closed_qa:
+        role: "meta-qa"
+        agent_id: "019e7bd0-f92b-7550-be16-3a8fe67f77de"
+        agent_name: "qa-kong"
+        thread_id: "019e7bd0-f92b-7550-be16-3a8fe67f77de"
+        tool_name: "multi_agent_v1.spawn_agent / multi_agent_v1.wait_agent / multi_agent_v1.close_agent"
+        spawned_at: "2026-05-31T10:15:57+08:00"
+        completed_at: "2026-05-31T10:18:14+08:00"
+        closed_at: "2026-05-31T10:21:33+08:00"
+        handoff_path: "process/handoffs/META-QA-CR019-S10-CP7-VERIFY-2026-05-31.md"
+    checkpoints_updated:
+      s10_cp7_result: "process/checks/CP7-CR019-S10-docs-runbook-user-manual-boundary-VERIFICATION-DONE.md"
+      s10_cp7_status: "PASS"
+      s10_story_status: "verified"
+      cr019_story_execution_status: "all-stories-verified"
+      next_step: "prepare-cr019-cp8-delivery-readiness"
+    main_thread_validation:
+      py_compile: "PASS"
+      pytest: "PASS: 38 passed in 0.18s"
+      dependency_diff: "PASS: pyproject.toml / uv.lock / .env no diff"
+      cache_check: "PASS: no .pytest_cache or __pycache__ changes"
+      sensitive_permission_scan: "REVIEWED: only forbidden-boundary text, placeholders, denylist fields, and historical safety notes"
+      real_config_scan: "REVIEWED: only USER-MANUAL pip-install prohibition"
+      dangerous_command_scan: "REVIEWED: only README/USER-MANUAL existing uv sync examples"
+      prompt_injection_scan: "PASS: no output"
+      diff_check: "PASS"
+    safety_confirmations:
+      controlled_verification_authorized: true
+      dependency_change_authorized: false
+      fastapi_service_start_authorized: false
+      credential_read_authorized: false
+      real_qmt_operation_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      broker_lake_write_authorized: false
+      publish_authorized: false
+      simulation_or_live_run_authorized: false
+  - at: "2026-05-31T10:26:53+08:00"
+    actor: "meta-po"
+    action: "cr019-cp8-generated-pending-user-review"
+    from_phase: "documentation"
+    to_phase: "documentation"
+    reason: "CR019 S01..S10 全部 verified 后，meta-po 完成 CP8 自动交付就绪预检并生成 CP8 人工终验稿。CP8 自动预检 PASS，阻断项 0；10 个 CR019 测试文件聚合验证 91 passed，README 状态修正后 S09/S10 文档回归 13 passed；依赖 diff、缓存状态、scoped prompt override scan 和 diff check 均 PASS，sensitive / real-config / dangerous command 宽泛扫描已按禁止语义、占位示例、redaction / denylist 字段、fixture safety tests 和既有 uv sync 示例进行 REVIEWED。当前等待用户 approve / 修改 / reject。"
+    artifacts:
+      - "process/checks/CP8-CR019-DELIVERY-READINESS.md"
+      - "checkpoints/CP8-CR019-DELIVERY-READINESS.md"
+      - "README.md"
+      - "process/STORY-STATUS.md"
+      - "process/STATE.md"
+    checkpoints_updated:
+      cp8_auto_result: "process/checks/CP8-CR019-DELIVERY-READINESS.md"
+      cp8_auto_status: "PASS"
+      cp8_manual_review: "checkpoints/CP8-CR019-DELIVERY-READINESS.md"
+      cp8_manual_status: "pending"
+      pending_user_decision: "approve | 修改: <具体修改点> | reject"
+      next_step: "await-user-cp8-review"
+    main_thread_validation:
+      py_compile: "PASS: 10 CR019 test files"
+      pytest: "PASS: 91 passed in 0.43s"
+      doc_regression_after_readme_fix: "PASS: 13 passed in 0.06s"
+      dependency_diff: "PASS: pyproject.toml / uv.lock / .env no diff"
+      cache_check: "PASS: no .pytest_cache or __pycache__ changes"
+      sensitive_permission_scan: "REVIEWED"
+      real_config_scan: "REVIEWED"
+      dangerous_command_scan: "REVIEWED"
+      prompt_override_scan: "PASS: no output"
+      diff_check: "PASS"
+    safety_confirmations:
+      auto_final_authorization: false
+      dependency_change_authorized: false
+      fastapi_service_start_authorized: false
+      credential_read_authorized: false
+      real_qmt_operation_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      broker_lake_write_authorized: false
+      publish_authorized: false
+      simulation_or_live_run_authorized: false
+  - at: "2026-05-31T10:43:18+08:00"
+    actor: "meta-po"
+    action: "cr019-cp8-approved-closed-with-follow-up-tracking"
+    from_phase: "documentation"
+    to_phase: "delivered"
+    reason: "用户回复“同意，按照你建议实施”；CP8 人工终验 approved；D-CP8-CR019-02 与 D-CP8-CR019-05 记录为 accepted deferred follow-up；已新增 follow-up tracking，更新 deferred register、CP8 自动 / 人工稿、README、STATE 和 STORY-STATUS；CR-019 当前离线合同 / 文档交付关闭；仍不授权真实 QMT、凭据读取、服务启动、provider fetch、lake / broker lake 写入、publish、simulation 或 live。"
+    artifacts:
+      - "process/changes/CR-019-FOLLOW-UP-TRACKING-2026-05-31.md"
+      - "checkpoints/CP8-CR019-DELIVERY-READINESS.md"
+      - "process/checks/CP8-CR019-DELIVERY-READINESS.md"
+      - "docs/CR019-DEFERRED-CAPABILITIES.md"
+      - "README.md"
+      - "process/STORY-STATUS.md"
+      - "process/STATE.md"
+    checkpoints_updated:
+      cp8_auto_status: "PASS"
+      cp8_manual_status: "approved"
+      cr019_status: "closed"
+      follow_up_tracking: "process/changes/CR-019-FOLLOW-UP-TRACKING-2026-05-31.md"
+    safety_confirmations:
+      dependency_change_authorized: false
+      fastapi_service_start_authorized: false
+      credential_read_authorized: false
+      real_qmt_operation_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      broker_lake_write_authorized: false
+      publish_authorized: false
+      simulation_or_live_run_authorized: false
+  - at: "2026-05-31T21:43:48+08:00"
+    actor: "meta-po"
+    action: "cr029-close-state-convergence-and-cr025-research-route-start"
+    from_phase: "delivered"
+    to_phase: "requirement-clarification"
+    reason: "用户要求按推荐顺序先处理 CR-029 关闭、CR-019 陈旧 active_change 同步和旧 CR 状态收敛，然后推进研究路线，最后推进真实 QMT 路线。已关闭 CR-029，接受真实运行结论为数据湖 / benchmark PASS 但阶段六策略准入 blocked；顶层 active_change 切换为 CR-025；CR-025 从 follow-up candidate 转为正式 active CR 并进入 CP2 intake；CR-026 与 CR-020..CR-024 保持候选等待。"
+    artifacts:
+      - "process/changes/CR-029-STAGE6-DATA-LAKE-ADMISSION-BENCHMARK-REAL-RUN-2026-05-31.md"
+      - "process/changes/CR-025-BACKTRADER-OPTIONAL-EXECUTION-BACKEND-HARDENING-2026-05-31.md"
+      - "process/changes/CR-019-FOLLOW-UP-TRACKING-2026-05-31.md"
+      - "process/changes/CR-INDEX.yaml"
+      - "process/checks/CP8-G2-CR-STATUS-CLOSURE-2026-05-31.md"
+      - "checkpoints/CP8-G2-CR-STATUS-CLOSURE-2026-05-31.md"
+      - "process/STATE.md"
+    checkpoints_updated:
+      cr029_status: "closed"
+      active_change: "CR-025"
+      cr025_status: "active-cp2-intake"
+    safety_confirmations:
+      dependency_change_authorized: false
+      fastapi_service_start_authorized: false
+      credential_read_authorized: false
+      real_qmt_operation_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      broker_lake_write_authorized: false
+      publish_authorized: false
+      simulation_or_live_run_authorized: false
+  - at: "2026-05-31T22:18:00+08:00"
+    actor: "meta-po"
+    action: "cr025-cp2-human-gate-launched"
+    from_phase: "requirement-clarification"
+    to_phase: "requirement-clarification"
+    reason: "meta-pm/pm-zheng 完成 CR-025 CP2 前需求 / 场景输入并交还，CP1 结论 PASS。meta-po 复核后生成 CP2 场景讨论日志、恢复点、自动预检和人工审查稿，并将 orchestrator_session 置为 awaiting-user。"
+    artifacts:
+      - "process/checks/CP1-CR025-USE-CASE-COMPLETENESS.md"
+      - "process/handoffs/META-PM-CR025-REQ-CLARIFICATION-2026-05-31.md"
+      - "process/discussions/CP2-CR025-SCENARIO-DISCUSSION-LOG.md"
+      - "process/checks/CP2-CR025-DISCUSSION-CHECKPOINT.json"
+      - "process/checks/CP2-CR025-REQUIREMENTS-BASELINE.md"
+      - "checkpoints/CP2-CR025-REQUIREMENTS-BASELINE.md"
+      - "process/checks/CP2-CR025-HUMAN-GATE-LAUNCH-MESSAGE.md"
+      - "process/STATE.md"
+    checkpoints_updated:
+      cp1_auto_status: "PASS"
+      cp2_auto_status: "PASS"
+      cp2_manual_status: "pending"
+      pending_gate: "CP2-CR025-REQUIREMENTS-BASELINE"
+    safety_confirmations:
+      dependency_change_authorized: false
+      backtrader_runtime_authorized: false
+      real_broker_authorized: false
+      real_qmt_operation_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      broker_lake_write_authorized: false
+      publish_authorized: false
+      credential_read_authorized: false
+  - at: "2026-06-02T07:44:16+08:00"
+    actor: "meta-po"
+    action: "cr025-w1-cp6-pass-ready-for-verification"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "meta-dev/dev-zhang 完成 CR025-S01 CP6 PASS，meta-dev/dev-xu 完成 CR025-S04 CP6 PASS；meta-po 已关闭两个 dev 线程，回填 handoff completed-closed、Story ready-for-verification、STORY-STATUS、DEVELOPMENT-PLAN 和 STATE 队列。W1 S01/S04 均进入 verify_ready；CP7 PASS 前不得标记 verified 或调度 S02。"
+    artifacts:
+      - "process/checks/CP6-CR025-S01-clean-feed-gate-backend-selector-CODING-DONE.md"
+      - "process/checks/CP6-CR025-S04-backtrader-module-reference-no-copy-guardrail-CODING-DONE.md"
+      - "process/handoffs/META-DEV-CR025-S01-IMPLEMENT-2026-06-02.md"
+      - "process/handoffs/META-DEV-CR025-S04-IMPLEMENT-2026-06-02.md"
+      - "process/stories/CR025-S01-clean-feed-gate-backend-selector.md"
+      - "process/stories/CR025-S04-backtrader-module-reference-no-copy-guardrail.md"
+      - "process/STORY-STATUS.md"
+      - "process/DEVELOPMENT-PLAN.yaml"
+      - "process/STATE.md"
+    agent_dispatch:
+      closed_dev:
+        - role: "meta-dev"
+          agent_id: "019e8588-e4ad-73b3-8787-699893c6213c"
+          agent_name: "dev-zhang"
+          thread_id: "019e8588-e4ad-73b3-8787-699893c6213c"
+          tool_name: "multi_agent_v1.spawn_agent / multi_agent_v1.close_agent"
+          spawned_at: "2026-06-02T07:33:45+08:00"
+          completed_at: "2026-06-02T07:40:52+08:00"
+          closed_at: "2026-06-02T07:44:16+08:00"
+          handoff_path: "process/handoffs/META-DEV-CR025-S01-IMPLEMENT-2026-06-02.md"
+        - role: "meta-dev"
+          agent_id: "019e8589-2c7b-7173-8aa5-1f8a327375fb"
+          agent_name: "dev-xu"
+          thread_id: "019e8589-2c7b-7173-8aa5-1f8a327375fb"
+          tool_name: "multi_agent_v1.spawn_agent / multi_agent_v1.close_agent"
+          spawned_at: "2026-06-02T07:33:45+08:00"
+          completed_at: "2026-06-02T07:37:38+08:00"
+          closed_at: "2026-06-02T07:41:20+08:00"
+          handoff_path: "process/handoffs/META-DEV-CR025-S04-IMPLEMENT-2026-06-02.md"
+    checkpoints_updated:
+      s01_cp6_status: "PASS"
+      s04_cp6_status: "PASS"
+      w1_story_status: "ready-for-verification"
+      next_step: "spawn-meta-qa-cr025-w1-cp7"
+    safety_confirmations:
+      controlled_verification_authorized: true
+      dependency_change_authorized: false
+      backtrader_runtime_authorized: false
+      source_migration_authorized: false
+      real_broker_authorized: false
+      real_qmt_operation_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      broker_lake_write_authorized: false
+      publish_authorized: false
+      simulation_or_live_run_authorized: false
+      credential_read_authorized: false
+      multifactor_research_framework_authorized: false
+  - at: "2026-06-02T07:55:45+08:00"
+    actor: "meta-po"
+    action: "cr025-w1-cp7-pass-s02-dev-ready"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "meta-qa/qa-kong 完成 CR025-W1 CP7 独立验证并返回 PASS：S01 9 passed，S04 6 passed，py_compile、diff check、依赖 diff 均 PASS，禁止项计数全 0。meta-po 已关闭 QA 线程，回填 handoff completed-closed、Story verified、STORY-STATUS、DEVELOPMENT-PLAN 和 STATE；S02 依赖 S01/S04 verified 已满足，进入 dev-ready。"
+    artifacts:
+      - "process/checks/CP7-CR025-S01-clean-feed-gate-backend-selector-VERIFICATION-DONE.md"
+      - "process/checks/CP7-CR025-S04-backtrader-module-reference-no-copy-guardrail-VERIFICATION-DONE.md"
+      - "process/handoffs/META-QA-CR025-W1-CP7-VERIFY-2026-06-02.md"
+      - "process/stories/CR025-S01-clean-feed-gate-backend-selector.md"
+      - "process/stories/CR025-S02-semantic-diff-schema-artifact.md"
+      - "process/stories/CR025-S04-backtrader-module-reference-no-copy-guardrail.md"
+      - "process/STORY-STATUS.md"
+      - "process/DEVELOPMENT-PLAN.yaml"
+      - "process/STATE.md"
+    agent_dispatch:
+      closed_qa:
+        role: "meta-qa"
+        agent_id: "019e8598-7e2d-7113-b2a4-732b3a2bf28c"
+        agent_name: "qa-kong"
+        thread_id: "019e8598-7e2d-7113-b2a4-732b3a2bf28c"
+        tool_name: "multi_agent_v1.spawn_agent / multi_agent_v1.wait_agent / multi_agent_v1.close_agent"
+        spawned_at: "2026-06-02T07:50:33+08:00"
+        completed_at: "2026-06-02T07:52:12+08:00"
+        closed_at: "2026-06-02T07:55:45+08:00"
+        handoff_path: "process/handoffs/META-QA-CR025-W1-CP7-VERIFY-2026-06-02.md"
+    checkpoints_updated:
+      s01_cp7_status: "PASS"
+      s04_cp7_status: "PASS"
+      s01_story_status: "verified"
+      s04_story_status: "verified"
+      s02_story_status: "dev-ready"
+      next_step: "spawn-meta-dev-cr025-s02-cp6"
+    main_thread_validation:
+      pytest: "PASS: 15 passed in 0.50s"
+      py_compile: "PASS"
+      cr_tracking_consistency: "PASS"
+      diff_check: "PASS"
+    safety_confirmations:
+      controlled_verification_authorized: true
+      dependency_change_authorized: false
+      backtrader_runtime_authorized: false
+      source_migration_authorized: false
+      real_broker_authorized: false
+      real_qmt_operation_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      broker_lake_write_authorized: false
+      publish_authorized: false
+      simulation_or_live_run_authorized: false
+      credential_read_authorized: false
+      multifactor_research_framework_authorized: false
+  - at: "2026-06-02T08:00:30+08:00"
+    actor: "meta-po"
+    action: "cr025-s02-dev-running"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "S02 dev_gate 通过：S01/S04 均已 CP7 PASS 并 verified，CP5 approved，LLD confirmed，当前无 dev_running 文件冲突。meta-po 创建 S02 implementation handoff，并通过 spawn_agent 调度 meta-dev/dev-zhu 执行受控离线 semantic diff schema/artifact 实现。"
+    artifacts:
+      - "process/handoffs/META-DEV-CR025-S02-IMPLEMENT-2026-06-02.md"
+      - "process/stories/CR025-S02-semantic-diff-schema-artifact.md"
+      - "process/STORY-STATUS.md"
+      - "process/DEVELOPMENT-PLAN.yaml"
+      - "process/STATE.md"
+    agent_dispatch:
+      running_dev:
+        role: "meta-dev"
+        agent_id: "019e85a1-acd8-76f3-96bd-1102eb15f256"
+        agent_name: "dev-zhu"
+        thread_id: "019e85a1-acd8-76f3-96bd-1102eb15f256"
+        tool_name: "multi_agent_v1.spawn_agent"
+        spawned_at: "2026-06-02T08:00:30+08:00"
+        handoff_path: "process/handoffs/META-DEV-CR025-S02-IMPLEMENT-2026-06-02.md"
+    checkpoints_updated:
+      s02_story_status: "in-development"
+      next_step: "wait-cr025-s02-cp6"
+    safety_confirmations:
+      controlled_implementation_authorized: true
+      dependency_change_authorized: false
+      backtrader_runtime_authorized: false
+      source_migration_authorized: false
+      real_broker_authorized: false
+      real_qmt_operation_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      broker_lake_write_authorized: false
+      publish_authorized: false
+      simulation_or_live_run_authorized: false
+      credential_read_authorized: false
+      multifactor_research_framework_authorized: false
+  - at: "2026-06-02T08:12:05+08:00"
+    actor: "meta-po"
+    action: "cr025-s02-cp6-pass-ready-for-verification"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "meta-dev/dev-zhu 完成 CR025-S02 受控离线实现并生成 CP6 PASS。主线程复跑 S02+W1 回归 22 passed，py_compile、diff check、依赖 diff 和 CR tracking consistency 均 PASS；`reports/semantic_diff/README.md` 位于 ignored `reports/` 下，作为本地 artifact 输出路径合同记录，非阻断。meta-po 已关闭 dev 线程并将 S02 推进到 ready-for-verification。"
+    artifacts:
+      - "engine/semantic_diff.py"
+      - "reports/semantic_diff/README.md"
+      - "tests/test_cr025_semantic_diff_contract.py"
+      - "process/checks/CP6-CR025-S02-semantic-diff-schema-artifact-CODING-DONE.md"
+      - "process/handoffs/META-DEV-CR025-S02-IMPLEMENT-2026-06-02.md"
+      - "process/stories/CR025-S02-semantic-diff-schema-artifact.md"
+      - "process/STORY-STATUS.md"
+      - "process/DEVELOPMENT-PLAN.yaml"
+      - "process/STATE.md"
+    agent_dispatch:
+      closed_dev:
+        role: "meta-dev"
+        agent_id: "019e85a1-acd8-76f3-96bd-1102eb15f256"
+        agent_name: "dev-zhu"
+        thread_id: "019e85a1-acd8-76f3-96bd-1102eb15f256"
+        tool_name: "multi_agent_v1.spawn_agent / multi_agent_v1.wait_agent / multi_agent_v1.close_agent"
+        spawned_at: "2026-06-02T08:00:30+08:00"
+        completed_at: "2026-06-02T08:08:31+08:00"
+        closed_at: "2026-06-02T08:12:05+08:00"
+        handoff_path: "process/handoffs/META-DEV-CR025-S02-IMPLEMENT-2026-06-02.md"
+    checkpoints_updated:
+      s02_cp6_status: "PASS"
+      s02_story_status: "ready-for-verification"
+      next_step: "spawn-meta-qa-cr025-s02-cp7"
+    main_thread_validation:
+      pytest: "PASS: 22 passed in 0.52s"
+      py_compile: "PASS"
+      dependency_diff: "PASS: pyproject.toml / uv.lock no diff"
+      cr_tracking_consistency: "PASS"
+      diff_check: "PASS"
+      ignored_report_contract: "REVIEWED: reports/semantic_diff/README.md ignored by .gitignore:33 reports/"
+    safety_confirmations:
+      controlled_implementation_authorized: true
+      dependency_change_authorized: false
+      backtrader_runtime_authorized: false
+      source_migration_authorized: false
+      real_broker_authorized: false
+      real_qmt_operation_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      broker_lake_write_authorized: false
+      publish_authorized: false
+      simulation_or_live_run_authorized: false
+      credential_read_authorized: false
+      multifactor_research_framework_authorized: false
+  - at: "2026-06-02T08:15:17+08:00"
+    actor: "meta-po"
+    action: "cr025-s02-cp7-running"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "CR025-S02 CP6 PASS 且 Story 为 ready-for-verification。meta-po 创建 S02 CP7 QA handoff，并通过 spawn_agent 调度 meta-qa/qa-zhang 执行独立验证；CP7 PASS 前不得标记 S02 verified 或调度 S03。"
+    artifacts:
+      - "process/handoffs/META-QA-CR025-S02-CP7-VERIFY-2026-06-02.md"
+      - "process/stories/CR025-S02-semantic-diff-schema-artifact.md"
+      - "process/STORY-STATUS.md"
+      - "process/DEVELOPMENT-PLAN.yaml"
+      - "process/STATE.md"
+    agent_dispatch:
+      running_qa:
+        role: "meta-qa"
+        agent_id: "019e85af-1f70-7571-9206-621f2d79cda9"
+        agent_name: "qa-zhang"
+        thread_id: "019e85af-1f70-7571-9206-621f2d79cda9"
+        tool_name: "multi_agent_v1.spawn_agent"
+        spawned_at: "2026-06-02T08:15:17+08:00"
+        handoff_path: "process/handoffs/META-QA-CR025-S02-CP7-VERIFY-2026-06-02.md"
+    checkpoints_updated:
+      s02_story_status: "verification-running"
+      next_step: "wait-cr025-s02-cp7"
+    safety_confirmations:
+      controlled_verification_authorized: true
+      dependency_change_authorized: false
+      backtrader_runtime_authorized: false
+      source_migration_authorized: false
+      real_broker_authorized: false
+      real_qmt_operation_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      broker_lake_write_authorized: false
+      publish_authorized: false
+      simulation_or_live_run_authorized: false
+      credential_read_authorized: false
+      multifactor_research_framework_authorized: false
+  - at: "2026-06-02T08:21:16+08:00"
+    actor: "meta-po"
+    action: "cr025-s02-verified-s03-dev-ready"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "meta-qa/qa-zhang 完成 CR025-S02 CP7 独立验证并返回 PASS：S02 定向 7 passed，W1+S02 回归 22 passed，py_compile、diff check、依赖 diff、ignored reports path 评估和 forbidden-operation counters 均通过。meta-po 已关闭 QA agent，回填 handoff / CP7 dispatch evidence，将 S02 收敛为 verified；S03 依赖 S02、CR015-S03、CR015-S06、CR017-S04 均已 verified，因此进入 dev-ready。"
+    artifacts:
+      - "process/checks/CP7-CR025-S02-semantic-diff-schema-artifact-VERIFICATION-DONE.md"
+      - "process/handoffs/META-QA-CR025-S02-CP7-VERIFY-2026-06-02.md"
+      - "process/stories/CR025-S02-semantic-diff-schema-artifact.md"
+      - "process/stories/CR025-S03-order-intent-draft-qmt-boundary.md"
+      - "process/STORY-STATUS.md"
+      - "process/DEVELOPMENT-PLAN.yaml"
+      - "process/changes/CR-INDEX.yaml"
+      - "process/changes/CR-025-BACKTRADER-OPTIONAL-EXECUTION-BACKEND-HARDENING-2026-05-31.md"
+      - "process/STATE.md"
+    agent_dispatch:
+      completed_qa:
+        role: "meta-qa"
+        agent_id: "019e85af-1f70-7571-9206-621f2d79cda9"
+        agent_name: "qa-zhang"
+        thread_id: "019e85af-1f70-7571-9206-621f2d79cda9"
+        tool_name: "multi_agent_v1.spawn_agent"
+        spawned_at: "2026-06-02T08:15:17+08:00"
+        completed_at: "2026-06-02T08:17:09+08:00"
+        closed_at: "2026-06-02T08:21:16+08:00"
+        handoff_path: "process/handoffs/META-QA-CR025-S02-CP7-VERIFY-2026-06-02.md"
+    checkpoints_updated:
+      s02_story_status: "verified"
+      s03_story_status: "dev-ready"
+      next_step: "dispatch-cr025-s03-cp6"
+    safety_confirmations:
+      controlled_offline_implementation_authorized: true
+      dependency_change_authorized: false
+      backtrader_runtime_authorized: false
+      source_migration_authorized: false
+      real_broker_authorized: false
+      real_qmt_operation_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      broker_lake_write_authorized: false
+      publish_authorized: false
+      simulation_or_live_run_authorized: false
+      credential_read_authorized: false
+      multifactor_research_framework_authorized: false
+  - at: "2026-06-02T08:27:19+08:00"
+    actor: "meta-po"
+    action: "cr025-s03-dev-running"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "CR025-S03 dev_gate 满足：S02、CR015-S03、CR015-S06、CR017-S04 均已 verified，CP5 approved，文件 owner 无冲突。meta-po 创建 S03 implementation handoff，并通过 spawn_agent 调度 meta-dev/dev-you 执行受控离线 order_intent_draft_v1 合同实现。"
+    artifacts:
+      - "process/handoffs/META-DEV-CR025-S03-IMPLEMENT-2026-06-02.md"
+      - "process/stories/CR025-S03-order-intent-draft-qmt-boundary.md"
+      - "process/STORY-STATUS.md"
+      - "process/DEVELOPMENT-PLAN.yaml"
+      - "process/changes/CR-INDEX.yaml"
+      - "process/changes/CR-025-BACKTRADER-OPTIONAL-EXECUTION-BACKEND-HARDENING-2026-05-31.md"
+      - "process/STATE.md"
+    agent_dispatch:
+      running_dev:
+        role: "meta-dev"
+        agent_id: "019e85ba-2dd3-79f2-835d-c324957d3776"
+        agent_name: "dev-you"
+        thread_id: "019e85ba-2dd3-79f2-835d-c324957d3776"
+        tool_name: "multi_agent_v1.spawn_agent"
+        spawned_at: "2026-06-02T08:27:19+08:00"
+        handoff_path: "process/handoffs/META-DEV-CR025-S03-IMPLEMENT-2026-06-02.md"
+    checkpoints_updated:
+      s03_story_status: "in-development"
+      next_step: "wait-cr025-s03-cp6"
+    safety_confirmations:
+      controlled_offline_implementation_authorized: true
+      dependency_change_authorized: false
+      backtrader_runtime_authorized: false
+      source_migration_authorized: false
+      real_broker_authorized: false
+      real_qmt_operation_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      broker_lake_write_authorized: false
+      publish_authorized: false
+      simulation_or_live_run_authorized: false
+      credential_read_authorized: false
+      multifactor_research_framework_authorized: false
+  - at: "2026-06-02T08:40:15+08:00"
+    actor: "meta-po"
+    action: "cr025-s03-cp6-pass-ready-for-verification"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "meta-dev/dev-you 完成 CR025-S03 受控离线 order_intent_draft_v1 合同实现并生成 CP6 PASS。meta-po 已关闭 dev agent，回填 handoff / CP6 dispatch evidence，并在主线程复跑 S03 目标测试 11 passed、CR025 当前回归 33 passed、py_compile、diff check、依赖 diff 和 CR tracking consistency，均 PASS。S03 进入 ready-for-verification；CP7 PASS 前不得标记 S03 verified 或解锁 S05/S06。"
+    artifacts:
+      - "engine/order_intent_draft.py"
+      - "tests/test_cr025_order_intent_draft_contract.py"
+      - "process/checks/CP6-CR025-S03-order-intent-draft-qmt-boundary-CODING-DONE.md"
+      - "process/handoffs/META-DEV-CR025-S03-IMPLEMENT-2026-06-02.md"
+      - "process/stories/CR025-S03-order-intent-draft-qmt-boundary.md"
+      - "process/STORY-STATUS.md"
+      - "process/DEVELOPMENT-PLAN.yaml"
+      - "process/changes/CR-INDEX.yaml"
+      - "process/changes/CR-025-BACKTRADER-OPTIONAL-EXECUTION-BACKEND-HARDENING-2026-05-31.md"
+      - "process/STATE.md"
+    agent_dispatch:
+      completed_dev:
+        role: "meta-dev"
+        agent_id: "019e85ba-2dd3-79f2-835d-c324957d3776"
+        agent_name: "dev-you"
+        thread_id: "019e85ba-2dd3-79f2-835d-c324957d3776"
+        tool_name: "multi_agent_v1.spawn_agent"
+        spawned_at: "2026-06-02T08:27:19+08:00"
+        completed_at: "2026-06-02T08:35:09+08:00"
+        closed_at: "2026-06-02T08:39:30+08:00"
+        handoff_path: "process/handoffs/META-DEV-CR025-S03-IMPLEMENT-2026-06-02.md"
+    checkpoints_updated:
+      s03_story_status: "ready-for-verification"
+      next_step: "dispatch-cr025-s03-cp7"
+    safety_confirmations:
+      controlled_offline_implementation_authorized: true
+      dependency_change_authorized: false
+      backtrader_runtime_authorized: false
+      source_migration_authorized: false
+      real_broker_authorized: false
+      real_qmt_operation_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      broker_lake_write_authorized: false
+      publish_authorized: false
+      simulation_or_live_run_authorized: false
+      credential_read_authorized: false
+      multifactor_research_framework_authorized: false
+  - at: "2026-06-02T08:43:31+08:00"
+    actor: "meta-po"
+    action: "cr025-s03-cp7-running"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "CR025-S03 CP6 PASS 且 Story 为 ready-for-verification。meta-po 创建 S03 CP7 QA handoff，并通过 spawn_agent 调度 meta-qa/qa-shi 执行独立验证；CP7 PASS 前不得标记 S03 verified 或解锁 S05/S06。"
+    artifacts:
+      - "process/handoffs/META-QA-CR025-S03-CP7-VERIFY-2026-06-02.md"
+      - "process/stories/CR025-S03-order-intent-draft-qmt-boundary.md"
+      - "process/STORY-STATUS.md"
+      - "process/DEVELOPMENT-PLAN.yaml"
+      - "process/changes/CR-INDEX.yaml"
+      - "process/changes/CR-025-BACKTRADER-OPTIONAL-EXECUTION-BACKEND-HARDENING-2026-05-31.md"
+      - "process/STATE.md"
+    agent_dispatch:
+      running_qa:
+        role: "meta-qa"
+        agent_id: "019e85c8-c788-7e83-b1bb-4b6c5a635306"
+        agent_name: "qa-shi"
+        thread_id: "019e85c8-c788-7e83-b1bb-4b6c5a635306"
+        tool_name: "multi_agent_v1.spawn_agent"
+        spawned_at: "2026-06-02T08:43:31+08:00"
+        handoff_path: "process/handoffs/META-QA-CR025-S03-CP7-VERIFY-2026-06-02.md"
+    checkpoints_updated:
+      s03_story_status: "verification-running"
+      next_step: "wait-cr025-s03-cp7"
+    safety_confirmations:
+      controlled_verification_authorized: true
+      dependency_change_authorized: false
+      backtrader_runtime_authorized: false
+      source_migration_authorized: false
+      real_broker_authorized: false
+      real_qmt_operation_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      broker_lake_write_authorized: false
+      publish_authorized: false
+      simulation_or_live_run_authorized: false
+      credential_read_authorized: false
+      multifactor_research_framework_authorized: false
+  - at: "2026-06-02T08:50:30+08:00"
+    actor: "meta-po"
+    action: "cr025-s03-verified-s05-dev-ready"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "meta-qa/qa-shi 完成 CR025-S03 CP7 独立验证并返回 PASS：S03 fixture-only 11 passed，CR025 当前回归 33 passed，py_compile、diff check、dependency/shared file diff、order-intent boundary assessment 和 forbidden-operation counters 均通过。meta-po 已关闭 QA agent，回填 handoff / CP7 dispatch evidence，将 S03 收敛为 verified；S01/S02/S03/S04 均 verified 后，S05 进入 dev-ready。S06 依赖虽满足，但按 W4 parallel_dev=false 和文档消费 S05 结果保持 blocked-by-wave-sequence。"
+    artifacts:
+      - "process/checks/CP7-CR025-S03-order-intent-draft-qmt-boundary-VERIFICATION-DONE.md"
+      - "process/handoffs/META-QA-CR025-S03-CP7-VERIFY-2026-06-02.md"
+      - "process/stories/CR025-S03-order-intent-draft-qmt-boundary.md"
+      - "process/stories/CR025-S05-no-real-operation-safety-verification.md"
+      - "process/stories/CR025-S06-route-docs-and-follow-up-handoff.md"
+      - "process/STORY-STATUS.md"
+      - "process/DEVELOPMENT-PLAN.yaml"
+      - "process/changes/CR-INDEX.yaml"
+      - "process/changes/CR-025-BACKTRADER-OPTIONAL-EXECUTION-BACKEND-HARDENING-2026-05-31.md"
+      - "process/STATE.md"
+    agent_dispatch:
+      completed_qa:
+        role: "meta-qa"
+        agent_id: "019e85c8-c788-7e83-b1bb-4b6c5a635306"
+        agent_name: "qa-shi"
+        thread_id: "019e85c8-c788-7e83-b1bb-4b6c5a635306"
+        tool_name: "multi_agent_v1.spawn_agent"
+        spawned_at: "2026-06-02T08:43:31+08:00"
+        completed_at: "2026-06-02T08:46:28+08:00"
+        closed_at: "2026-06-02T08:50:30+08:00"
+        handoff_path: "process/handoffs/META-QA-CR025-S03-CP7-VERIFY-2026-06-02.md"
+    checkpoints_updated:
+      s03_story_status: "verified"
+      s05_story_status: "dev-ready"
+      s06_story_status: "blocked-by-wave-sequence"
+      next_step: "dispatch-cr025-s05-cp6"
+    safety_confirmations:
+      controlled_offline_implementation_authorized: true
+      dependency_change_authorized: false
+      backtrader_runtime_authorized: false
+      source_migration_authorized: false
+      real_broker_authorized: false
+      real_qmt_operation_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      broker_lake_write_authorized: false
+      publish_authorized: false
+      simulation_or_live_run_authorized: false
+      credential_read_authorized: false
+      multifactor_research_framework_authorized: false
+  - at: "2026-06-02T08:55:03+08:00"
+    actor: "meta-po"
+    action: "cr025-s05-dev-running"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "CR025-S05 dev_gate 满足：S01/S02/S03/S04 均已 verified，CP5 approved，文件 owner 无冲突。meta-po 创建 S05 implementation handoff，并通过 spawn_agent 调度 meta-dev/dev-shi 执行受控离线 fixture-only no-real-operation safety tests。"
+    artifacts:
+      - "process/handoffs/META-DEV-CR025-S05-IMPLEMENT-2026-06-02.md"
+      - "process/stories/CR025-S05-no-real-operation-safety-verification.md"
+      - "process/STORY-STATUS.md"
+      - "process/DEVELOPMENT-PLAN.yaml"
+      - "process/changes/CR-INDEX.yaml"
+      - "process/changes/CR-025-BACKTRADER-OPTIONAL-EXECUTION-BACKEND-HARDENING-2026-05-31.md"
+      - "process/STATE.md"
+    agent_dispatch:
+      running_dev:
+        role: "meta-dev"
+        agent_id: "019e85d3-9cf2-77a1-a227-455cc7078469"
+        agent_name: "dev-shi"
+        thread_id: "019e85d3-9cf2-77a1-a227-455cc7078469"
+        tool_name: "multi_agent_v1.spawn_agent"
+        spawned_at: "2026-06-02T08:55:03+08:00"
+        handoff_path: "process/handoffs/META-DEV-CR025-S05-IMPLEMENT-2026-06-02.md"
+    checkpoints_updated:
+      s05_story_status: "ready-for-verification"
+      next_step: "dispatch-cr025-s05-cp7"
+    safety_confirmations:
+      controlled_offline_implementation_authorized: true
+      dependency_change_authorized: false
+      backtrader_runtime_authorized: false
+      source_migration_authorized: false
+      real_broker_authorized: false
+      real_qmt_operation_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      broker_lake_write_authorized: false
+      publish_authorized: false
+      simulation_or_live_run_authorized: false
+      credential_read_authorized: false
+      multifactor_research_framework_authorized: false
+  - at: "2026-06-02T09:08:23+08:00"
+    actor: "meta-po"
+    action: "cr025-s05-cp6-pass-ready-for-verification"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "meta-dev/dev-shi 完成 CR025-S05 受控离线 fixture-only safety tests 并写入 CP6 PASS；meta-po 已关闭 dev 线程，修正 CP6 Agent Dispatch Evidence 为真实 spawn/close 证据，并在主线程复跑 S05 定向测试 19 passed、CR025 组合回归 52 passed、py_compile PASS、pyproject.toml/uv.lock diff 为空。S05 进入 ready-for-verification，S06 仍等待 S05 CP7 verified。"
+    artifacts:
+      - "tests/test_cr025_no_real_operation_safety.py"
+      - "tests/test_cr025_forbidden_source_copy.py"
+      - "tests/test_cr025_schema_contracts.py"
+      - "process/checks/CP6-CR025-S05-no-real-operation-safety-verification-CODING-DONE.md"
+      - "process/handoffs/META-DEV-CR025-S05-IMPLEMENT-2026-06-02.md"
+      - "process/stories/CR025-S05-no-real-operation-safety-verification.md"
+      - "process/STATE.md"
+    agent_dispatch:
+      completed_dev:
+        role: "meta-dev"
+        agent_id: "019e85d3-9cf2-77a1-a227-455cc7078469"
+        agent_name: "dev-shi"
+        thread_id: "019e85d3-9cf2-77a1-a227-455cc7078469"
+        tool_name: "multi_agent_v1.spawn_agent"
+        spawned_at: "2026-06-02T08:55:03+08:00"
+        completed_at: "2026-06-02T09:02:43+08:00"
+        closed_at: "2026-06-02T09:08:23+08:00"
+        handoff_path: "process/handoffs/META-DEV-CR025-S05-IMPLEMENT-2026-06-02.md"
+    checkpoints_updated:
+      s05_cp6_status: "PASS"
+      s05_story_status: "ready-for-verification"
+      next_step: "dispatch-cr025-s05-cp7"
+    safety_confirmations:
+      controlled_offline_implementation_authorized: true
+      dependency_change_authorized: false
+      backtrader_runtime_authorized: false
+      source_migration_authorized: false
+      real_broker_authorized: false
+      real_qmt_operation_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      broker_lake_write_authorized: false
+      publish_authorized: false
+      simulation_or_live_run_authorized: false
+      credential_read_authorized: false
+      multifactor_research_framework_authorized: false
+  - at: "2026-06-02T09:13:03+08:00"
+    actor: "meta-po"
+    action: "cr025-s05-cp7-running"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "CR025-S05 CP6 PASS 后，meta-po 创建 CP7 验证 handoff，并通过 spawn_agent 调度 meta-qa/qa-yan 执行独立 CP7。当前仅表示 verify_running，不表示 S05 已 verified；S06 继续等待 S05 CP7 PASS。"
+    artifacts:
+      - "process/handoffs/META-QA-CR025-S05-CP7-VERIFY-2026-06-02.md"
+      - "process/STATE.md"
+      - "process/STORY-STATUS.md"
+      - "process/DEVELOPMENT-PLAN.yaml"
+      - "process/changes/CR-INDEX.yaml"
+      - "process/changes/CR-025-BACKTRADER-OPTIONAL-EXECUTION-BACKEND-HARDENING-2026-05-31.md"
+    agent_dispatch:
+      running_qa:
+        role: "meta-qa"
+        agent_id: "019e85e4-1880-7c21-bc65-1efc837ed5b8"
+        agent_name: "qa-yan"
+        thread_id: "019e85e4-1880-7c21-bc65-1efc837ed5b8"
+        tool_name: "multi_agent_v1.spawn_agent"
+        spawned_at: "2026-06-02T09:13:03+08:00"
+        handoff_path: "process/handoffs/META-QA-CR025-S05-CP7-VERIFY-2026-06-02.md"
+    checkpoints_updated:
+      s05_story_status: "verify-running"
+      next_step: "wait-cr025-s05-cp7"
+    safety_confirmations:
+      controlled_offline_verification_authorized: true
+      dependency_change_authorized: false
+      backtrader_runtime_authorized: false
+      source_migration_authorized: false
+      real_broker_authorized: false
+      real_qmt_operation_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      broker_lake_write_authorized: false
+      publish_authorized: false
+      simulation_or_live_run_authorized: false
+      credential_read_authorized: false
+      multifactor_research_framework_authorized: false
+  - at: "2026-06-02T09:18:42+08:00"
+    actor: "meta-po"
+    action: "cr025-s05-verified-s06-dev-ready"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "meta-qa/qa-yan 完成 CR025-S05 CP7 独立验证并 PASS；meta-po 已关闭 QA 线程，回填 handoff completed/closed 与 CP7 Agent Dispatch Evidence，将 S05 收敛为 verified。S06 上游 S01/S02/S03/S04/S05 和 CR019-S09 deferred route contract 均满足，当前无 dev_running 文件冲突，S06 进入 dev-ready。"
+    artifacts:
+      - "process/checks/CP7-CR025-S05-no-real-operation-safety-verification-VERIFICATION-DONE.md"
+      - "process/handoffs/META-QA-CR025-S05-CP7-VERIFY-2026-06-02.md"
+      - "process/stories/CR025-S05-no-real-operation-safety-verification.md"
+      - "process/stories/CR025-S06-route-docs-and-follow-up-handoff.md"
+      - "process/STATE.md"
+      - "process/STORY-STATUS.md"
+      - "process/DEVELOPMENT-PLAN.yaml"
+      - "process/changes/CR-INDEX.yaml"
+    agent_dispatch:
+      completed_qa:
+        role: "meta-qa"
+        agent_id: "019e85e4-1880-7c21-bc65-1efc837ed5b8"
+        agent_name: "qa-yan"
+        thread_id: "019e85e4-1880-7c21-bc65-1efc837ed5b8"
+        tool_name: "multi_agent_v1.spawn_agent"
+        spawned_at: "2026-06-02T09:13:03+08:00"
+        completed_at: "2026-06-02T09:15:53+08:00"
+        closed_at: "2026-06-02T09:18:42+08:00"
+        handoff_path: "process/handoffs/META-QA-CR025-S05-CP7-VERIFY-2026-06-02.md"
+    checkpoints_updated:
+      s05_cp7_status: "PASS"
+      s05_story_status: "verified"
+      s06_story_status: "dev-ready"
+      next_step: "dispatch-cr025-s06-cp6"
+    safety_confirmations:
+      controlled_offline_implementation_authorized: true
+      dependency_change_authorized: false
+      backtrader_runtime_authorized: false
+      source_migration_authorized: false
+      real_broker_authorized: false
+      real_qmt_operation_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      broker_lake_write_authorized: false
+      publish_authorized: false
+      simulation_or_live_run_authorized: false
+      credential_read_authorized: false
+      multifactor_research_framework_authorized: false
+  - at: "2026-06-02T09:23:59+08:00"
+    actor: "meta-po"
+    action: "cr025-s06-dev-running"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "CR025-S06 dev_gate 满足：S01/S02/S03/S04/S05 均已 verified，CR019-S09 deferred route contract 可引用，CP5 approved，文件 owner 无冲突。meta-po 创建 S06 implementation handoff，并通过 spawn_agent 调度 meta-dev/dev-kong 执行受控离线文档与后续路线边界实现。"
+    artifacts:
+      - "process/handoffs/META-DEV-CR025-S06-IMPLEMENT-2026-06-02.md"
+      - "process/stories/CR025-S06-route-docs-and-follow-up-handoff.md"
+      - "process/STATE.md"
+      - "process/STORY-STATUS.md"
+      - "process/DEVELOPMENT-PLAN.yaml"
+      - "process/changes/CR-INDEX.yaml"
+      - "process/changes/CR-025-BACKTRADER-OPTIONAL-EXECUTION-BACKEND-HARDENING-2026-05-31.md"
+    agent_dispatch:
+      running_dev:
+        role: "meta-dev"
+        agent_id: "019e85ee-1bae-7351-b198-92d269939f1b"
+        agent_name: "dev-kong"
+        thread_id: "019e85ee-1bae-7351-b198-92d269939f1b"
+        tool_name: "multi_agent_v1.spawn_agent"
+        spawned_at: "2026-06-02T09:23:59+08:00"
+        handoff_path: "process/handoffs/META-DEV-CR025-S06-IMPLEMENT-2026-06-02.md"
+    checkpoints_updated:
+      s06_story_status: "in-development"
+      next_step: "wait-cr025-s06-cp6"
+    safety_confirmations:
+      controlled_offline_implementation_authorized: true
+      dependency_change_authorized: false
+      backtrader_runtime_authorized: false
+      source_migration_authorized: false
+      real_broker_authorized: false
+      real_qmt_operation_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      broker_lake_write_authorized: false
+      publish_authorized: false
+      simulation_or_live_run_authorized: false
+      credential_read_authorized: false
+      multifactor_research_framework_authorized: false
+  - at: "2026-06-02T09:37:34+08:00"
+    actor: "meta-po"
+    action: "cr025-s06-cp6-pass-ready-for-verification"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "meta-dev/dev-kong 完成 CR025-S06 受控离线文档与后续路线边界实现并生成 CP6，结论 PASS。meta-po 已关闭 dev 线程，回填 handoff / CP6 dispatch evidence，S06 进入 ready-for-verification；下一步调度 meta-qa 执行 CP7。"
+    artifacts:
+      - "docs/CR025-RESEARCH-EXECUTION-SEMANTIC-ALIGNMENT.md"
+      - "README.md"
+      - "docs/USER-MANUAL.md"
+      - "process/checks/CP6-CR025-S06-route-docs-and-follow-up-handoff-CODING-DONE.md"
+      - "process/handoffs/META-DEV-CR025-S06-IMPLEMENT-2026-06-02.md"
+      - "process/stories/CR025-S06-route-docs-and-follow-up-handoff.md"
+      - "process/STATE.md"
+      - "process/STORY-STATUS.md"
+      - "process/DEVELOPMENT-PLAN.yaml"
+      - "process/changes/CR-INDEX.yaml"
+      - "process/changes/CR-025-BACKTRADER-OPTIONAL-EXECUTION-BACKEND-HARDENING-2026-05-31.md"
+      - "process/changes/CR-019-FOLLOW-UP-TRACKING-2026-05-31.md"
+    agent_dispatch:
+      completed_dev:
+        role: "meta-dev"
+        agent_id: "019e85ee-1bae-7351-b198-92d269939f1b"
+        agent_name: "dev-kong"
+        thread_id: "019e85ee-1bae-7351-b198-92d269939f1b"
+        tool_name: "multi_agent_v1.spawn_agent"
+        spawned_at: "2026-06-02T09:23:59+08:00"
+        completed_at: "2026-06-02T09:33:25+08:00"
+        closed_at: "2026-06-02T09:35:40+08:00"
+        handoff_path: "process/handoffs/META-DEV-CR025-S06-IMPLEMENT-2026-06-02.md"
+    checkpoints_updated:
+      s06_cp6_status: "PASS"
+      s06_story_status: "ready-for-verification"
+      next_step: "dispatch-cr025-s06-cp7"
+    safety_confirmations:
+      controlled_offline_implementation_authorized: true
+      dependency_change_authorized: false
+      backtrader_runtime_authorized: false
+      source_migration_authorized: false
+      real_broker_authorized: false
+      real_qmt_operation_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      broker_lake_write_authorized: false
+      publish_authorized: false
+      simulation_or_live_run_authorized: false
+      credential_read_authorized: false
+      multifactor_research_framework_authorized: false
+  - at: "2026-06-02T09:46:09+08:00"
+    actor: "meta-po"
+    action: "cr025-s06-cp7-verification-running"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "CR025-S06 CP6 PASS 且 Story 为 ready-for-verification。meta-po 创建 S06 CP7 QA handoff，并通过 spawn_agent 调度 meta-qa/qa-wei 执行独立验证；CP7 PASS 前不得标记 S06 verified 或关闭 CR-025。"
+    artifacts:
+      - "process/handoffs/META-QA-CR025-S06-CP7-VERIFY-2026-06-02.md"
+      - "process/checks/CP6-CR025-S06-route-docs-and-follow-up-handoff-CODING-DONE.md"
+      - "process/stories/CR025-S06-route-docs-and-follow-up-handoff.md"
+      - "process/STATE.md"
+      - "process/STORY-STATUS.md"
+      - "process/changes/CR-INDEX.yaml"
+    agent_dispatch:
+      running_qa:
+        role: "meta-qa"
+        agent_id: "019e8602-5d35-7622-8f24-0a8adc1290ca"
+        agent_name: "qa-wei"
+        thread_id: "019e8602-5d35-7622-8f24-0a8adc1290ca"
+        tool_name: "multi_agent_v1.spawn_agent"
+        spawned_at: "2026-06-02T09:46:09+08:00"
+        handoff_path: "process/handoffs/META-QA-CR025-S06-CP7-VERIFY-2026-06-02.md"
+    checkpoints_updated:
+      s06_story_status: "verification-running"
+      next_step: "wait-cr025-s06-cp7"
+    safety_confirmations:
+      controlled_offline_verification_authorized: true
+      dependency_change_authorized: false
+      backtrader_runtime_authorized: false
+      source_migration_authorized: false
+      real_broker_authorized: false
+      real_qmt_operation_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      broker_lake_write_authorized: false
+      publish_authorized: false
+      simulation_or_live_run_authorized: false
+      credential_read_authorized: false
+      multifactor_research_framework_authorized: false
+  - at: "2026-06-02T09:55:21+08:00"
+    actor: "meta-po"
+    action: "cr025-s06-cp7-fail-blocker-fix-running"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "meta-qa/qa-wei 完成 CR025-S06 CP7 并返回 FAIL，唯一阻断项为 bounded static trace scan 缺失精确 token `QuantConnect LEAN`。meta-po 已关闭 QA 线程，回填 handoff / CP7 dispatch evidence，创建 blocker fix handoff 并通过 spawn_agent 调度 meta-dev/dev-qin 回修；CP7 复验 PASS 前不得标记 S06 verified。"
+    artifacts:
+      - "process/checks/CP7-CR025-S06-route-docs-and-follow-up-handoff-VERIFICATION-DONE.md"
+      - "process/handoffs/META-QA-CR025-S06-CP7-VERIFY-2026-06-02.md"
+      - "process/handoffs/META-DEV-CR025-S06-CP7-BLOCKER-FIX-2026-06-02.md"
+      - "process/STATE.md"
+      - "process/STORY-STATUS.md"
+      - "process/changes/CR-INDEX.yaml"
+      - "process/changes/CR-025-BACKTRADER-OPTIONAL-EXECUTION-BACKEND-HARDENING-2026-05-31.md"
+      - "process/changes/CR-019-FOLLOW-UP-TRACKING-2026-05-31.md"
+    agent_dispatch:
+      completed_qa:
+        role: "meta-qa"
+        agent_id: "019e8602-5d35-7622-8f24-0a8adc1290ca"
+        agent_name: "qa-wei"
+        thread_id: "019e8602-5d35-7622-8f24-0a8adc1290ca"
+        tool_name: "multi_agent_v1.spawn_agent"
+        spawned_at: "2026-06-02T09:46:09+08:00"
+        completed_at: "2026-06-02T09:50:46+08:00"
+        closed_at: "2026-06-02T09:53:55+08:00"
+        handoff_path: "process/handoffs/META-QA-CR025-S06-CP7-VERIFY-2026-06-02.md"
+      running_dev:
+        role: "meta-dev"
+        agent_id: "019e860a-cd11-7820-b0e0-821e2133fbb2"
+        agent_name: "dev-qin"
+        thread_id: "019e860a-cd11-7820-b0e0-821e2133fbb2"
+        tool_name: "multi_agent_v1.spawn_agent"
+        spawned_at: "2026-06-02T09:55:21+08:00"
+        handoff_path: "process/handoffs/META-DEV-CR025-S06-CP7-BLOCKER-FIX-2026-06-02.md"
+    checkpoints_updated:
+      s06_cp7_status: "FAIL"
+      blocker_id: "CR025-S06-CP7-F01"
+      s06_story_status: "cp7-failed-returned-to-dev"
+      next_step: "wait-cr025-s06-blocker-fix-cp6"
+    safety_confirmations:
+      controlled_offline_blocker_fix_authorized: true
+      dependency_change_authorized: false
+      backtrader_runtime_authorized: false
+      source_migration_authorized: false
+      real_broker_authorized: false
+      real_qmt_operation_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      broker_lake_write_authorized: false
+      publish_authorized: false
+      simulation_or_live_run_authorized: false
+      credential_read_authorized: false
+      multifactor_research_framework_authorized: false
+  - at: "2026-06-02T22:10:56+08:00"
+    actor: "meta-po"
+    action: "cr025-s06-blocker-fix-pass-ready-for-reverify"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "meta-dev/dev-qin 完成 CR025-S06-CP7-F01 最小命名回修并写入 CP6 blocker-fix PASS；meta-po 记录 close_agent not_found，不伪造 closed_at；S06 从 dev_running 移回 verify_ready，等待 CP7 复验。"
+    artifacts:
+      - "docs/CR025-RESEARCH-EXECUTION-SEMANTIC-ALIGNMENT.md"
+      - "process/stories/CR025-S06-route-docs-and-follow-up-handoff.md"
+      - "process/checks/CP6-CR025-S06-CP7-BLOCKER-FIX-CODING-DONE.md"
+      - "process/handoffs/META-DEV-CR025-S06-CP7-BLOCKER-FIX-2026-06-02.md"
+      - "process/STATE.md"
+      - "process/STORY-STATUS.md"
+      - "process/DEVELOPMENT-PLAN.yaml"
+      - "process/changes/CR-INDEX.yaml"
+      - "process/changes/CR-025-BACKTRADER-OPTIONAL-EXECUTION-BACKEND-HARDENING-2026-05-31.md"
+      - "process/changes/CR-019-FOLLOW-UP-TRACKING-2026-05-31.md"
+    agent_dispatch:
+      completed_dev:
+        role: "meta-dev"
+        agent_id: "019e860a-cd11-7820-b0e0-821e2133fbb2"
+        agent_name: "dev-qin"
+        thread_id: "019e860a-cd11-7820-b0e0-821e2133fbb2"
+        tool_name: "multi_agent_v1.spawn_agent"
+        spawned_at: "2026-06-02T09:55:21+08:00"
+        completed_at: "2026-06-02T10:00:17+08:00"
+        close_attempt: "close_agent returned not_found at 2026-06-02T22:08:41+08:00; no closed_at fabricated."
+        handoff_path: "process/handoffs/META-DEV-CR025-S06-CP7-BLOCKER-FIX-2026-06-02.md"
+    checkpoints_updated:
+      s06_blocker_fix_cp6_status: "PASS"
+      s06_blocker_fix_cp6_checkpoint: "process/checks/CP6-CR025-S06-CP7-BLOCKER-FIX-CODING-DONE.md"
+      s06_story_status: "ready-for-verification"
+      next_step: "dispatch-cr025-s06-cp7-reverify"
+    safety_confirmations:
+      controlled_offline_blocker_fix_authorized: true
+      dependency_change_authorized: false
+      backtrader_runtime_authorized: false
+      source_migration_authorized: false
+      real_broker_authorized: false
+      real_qmt_operation_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      broker_lake_write_authorized: false
+      publish_authorized: false
+      simulation_or_live_run_authorized: false
+      credential_read_authorized: false
+      multifactor_research_framework_authorized: false
+  - at: "2026-06-02T22:16:28+08:00"
+    actor: "meta-po"
+    action: "cr025-s06-cp7-reverify-running"
+    from_phase: "story-execution"
+    to_phase: "story-execution"
+    reason: "S06 blocker-fix CP6 PASS 后，meta-po 创建 CP7 复验 handoff，并通过 spawn_agent 调度 meta-qa/qa-wei 执行独立复验；复验 PASS 前不标记 verified。"
+    artifacts:
+      - "process/handoffs/META-QA-CR025-S06-CP7-REVERIFY-2026-06-02.md"
+      - "process/checks/CP6-CR025-S06-CP7-BLOCKER-FIX-CODING-DONE.md"
+      - "process/checks/CP7-CR025-S06-route-docs-and-follow-up-handoff-VERIFICATION-DONE.md"
+      - "process/STATE.md"
+      - "process/STORY-STATUS.md"
+      - "process/changes/CR-INDEX.yaml"
+    agent_dispatch:
+      running_qa:
+        role: "meta-qa"
+        agent_id: "019e88b1-5328-7890-961f-aa76a50de028"
+        agent_name: "qa-wei"
+        thread_id: "019e88b1-5328-7890-961f-aa76a50de028"
+        tool_name: "multi_agent_v1.spawn_agent"
+        spawned_at: "2026-06-02T22:16:28+08:00"
+        handoff_path: "process/handoffs/META-QA-CR025-S06-CP7-REVERIFY-2026-06-02.md"
+    checkpoints_updated:
+      s06_story_status: "cp7-reverify-running"
+      next_step: "wait-cr025-s06-cp7-reverify"
+    safety_confirmations:
+      controlled_offline_reverify_authorized: true
+      dependency_change_authorized: false
+      backtrader_runtime_authorized: false
+      source_migration_authorized: false
+      real_broker_authorized: false
+      real_qmt_operation_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      broker_lake_write_authorized: false
+      publish_authorized: false
+      simulation_or_live_run_authorized: false
+      credential_read_authorized: false
+      multifactor_research_framework_authorized: false
+  - at: "2026-06-02T22:26:23+08:00"
+    actor: "meta-po"
+    action: "cr025-s06-cp7-reverify-pass-verified"
+    from_phase: "story-execution"
+    to_phase: "documentation"
+    reason: "meta-qa/qa-wei 完成 CR025-S06 CP7 复验并返回 PASS；首轮 blocker CR025-S06-CP7-F01 已关闭，禁止操作计数全部为 0，依赖 diff 无输出。meta-po 关闭 QA 线程并将 S06 标记 verified；CR-025 六个 Story 均已 verified，进入 CP8 收敛。"
+    artifacts:
+      - "process/checks/CP7-CR025-S06-route-docs-and-follow-up-handoff-REVERIFY-DONE.md"
+      - "process/handoffs/META-QA-CR025-S06-CP7-REVERIFY-2026-06-02.md"
+      - "process/stories/CR025-S06-route-docs-and-follow-up-handoff.md"
+      - "process/STATE.md"
+      - "process/STORY-STATUS.md"
+      - "process/DEVELOPMENT-PLAN.yaml"
+      - "process/changes/CR-INDEX.yaml"
+      - "process/changes/CR-025-BACKTRADER-OPTIONAL-EXECUTION-BACKEND-HARDENING-2026-05-31.md"
+      - "process/changes/CR-019-FOLLOW-UP-TRACKING-2026-05-31.md"
+    agent_dispatch:
+      completed_qa:
+        role: "meta-qa"
+        agent_id: "019e88b1-5328-7890-961f-aa76a50de028"
+        agent_name: "qa-wei"
+        thread_id: "019e88b1-5328-7890-961f-aa76a50de028"
+        tool_name: "multi_agent_v1.spawn_agent"
+        spawned_at: "2026-06-02T22:16:28+08:00"
+        completed_at: "2026-06-02T22:22:55+08:00"
+        closed_at: "2026-06-02T22:26:23+08:00"
+        handoff_path: "process/handoffs/META-QA-CR025-S06-CP7-REVERIFY-2026-06-02.md"
+    checkpoints_updated:
+      s06_cp7_reverify_status: "PASS"
+      s06_cp7_reverify_checkpoint: "process/checks/CP7-CR025-S06-route-docs-and-follow-up-handoff-REVERIFY-DONE.md"
+      s06_story_status: "verified"
+      cr025_verified_story_count: 6
+      next_step: "generate-cr025-cp8-delivery-readiness"
+    safety_confirmations:
+      controlled_offline_reverify_authorized: true
+      dependency_change_authorized: false
+      backtrader_runtime_authorized: false
+      source_migration_authorized: false
+      real_broker_authorized: false
+      real_qmt_operation_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      broker_lake_write_authorized: false
+      publish_authorized: false
+      simulation_or_live_run_authorized: false
+      credential_read_authorized: false
+      multifactor_research_framework_authorized: false
+  - at: "2026-06-02T22:34:58+08:00"
+    actor: "meta-po"
+    action: "cr025-documentation-readiness-review-running"
+    from_phase: "documentation"
+    to_phase: "documentation"
+    reason: "CR-025 六个 Story 均 verified 后，meta-po 创建 documentation readiness handoff，并通过 spawn_agent 调度 meta-doc/doc-hua 只读复核 README、USER-MANUAL、CR025专题文档和 CP6/CP7 证据，为 CP8 自动预检提供输入。"
+    artifacts:
+      - "process/handoffs/META-DOC-CR025-DELIVERY-READINESS-2026-06-02.md"
+      - "process/STATE.md"
+    agent_dispatch:
+      running_doc:
+        role: "meta-doc"
+        agent_id: "019e88c2-4810-79b3-97a4-9391c63e65f3"
+        agent_name: "doc-hua"
+        thread_id: "019e88c2-4810-79b3-97a4-9391c63e65f3"
+        tool_name: "multi_agent_v1.spawn_agent"
+        spawned_at: "2026-06-02T22:34:58+08:00"
+        handoff_path: "process/handoffs/META-DOC-CR025-DELIVERY-READINESS-2026-06-02.md"
+    checkpoints_updated:
+      documentation_review_status: "running"
+      next_step: "wait-cr025-doc-readiness-summary"
+    safety_confirmations:
+      readonly_documentation_review_authorized: true
+      dependency_change_authorized: false
+      backtrader_runtime_authorized: false
+      source_migration_authorized: false
+      real_broker_authorized: false
+      real_qmt_operation_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      broker_lake_write_authorized: false
+      publish_authorized: false
+      simulation_or_live_run_authorized: false
+      credential_read_authorized: false
+      multifactor_research_framework_authorized: false
+  - at: "2026-06-02T22:39:29+08:00"
+    actor: "meta-po"
+    action: "cr025-documentation-readiness-pass"
+    from_phase: "documentation"
+    to_phase: "documentation"
+    reason: "meta-doc/doc-hua 完成 CR-025 文档交付就绪只读复核并返回 PASS；阻断项 0，禁止操作计数 0，CP8 可继续。meta-po 关闭 doc 线程，准备生成 CP8 自动预检和人工审查稿。"
+    artifacts:
+      - "process/checks/DOC-CR025-DELIVERY-READINESS-SUMMARY-2026-06-02.md"
+      - "process/handoffs/META-DOC-CR025-DELIVERY-READINESS-2026-06-02.md"
+      - "process/STATE.md"
+    agent_dispatch:
+      completed_doc:
+        role: "meta-doc"
+        agent_id: "019e88c2-4810-79b3-97a4-9391c63e65f3"
+        agent_name: "doc-hua"
+        thread_id: "019e88c2-4810-79b3-97a4-9391c63e65f3"
+        tool_name: "multi_agent_v1.spawn_agent"
+        spawned_at: "2026-06-02T22:34:58+08:00"
+        completed_at: "2026-06-02T22:37:51+08:00"
+        closed_at: "2026-06-02T22:39:29+08:00"
+        handoff_path: "process/handoffs/META-DOC-CR025-DELIVERY-READINESS-2026-06-02.md"
+    checkpoints_updated:
+      documentation_review_status: "PASS"
+      documentation_summary: "process/checks/DOC-CR025-DELIVERY-READINESS-SUMMARY-2026-06-02.md"
+      next_step: "generate-cr025-cp8-delivery-readiness"
+    safety_confirmations:
+      readonly_documentation_review_authorized: true
+      dependency_change_authorized: false
+      backtrader_runtime_authorized: false
+      source_migration_authorized: false
+      real_broker_authorized: false
+      real_qmt_operation_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      broker_lake_write_authorized: false
+      publish_authorized: false
+      simulation_or_live_run_authorized: false
+      credential_read_authorized: false
+      multifactor_research_framework_authorized: false
+  - at: "2026-06-02T22:43:00+08:00"
+    actor: "meta-po"
+    action: "cr025-cp8-human-gate-launched"
+    from_phase: "documentation"
+    to_phase: "documentation"
+    reason: "CR-025 六个 Story 均已 verified，meta-doc 交付就绪复核 PASS；meta-po 生成 CP8 自动预检、人工审查稿和 Human Gate launch message。CP8 自动预检 PASS，自动终验授权为 false，等待用户人工确认；CP8 approved 前不得关闭 CR-025。"
+    artifacts:
+      - "process/checks/CP8-CR025-DELIVERY-READINESS.md"
+      - "checkpoints/CP8-CR025-DELIVERY-READINESS.md"
+      - "process/checks/CP8-CR025-HUMAN-GATE-LAUNCH-MESSAGE.md"
+      - "scripts/check_human_gate_decision_brief.py"
+      - "process/STATE.md"
+    checkpoints_updated:
+      cp8_auto_status: "PASS"
+      cp8_manual_status: "pending"
+      pending_gate: "CP8"
+      pending_decision_count: 4
+      next_step: "await-user-cp8-review"
+    validation_summary:
+      cr025_regression: "PASS: 52 passed in 0.79s"
+      cr_tracking_consistency: "PASS"
+      dependency_diff: "PASS: pyproject.toml / uv.lock diff empty"
+      human_gate_launch_protocol: "PASS: scripts/check_human_gate_decision_brief.py validated CP8 checkpoint and launch message with decision_count=4"
+    safety_confirmations:
+      auto_final_authorization: false
+      dependency_change_authorized: false
+      backtrader_runtime_authorized: false
+      source_migration_authorized: false
+      real_broker_authorized: false
+      real_qmt_operation_authorized: false
+      provider_fetch_authorized: false
+      real_lake_write_authorized: false
+      broker_lake_write_authorized: false
+      publish_authorized: false
+      simulation_or_live_run_authorized: false
+      credential_read_authorized: false
+      multifactor_research_framework_authorized: false
+last_updated: "2026-06-03T13:49:26+08:00"
 ---
 
 # 工作流状态
 
-当前 CR-011 因子研究生产级数据补齐已交付关闭。用户已通过 CP3 人工审查 `approve`，CP4 自动预检 PASS，并完成 CR011-DATA-BATCH-A、CR011-RESEARCH-BATCH-B 与 CR011-VALIDATION-BATCH-C 的 CP5 批次人工确认。CR011-DATA-BATCH-A 的 S01..S06、CR011-RESEARCH-BATCH-B 的 S07、CR011-VALIDATION-BATCH-C 的 S08 均已完成 CP6/CP7 并收敛为 `verified`。其中 S04 与 S06 的首轮 CP7 阻断均已通过 blocker-fix 和 CP7 复验关闭；S08 最新 CP7 文件 `process/checks/CP7-CR011-S08-factor-panel-audit-and-robust-validation-VERIFICATION-DONE.md` 结论 PASS。meta-doc/doc-cao the 2nd 已完成 README / USER-MANUAL / TEST-STRATEGY 中的生产级因子研究数据口径刷新，无 BLOCKING 文档风险。CP8 自动预检 `process/checks/CP8-CR011-DELIVERY-READINESS.md` 已 PASS，用户已 approve `checkpoints/CP8-CR011-DELIVERY-READINESS.md`，CR-011 已关闭。仍不授权真实联网、真实 lake 写入、凭据读取 / 打印、旧 `data/**` 操作或旧报告覆盖。
+当前 active formal CR 为 CR-030，正式文件为 `process/changes/CR-030-MULTIFACTOR-RESEARCH-FRAMEWORK-REFERENCE-AND-RESEARCH-LOOP-STANDARDIZATION-2026-06-02.md`，状态为 `active-cp2-intake`。用户要求先处理 CR-029 关闭、CR-019 陈旧 active_change 同步和旧 CR 状态收敛，然后推进研究路线，最后推进真实 QMT 路线；随后在 CR-025 CP2 前澄清目标是生产级策略研究回测、模拟盘和实盘框架，不是框架级回测内核开发。CR-029 已在 2026-05-31T21:43:48+08:00 按用户当前指令关闭；结论是数据湖与 benchmark 链路 PASS，但阶段六策略准入 blocked，`qmt_admission_allowed_count=0`。CR-025 已完成 CP3 HLD / ADR、CP4 Story Plan / DAG、CR025-S01..S06 全量 LLD 与 6 份 CP5 自动预检，全部 PASS；S01 clean feed gate/backend selector、S04 Backtrader module reference/no-copy guardrail、S02 semantic diff schema/artifact、S03 order_intent_draft_v1、S05 no-real-operation safety 与 S06 route docs/follow-up handoff 均已 CP6 / CP7 PASS 并 verified；S06 首轮 CP7 blocker `CR025-S06-CP7-F01` 已由 blocker fix CP6 和 CP7 复验关闭。CP8 自动预检 PASS，用户于 2026-06-02T23:10:16+08:00 回复“好的关闭CR025”，CR-025 当前交付范围已关闭。CR-025 关闭只收敛受控离线 / fixture / 静态合同交付；不得引入 Backtrader 依赖、不得运行 Backtrader、不得复制 / 移植 Backtrader 源码实现、不得触发真实 broker / QMT / provider / lake / publish / simulation / live。CR-030 已创建为多因子研究框架借鉴与研究闭环标准化正式 CR；2026-06-03 已完成 Qlib 本地静态分析、外部项目 web search 子 agent 调研和 meta-pm CP2 收敛建议，产物为 `process/research/CR030-MULTIFACTOR-FRAMEWORK-REFERENCE-ANALYSIS-2026-06-03.md`、`process/discussions/CP2-CR030-SCENARIO-DISCUSSION-LOG.md`、`process/checks/CP2-CR030-DISCUSSION-CHECKPOINT.json`。下一步将 UC-20..UC-27、REQ-174..REQ-185 和 DQ-CP2-CR030-01..09 写入正式 CP2 基线与 Decision Brief，再发起人工确认。CR-026 保持 Qlib isolated runner 窄范围候选，需在 CR-030 CP2/CP3 分流；真实 QMT 路线从 CR-020 开始，可在用户明确启动后做 gateway health 准入冲突预检，但不自动授权交易。
+
+CR-015 / CR-016 / CR-017 受控离线交付仍停留在 CP8 人工终验：`CR017-S01..S06`、`CR015-S01..S07`、`CR016-S01..S04` 与 `CR016-S07` 均已 CP6 / CP7 PASS 并收敛为 `verified`；`CR016-S05` 与 `CR016-S06` 保持 `lld-approved-later-gated`，`implementation_allowed=false`，未实现、未验证。meta-doc/doc-jin the 2nd 已完成 README / USER-MANUAL / TEST-STRATEGY 文档收敛，主线程复核 `154 passed`，CP8 自动预检 `process/checks/CP8-CR015-CR016-CR017-DELIVERY-READINESS.md` 结论 PASS。当前等待用户审查 `checkpoints/CP8-CR015-CR016-CR017-DELIVERY-READINESS.md`；仍不授权真实 QMT / broker、真实发单 / 撤单 / 账户查询、凭据读取、真实抓取、真实写湖、broker lake 写入、publish、simulation、live_readonly、small_live 或 scale_up。
+
+CR-014 已完成 Batch-A / since-inception 架构交付并在本轮关闭；S09 真实数据湖推进已扩展到 2015 至今的 `prices` / `adj_factor` candidate：`process/checks/REAL-TUSHARE-CR014-S14-FULL-HISTORY-PRICES-ADJ-FACTOR-PULL-2026-05-29.md` 记录 2015-01-05..2026-05-28 共 2768 个开市日、5536 条成功 manifest、`prices` 11311360 行、`adj_factor` 11823057 行，所有已观测 `prices` 交易对均有 `adj_factor`，`missing_adj_for_price_pairs_total=0`。后续真实 publish、current pointer 和 QMT admission 已由 CR-018 / CR-029 及后续 CR 承接；CR-014 关闭不授权额外 provider fetch、lake write、DuckDB 写入或 publish。
+
+历史上，CR-011 因子研究生产级数据补齐已交付关闭。用户已通过 CP3 人工审查 `approve`，CP4 自动预检 PASS，并完成 CR011-DATA-BATCH-A、CR011-RESEARCH-BATCH-B 与 CR011-VALIDATION-BATCH-C 的 CP5 批次人工确认。CR011-DATA-BATCH-A 的 S01..S06、CR011-RESEARCH-BATCH-B 的 S07、CR011-VALIDATION-BATCH-C 的 S08 均已完成 CP6/CP7 并收敛为 `verified`。其中 S04 与 S06 的首轮 CP7 阻断均已通过 blocker-fix 和 CP7 复验关闭；S08 最新 CP7 文件 `process/checks/CP7-CR011-S08-factor-panel-audit-and-robust-validation-VERIFICATION-DONE.md` 结论 PASS。meta-doc/doc-cao the 2nd 已完成 README / USER-MANUAL / TEST-STRATEGY 中的生产级因子研究数据口径刷新，无 BLOCKING 文档风险。CP8 自动预检 `process/checks/CP8-CR011-DELIVERY-READINESS.md` 已 PASS，用户已 approve `checkpoints/CP8-CR011-DELIVERY-READINESS.md`，CR-011 已关闭。仍不授权真实联网、真实 lake 写入、凭据读取 / 打印、旧 `data/**` 操作或旧报告覆盖。
 
 CR-010 真实数据湖补跑保持历史事实：用户已授权真实联网、真实 Tushare 抓取、真实写入外置 lake 和读取 `.env`；旧 `data/**` 对比继续暂缓。主线程已按用户要求拉起 meta-dev/dev-lv 与 meta-qa/qa-he 子 agent：dev 子 agent确认 CR010-DL-BATCH-B 与 CR010-QF-BATCH-C 仍缺 Story/LLD/CP5 门控而未越权实现；qa 子 agent完成首次真实 smoke 并定位阻断。主线程随后完成 CR010-DL-BATCH-A 真实链路阻断修复与补跑，记录见 `process/checks/REAL-TUSHARE-DATA-LAKE-SMOKE-CR010-RESMOKE-2026-05-22.md`。
 
 CR-010 当前结论更新为 `LIMITED_WINDOW_PASS`：外置 lake 在 `2025-02-11..2026-02-18` 内完成 10 个目标数据集同窗发布，`prices`、`adj_factor`、`hs300_index`、`trade_calendar`、`index_members`、`index_weights`、`stock_basic`、`trade_status`、`prices_limit`、`events` 均为 `published/pass/available`，其中 PIT 数据集为 `pit_available`。`production_strict` 与 `exploratory` readiness 均为 PASS，允许 claim 为 `production_strict_research`；`production_current_truth` 仍按更强口径 blocked，因为本轮不声明完整历史或持续生产真相。全量回归验证正在本轮收敛后重新执行。
 
-CR008 LLD 批次已按 max_parallel_lld=3 分两轮完成。`CR008-S01/S02/S03/S04/S05/S06` 已完成 CP6/CP7 并收敛为 verified；`CR007-S03-index-members-stock-basic-datasets` 与 `CR007-S04-experiment-real-benchmark-consumption` 也已 CP7 PASS。按 CR008 优先规则复核后，`CR007-S05` 的上游依赖、CR008 影响、文件所有权和离线安全边界均已满足；当前 S05 实现运行中。
+CR008 LLD 批次已按 max_parallel_lld=3 分两轮完成。`CR008-S01/S02/S03/S04/S05/S06` 已完成 CP6/CP7 并收敛为 verified；`CR007-S03-index-members-stock-basic-datasets`、`CR007-S04-experiment-real-benchmark-consumption` 与 `CR007-S05-data-quality-report-and-doc-guardrail` 也已 CP7 PASS。CR-007 与 CR-008 当前均为 batch verified / pending CP8，不再处于 S05 dev-running。
 
 当前五个 `meta-dev` LLD 子任务已由主线程真实 `spawn_agent` 调度并完成，五份 LLD 和五份 Story 级 CP5 自动预检均已产出且 PASS。CP5 批次人工审查稿 `checkpoints/CP5-CR007-BATCH-A-LLD-BATCH.md` 已由用户原文 `同意` 批准并回填为 approved。五份 LLD 已更新为 `confirmed=true`、`implementation_allowed=true`；该状态仅授权进入离线实现调度，不授权真实 Tushare 抓取、真实 lake 写入、凭据读取、旧 `data/**` 操作或旧报告读取 / 覆盖。
 
@@ -13220,7 +23968,7 @@ CR-005 保持 `ready-for-close`，仍需用户单独确认是否关闭；CR-006 
 
 主线程已完成第三轮修订调度并关闭 meta-pm / meta-se / meta-qa。meta-pm 新增 UC-07 与 REQ-059..REQ-070；meta-se 补齐两步契约、`BenchmarkResult` typed schema、`hs300_index` backfill job spec、accuracy/quality AC、CR005-S01 -> CR005-S04 DAG 和 S04/S06 dev_gate；meta-qa post-revision findings 的唯一 blocking 已由主线程修正。CP3/CP4/CP5 Batch A 人工稿均已由用户确认通过；当前 Batch A 的 S01 CP7 为 PASS，S02 blocker fix 后 CP7 重验为 PASS。
 
-CR-004 及此前交付保持历史基线。CR-005 当前允许的后续变更必须通过真实子 agent 和对应检查点门控推进；默认禁止真实联网抓取全量行情、提交凭据、写入真实 lake 数据、提交 `__pycache__` / `.pyc`、把实验十 / 十二改成运行时自动联网。CR005-S06 已由 meta-dev 按已确认 dependency group/version、lazy import、默认 lightweight 不依赖 Backtrader、CP6 smoke/fallback 约束实现，并由 meta-qa CP7 独立验证 PASS。
+CR-004 Batch D / G1 已在 2026-05-30 完成 STORY-004 与 STORY-018 的 CP6 / CP7，聚合验证 `48 passed`，且未触发真实抓取、真实写湖、publish、凭据读取或 QMT 操作。CR-004 总 CR 仍保持 open，不因 Batch D 自动关闭，也不声明真实沪深 300 全面 available。CR-005 当前允许的后续变更必须通过真实子 agent 和对应检查点门控推进；默认禁止真实联网抓取全量行情、提交凭据、写入真实 lake 数据、提交 `__pycache__` / `.pyc`、把实验十 / 十二改成运行时自动联网。CR005-S06 已由 meta-dev 按已确认 dependency group/version、lazy import、默认 lightweight 不依赖 Backtrader、CP6 smoke/fallback 约束实现，并由 meta-qa CP7 独立验证 PASS。
 
 CP3 自动预检为 `process/checks/CP3-CR005-HLD-PRECHECK.md`，结论为 `PASS`，人工审查稿 `checkpoints/CP3-CR005-HLD-REVIEW.md` 已 approved；CP4 自动预检为 `process/checks/CP4-CR005-STORY-PLAN-PRECHECK.md`，结论为 `PASS`，人工审查稿 `checkpoints/CP4-CR005-STORY-PLAN-REVIEW.md` 已 approved。CP5 Batch A 的 Story 级自动预检均 `PASS`，批次人工审查稿 `checkpoints/CP5-CR005-BATCH-A-LLD-BATCH.md` 已 approved。Batch A 的 CR005-S01 CP6/CP7 为 `PASS`；CR005-S02 blocker fix CP6 与 CP7 重验均为 `PASS`，状态已收敛为 `verified`。CR005-S03、CR005-S04、CR005-S05、CR005-S06 的 CP7 均为 `PASS` 且已收敛为 `verified`。
 
@@ -13264,13 +24012,15 @@ CP3 自动预检为 `process/checks/CP3-CR005-HLD-PRECHECK.md`，结论为 `PASS
 | HLD 确认 | confirmed | 用户已确认 `process/HLD.md` 可作为后续 Story 拆解输入 |
 | Story 计划确认 | confirmed | 用户已确认 13 Story / 5 Wave 计划，SP-Q1 至 SP-Q3 按默认规划收敛 |
 | Story LLD / Story Package 确认 | confirmed | `STORY-004` 单张检查点已被批量包取代；STORY-004 至 STORY-013 LLD 已齐全并由用户确认 |
-| CR-004 | blocked-awaiting-platform-dispatch | CR-004 已登记并回退到 solution-design；等待真实 meta-se / meta-dev / meta-qa 子 agent 调度证据 |
-| CR-005 | batch-a-cp7-pass | CP3/CP4/CP5 Batch A 均已 approved；CR005-S01 已 verified；CR005-S02 两个 CP7 BLOCKING 已修复并重验 PASS，当前不得自动进入后续 Story |
-| CR-006 | verified-pending-user-close-decision | CP3/CP4/CP5 均已 approved；CR006-BATCH-A 四个 dev Story 已完成 CP6 PASS；meta-qa/qa-wei 已完成 CP7，四份 Story CP7 与 batch summary 均 PASS，聚合验证 20 passed、全量 127 passed。BATCH-A 已 verified；由于自动终验授权=false，CR-006 未直接 closed，仍不得执行真实数据/凭据操作 |
-| CR-007 | story-execution-s05-dev-running | meta-se/se-han 已完成设计刷新，CP3/CP4 均 approved；CR007-BATCH-A 五份 LLD 与 CP5 已 approved；S01/S02/S03/S04 均已 CP6/CP7 PASS 且 verified；主线程已通过 `spawn_agent` 调度 meta-dev/dev-he the 2nd 执行 S05 离线实现，等待 CP6 |
-| CR-008 | story-execution-batch-a-verified | 用户回复“通过”已回填 CR008-BATCH-A CP5 批次人工审查 approved；六份 CR008 LLD 与六份 Story 级 CP5 自动预检均已完成且 PASS。`CR008-S01/S02/S03/S04/S05/S06` 均已完成 CP6/CP7 并收敛为 verified；CR008 对 CR007-S04 的优先阻塞已解除。 |
+| CR-004 | batch-d-g1-verified-pending-total-close-decision | Batch D / G1 已完成 STORY-004 与 STORY-018 的 CP6/CP7，聚合验证见 `process/checks/CP7-CR004-BATCH-D-VERIFICATION-SUMMARY-2026-05-30.md`；CR-004 总 CR 不自动关闭，真实 provider fetch / lake write / publish / credential read / QMT 仍 blocked |
+| CR-005 | closed | G0 状态收口已关闭；关闭不授权新的真实数据、凭据、旧 data 操作或 QMT |
+| CR-006 | closed | G0 状态收口已关闭；关闭不授权真实数据/凭据操作 |
+| CR-007 | story-execution-batch-a-verified-pending-cp8 | CR007-BATCH-A 五份 LLD 与 CP5 已 approved；S01/S02/S03/S04/S05 均已 CP6/CP7 PASS 且 verified；下一步是 CP8 / 关闭决策 |
+| CR-008 | story-execution-batch-a-verified-pending-cp8 | CR008-BATCH-A 六个 Story 均已完成 CP6/CP7 并收敛为 verified；下一步是 CP8 / 关闭决策 |
 | CR-011 | closed | CP3/CP4 和 CR011 三个 CP5 批次均已 approved；S01..S08 均已完成 CP6/CP7 并收敛为 verified；README / USER-MANUAL / TEST-STRATEGY 已刷新；CP8 自动预检 PASS，用户已 approve 人工终验，CR-011 已关闭。 |
 | CR-013 | cp5-manual-review-pending | CP3 人工审查已 approved；CR013-S01..S04 四份 LLD 和四份 CP5 自动预检已完成且均 PASS；当前等待用户审查 `checkpoints/CP5-CR013-BATCH-A-LLD-BATCH.md`，CP5 未批准前不得实现。 |
+| CR-025 | closed | CP3 已 approved；CP4 自动预检 PASS；6 份 LLD 与 6 份 CP5 自动预检已完成且 PASS；CP5 已 approved。S01/S04/S02/S03/S05/S06 均已 CP6 / CP7 PASS 且 verified；S06 首轮 CP7 FAIL 已由 blocker-fix CP6 与 CP7 REVERIFY 关闭。CP8 自动预检 PASS，用户于 2026-06-02T23:10:16+08:00 回复“好的关闭CR025”，CR-025 当前交付范围已关闭。仍不授权依赖变更、Backtrader 运行、源码移植或真实 broker / QMT / provider / lake / publish / simulation / live。 |
+| CR-030 | active-cp2-intake | `process/changes/CR-030-MULTIFACTOR-RESEARCH-FRAMEWORK-REFERENCE-AND-RESEARCH-LOOP-STANDARDIZATION-2026-06-02.md` 已创建；`process/changes/CR-INDEX.yaml` 与 CR-019 follow-up 台账已同步；`process/research/CR030-MULTIFACTOR-FRAMEWORK-REFERENCE-ANALYSIS-2026-06-03.md` 和 `process/discussions/CP2-CR030-SCENARIO-DISCUSSION-LOG.md` 已补齐 CP2 输入。 | 下一步将 UC-20..UC-27、REQ-174..REQ-185 和 DQ-CP2-CR030-01..09 写入正式 CP2 基线与 Decision Brief；不授权实现、依赖变更、外部项目 clone/install/run/source copy、provider/lake/publish、真实 broker / QMT / simulation / live 或凭据读取。 |
 
 ## 当前 Story 执行收敛门控
 
@@ -13285,7 +24035,7 @@ CP3 自动预检为 `process/checks/CP3-CR005-HLD-PRECHECK.md`，结论为 `PASS
 9. `STORY-004` 至 `STORY-013` 已完成实现与验证；`QA-IND-REQ-001 / F-004` 已由 Galileo 于 2026-05-16 回归关闭。
 10. 当前不得生成真实数据、安装脚本或 `delivery/**`；README / USER-MANUAL 已在 documentation 阶段输出并经 QA 复核 PASS。
 11. W3 `UNRESOLVED` source/interface 保留为 ADVISORY；真实数据源启用前必须替换 exact source/interface 并重新回归。
-12. 当前 active_change 为 CR-013；主线程已通过 `spawn_agent` 调度 meta-pm/pm-chen、meta-se/se-han 和 meta-dev/dev-xu 完成需求、HLD、ADR、Story Plan、四份 LLD、CP3/CP4/CP5 自动预检。当前等待 CP5 批次人工确认；CP5 未 approved 前不得实现。默认仍不得 provider fetch、不得读取或记录凭据、不得写真实 lake、不得读取旧 `data/**`、不得覆盖旧报告证据。
+12. 当前 active formal CR 为 CR-030，状态为 `active-cp2-intake`；CR-025 研究路线已通过 CP4 Story Plan / DAG 自动预检，HLD §34 已完成 Backtrader 本地项目模块级分析和 research-to-execution 语义对齐设计，CR025-S01..S06 全量 LLD 与 CP5 自动预检均已完成且 PASS，CP5 已 approved，S01/S04/S02/S03/S05/S06 均已 CP6 / CP7 PASS 且 verified；S06 首轮 CP7 FAIL 已由 blocker-fix CP6 与 CP7 REVERIFY 关闭。CP8 自动预检 PASS，用户已确认关闭 CR-025。CR-030 下一步是 CP2 需求 / 场景基线，尚无批准的 CR030 Story / LLD / 实现；默认仍不得实现、不得改依赖、不得 clone/install/run GitHub 项目、不得源码迁移、不得 provider fetch、不得读取或记录凭据、不得写真实 lake、不得 publish、不得 QMT / simulation / live。
 
 ## 非阻断观察项
 

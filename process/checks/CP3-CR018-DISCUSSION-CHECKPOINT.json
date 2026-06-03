@@ -1,0 +1,19 @@
+{
+  "checkpoint_id": "CP3-CR018-DISCUSSION",
+  "change_id": "CR-018",
+  "phase": "solution-design",
+  "status": "recorded",
+  "created_at": "2026-05-29T07:22:03+08:00",
+  "discussion_log": "process/discussions/CP3-CR018-HLD-DISCUSSION-LOG.md",
+  "resolved_by_cp2_decisions": ["D1", "D2", "D3", "D4", "D5", "D6"],
+  "open_for_cp3": ["CP3-CR018-DQ-01", "CP3-CR018-DQ-02", "CP3-CR018-DQ-03"],
+  "recommendation": "Accept CR18-A HLD/ADR increment, CR018-S01..S09 Story Plan, and no real-operation authorization during CP3.",
+  "safety_boundary": {
+    "provider_fetch_authorized": false,
+    "credential_read_authorized": false,
+    "real_lake_write_authorized": false,
+    "catalog_publish_authorized": false,
+    "qmt_operation_authorized": false,
+    "code_implementation_authorized": false
+  }
+}

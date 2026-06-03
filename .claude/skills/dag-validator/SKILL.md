@@ -8,7 +8,7 @@ argument-hint: "WORKFLOW-PLAN.yaml 路径"
 user-invokable: true
 status: draft
 ---
-<!-- myflow-managed: version=1.0.0 canonical-commit=05cbfdc generated=2026-05-18T12:11:08Z -->
+<!-- myflow-managed: version=1.0.0 canonical-commit=fe24c81 generated=2026-05-28T13:51:34Z -->
 
 ## 目标
 

@@ -11,10 +11,19 @@ from typing import Any
 import pandas as pd
 
 from engine.contracts import (
+    DATASET_STATUS_FAIL_VALUES,
+    DATASET_STATUS_PASS_VALUES,
+    DATASET_STATUS_WARN_VALUES,
     DATASET_REQUIRED_COLUMNS,
     DEFAULT_ADJUSTMENT_POLICY,
     DEFAULT_AVAILABLE_AT_RULE,
+    DEFAULT_QUALITY_POLICY,
+    FETCH_STATUS_SUCCESS_VALUES,
+    LOADER_METADATA_FIELDS,
+    QUALITY_POLICY_VALUES,
+    QUALITY_REPORT_REQUIRED_FIELDS,
     STANDARD_PARQUET_FILES,
+    SURVIVORSHIP_BIAS_NOTE,
 )
 from engine.diagnostics import start_diagnostic
 from engine.quality import QualityError, calculate_quality
@@ -31,7 +40,7 @@ class DataContractError(DataLoaderError):
     """输入数据合同不满足。"""
 
 
-class DataQualityGateError(DataLoaderError):
+class DataQualityGateError(DataContractError):
     """质量报告门禁失败。"""
 
 
@@ -46,7 +55,7 @@ class LoaderConfig:
     start_date: str | date | None = None
     end_date: str | date | None = None
     adjustment_policy: str = DEFAULT_ADJUSTMENT_POLICY
-    quality_policy: str = "pass_warn"
+    quality_policy: str = DEFAULT_QUALITY_POLICY
     legacy_flat_enabled: bool = False
     decision_time_rule: str = DEFAULT_AVAILABLE_AT_RULE
     allow_exploratory_recompute: bool = False
@@ -92,6 +101,9 @@ def load_backtest_data(config: LoaderConfig | dict[str, Any]) -> LoadedBacktestD
         for dataset, path in paths.items():
             if not path.exists():
                 raise DataContractError(f"缺少标准 parquet: dataset={dataset}, path={path}")
+        manifest_path = Path(cfg.manifest_path)
+        if not manifest_path.exists():
+            raise DataContractError(f"缺少 manifest: {manifest_path}")
 
         frames = {
             dataset: _read_parquet_with_required_columns(dataset, path)
@@ -101,16 +113,15 @@ def load_backtest_data(config: LoaderConfig | dict[str, Any]) -> LoadedBacktestD
         calendar = _build_calendar(frames["trade_calendar"], cfg)
         universe = _build_universe(frames["index_members"], cfg)
         close_df = _build_close_matrix(frames["prices"], calendar, universe, cfg)
-        metadata = {
-            "quality_status": quality.get("quality_status", ""),
-            "manifest_run_id": quality.get("manifest_run_id", ""),
-            "adjustment_policy": cfg.adjustment_policy,
-            "available_at_rule": cfg.decision_time_rule,
-            "is_pit_universe": bool(_bool_series(frames["index_members"].get("is_pit_universe")).any())
-            if "is_pit_universe" in frames["index_members"]
-            else False,
-            "warnings": quality.get("warnings", []),
-        }
+        metadata = _build_loader_metadata(
+            cfg=cfg,
+            paths=paths,
+            quality=quality,
+            index_members=frames["index_members"],
+            calendar=calendar,
+            close_df=close_df,
+            universe=universe,
+        )
         if metadata["warnings"]:
             diag.warning("quality_warn", warnings=metadata["warnings"])
         diag.end("success", calendar_count=len(calendar), universe_count=len(universe))
@@ -244,6 +255,8 @@ def _read_parquet_with_required_columns(dataset: str, path: Path) -> pd.DataFram
 
 def _load_quality_gate(cfg: LoaderConfig, paths: dict[str, Path], diag: Any) -> dict[str, Any]:
     quality_path = Path(cfg.quality_report_path)
+    if quality_path.suffix.lower() == ".md":
+        raise DataQualityGateError("Markdown 质量报告仅供人工阅读，不能作为 Data Loader 机器入口")
     if not quality_path.exists():
         if not cfg.allow_exploratory_recompute:
             raise DataQualityGateError(f"缺少质量报告: {quality_path}")
@@ -255,22 +268,163 @@ def _load_quality_gate(cfg: LoaderConfig, paths: dict[str, Path], diag: Any) -> 
         status = summary.quality_status
         return {
             "quality_status": status,
+            "fetch_status": "not_applicable",
+            "dataset_status": status,
             "manifest_run_id": summary.manifest_run_id,
+            "quality_policy": cfg.quality_policy,
+            "allow_warn": _allows_quality_warn(cfg.quality_policy),
+            "quality_source": "memory_calculate_quality",
+            "quality_decision_reason": f"exploratory_recompute_status_{status}",
+            "derived_quality_summary": True,
+            "missing_rate": float(summary.missing_rate),
+            "failed_batch_count": int(summary.failed_batch_count),
+            "last_successful_update_at": summary.last_successful_update_at,
+            "data_freshness_trade_days": int(summary.data_freshness_trade_days),
+            "data_freshness_calendar_days": int(summary.data_freshness_calendar_days),
             "warnings": ["quality_report_missing_exploratory_recompute"],
         }
 
     with quality_path.open("r", encoding="utf-8", newline="") as handle:
         rows = list(csv.DictReader(handle))
     overall = next((row for row in rows if row.get("dataset") == "overall"), rows[-1] if rows else {})
-    status = str(overall.get("quality_status") or "")
+    missing_fields = [
+        field
+        for field in QUALITY_REPORT_REQUIRED_FIELDS
+        if field not in overall or str(overall.get(field) or "").strip() == ""
+    ]
+    if missing_fields:
+        raise DataQualityGateError("质量报告缺少 CR-004 必需字段: " + ", ".join(missing_fields))
+    policy = _normalise_quality_policy(cfg.quality_policy)
+    status = str(overall.get("quality_status") or "").strip().lower()
+    fetch_status = str(overall.get("fetch_status") or "").strip().lower()
+    dataset_status = str(overall.get("dataset_status") or "").strip().lower()
     if status not in {"pass", "warn", "fail"}:
         raise DataQualityGateError(f"质量报告状态非法: {status!r}")
-    if status == "fail" or (cfg.quality_policy == "pass_only" and status != "pass"):
-        raise DataQualityGateError(f"质量报告未通过: status={status}")
+    if dataset_status in DATASET_STATUS_FAIL_VALUES or status == "fail":
+        raise DataQualityGateError(
+            "质量报告未通过: "
+            f"quality_status={status}, dataset_status={dataset_status}, allow_warn={_allows_quality_warn(policy)}"
+        )
+    warnings = []
+    if status == "warn" or dataset_status in DATASET_STATUS_WARN_VALUES:
+        warnings.append("warn_minor_missing_rate")
+        if not _allows_quality_warn(policy):
+            raise DataQualityGateError(
+                "质量报告为 warn，默认策略拒绝启动: "
+                f"quality_policy={policy}, allow_warn=false"
+            )
+    if dataset_status not in (*DATASET_STATUS_PASS_VALUES, *DATASET_STATUS_WARN_VALUES):
+        raise DataQualityGateError(f"dataset_status 非法或不可放行: {dataset_status!r}")
+    if fetch_status not in FETCH_STATUS_SUCCESS_VALUES:
+        warnings.append("warn_source_fetch_failed_but_local_valid")
     return {
         "quality_status": status,
+        "fetch_status": fetch_status,
+        "dataset_status": dataset_status,
         "manifest_run_id": overall.get("manifest_run_id", ""),
-        "warnings": [] if status == "pass" else ["quality_status_warn"],
+        "quality_policy": policy,
+        "allow_warn": _allows_quality_warn(policy),
+        "quality_source": "csv_report",
+        "quality_decision_reason": _quality_decision_reason(status, dataset_status, policy),
+        "derived_quality_summary": False,
+        "missing_rate": _float_value(overall.get("missing_rate")),
+        "failed_batch_count": _int_value(overall.get("failed_batch_count")),
+        "last_successful_update_at": str(overall.get("last_successful_update_at") or ""),
+        "data_freshness_trade_days": _int_value(overall.get("data_freshness_trade_days")),
+        "data_freshness_calendar_days": _int_value(overall.get("data_freshness_calendar_days")),
+        "warnings": list(dict.fromkeys(warnings)),
+    }
+
+
+def _normalise_quality_policy(value: str) -> str:
+    policy = str(value or DEFAULT_QUALITY_POLICY).replace("-", "_")
+    if policy not in QUALITY_POLICY_VALUES:
+        raise DataQualityGateError(f"未知 quality_policy: {value!r}")
+    return policy
+
+
+def _allows_quality_warn(policy: str) -> bool:
+    return _normalise_quality_policy(policy) in {"allow_warn", "pass_warn"}
+
+
+def _quality_decision_reason(status: str, dataset_status: str, policy: str) -> str:
+    if status == "pass" and dataset_status in DATASET_STATUS_PASS_VALUES:
+        return "quality_pass_dataset_available"
+    if _allows_quality_warn(policy):
+        return "quality_warn_allowed_explicitly"
+    return "quality_policy_passed"
+
+
+def _float_value(value: Any) -> float:
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        raise DataQualityGateError(f"质量报告数值字段非法: {value!r}") from None
+
+
+def _int_value(value: Any) -> int:
+    try:
+        return int(float(value))
+    except (TypeError, ValueError):
+        raise DataQualityGateError(f"质量报告整数字段非法: {value!r}") from None
+
+
+def _build_loader_metadata(
+    *,
+    cfg: LoaderConfig,
+    paths: dict[str, Path],
+    quality: dict[str, Any],
+    index_members: pd.DataFrame,
+    calendar: list[date],
+    close_df: pd.DataFrame,
+    universe: list[str],
+) -> dict[str, Any]:
+    requested_start, requested_end = _requested_range(cfg)
+    universe_meta = _universe_metadata(index_members)
+    warnings = list(quality.get("warnings", []))
+    if universe_meta["pit_status"] == "non_pit_warn":
+        warnings.append("warn_non_pit_universe")
+    loaded_start = close_df.index.min().isoformat() if len(close_df.index) else ""
+    loaded_end = close_df.index.max().isoformat() if len(close_df.index) else ""
+    metadata = {
+        "loader_schema_version": "1.0",
+        "requested_start": requested_start.isoformat(),
+        "requested_end": requested_end.isoformat(),
+        "loaded_start": loaded_start,
+        "loaded_end": loaded_end,
+        "price_row_count": int(close_df.count().sum()),
+        "universe_size": len(universe),
+        "calendar_size": len(calendar),
+        "adjustment_policy": cfg.adjustment_policy,
+        "available_at_rule": cfg.decision_time_rule,
+        "source_parquet_paths": {dataset: str(path) for dataset, path in paths.items()},
+        "source_manifest_path": str(Path(cfg.manifest_path)),
+        "source_quality_report_path": str(Path(cfg.quality_report_path)),
+        "filtered_symbol_count": 0,
+        "dropped_non_open_days": 0,
+        **quality,
+        **universe_meta,
+        "warnings": list(dict.fromkeys(warnings)),
+    }
+    for field in LOADER_METADATA_FIELDS:
+        metadata.setdefault(field, "" if field not in {"warnings", "source_parquet_paths"} else [] if field == "warnings" else {})
+    return metadata
+
+
+def _universe_metadata(frame: pd.DataFrame) -> dict[str, Any]:
+    is_pit = bool(_bool_series(frame.get("is_pit_universe")).any()) if "is_pit_universe" in frame else False
+    if is_pit:
+        return {
+            "is_pit_universe": True,
+            "universe_mode": "pit",
+            "pit_status": "valid_pit",
+            "survivorship_bias_note": "",
+        }
+    return {
+        "is_pit_universe": False,
+        "universe_mode": "non_pit_snapshot",
+        "pit_status": "non_pit_warn",
+        "survivorship_bias_note": SURVIVORSHIP_BIAS_NOTE,
     }
 
 

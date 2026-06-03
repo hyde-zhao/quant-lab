@@ -1,0 +1,133 @@
+{
+  "checkpoint_id": "CP2-CR019-DISCUSSION",
+  "change_id": "CR-019",
+  "status": "completed",
+  "created_at": "2026-05-30T15:03:02+08:00",
+  "created_by": "meta-pm",
+  "engagement_mode": "production",
+  "scenario_subject_type": "target-artifact",
+  "artifacts": {
+    "discussion_log": "process/discussions/CP2-CR019-SCENARIO-DISCUSSION-LOG.md",
+    "use_cases": "process/USE-CASES.md",
+    "requirements": "process/REQUIREMENTS.md",
+    "clarification_log": "process/CLARIFICATION-LOG.md"
+  },
+  "selected_gray_areas": [
+    "SGA-019-01",
+    "SGA-019-02",
+    "SGA-019-03",
+    "SGA-019-04"
+  ],
+  "completed_gray_areas": [
+    {
+      "id": "SGA-019-01",
+      "topic": "阶段六目标：旧失败策略包装 vs 重建多因子模拟盘准入",
+      "decision": "采用重建 production-ready 多因子 admission；旧失败策略保留为 blocked evidence。",
+      "refs": ["UC-15", "REQ-138", "REQ-154"]
+    },
+    {
+      "id": "SGA-019-02",
+      "topic": "QMT C/S bridge 主方案",
+      "decision": "采用 local_backtest C 侧 client + Windows QMT FastAPI S 侧 gateway 为主方案，signed file drop 降级为 fallback。",
+      "refs": ["UC-16", "REQ-142", "REQ-145", "REQ-149", "REQ-150", "REQ-159", "REQ-160"]
+    },
+    {
+      "id": "SGA-019-03",
+      "topic": "FastAPI gateway 完整 QMT 接口覆盖与运行门控分离",
+      "decision": "Gateway 必须覆盖 simulation/live/account/cancel/query 等完整 QMT 功能接口类别；真实转发由 run mode / stage gate / risk gate 控制。",
+      "refs": ["UC-17", "REQ-146", "REQ-147", "REQ-148", "REQ-152"]
+    },
+    {
+      "id": "SGA-019-04",
+      "topic": "Backtrader / Qlib / minute / Level2 后置边界",
+      "decision": "Backtrader/Qlib 后置，minute/Level2 Spike 后置；未触发前不作为阶段六 P0。",
+      "refs": ["UC-18", "REQ-139", "REQ-140", "REQ-141", "REQ-143", "REQ-155", "REQ-156", "REQ-157", "REQ-158"]
+    }
+  ],
+  "remaining_gray_areas": [],
+  "deferred_ideas": [
+    {
+      "id": "DEF-019-01",
+      "topic": "Backtrader W6 optional execution backend",
+      "restart_condition": "clean feed、候选策略和执行对照需求稳定"
+    },
+    {
+      "id": "DEF-019-02",
+      "topic": "Qlib W7 isolated runner",
+      "restart_condition": "factor panel、report catalog、PIT/available_at 和 isolated runner I/O contract 稳定"
+    },
+    {
+      "id": "DEF-019-03",
+      "topic": "分钟数据 Spike",
+      "restart_condition": "实验 58-59 证明日频执行假设不足且成为 admission 主风险"
+    },
+    {
+      "id": "DEF-019-04",
+      "topic": "QMT Level2 Spike",
+      "restart_condition": "订单簿深度、排队、冲击成本成为主要风险且 L1/minute 不足，并获得独立授权"
+    },
+    {
+      "id": "DEF-019-05",
+      "topic": "自动真实 QMT fallback",
+      "restart_condition": "用户另行明确授权并接受 fail-open 风险；默认不启用"
+    }
+  ],
+  "confirmed_decisions": {
+    "D1": "Backtrader 后置为 optional execution backend",
+    "D2": "Qlib 后置为 isolated runner",
+    "D3": "分钟数据不作为 P0，只做后置 Spike",
+    "D4": "QMT xtdata 不进 WSL 主路径；最终 simulation 前采用 Windows QMT bridge",
+    "D5": "暂不申请 QMT Level2",
+    "D6": "shadow + 连续 5 个真实交易日 dry-run 后再申请 QMT simulation",
+    "D7": "第一版桥接采用 FastAPI 本地服务，signed file drop 作为 fallback"
+  },
+  "open_questions": [
+    {
+      "id": "Q-039",
+      "status": "REQUIRED_FOR_CP3",
+      "blocks_cp2": false,
+      "topic": "受控局域网无应用层鉴权 / 可选 token-HMAC、bind/firewall/endpoint schema/log redaction"
+    },
+    {
+      "id": "Q-040",
+      "status": "RESOLVED",
+      "blocks_cp2": false,
+      "topic": "阶段六 admission benchmark / tracking / freeze fields 采用多基准看板 + primary benchmark 规则"
+    },
+    {
+      "id": "Q-041",
+      "status": "REQUIRED_FOR_CP3",
+      "blocks_cp2": false,
+      "topic": "完整 QMT endpoint 的 run mode / stage gate / risk gate / kill-switch 运行门控"
+    },
+    {
+      "id": "Q-042",
+      "status": "REQUIRED_FOR_CP3",
+      "blocks_cp2": false,
+      "topic": "blocked-only 或人工 dry-run fallback 的切换条件和责任边界"
+    },
+    {
+      "id": "Q-043",
+      "status": "RESOLVED",
+      "blocks_cp2": false,
+      "topic": "Backtrader/Qlib/minute/Level2 story order and Spike exit criteria"
+    },
+    {
+      "id": "Q-044",
+      "status": "REQUIRED_FOR_CP3",
+      "blocks_cp2": false,
+      "topic": "QMT C 侧接口形态：Python client / 函数调用为主 + 薄 CLI 推荐"
+    }
+  ],
+  "no_new_user_questions_reason": "用户已纠正 gateway 功能范围与鉴权关系，并确认 Q-040 推荐方案；Q-044 C 侧接口形态已形成推荐方案，其余细节进入 CP3/HLD 设计冻结。",
+  "safety_scope": {
+    "code_changes": false,
+    "dependency_changes": false,
+    "fastapi_service_started": false,
+    "qmt_or_xtquant_calls": false,
+    "credential_reads": false,
+    "provider_fetch": false,
+    "real_data_reports_delivery_writes": false
+  },
+  "next_recovery_action": "meta-po 基于 CP1/CP2 自动检查发起 CP2 人工确认；确认后交给 meta-se 做 CR-019 CP3 HLD/ADR/Story Plan。"
+}

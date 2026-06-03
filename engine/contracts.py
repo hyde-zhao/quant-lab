@@ -124,8 +124,11 @@ QUALITY_REPORT_FIELDS = (
     "report_schema_version",
     "manifest_run_id",
     "dataset",
+    "fetch_status",
+    "dataset_status",
     "coverage_start",
     "coverage_end",
+    "coverage_denominator",
     "requested_start",
     "requested_end",
     "missing_rate",
@@ -140,6 +143,9 @@ QUALITY_REPORT_FIELDS = (
     "data_freshness_trade_days",
     "data_freshness_calendar_days",
     "quality_status",
+    "denominator_mode",
+    "thresholds_json",
+    "input_config_hash",
     "available_at_rule",
     "adjustment_policy",
     "is_pit_universe",
@@ -156,6 +162,109 @@ QUALITY_REPORT_FORMATS = (
 DEFAULT_ADJUSTMENT_POLICY = "qfq"
 
 DEFAULT_AVAILABLE_AT_RULE = "trade_date_close_after"
+
+DEFAULT_DECISION_TIME_RULE = DEFAULT_AVAILABLE_AT_RULE
+
+QUALITY_POLICY_VALUES = (
+    "fail_on_warn_or_fail",
+    "require_pass",
+    "pass_only",
+    "strict",
+    "allow_warn",
+    "pass_warn",
+)
+
+DEFAULT_QUALITY_POLICY = "fail_on_warn_or_fail"
+
+QUALITY_REPORT_REQUIRED_FIELDS = (
+    "dataset",
+    "quality_status",
+    "fetch_status",
+    "dataset_status",
+    "missing_rate",
+    "failed_batch_count",
+    "manifest_run_id",
+    "coverage_denominator",
+    "denominator_mode",
+    "thresholds_json",
+    "input_config_hash",
+)
+
+DATASET_STATUS_PASS_VALUES = (
+    "pass",
+    "available",
+    "ok",
+)
+
+DATASET_STATUS_WARN_VALUES = (
+    "warn",
+    "available_with_warnings",
+)
+
+DATASET_STATUS_FAIL_VALUES = (
+    "fail",
+    "quality_failed",
+    "required_missing",
+    "unavailable",
+    "duplicate_key",
+    "schema_mismatch",
+)
+
+FETCH_STATUS_SUCCESS_VALUES = (
+    "success",
+    "not_applicable",
+    "cached",
+)
+
+AVAILABLE_AT_POLICY_VALUES = (
+    "explicit",
+    "trade_date_close_after",
+    "close_after",
+)
+
+LOADER_WARNING_CODES = (
+    "warn_non_pit_universe",
+    "warn_source_fetch_failed_but_local_valid",
+    "warn_minor_missing_rate",
+    "warn_markdown_report_ignored",
+)
+
+LOADER_METADATA_FIELDS = (
+    "loader_schema_version",
+    "requested_start",
+    "requested_end",
+    "loaded_start",
+    "loaded_end",
+    "price_row_count",
+    "universe_size",
+    "calendar_size",
+    "adjustment_policy",
+    "available_at_rule",
+    "quality_status",
+    "fetch_status",
+    "dataset_status",
+    "quality_policy",
+    "allow_warn",
+    "quality_source",
+    "quality_decision_reason",
+    "derived_quality_summary",
+    "missing_rate",
+    "failed_batch_count",
+    "manifest_run_id",
+    "last_successful_update_at",
+    "data_freshness_trade_days",
+    "data_freshness_calendar_days",
+    "is_pit_universe",
+    "universe_mode",
+    "pit_status",
+    "survivorship_bias_note",
+    "source_parquet_paths",
+    "source_manifest_path",
+    "source_quality_report_path",
+    "filtered_symbol_count",
+    "dropped_non_open_days",
+    "warnings",
+)
 
 SURVIVORSHIP_BIAS_NOTE = (
     "第一版使用固定当前成分股快照，is_pit_universe=false，存在幸存者偏差。"
@@ -310,6 +419,17 @@ __all__ = (
     "QUALITY_REPORT_FORMATS",
     "DEFAULT_ADJUSTMENT_POLICY",
     "DEFAULT_AVAILABLE_AT_RULE",
+    "DEFAULT_DECISION_TIME_RULE",
+    "QUALITY_POLICY_VALUES",
+    "DEFAULT_QUALITY_POLICY",
+    "QUALITY_REPORT_REQUIRED_FIELDS",
+    "DATASET_STATUS_PASS_VALUES",
+    "DATASET_STATUS_WARN_VALUES",
+    "DATASET_STATUS_FAIL_VALUES",
+    "FETCH_STATUS_SUCCESS_VALUES",
+    "AVAILABLE_AT_POLICY_VALUES",
+    "LOADER_WARNING_CODES",
+    "LOADER_METADATA_FIELDS",
     "SURVIVORSHIP_BIAS_NOTE",
     "DATA_PREP_CONFIG_KEYS",
     "BACKTEST_REPORT_FIELDS",

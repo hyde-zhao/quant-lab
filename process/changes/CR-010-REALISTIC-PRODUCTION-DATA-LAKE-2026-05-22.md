@@ -1,15 +1,16 @@
 ---
 cr_id: "CR-010"
-status: "open"
+status: "verified-limited-window-pass-pending-close-decision"
 impact_level: "high"
 rollback_to: "solution-design"
-approval_result: "remaining-batches-registered-cp4-addendum-approved"
+approval_result: "limited-window-pass-pending-close-decision"
 created_at: "2026-05-22T09:11:39+08:00"
 created_by: "meta-po"
 approved_by: "user"
 approved_at: "2026-05-22T15:09:54+08:00"
 source: "user"
 linked_issue: ""
+updated_at: "2026-05-31T21:43:48+08:00"
 ---
 
 # CR-010 数据湖生产化与回测真实性提升

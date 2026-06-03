@@ -2,7 +2,7 @@
 
 > 本地日频量化回测层：用 `pandas` + `parquet` 在本地完成数据准备、离线回测、参数扫描和候选报告。  
 > **核心原则**：数据准备可联网，回测主路径离线优先；已有本地缓存时优先使用缓存，不在回测、扫描或候选筛选中隐式补抓数据。  
-> **验证状态**：`STORY-001` 至 `STORY-013` 已完成验证；CR-011 的 `S01` 至 `S08` 已完成 CP7 验证并通过 CP8 人工终验，CR-011 已关闭；CR-012 已完成 limited-window readiness audit 口径修正和定向测试；CR-013 已完成 full-history / unsupported claim boundary 的 CP7 验证与文档收敛，等待 CP8 终验；CR-014 Batch-A `S01` 至 `S08` 已完成 CP7 验证，范围是离线合同与护栏实现，不包含真实抓取、真实写湖或 S09 执行；当前仓库不包含真实行情数据。
+> **验证状态**：`STORY-001` 至 `STORY-013` 已完成验证；CR-011 的 `S01` 至 `S08` 已完成 CP7 验证并通过 CP8 人工终验，CR-011 已关闭；CR-012 已完成 limited-window readiness audit 口径修正和定向测试；CR-013 已完成 full-history / unsupported claim boundary 的 CP7 验证与文档收敛，等待 CP8 终验；CR-014 Batch-A `S01` 至 `S08` 已完成 CP7 验证，范围是离线合同与护栏实现，不包含真实抓取、真实写湖或 S09 执行；CR-015 `S01` 至 `S07`、CR-017 `S01` 至 `S06`、CR-016 `S01` 至 `S04` 与 `S07` 已完成受控离线 / 文档范围 CP7 验证；CR-016 `S05` / `S06` 仍为 later-gated，`implementation_allowed=false`；CR-019 `S01` 至 `S10` 已完成 CP7 验证并通过 CP8 人工终验，CR-019 当前离线合同 / 文档交付已关闭；后续真实 QMT 运行与 deferred capabilities 按 `process/changes/CR-019-FOLLOW-UP-TRACKING-2026-05-31.md` 独立跟踪，不提供当前真实操作许可；当前仓库不包含真实行情数据。
 
 ## 目录
 
@@ -15,6 +15,14 @@
 - [Tushare 真实回补与本地 comparison](#tushare-真实回补与本地-comparison)
 - [数据湖备份、恢复与演练](#数据湖备份恢复与演练)
 - [CR-014 全 A since-inception 数据湖 Batch-A 边界](#cr-014-全-a-since-inception-数据湖-batch-a-边界)
+- [CR-018 S01 production current truth scoped release 与 dataset group](#cr-018-s01-production-current-truth-scoped-release-与-dataset-group)
+- [CR-019 S10 QMT CS bridge runbook 边界](#cr-019-s10-qmt-cs-bridge-runbook-边界)
+- [CR-019 S09 deferred capability register](#cr-019-s09-deferred-capability-register)
+- [CR-025 research execution semantic alignment](#cr-025-research-execution-semantic-alignment)
+- [CR-030 多因子策略研究入口](#cr-030-多因子策略研究入口)
+- [CR-015 QMT foundation runbook 边界](#cr-015-qmt-foundation-runbook-边界)
+- [CR-016 QMT staged activation runbook 边界](#cr-016-qmt-staged-activation-runbook-边界)
+- [CR-017 复权双视图与 QMT 消费边界](#cr-017-复权双视图与-qmt-消费边界)
 - [CR-011 因子研究生产级数据补齐](#cr-011-因子研究生产级数据补齐)
 - [CR-006 旧 data reference-only guardrail](#cr-006-旧-data-reference-only-guardrail)
 - [CR-007 quality report legacy 与 current quality truth](#cr-007-quality-report-legacy-与-current-quality-truth)
@@ -75,6 +83,12 @@ Agent 协作边界也按该目录组织执行：`meta-po` 负责编排 CR 与检
 | CR-011 因子研究数据补齐 | closed | 真实 benchmark、PIT 股票池 / lifecycle、可交易性 / 涨跌停、OHLCV/VWAP、复权 / 公司行动、行业 / 市值 / 风格、流动性 / 容量 / 成本敏感性、factor panel audit 与 robust validation 已完成 Story 级 CP7 验证，并已通过 CP8 人工终验。 |
 | CR-013 full-history 声明边界 | verified-pending-cp8 | `2025-02-11..2026-02-18` 仅为 supported limited window；`2020-01-01..2024-12-31` 保持 blocked / `research_limited_only`。真实 VWAP、VWAP fill、分钟 / 逐笔 / 盘口 / 撮合执行价保持 blocked / unsupported；unsupported register 的 `excluded` 项不进入正式 pass 分母。 |
 | CR-014 Batch-A 全 A 数据湖合同与护栏 | verified | `CR014-S01` 至 `CR014-S08` 已通过 CP7，交付的是 all-A since-inception universe/lifecycle、Parquet layout、manifest/catalog、Explicit Publish Gate、P0 pipeline、DuckDB 只读查询/审计边界、readiness/claim boundary、replay/retention 和 research consumer 只读边界。真实 provider 抓取、raw/manifest/run metadata 写湖与任何 S09 真实运行均拆到后续 Batch-B。 |
+| CR-015 QMT foundation | verified | `CR015-S01` 至 `CR015-S07` 已完成受控离线 / mock / fixture / 文档范围 CP7 验证。CR-015 只允许 `shadow` / `dry_run` / `mock`，不授权 simulation、live_readonly、small_live、scale_up、真实 QMT、真实发单、撤单、账户查询、凭据读取、真实 broker lake 写入、真实抓取、真实 lake 写入或 publish。 |
+| CR-016 QMT staged activation runbook | controlled-offline-verified-with-later-gated-scope | `CR016-S01` 至 `CR016-S04` 与 `CR016-S07` 已完成受控离线 / 文档范围 CP7 验证；`CR016-S05` 和 `CR016-S06` 仍为 later-gated，`implementation_allowed=false`，不得写成 implemented 或 verified。`CR016-S04` 交付 [docs/QMT-SIMULATION-LIVE-RUNBOOK.md](docs/QMT-SIMULATION-LIVE-RUNBOOK.md)，`CR016-S07` 增加 [docs/QMT-INCIDENT-PLAYBOOK.md](docs/QMT-INCIDENT-PLAYBOOK.md)。runbook、incident playbook、CP5、CP6/CP7、Story verified 或文档存在均不自动授权 `simulation`、`live`、`small_live`、`scale_up` 或真实 broker 操作。 |
+| CR-017 复权双视图消费边界 | verified | `CR017-S01` 至 `CR017-S06` 已完成 CP7 验证，覆盖复权策略、raw prices / adj_factor 合同、qfq / hfq 派生视图、reader policy gate、质量 / 泄漏验证、research / QMT consumer 文档与迁移指南。scale_up 仍受 CR016-S06 later-gated、research maturity gate 和用户后续显式授权控制；production adjustment governance / scale_up 自动放行计数仍为 0。 |
+| CR-018 S01 production current truth 合同 | ready-for-verification | `market_data.release_scope` 冻结 `2015-01-05..latest_closed_trade_date` scoped release，`market_data.dataset_groups` 冻结 P0 dataset group / P1 dataset group、required_for_publish 和 blocked claims；本项只定义合同与离线测试，不抓取 provider、不写 lake、不 publish current pointer、不读取凭据、不操作 QMT。 |
+| CR-019 S09 deferred capability register | verified | 新增 [docs/CR019-DEFERRED-CAPABILITIES.md](docs/CR019-DEFERRED-CAPABILITIES.md) 作为静态 register，固定 `backtrader_w6`、`qlib_w7`、`minute_spike`、`level2_spike` 均为 non-P0 / later-gated 范围；本项不新增依赖、不接入外部 provider、不抓取 minute / Level2 数据、不读取凭据、不改变 Stage 6 admission 或 QMT C/S bridge 的当前实现范围。 |
+| CR-019 QMT C/S bridge delivery | closed | `CR019-S01` 至 `CR019-S10` 已完成 CP7 验证并通过 CP8 人工终验；新增 [docs/QMT-C-S-BRIDGE-RUNBOOK.md](docs/QMT-C-S-BRIDGE-RUNBOOK.md) 作为 QMT C/S bridge 用户边界入口，汇总 Stage 6 admission、pairing/HMAC、endpoint matrix、run gate、fallback、deferred register 和 no-real-operation 计数；后续真实 QMT 运行与 deferred capabilities 按 `process/changes/CR-019-FOLLOW-UP-TRACKING-2026-05-31.md` 独立跟踪，本文档、README、USER-MANUAL、CP5/CP6/CP7、CP8 或 Story verified 都不提供真实操作许可。 |
 | 因子审计与稳健性验证 | closed | 新版研究报告、factor panel 和 robust validation 默认隔离到 `reports/experiment_17_21_cr011/**`；旧 `reports/experiment_17_21/factor_strategy_report.md` 只作为 baseline 引用，不得覆盖。 |
 | 偏差审计 | verified | `engine.bias_audit` 支持 baseline/enhanced 对比，输出收益、回撤、Sharpe、换手、候选排名变化及降级 warning。 |
 | 策略扩展 | verified | `strategies.base`、`strategies.rsi`、`strategies.macd` 提供策略接口和 RSI/MACD 示例。 |
@@ -432,6 +446,165 @@ Batch-A 明确没有授权或执行以下动作：
 | S09 real execution | `0` |
 
 真实 provider 抓取和 raw / manifest / run metadata 写湖已拆到后续 `CR014-S09-windowed-real-fetch-lake-write-run`，属于 `CR014-REAL-RUN-BATCH-B`。S09 只有在以下条件全部满足后才能执行：`S09 LLD approved`、`S09 CP5 approved`、每次真实 run 都有用户提供的 `authorization_id`，并且授权文本明确 dataset、date range、source/interface allowlist、lake root、window policy、resume policy 和 rollback policy。即使 S09 完成 raw / manifest 写湖，也不得自动 normalize、validate 或 publish；后续发布仍必须走 Explicit Publish Gate。
+
+### CR-018 S01 production current truth scoped release 与 dataset group
+
+CR-018 S01 production current truth 只冻结第一版 release 与 dataset group 合同，不发布 catalog current pointer。第一版 production current truth 的 release scope 是 `2015-01-05..latest_closed_trade_date`；2015 年前或 since-inception 完整声明必须写为 `blocked/future_backfill`，不得写成已关闭。
+
+| 合同项 | 当前定义 | 声明边界 |
+|---|---|---|
+| scoped release | `2015-01-05..latest_closed_trade_date` | 只允许声明 scoped production current truth；pre-2015 / since-inception 仍为 future backfill。 |
+| P0 dataset group | `prices_raw`、`adj_factor`、`prices_qfq`、`prices_hfq`、`returns_adjusted`、`trade_calendar`、`pit_universe`、`lifecycle_code_change`、`trade_status`、`prices_limit_st_suspend`、`benchmark_group` | 任一 P0 缺失都会阻断 core release 和 required_for_publish。 |
+| P1 dataset group | `industry_classification`、`market_cap_total`、`market_cap_float`、`beta_style_factors`、`adv`、`turnover_rate`、`liquidity_capacity`、`market_impact_cost` | P1 缺失不阻断 core release，但阻断 neutralized、pure-alpha、capacity、scale_up 和资金放大声明。 |
+| unknown dataset | 未登记 dataset 不得进入 publish readiness | readiness pass count 固定为 `0`，必须输出 `unregistered_dataset`。 |
+
+S01 的 provider fetch、lake write、credential read、current pointer publish、QMT operation 计数均为 `0`。`market_data.catalog` 只提供只读 metadata helper；它不会调用 publish，不会写 catalog current pointer，也不会把 CR014 S14 candidate 自动提升为 production current truth。
+
+### CR-019 S10 QMT CS bridge runbook 边界
+
+CR-019 S10 新增 [docs/QMT-C-S-BRIDGE-RUNBOOK.md](docs/QMT-C-S-BRIDGE-RUNBOOK.md)，作为 Stage 6 admission 与 QMT C/S bridge 的用户可读边界。它汇总 CP3 DQ-01..DQ-07、CR019-S01..S10 Story 边界、pairing/HMAC、endpoint matrix、run gate、fallback、deferred register 和 No-real-operation 计数。
+
+该 runbook 是文档合同，不是运行开关。README、USER-MANUAL、QMT runbook、incident playbook、CP5、CP6、CP7、Story `verified` 或文档存在，都不提供真实操作许可；任何真实 QMT / MiniQMT / XtQuant、账户查询、发单、撤单、broker lake 写入、provider fetch、market-data lake 写入、publish、simulation 或 live，都必须另有后续 CR / CP、per-run authorization 和对应 stage gate。
+
+| Boundary | Current value |
+|---|---:|
+| dependency_change | `0` |
+| service_start | `0` |
+| credential_read | `0` |
+| qmt_miniqmt_xtquant_operation | `0` |
+| provider_fetch | `0` |
+| lake_or_broker_lake_write | `0` |
+| publish | `0` |
+| simulation_live_run | `0` |
+| default_real_operation_authorization_claim | `0` |
+
+用户入口按职责拆分：
+
+| Entry | 用途 | 边界 |
+|---|---|---|
+| [docs/QMT-C-S-BRIDGE-RUNBOOK.md](docs/QMT-C-S-BRIDGE-RUNBOOK.md) | QMT C/S bridge 的总 runbook | 只读边界和排障入口 |
+| [docs/USER-MANUAL.md](docs/USER-MANUAL.md) | 用户操作手册 | 说明真实授权禁区和后续 CR / CP 路径 |
+| [docs/QMT-SIMULATION-LIVE-RUNBOOK.md](docs/QMT-SIMULATION-LIVE-RUNBOOK.md) | CR016 staged activation 治理入口 | 仍需 per-run authorization 和 later-gated stage |
+| [docs/QMT-INCIDENT-PLAYBOOK.md](docs/QMT-INCIDENT-PLAYBOOK.md) | incident / fallback / signed file 处理 | 只允许 fail-closed 和 manual dry-run candidate |
+
+### CR-019 S09 deferred capability register
+
+CR-019 S09 新增 [docs/CR019-DEFERRED-CAPABILITIES.md](docs/CR019-DEFERRED-CAPABILITIES.md)，用于记录 Stage 6 多因子 admission 与 QMT C/S bridge 之外的后置能力边界。该 register 是范围合同，不是运行开关；它不覆盖既有 Backtrader 可选后端说明，也不把 Backtrader W6、Qlib W7、minute Spike 或 Level2 Spike 放入当前 Stage 6 P0。
+
+| Capability | Current boundary | Later entry condition |
+|---|---|---|
+| `backtrader_w6` | non-P0 / later-gated | clean feed、候选策略稳定、执行语义对照需求都形成证据后，另起 CR 和 CP 链路。 |
+| `qlib_w7` | non-P0 / later-gated | factor panel、report catalog、PIT / `available_at` 与 isolated runner I/O 合同冻结后，另起 CR 和 CP 链路。 |
+| `minute_spike` | Spike candidate | 日频执行假设被实验证明不足，并且 source / schema / storage / quality audit 方案获批后，另起 Spike CR。 |
+| `level2_spike` | Spike candidate | order book、queue、impact cost 或微观结构风险成为主要量化阻断，且 L1 / minute 证据不足后，另起 Spike CR。 |
+
+| Counter | Current value |
+|---|---:|
+| Stage 6 P0 dependency additions | `0` |
+| QMT C/S bridge dependency additions | `0` |
+| New runtime feature flags from S09 | `0` |
+| Real provider / broker / QMT operations from S09 | `0` |
+| Credential reads from S09 | `0` |
+| Data acquisition jobs from S09 | `0` |
+
+这些能力满足 register 中的触发条件后仍必须重新经过需求、HLD / ADR、Story Plan、CP5、CP6 和 CP7。缺少后续 CR 与检查点时，任何依赖变更、provider 接入、minute / Level2 数据获取、QMT / MiniQMT / XtQuant 调用、simulation / live 运行或真实 broker 操作都保持 blocked。
+
+### CR-025 research execution semantic alignment
+
+CR-025 的用户入口是 [docs/CR025-RESEARCH-EXECUTION-SEMANTIC-ALIGNMENT.md](docs/CR025-RESEARCH-EXECUTION-SEMANTIC-ALIGNMENT.md)。它汇总 CR025-S01..S06、DQ-CP3-CR025-01..06、semantic diff、`order_intent_draft_v1`、Backtrader optional / no-copy / `migration_candidate=[]`、no-real-operation safety、CR-020..CR-024 独立 QMT 后续路线，以及 CR-030 多因子研究框架借鉴候选上下文。
+
+该专题文档只说明 research execution semantic alignment，不是运行开关。CR-025 的 LLD、CP5、CP6、CP7、Story `verified`、README 入口或 USER-MANUAL 说明，都不授权依赖安装、Backtrader run、Backtrader source copy、gateway 启动、真实 broker、QMT / MiniQMT / XtQuant、provider fetch、lake write、broker lake write、publish、simulation/live、credential read、FactorSpec / FactorRunSpec、IC / RankIC、分层收益、多因子组合、实验追踪、策略准入包、Qlib / Alphalens / vectorbt / vnpy.alpha 集成。
+
+后续路线必须独立推进：CR-020..CR-024 需要各自的 CR / CP / stage gate / per-run authorization；CR-030 需要在正式启动前重新验证候选 GitHub 项目的 license、维护状态、依赖体量和 clean-room 借鉴边界。CR-025 只可作为 later-gated 输入，不提供这些后续路线的默认许可。
+
+### CR-030 多因子策略研究入口
+
+CR-030 的快速开始入口是 [docs/CR030-FACTOR-RESEARCH-QUICKSTART.md](docs/CR030-FACTOR-RESEARCH-QUICKSTART.md)。该手册说明如何从 `FactorSpec` / `FactorRunSpec` 开始，构建本地离线 factor panel 与 label window，生成 `FactorEvaluationReport`、`MultiFactorPortfolioPlan`、`ExperimentManifest` / `ResearchReportCatalog` 和 `StrategyAdmissionPackage`。
+
+CR-030 的出口语义是完成多因子策略研究与实验闭环，达到策略侧模拟盘入口审查输入。它不表示 QMT-ready、simulation-ready、live-ready、production truth 或真实可交易授权；QMT 接口 ready、simulation 账号、gateway、账户 / 订单和运行授权仍需 CR-020 / CR-021 等后续 CR 单独通过。
+
+边界与证据链见 [docs/CR030-MULTIFACTOR-RESEARCH-LOOP.md](docs/CR030-MULTIFACTOR-RESEARCH-LOOP.md)，外部项目借鉴矩阵见 [docs/CR030-MULTIFACTOR-REFERENCE-MATRIX.md](docs/CR030-MULTIFACTOR-REFERENCE-MATRIX.md)。
+
+### CR-015 QMT foundation runbook 边界
+
+CR-015 交付的是 QMT foundation 的离线合同、shadow pipeline、dry-run plan、mock event 和用户可见 runbook。完整 runbook 见 [docs/QMT-TRADING-RUNBOOK.md](docs/QMT-TRADING-RUNBOOK.md)。当前可用模式只有：
+
+| Mode | 当前用途 | 外部效果 |
+|---|---|---|
+| `shadow` | 从 target portfolio / fixture snapshot 生成本地 order intent、risk result、state transition 和 audit summary | 不调用 QMT / MiniQMT / broker API |
+| `dry_run` | 输出 broker lake schema / write plan / reconciliation prerequisite | 不打开、不创建、不写入真实 broker lake |
+| `mock` | 用本地 mock broker event 驱动 OMS 状态机 | 不触达真实账户、柜台或交易节点 |
+
+CR-015 明确不授权以下事项：
+
+| Blocked claim / operation | 当前值 |
+|---|---:|
+| simulation activation | `0` |
+| live_readonly / small_live / scale_up activation | `0` |
+| real QMT / MiniQMT / broker API call | `0` |
+| real_order_call / real_cancel_call / account_query_call / account_write_call | `0` |
+| credential_read，包括 `.env`、token、password、cookie、session、private key、真实账户快照或 holdings 文件 | `0` |
+| real_broker_lake_write / real_lake_write / provider_fetch / publish | `0` |
+| real trading availability claim | `0` |
+| real VWAP / minute / tick / Level2 / order-match allowed claim | `0` |
+
+CR-016 是后续 simulation / live 运行治理入口。当前已 verified 的 CR-016 范围只覆盖 `CR016-S01` 至 `CR016-S04` 与 `CR016-S07` 的受控离线 / 文档合同；`CR016-S05` 与 `CR016-S06` 仍为 later-gated，`implementation_allowed=false`。任何 simulation、live_readonly、small_live、scale_up、真实发单、撤单、账户查询、凭据读取、真实 broker lake 写入、真实抓取、真实 lake 写入和 publish，都必须另有目标阶段的 CP5/CP6/CP7、逐次 per-run authorization、stage gate、reconciliation gate、kill switch / recovery gate；缺少任一项时保持 blocked。
+
+### CR-016 QMT staged activation runbook 边界
+
+CR-016 的用户入口是 [docs/QMT-SIMULATION-LIVE-RUNBOOK.md](docs/QMT-SIMULATION-LIVE-RUNBOOK.md) 和 [docs/QMT-INCIDENT-PLAYBOOK.md](docs/QMT-INCIDENT-PLAYBOOK.md)。runbook 定义 `shadow -> simulation -> live_readonly -> small_live -> scale_up` 的 staged activation 文档合同，以及 per-run authorization、rollback / recovery matrix 和 incident stop conditions；incident playbook 定义 `heartbeat_fail`、`risk_blocked`、`recon_diff`、`manual_trigger`、`recovery_required` 的 trigger、immediate action、owner、evidence required、recovery gate 和 rollback target。
+
+阶段边界如下：
+
+| Stage | 用户可见含义 | 当前边界 |
+|---|---|---|
+| `shadow` | CR-015 foundation 离线证据 | 只允许本地 shadow / dry-run / mock |
+| `simulation` | 后续模拟盘 gate 请求目标 | 需要 runbook readiness、CR016-S01/S02/S03 evidence、per-run authorization；文档本身不启动 simulation |
+| `live_readonly` | 后续只读核对阶段 | later-gated，需要 live-readonly admission 和对账证据 |
+| `small_live` | 后续小资金阶段 | later-gated，需要资金上限、kill switch drill、人工审批和回滚方案 |
+| `scale_up` | 后续资金放大阶段 | later-gated；CR017 S01-S06 已 verified，但仍必须等待 CR016-S06 解禁、research maturity gate 和用户后续显式授权 |
+
+默认不授权声明：
+
+| Claim | Current value |
+|---|---:|
+| `simulation_run` | `0` |
+| `live_run` | `0` |
+| `small_live_run` | `0` |
+| `scale_up_run` | `0` |
+| `real_broker_operation` | `0` |
+| `default_real_operation_authorization_claim` | `0` |
+
+Runbook、incident playbook、README、USER-MANUAL、CP5、CP6/CP7、Story `verified` 或文档存在均不自动授权 `simulation`、`live`、`small_live`、`scale_up` 或真实 broker 操作。文档合同和 CP7 PASS 只证明离线 / 文档 / 静态验证通过，不是真实运行授权。任何真实 broker 操作、QMT / MiniQMT / GUI、发单、撤单、账户查询、凭据读取、真实 snapshot 拉取、真实 broker lake 写入、provider fetch、真实 lake 写入、真实 incident 持久化或 publish，都必须由后续明确授权的 run 和对应 stage gate 单独控制。
+
+### CR-017 复权双视图与 QMT 消费边界
+
+CR-017 将研究侧复权视图和 QMT 执行价格隔离：研究可显式选择 `qfq`、`hfq` 或 `returns_adjusted`；QMT order intent 和任何真实 / 模拟执行价只能使用 `raw` / broker reference。`CR017-S01` 至 `CR017-S06` 已完成 CP7 验证；其中 `CR017-S06` 只提供文档和 metadata helper，不授权真实外部操作，也不解除 CR016 scale_up later-gated 边界。
+
+| Consumer | 推荐口径 | 可用范围 | 执行价边界 |
+|---|---|---|---|
+| chart | `qfq` | 图表展示可用 `qfq`，也可展示 `raw` 对照；必须标明 policy | 不产生执行价 |
+| long-horizon research | `hfq_or_returns_adjusted` | 长周期价格连续性优先 `hfq`，收益序列优先 `returns_adjusted` | 不产生执行价 |
+| factor research | `returns_adjusted` | 因子研究默认 `returns_adjusted`；同一 run 必须保持单一 `research_adjustment_policy` | 不产生执行价 |
+| QMT order intent | `raw` | 只允许携带研究 metadata；不得把 `qfq`、`hfq`、`returns_adjusted` 当执行价 | QMT execution raw-only |
+
+QMT execution raw-only 的可验证计数固定为：
+
+| 计数 | 当前值 |
+|---|---:|
+| non-raw execution allowed count | `0` |
+| adjusted execution price pass count | `0` |
+| provider_fetch | `0` |
+| lake_write | `0` |
+| credential_read | `0` |
+| current_pointer_publish | `0` |
+| real_order_call / real_cancel_call / account_query_call | `0` |
+| dependency_change | `0` |
+| legacy_qfq_overwrite | `0` |
+
+CR017 S01-S06 已完成 CP7 验证，但 production adjustment governance claim allowed count 和 scale_up allowed count 仍为 `0`。解除这些 blocked claim 至少还需要后续 production governance / CR016-S06 scale_up gate 解禁、research maturity gate、对应 CP5/CP6/CP7 证据和用户显式授权。
+
+迁移规则保持兼容：legacy qfq 仍是 `legacy_qfq_readonly`，旧报告只作为历史证据，不覆盖、不替换、不提升为 current truth；新的 `prices_qfq` 不声明已经覆盖旧报告或旧 qfq 基线。当前也不声明真实 VWAP、minute、tick、Level2、order-match 或 microstructure impact cost execution 已支持；这些能力保持 unsupported / blocked，必须另起 Story、CP5 和显式授权。
 
 ### CR-011 因子研究生产级数据补齐
 
