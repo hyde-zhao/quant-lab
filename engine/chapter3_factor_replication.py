@@ -16,6 +16,7 @@ import pandas as pd
 
 CHAPTER3_FACTOR_SCHEMA = "chapter3_factor_replication_v1"
 CHAPTER3_AUDIT_SCHEMA = "chapter3_data_issue_audit_v1"
+CHAPTER3_RESEARCH_POLICY_SCHEMA = "chapter3_research_policy_v1"
 
 STATUS_COVERED = "covered"
 STATUS_PARTIAL = "partial"
@@ -29,6 +30,14 @@ DEFAULT_FACTOR_IDS = (
     "profitability_roe_ttm",
     "investment_asset_growth",
     "abnormal_turnover_21_252",
+)
+
+DEFAULT_CHAPTER3_PRICE_COLUMNS = (
+    "back_adjusted_close",
+    "hfq_close",
+    "adjusted_close",
+    "qfq_close",
+    "close",
 )
 
 
@@ -71,6 +80,36 @@ class Chapter3FactorReplicationResult:
     preprocessing_summary: pd.DataFrame
     limitations: tuple[str, ...]
     schema_version: str = CHAPTER3_FACTOR_SCHEMA
+
+
+@dataclass(frozen=True, slots=True)
+class Chapter3ResearchPolicy:
+    """第三章实证默认口径，全部只作用于调用方传入的离线数据。"""
+
+    adjustment_policy: str = "back_adjusted_or_hfq"
+    price_columns: tuple[str, ...] = DEFAULT_CHAPTER3_PRICE_COLUMNS
+    include_financial_industry: bool = True
+    exclude_star_market: bool = True
+    new_stock_min_days: int = 365
+    compress_returns_after: str = "1996-12-16"
+    return_clip: tuple[float, float] = (-0.10, 0.10)
+    one_price_tolerance: float = 1e-8
+    schema_version: str = CHAPTER3_RESEARCH_POLICY_SCHEMA
+
+    def to_dict(self) -> dict[str, Any]:
+        return asdict(self)
+
+
+@dataclass(frozen=True, slots=True)
+class Chapter3PreparedData:
+    close: pd.DataFrame
+    returns: pd.DataFrame
+    universe_mask: pd.DataFrame
+    tradable_mask: pd.DataFrame
+    rebalance_dates: tuple[date, ...]
+    selected_price_column: str
+    limitations: tuple[str, ...]
+    policy: Chapter3ResearchPolicy
 
 
 def chapter3_factor_definitions() -> tuple[Chapter3FactorDefinition, ...]:
@@ -245,11 +284,17 @@ def replicate_chapter3_factors(
     *,
     market_cap: pd.DataFrame | None = None,
     financials: pd.DataFrame | None = None,
+    stock_basic: pd.DataFrame | None = None,
+    trade_status: pd.DataFrame | None = None,
+    prices_limit: pd.DataFrame | None = None,
     trade_calendar: pd.DataFrame | Sequence[Any] | None = None,
     factor_ids: Sequence[str] = DEFAULT_FACTOR_IDS,
     winsor_limits: tuple[float, float] = (0.01, 0.99),
     min_period_ratio: float = 2.0 / 3.0,
     min_cross_section: int = 5,
+    research_policy: Chapter3ResearchPolicy | None = None,
+    universe_mask: pd.DataFrame | None = None,
+    tradable_mask: pd.DataFrame | None = None,
 ) -> Chapter3FactorReplicationResult:
     if not 0 <= winsor_limits[0] < winsor_limits[1] <= 1:
         raise ValueError("winsor_limits 必须满足 0 <= lower < upper <= 1")
@@ -258,10 +303,11 @@ def replicate_chapter3_factors(
     if min_cross_section < 2:
         raise ValueError("min_cross_section 必须至少为 2")
 
+    policy = research_policy or Chapter3ResearchPolicy()
     price_frame = _normalise_long_frame(prices, required=("trade_date", "symbol"))
-    close_column = _first_existing(price_frame, ("adjusted_close", "hfq_close", "qfq_close", "close"))
+    close_column = _first_existing(price_frame, policy.price_columns)
     if close_column is None:
-        raise ValueError("prices 缺少 adjusted_close/hfq_close/qfq_close/close 字段")
+        raise ValueError("prices 缺少 back_adjusted_close/hfq_close/adjusted_close/qfq_close/close 字段")
     close = _pivot_numeric(price_frame, close_column, trade_calendar=trade_calendar)
     symbols = tuple(str(item) for item in close.columns)
     calendar = list(close.index)
@@ -270,8 +316,34 @@ def replicate_chapter3_factors(
     turnover_matrix = _turnover_matrix(price_frame, market_cap, calendar, symbols)
     financial_daily = _build_financial_daily(financials, calendar, symbols)
 
-    returns = close.pct_change(fill_method=None)
-    market_factor_return = _market_return(returns, market_cap_matrix)
+    suspended = _suspended_matrix(price_frame, trade_status, calendar, symbols)
+    returns = build_chapter3_return_matrix(close, suspended=suspended, policy=policy)
+    derived_universe_mask = (
+        _align_bool_mask(universe_mask, calendar, symbols, default=True)
+        if universe_mask is not None
+        else build_chapter3_universe_mask(
+            calendar,
+            symbols,
+            stock_basic=stock_basic,
+            financial_daily=financial_daily,
+            policy=policy,
+        )
+    )
+    derived_tradable_mask = (
+        _align_bool_mask(tradable_mask, calendar, symbols, default=True)
+        if tradable_mask is not None
+        else build_chapter3_tradable_mask(
+            price_frame,
+            trade_status=trade_status,
+            prices_limit=prices_limit,
+            calendar=calendar,
+            symbols=symbols,
+            policy=policy,
+        )
+    )
+    factor_eligibility = derived_universe_mask & derived_tradable_mask
+    returns_for_market = returns.where(derived_universe_mask)
+    market_factor_return = _market_return(returns_for_market, market_cap_matrix)
 
     raw: dict[str, pd.DataFrame] = {}
     limitations: list[str] = []
@@ -314,6 +386,8 @@ def replicate_chapter3_factors(
                 turnover_matrix.rolling(21, min_periods=short_window).mean()
                 / turnover_matrix.rolling(252, min_periods=long_window).mean()
             )
+
+    raw = {factor_id: matrix.where(factor_eligibility) for factor_id, matrix in raw.items()}
 
     definitions = tuple(item for item in chapter3_factor_definitions() if item.factor_id in requested)
     direction_by_factor = {item.factor_id: item.direction for item in definitions}
@@ -382,9 +456,198 @@ def factor_matrices_to_panel(
     return pd.concat(rows, ignore_index=True)
 
 
-def build_forward_return_matrix(close: pd.DataFrame, *, horizon: int) -> pd.DataFrame:
+def prepare_chapter3_research_data(
+    prices: pd.DataFrame,
+    *,
+    stock_basic: pd.DataFrame | None = None,
+    financials: pd.DataFrame | None = None,
+    trade_status: pd.DataFrame | None = None,
+    prices_limit: pd.DataFrame | None = None,
+    trade_calendar: pd.DataFrame | Sequence[Any] | None = None,
+    research_policy: Chapter3ResearchPolicy | None = None,
+) -> Chapter3PreparedData:
+    policy = research_policy or Chapter3ResearchPolicy()
+    price_frame = _normalise_long_frame(prices, required=("trade_date", "symbol"))
+    close_column = _first_existing(price_frame, policy.price_columns)
+    if close_column is None:
+        raise ValueError("prices 缺少 back_adjusted_close/hfq_close/adjusted_close/qfq_close/close 字段")
+    close = _pivot_numeric(price_frame, close_column, trade_calendar=trade_calendar)
+    symbols = tuple(str(item) for item in close.columns)
+    calendar = list(close.index)
+    financial_daily = _build_financial_daily(financials, calendar, symbols)
+    suspended = _suspended_matrix(price_frame, trade_status, calendar, symbols)
+    returns = build_chapter3_return_matrix(close, suspended=suspended, policy=policy)
+    universe = build_chapter3_universe_mask(calendar, symbols, stock_basic=stock_basic, financial_daily=financial_daily, policy=policy)
+    tradable = build_chapter3_tradable_mask(
+        price_frame,
+        trade_status=trade_status,
+        prices_limit=prices_limit,
+        calendar=calendar,
+        symbols=symbols,
+        policy=policy,
+    )
+    limitations: list[str] = []
+    if close_column not in {"back_adjusted_close", "hfq_close"}:
+        limitations.append(f"价格列使用 {close_column}，不是第三章首选的后复权口径。")
+    if stock_basic is None:
+        limitations.append("缺 stock_basic，黑名单只能依赖财务矩阵中的负净资产字段。")
+    if trade_status is None and "is_suspended" not in price_frame.columns:
+        limitations.append("缺 trade_status/is_suspended，停牌日收益置缺和调仓剔除无法完全验证。")
+    if prices_limit is None and not _has_any_column(price_frame, ("limit_up", "limit_down", "up_limit", "down_limit")):
+        limitations.append("缺 prices_limit/涨跌停字段，一字涨跌停剔除无法完全验证。")
+    return Chapter3PreparedData(
+        close=close,
+        returns=returns,
+        universe_mask=universe,
+        tradable_mask=tradable,
+        rebalance_dates=chapter3_month_end_rebalance_dates(calendar),
+        selected_price_column=close_column,
+        limitations=tuple(limitations),
+        policy=policy,
+    )
+
+
+def build_chapter3_return_matrix(
+    close: pd.DataFrame,
+    *,
+    suspended: pd.DataFrame | None = None,
+    policy: Chapter3ResearchPolicy | None = None,
+) -> pd.DataFrame:
+    policy = policy or Chapter3ResearchPolicy()
+    returns = close.pct_change(fill_method=None)
+    if suspended is not None:
+        suspended = _align_bool_mask(suspended, close.index, close.columns, default=False)
+        returns = returns.mask(suspended)
+    clip_start = pd.Timestamp(policy.compress_returns_after).date()
+    after_clip_start = pd.Series(close.index, index=close.index).map(lambda value: value >= clip_start)
+    returns.loc[after_clip_start, :] = returns.loc[after_clip_start, :].clip(
+        lower=policy.return_clip[0],
+        upper=policy.return_clip[1],
+    )
+    return returns
+
+
+def build_chapter3_universe_mask(
+    calendar: Sequence[Any],
+    symbols: Sequence[str],
+    *,
+    stock_basic: pd.DataFrame | None = None,
+    financial_daily: Mapping[str, pd.DataFrame] | None = None,
+    policy: Chapter3ResearchPolicy | None = None,
+) -> pd.DataFrame:
+    policy = policy or Chapter3ResearchPolicy()
+    index = [pd.Timestamp(item).date() for item in calendar]
+    columns = [str(item) for item in symbols]
+    mask = pd.DataFrame(True, index=index, columns=columns)
+    if policy.exclude_star_market:
+        star_symbols = {symbol for symbol in columns if symbol.startswith("688")}
+        if stock_basic is not None and not stock_basic.empty:
+            basic = stock_basic.copy()
+            if "symbol" in basic.columns:
+                basic["symbol"] = basic["symbol"].astype("string").str.strip()
+                for column in ("board", "market", "exchange", "list_board"):
+                    if column in basic.columns:
+                        star = basic[column].astype("string").str.contains("科创|STAR|SSE_STAR", case=False, regex=True, na=False)
+                        star_symbols |= set(basic.loc[star, "symbol"].astype(str))
+        for symbol in star_symbols & set(columns):
+            mask.loc[:, symbol] = False
+    if stock_basic is not None and not stock_basic.empty and "symbol" in stock_basic.columns:
+        basic = stock_basic.copy()
+        basic["symbol"] = basic["symbol"].astype("string").str.strip()
+        for _, row in basic.iterrows():
+            symbol = str(row["symbol"])
+            if symbol not in mask.columns:
+                continue
+            if _truthy(row.get("is_st")) or _truthy(row.get("st_status")):
+                mask.loc[:, symbol] = False
+            list_status = str(row.get("list_status", "")).upper()
+            if list_status and list_status not in {"L", "LISTED", "上市", "NAN", "<NA>"}:
+                mask.loc[:, symbol] = False
+            list_date = _optional_date(row.get("list_date"))
+            if list_date is not None and policy.new_stock_min_days > 0:
+                eligible_after = pd.Timestamp(list_date) + pd.Timedelta(days=policy.new_stock_min_days)
+                mask.loc[[item < eligible_after.date() for item in mask.index], symbol] = False
+            delist_date = _optional_date(row.get("delist_date"))
+            if delist_date is not None:
+                mask.loc[[item >= delist_date for item in mask.index], symbol] = False
+            net_asset = _first_row_value(row, ("book_equity", "net_assets", "total_equity", "total_hldr_eqy_exc_min_int"))
+            if net_asset is not None and np.isfinite(net_asset) and net_asset <= 0:
+                mask.loc[:, symbol] = False
+    equity = _first_existing_matrix(financial_daily or {}, ("book_equity", "net_assets", "total_equity", "total_hldr_eqy_exc_min_int"))
+    if equity is not None:
+        equity = equity.reindex(index=mask.index, columns=mask.columns)
+        mask = mask & (equity.isna() | (equity > 0))
+    return mask
+
+
+def build_chapter3_tradable_mask(
+    price_frame: pd.DataFrame,
+    *,
+    trade_status: pd.DataFrame | None,
+    prices_limit: pd.DataFrame | None,
+    calendar: Sequence[Any],
+    symbols: Sequence[str],
+    policy: Chapter3ResearchPolicy | None = None,
+) -> pd.DataFrame:
+    policy = policy or Chapter3ResearchPolicy()
+    index = [pd.Timestamp(item).date() for item in calendar]
+    columns = [str(item) for item in symbols]
+    tradable = pd.DataFrame(True, index=index, columns=columns)
+    suspended = _suspended_matrix(price_frame, trade_status, index, columns)
+    if suspended is not None:
+        tradable = tradable & ~suspended
+    limit_up = _limit_mask(price_frame, prices_limit, index, columns, kind="up", policy=policy)
+    limit_down = _limit_mask(price_frame, prices_limit, index, columns, kind="down", policy=policy)
+    return tradable & ~limit_up & ~limit_down
+
+
+def chapter3_month_end_rebalance_dates(calendar: Sequence[Any]) -> tuple[date, ...]:
+    index = pd.Index([pd.Timestamp(item).date() for item in calendar])
+    if index.empty:
+        return ()
+    months = pd.Series(index, index=index).groupby([item.strftime("%Y-%m") for item in index]).max()
+    return tuple(pd.Timestamp(item).date() for item in months.tolist())
+
+
+def canonicalize_chapter3_financials(financials: pd.DataFrame) -> pd.DataFrame:
+    """按第三章 PIT 原则为同日多条财务记录建立稳定优先级。
+
+    调用方仍需提供已经离线落地的财报记录；本函数不抓取、不修正源数据，只
+    避免同一 symbol/report_period/available_at 存在多条记录时随机取最后一条。
+    """
+
+    if financials.empty:
+        return financials.copy()
+    work = financials.copy()
+    if "symbol" in work.columns:
+        work["symbol"] = work["symbol"].astype("string").str.strip()
+    available_column = _first_existing(work, ("available_at", "ann_date", "publish_date", "trade_date"))
+    if available_column is not None:
+        work["available_at"] = pd.to_datetime(work[available_column]).dt.date
+    report_column = _first_existing(work, ("report_period", "end_date", "f_ann_date"))
+    if report_column is not None:
+        work["report_period"] = pd.to_datetime(work[report_column], errors="coerce").dt.strftime("%Y%m%d")
+    work["chapter3_record_priority"] = work.apply(_financial_record_priority, axis=1)
+    sort_columns = [column for column in ("symbol", "report_period", "available_at", "chapter3_record_priority") if column in work.columns]
+    if sort_columns:
+        work = work.sort_values(sort_columns)
+    dedupe_columns = [column for column in ("symbol", "report_period", "available_at") if column in work.columns]
+    if len(dedupe_columns) >= 2:
+        work = work.drop_duplicates(subset=dedupe_columns, keep="last")
+    return work
+
+
+def build_forward_return_matrix(
+    close: pd.DataFrame,
+    *,
+    horizon: int,
+    daily_returns: pd.DataFrame | None = None,
+) -> pd.DataFrame:
     if horizon <= 0:
         raise ValueError("horizon 必须为正数")
+    if daily_returns is not None:
+        growth = (1.0 + daily_returns).shift(-1)
+        return growth.rolling(horizon, min_periods=horizon).apply(np.prod, raw=True).shift(-(horizon - 1)) - 1.0
     return close.shift(-horizon) / close - 1.0
 
 
@@ -392,6 +655,8 @@ def single_sort_returns(
     factor: pd.DataFrame,
     forward_returns: pd.DataFrame,
     *,
+    weights: pd.DataFrame | None = None,
+    weight_method: str = "equal",
     quantiles: int = 10,
     min_cross_section: int = 10,
 ) -> pd.DataFrame:
@@ -399,7 +664,10 @@ def single_sort_returns(
         raise ValueError("quantiles 必须至少为 2")
     rows: list[dict[str, Any]] = []
     for trade_date in factor.index.intersection(forward_returns.index):
-        valid = pd.DataFrame({"factor": factor.loc[trade_date], "forward_return": forward_returns.loc[trade_date]}).dropna()
+        valid = pd.DataFrame({"factor": factor.loc[trade_date], "forward_return": forward_returns.loc[trade_date]})
+        if weights is not None:
+            valid["weight"] = weights.reindex(index=factor.index, columns=factor.columns).loc[trade_date]
+        valid = valid.dropna(subset=["factor", "forward_return"])
         if len(valid) < max(quantiles, min_cross_section):
             continue
         valid["group"] = _quantile_groups(valid["factor"], quantiles)
@@ -408,8 +676,9 @@ def single_sort_returns(
                 {
                     "trade_date": _iso_date(trade_date),
                     "group": int(group_id),
-                    "mean_forward_return": float(group["forward_return"].mean()),
+                    "mean_forward_return": _weighted_average(group, weight_method=weight_method),
                     "symbol_count": int(len(group)),
+                    "weight_method": weight_method,
                 }
             )
     return pd.DataFrame(rows)
@@ -420,6 +689,8 @@ def independent_double_sort_returns(
     size: pd.DataFrame,
     forward_returns: pd.DataFrame,
     *,
+    weights: pd.DataFrame | None = None,
+    weight_method: str = "equal",
     groups: int = 5,
     min_cross_section: int = 25,
 ) -> pd.DataFrame:
@@ -434,7 +705,10 @@ def independent_double_sort_returns(
                 "size": size.loc[trade_date],
                 "forward_return": forward_returns.loc[trade_date],
             }
-        ).dropna()
+        )
+        if weights is not None:
+            valid["weight"] = weights.reindex(index=factor.index, columns=factor.columns).loc[trade_date]
+        valid = valid.dropna(subset=["factor", "size", "forward_return"])
         if len(valid) < min_cross_section:
             continue
         valid["size_group"] = _quantile_groups(valid["size"], groups)
@@ -446,14 +720,67 @@ def independent_double_sort_returns(
                     "trade_date": _iso_date(trade_date),
                     "size_group": int(size_group),
                     "factor_group": int(factor_group),
-                    "mean_forward_return": float(group["forward_return"].mean()),
+                    "mean_forward_return": _weighted_average(group, weight_method=weight_method),
                     "symbol_count": int(len(group)),
+                    "weight_method": weight_method,
                 }
             )
     return pd.DataFrame(rows)
 
 
-def long_short_summary(group_returns: pd.DataFrame, *, high_minus_low: bool = True) -> dict[str, Any]:
+def conditional_double_sort_returns(
+    conditioning_factor: pd.DataFrame,
+    factor: pd.DataFrame,
+    forward_returns: pd.DataFrame,
+    *,
+    weights: pd.DataFrame | None = None,
+    weight_method: str = "equal",
+    groups: int = 5,
+    min_cross_section: int = 25,
+) -> pd.DataFrame:
+    if groups < 2:
+        raise ValueError("groups 必须至少为 2")
+    rows: list[dict[str, Any]] = []
+    common_dates = conditioning_factor.index.intersection(factor.index).intersection(forward_returns.index)
+    for trade_date in common_dates:
+        valid = pd.DataFrame(
+            {
+                "conditioning_factor": conditioning_factor.loc[trade_date],
+                "factor": factor.loc[trade_date],
+                "forward_return": forward_returns.loc[trade_date],
+            }
+        )
+        if weights is not None:
+            valid["weight"] = weights.reindex(index=factor.index, columns=factor.columns).loc[trade_date]
+        valid = valid.dropna(subset=["conditioning_factor", "factor", "forward_return"])
+        if len(valid) < min_cross_section:
+            continue
+        valid["conditioning_group"] = _quantile_groups(valid["conditioning_factor"], groups)
+        valid = valid.dropna(subset=["conditioning_group"])
+        for conditioning_group, outer in valid.groupby("conditioning_group", sort=True):
+            outer = outer.copy()
+            outer["factor_group"] = _quantile_groups(outer["factor"], groups)
+            for factor_group, group in outer.dropna(subset=["factor_group"]).groupby("factor_group", sort=True):
+                rows.append(
+                    {
+                        "trade_date": _iso_date(trade_date),
+                        "conditioning_group": int(conditioning_group),
+                        "factor_group": int(factor_group),
+                        "mean_forward_return": _weighted_average(group, weight_method=weight_method),
+                        "symbol_count": int(len(group)),
+                        "weight_method": weight_method,
+                    }
+                )
+    return pd.DataFrame(rows)
+
+
+def long_short_summary(
+    group_returns: pd.DataFrame,
+    *,
+    high_minus_low: bool = True,
+    t_stat_method: str = "newey_west",
+    newey_west_lags: int | None = None,
+) -> dict[str, Any]:
     if group_returns.empty:
         return {"status": "missing", "mean": None, "t_stat": None, "observation_count": 0}
     pivot = group_returns.pivot_table(index="trade_date", columns="group", values="mean_forward_return", aggfunc="mean")
@@ -466,9 +793,119 @@ def long_short_summary(group_returns: pd.DataFrame, *, high_minus_low: bool = Tr
     return {
         "status": "pass" if not spread.empty else "missing",
         "mean": _safe_float(spread.mean()) if not spread.empty else None,
-        "t_stat": _t_stat(spread),
+        "t_stat": newey_west_t_stat(spread, lags=newey_west_lags) if t_stat_method == "newey_west" else _t_stat(spread),
+        "t_stat_method": t_stat_method,
         "observation_count": int(len(spread)),
     }
+
+
+def long_short_summary_from_double_sort(
+    group_returns: pd.DataFrame,
+    *,
+    outer_group_column: str = "size_group",
+    factor_group_column: str = "factor_group",
+    high_minus_low: bool = True,
+    t_stat_method: str = "newey_west",
+    newey_west_lags: int | None = None,
+) -> dict[str, Any]:
+    required = {"trade_date", outer_group_column, factor_group_column, "mean_forward_return"}
+    if group_returns.empty or not required <= set(group_returns.columns):
+        return {"status": "missing", "mean": None, "t_stat": None, "observation_count": 0}
+    rows: list[dict[str, Any]] = []
+    for trade_date, date_group in group_returns.groupby("trade_date", sort=True):
+        pivot = date_group.pivot_table(index=outer_group_column, columns=factor_group_column, values="mean_forward_return")
+        if pivot.empty:
+            continue
+        low = int(min(pivot.columns))
+        high = int(max(pivot.columns))
+        spread_by_outer = pivot[high] - pivot[low] if high_minus_low else pivot[low] - pivot[high]
+        rows.append({"trade_date": trade_date, "spread": float(spread_by_outer.dropna().mean())})
+    spread = pd.DataFrame(rows).set_index("trade_date")["spread"] if rows else pd.Series(dtype="float64")
+    return {
+        "status": "pass" if not spread.empty else "missing",
+        "mean": _safe_float(spread.mean()) if not spread.empty else None,
+        "t_stat": newey_west_t_stat(spread, lags=newey_west_lags) if t_stat_method == "newey_west" else _t_stat(spread),
+        "t_stat_method": t_stat_method,
+        "observation_count": int(len(spread)),
+    }
+
+
+def newey_west_t_stat(values: pd.Series | Sequence[float], *, lags: int | None = None) -> float | None:
+    clean = pd.to_numeric(pd.Series(values), errors="coerce").dropna()
+    n_obs = len(clean)
+    if n_obs < 2:
+        return None
+    if lags is None:
+        lags = int(np.floor(4 * (n_obs / 100.0) ** (2.0 / 9.0)))
+    lags = max(0, min(int(lags), n_obs - 1))
+    demeaned = clean.to_numpy(dtype="float64") - float(clean.mean())
+    gamma0 = float(np.dot(demeaned, demeaned) / n_obs)
+    variance = gamma0
+    for lag in range(1, lags + 1):
+        covariance = float(np.dot(demeaned[lag:], demeaned[:-lag]) / n_obs)
+        variance += 2.0 * (1.0 - lag / (lags + 1.0)) * covariance
+    if not np.isfinite(variance) or variance <= 0:
+        return None
+    standard_error = np.sqrt(variance / n_obs)
+    if standard_error == 0 or not np.isfinite(standard_error):
+        return None
+    return float(clean.mean() / standard_error)
+
+
+def fama_macbeth_regression(
+    forward_returns: pd.DataFrame,
+    factors: Mapping[str, pd.DataFrame],
+    *,
+    add_intercept: bool = True,
+    min_cross_section: int = 20,
+    newey_west_lags: int | None = None,
+) -> pd.DataFrame:
+    if not factors:
+        raise ValueError("factors 不能为空")
+    factor_ids = tuple(factors.keys())
+    rows: list[dict[str, Any]] = []
+    common_dates = forward_returns.index
+    for matrix in factors.values():
+        common_dates = common_dates.intersection(matrix.index)
+    for trade_date in common_dates:
+        columns: dict[str, Any] = {"forward_return": forward_returns.loc[trade_date]}
+        columns.update({factor_id: factors[factor_id].loc[trade_date] for factor_id in factor_ids})
+        cross_section = pd.DataFrame(columns).dropna()
+        parameter_count = len(factor_ids) + (1 if add_intercept else 0)
+        if len(cross_section) < max(min_cross_section, parameter_count + 1):
+            continue
+        y = cross_section["forward_return"].to_numpy(dtype="float64")
+        x_columns = [cross_section[factor_id].to_numpy(dtype="float64") for factor_id in factor_ids]
+        if add_intercept:
+            x_columns.insert(0, np.ones(len(cross_section), dtype="float64"))
+        x = np.column_stack(x_columns)
+        beta, *_ = np.linalg.lstsq(x, y, rcond=None)
+        names = ("intercept",) + factor_ids if add_intercept else factor_ids
+        for name, value in zip(names, beta, strict=True):
+            rows.append(
+                {
+                    "trade_date": _iso_date(trade_date),
+                    "coefficient": name,
+                    "estimate": float(value),
+                    "symbol_count": int(len(cross_section)),
+                }
+            )
+    if not rows:
+        return pd.DataFrame(columns=["coefficient", "mean_estimate", "t_stat", "observation_count", "newey_west_lags"])
+    time_series = pd.DataFrame(rows)
+    summary_rows: list[dict[str, Any]] = []
+    for coefficient, group in time_series.groupby("coefficient", sort=False):
+        estimates = group["estimate"]
+        summary_rows.append(
+            {
+                "coefficient": coefficient,
+                "mean_estimate": float(estimates.mean()),
+                "t_stat": newey_west_t_stat(estimates, lags=newey_west_lags),
+                "observation_count": int(estimates.notna().sum()),
+                "newey_west_lags": newey_west_lags,
+            }
+        )
+    return pd.DataFrame(summary_rows)
 
 
 def _audit_item(
@@ -596,6 +1033,100 @@ def _turnover_matrix(
     return _optional_matrix(market_cap, ("turnover_rate", "turnover", "turnover_rate_f"), calendar, symbols)
 
 
+def _suspended_matrix(
+    price_frame: pd.DataFrame,
+    trade_status: pd.DataFrame | None,
+    calendar: Sequence[Any],
+    symbols: Sequence[str],
+) -> pd.DataFrame | None:
+    source = trade_status
+    if source is None and _has_any_column(price_frame, ("is_suspended", "suspend_type", "trade_status")):
+        source = price_frame
+    if source is None or source.empty:
+        return None
+    work = _normalise_long_frame(source, required=("trade_date", "symbol"))
+    if "is_suspended" in work.columns:
+        values = work["is_suspended"].map(_truthy)
+    elif "trade_status" in work.columns:
+        status = work["trade_status"].astype("string").str.lower()
+        values = status.str.contains("suspend|停牌|paused|halt", regex=True, na=False)
+    elif "suspend_type" in work.columns:
+        values = work["suspend_type"].notna() & (work["suspend_type"].astype("string").str.strip() != "")
+    else:
+        return None
+    work = work.assign(_suspended=values.astype(bool))
+    return work.pivot_table(index="trade_date", columns="symbol", values="_suspended", aggfunc="last").reindex(
+        index=list(calendar),
+        columns=list(symbols),
+        fill_value=False,
+    ).astype(bool)
+
+
+def _limit_mask(
+    price_frame: pd.DataFrame,
+    prices_limit: pd.DataFrame | None,
+    calendar: Sequence[Any],
+    symbols: Sequence[str],
+    *,
+    kind: str,
+    policy: Chapter3ResearchPolicy,
+) -> pd.DataFrame:
+    frame = price_frame.copy()
+    limit_columns = ("limit_up", "up_limit", "is_limit_up") if kind == "up" else ("limit_down", "down_limit", "is_limit_down")
+    flag_column = _first_existing(frame, limit_columns)
+    flag = None
+    if flag_column is not None:
+        flag = _pivot_bool(frame, flag_column, calendar, symbols)
+    if prices_limit is not None and not prices_limit.empty:
+        limit_frame = _normalise_long_frame(prices_limit, required=("trade_date", "symbol"))
+        limit_flag_column = _first_existing(limit_frame, limit_columns)
+        if limit_flag_column is not None:
+            limit_flag = _pivot_bool(limit_frame, limit_flag_column, calendar, symbols)
+            flag = limit_flag if flag is None else (flag | limit_flag)
+    one_price = _one_price_mask(frame, calendar, symbols, policy=policy)
+    if flag is not None:
+        return flag & one_price
+    price_column = "up_limit" if kind == "up" else "down_limit"
+    if prices_limit is not None and price_column in prices_limit.columns and "close" in frame.columns:
+        limit_frame = _normalise_long_frame(prices_limit, required=("trade_date", "symbol"))
+        limit_price = _pivot_numeric(limit_frame, price_column, trade_calendar=list(calendar), symbols=symbols)
+        close = _pivot_numeric(frame, "close", trade_calendar=list(calendar), symbols=symbols)
+        return _isclose_frame(close, limit_price, tolerance=policy.one_price_tolerance) & one_price
+    return pd.DataFrame(False, index=list(calendar), columns=list(symbols))
+
+
+def _one_price_mask(
+    price_frame: pd.DataFrame,
+    calendar: Sequence[Any],
+    symbols: Sequence[str],
+    *,
+    policy: Chapter3ResearchPolicy,
+) -> pd.DataFrame:
+    if not {"open", "high", "low", "close"} <= set(price_frame.columns):
+        return pd.DataFrame(True, index=list(calendar), columns=list(symbols))
+    open_ = _pivot_numeric(price_frame, "open", trade_calendar=list(calendar), symbols=symbols)
+    high = _pivot_numeric(price_frame, "high", trade_calendar=list(calendar), symbols=symbols)
+    low = _pivot_numeric(price_frame, "low", trade_calendar=list(calendar), symbols=symbols)
+    close = _pivot_numeric(price_frame, "close", trade_calendar=list(calendar), symbols=symbols)
+    tol = policy.one_price_tolerance
+    return _isclose_frame(open_, high, tolerance=tol) & _isclose_frame(high, low, tolerance=tol) & _isclose_frame(low, close, tolerance=tol)
+
+
+def _pivot_bool(
+    frame: pd.DataFrame,
+    value_column: str,
+    calendar: Sequence[Any],
+    symbols: Sequence[str],
+) -> pd.DataFrame:
+    work = frame.copy()
+    work[value_column] = work[value_column].map(_truthy)
+    return work.pivot_table(index="trade_date", columns="symbol", values=value_column, aggfunc="last").reindex(
+        index=list(calendar),
+        columns=list(symbols),
+        fill_value=False,
+    ).astype(bool)
+
+
 def _build_financial_daily(
     financials: pd.DataFrame | None,
     calendar: Sequence[Any],
@@ -603,10 +1134,10 @@ def _build_financial_daily(
 ) -> dict[str, pd.DataFrame]:
     if financials is None or financials.empty:
         return {}
-    work = financials.copy()
+    work = canonicalize_chapter3_financials(financials)
     if "symbol" not in work.columns:
         return {}
-    available_column = _first_existing(work, ("available_at", "ann_date", "publish_date", "trade_date"))
+    available_column = _first_existing(work, ("available_at", "ann_date", "publish_date", "trade_date", "available_date"))
     if available_column is None:
         return {}
     work["available_date"] = pd.to_datetime(work[available_column]).dt.date
@@ -616,7 +1147,21 @@ def _build_financial_daily(
     value_columns = [
         column
         for column in work.columns
-        if column not in {"trade_date", "available_at", "ann_date", "publish_date", "available_date", "symbol"}
+        if column
+        not in {
+            "trade_date",
+            "available_at",
+            "ann_date",
+            "publish_date",
+            "available_date",
+            "symbol",
+            "report_period",
+            "end_date",
+            "statement_type",
+            "report_type",
+            "update_flag",
+            "chapter3_record_priority",
+        }
     ]
     for column in value_columns:
         work[column] = pd.to_numeric(work[column], errors="coerce")
@@ -788,3 +1333,91 @@ def _iso_date(value: Any) -> str:
     if isinstance(value, date):
         return value.isoformat()
     return str(value)
+
+
+def _has_any_column(frame: pd.DataFrame, columns: Sequence[str]) -> bool:
+    return any(column in frame.columns for column in columns)
+
+
+def _align_bool_mask(
+    mask: pd.DataFrame,
+    calendar: Sequence[Any],
+    symbols: Sequence[Any],
+    *,
+    default: bool,
+) -> pd.DataFrame:
+    aligned = mask.copy()
+    aligned.index = [pd.Timestamp(item).date() for item in aligned.index]
+    aligned.columns = [str(item) for item in aligned.columns]
+    return aligned.reindex(
+        index=[pd.Timestamp(item).date() for item in calendar],
+        columns=[str(item) for item in symbols],
+        fill_value=default,
+    ).astype(bool)
+
+
+def _truthy(value: Any) -> bool:
+    if value is None or pd.isna(value):
+        return False
+    if isinstance(value, (bool, np.bool_)):
+        return bool(value)
+    if isinstance(value, (int, float, np.integer, np.floating)):
+        return bool(value)
+    text = str(value).strip().lower()
+    return text in {"1", "true", "t", "yes", "y", "st", "*st", "suspend", "停牌", "risk", "风险警示"}
+
+
+def _optional_date(value: Any) -> date | None:
+    if value is None or pd.isna(value):
+        return None
+    try:
+        return pd.Timestamp(value).date()
+    except (TypeError, ValueError):
+        return None
+
+
+def _first_row_value(row: pd.Series, columns: Sequence[str]) -> float | None:
+    for column in columns:
+        if column in row.index and pd.notna(row[column]):
+            try:
+                return float(row[column])
+            except (TypeError, ValueError):
+                return None
+    return None
+
+
+def _weighted_average(group: pd.DataFrame, *, weight_method: str) -> float:
+    if weight_method == "equal" or "weight" not in group.columns:
+        return float(group["forward_return"].mean())
+    if weight_method not in {"value", "market_cap"}:
+        raise ValueError("weight_method 只能是 equal/value/market_cap")
+    weights = pd.to_numeric(group["weight"], errors="coerce").where(lambda item: item > 0)
+    values = pd.to_numeric(group["forward_return"], errors="coerce")
+    valid = values.notna() & weights.notna()
+    if not valid.any() or weights.loc[valid].sum() == 0:
+        return float(values.mean())
+    return float((values.loc[valid] * weights.loc[valid]).sum() / weights.loc[valid].sum())
+
+
+def _financial_record_priority(row: pd.Series) -> int:
+    fields = " ".join(
+        str(row.get(column, "")).lower()
+        for column in ("statement_type", "report_type", "update_flag", "record_type", "data_type")
+    )
+    if "latest_pit" in fields:
+        return 50
+    if "type2" in fields or "baseline" in fields or "基准" in fields:
+        return 40
+    if "type1" in fields or "initial" in fields or "初始" in fields:
+        return 30
+    if "type4" in fields:
+        return 20
+    if "type3" in fields or "original" in fields or "原始" in fields:
+        return 10
+    return 0
+
+
+def _isclose_frame(left: pd.DataFrame, right: pd.DataFrame, *, tolerance: float) -> pd.DataFrame:
+    right = right.reindex(index=left.index, columns=left.columns)
+    values = np.isclose(left.to_numpy(dtype="float64"), right.to_numpy(dtype="float64"), atol=tolerance, equal_nan=False)
+    return pd.DataFrame(values, index=left.index, columns=left.columns)

@@ -6,24 +6,44 @@
 
 本轮只做本地离线研究能力建设，不授权真实 provider fetch、lake write、catalog publish、QMT、simulation、live、账户、订单或凭据读取。
 
+## 第三章关键口径
+
+本轮重新阅读书籍 Markdown 的第3章，定位范围为 `3.1 数据和流程` 到 `3.8 换手率因子`。工程化落地遵循以下口径：
+
+| 领域 | 第三章口径 |
+|---|---|
+| 价格与收益 | 收益率和历史表现使用后复权价格；后复权不可得时必须在运行限制中声明替代列。 |
+| 复牌异常收益 | 1996-12-16 后日收益超过 +10% 或低于 -10% 时压缩到 +/-10%，以降低长期停牌复牌异常收益污染。 |
+| 停牌处理 | 动量价格基准可使用填充后的价格逻辑；波动率、beta、收益序列不能把停牌日当成 0 收益。 |
+| 最少交易日 | 滚动窗口指标有效样本数至少达到窗口的 2/3。 |
+| 财务 PIT | 财报必须区分报告期、基准报告期、调整和更正；历史回溯只能使用当前时点可得的最新信息。 |
+| TTM | 利润/现金流 TTM 用当前报告期 + 上年年报 - 上年同比报告期；缺少同比/年报时可年化。资产负债表可用最近值、四期均值或同比均值。 |
+| 股票池 | 保留金融行业；剔除待退市、ST/风险警示、净资产为负、上市不足一年次新股。 |
+| 异常值 | 截面使用左右各 1% 缩尾。 |
+| 排序检验 | 单变量十分组；除规模外，目标变量与市值做 5x5 独立双重排序；投资因子另用 ROA 与总资产增长率做条件双重排序。 |
+| 调仓与可交易 | 每月末换仓；调仓日剔除停牌、一字涨停、一字跌停；交易成本设为 0。 |
+| 研究范围 | 2000-01-01 至 2019-12-31，沪深主板、中小板、创业板，排除科创板。 |
+| 权重与显著性 | 组合收益同时报告等权和总市值加权；收益率 t 值使用 Newey-West 调整。 |
+| 因子 | 市场、规模、价值 BM、动量 12-1、盈利 ROE(TTM)、投资总资产增长率、异常换手率。 |
+
 ## 当前结论
 
-项目已经具备较强的 CR030 多因子研究合同和门禁能力，包括 `FactorSpec`、`FactorRunSpec`、`FactorPanelContract`、`LabelWindowSpec`、`FactorEvaluationReport` 和组合层 blocked claims。但按第三章严格实证口径衡量，项目此前没有完整处理好第三章全部数据问题。
+项目已经具备较强的 CR030 多因子研究合同和门禁能力，包括 `FactorSpec`、`FactorRunSpec`、`FactorPanelContract`、`LabelWindowSpec`、`FactorEvaluationReport` 和组合层 blocked claims。基线时按第三章严格实证口径衡量，项目没有完整处理好第三章全部数据问题；本轮已把第三章 P0 缺口整改为本地离线工程能力，但仍未读取真实 lake、未触发 provider、未声明真实实证结果。
 
 覆盖状态摘要：
 
 | 领域 | 状态 | 结论 |
 |---|---|---|
-| 复权与收益 | partial | 合同层支持复权政策和复权泄漏门禁；第三章复刻尚未统一到书中后复权口径，既有换手率实验仍声明 qfq/ex-post 限制。 |
-| 长期停牌复牌异常收益压缩 | missing | 未发现统一的复牌异常收益按 +/-10% 压缩规则和测试。 |
-| 停牌处理 | partial | 门禁层能识别停牌/交易状态缺失；因子计算层此前未形成按动量、波动、beta 等用途区分的统一策略。 |
-| 滚动窗口有效样本 | partial | 换手率实验短窗口接近 2/3 规则，但长窗口门槛不足；此前没有统一规则。新增模块默认按窗口 2/3。 |
-| 财务报告期、基准报告期、调整/更正 | missing/partial | 只有通用 `available_at <= decision_time` 门禁；缺少财报 canonical schema、revision/as-of 查询、基准报告期和 TTM 实现。 |
-| 黑名单与交易约束 | partial | lifecycle/tradability 门禁较完整；因子组合计算层此前未实际统一剔除 ST、退市、负净资产、次新、停牌、一字板。 |
-| 科创板边界 | missing | 未发现第三章复刻专用板块边界配置。 |
+| 复权与收益 | covered/offline | `Chapter3ResearchPolicy` 默认优先 `back_adjusted_close/hfq_close`；`prepare_chapter3_research_data` 会记录非后复权替代限制。 |
+| 长期停牌复牌异常收益压缩 | covered/offline | `build_chapter3_return_matrix` 对 1996-12-16 后日收益做 +/-10% 压缩，并对停牌日收益置缺。 |
+| 停牌处理 | covered/offline | `trade_status/is_suspended` 进入收益和可交易掩码；beta/市场收益不把停牌当 0 收益。 |
+| 滚动窗口有效样本 | covered/offline | 滚动 beta、动量、异常换手率继续使用 `min_period_ratio`，默认窗口 2/3。 |
+| 财务报告期、基准报告期、调整/更正 | partial/offline | 新增 `canonicalize_chapter3_financials`，按 PIT 可用日和记录优先级稳定去重；真实财报 revision/as-of 数据仍需调用方离线提供。 |
+| 黑名单与交易约束 | covered/offline | 新增 `build_chapter3_universe_mask` 和 `build_chapter3_tradable_mask`，覆盖 ST、退市、负净资产、次新、科创板、停牌、一字涨停/跌停。 |
+| 科创板边界 | covered/offline | `Chapter3ResearchPolicy.exclude_star_market=True`，默认排除 `688*` 和 board/market 标记为科创板的股票。 |
 | 1%/99% 缩尾与 zscore | covered | CR030 合同和实验 17-21 已支持 raw/directional/winsorized/zscore 层。 |
-| 十分组和 5x5 双重排序 | partial | 异常换手率已有 5x5 复刻 POC；新增模块提供通用十分组和独立双重排序函数。 |
-| Newey-West / Fama-MacBeth | partial/missing | 异常换手率 POC 有 Newey-West；通用 Fama-MacBeth 仍缺。 |
+| 十分组和 5x5 双重排序 | covered/offline | 新增单变量排序、独立双重排序、条件双重排序，均支持等权和总市值加权。 |
+| Newey-West / Fama-MacBeth | covered/offline | 新增 `newey_west_t_stat`、`long_short_summary(..., t_stat_method="newey_west")` 和 `fama_macbeth_regression`。 |
 
 ## 已新增实现
 
@@ -45,7 +65,13 @@
 | 因子面板输出 | `factor_matrices_to_panel(result)` | 输出包含 raw/directional/winsorized/zscore 的长表面板，便于接 CR030 合同。 |
 | 单变量排序 | `single_sort_returns(...)` | 支持十分组或自定义分组。 |
 | 独立双重排序 | `independent_double_sort_returns(...)` | 支持市值 x 目标因子的 5x5 或自定义组数双重排序。 |
+| 条件双重排序 | `conditional_double_sort_returns(...)` | 支持投资因子中 ROA 先分组、总资产增长率组内再分组的条件双重排序。 |
 | 多空摘要 | `long_short_summary(...)` | 输出 spread 均值、t 值和观察数量。 |
+| 双重排序多空摘要 | `long_short_summary_from_double_sort(...)` | 按外层组内 High-Low/Low-High 后再跨外层平均。 |
+| 第三章研究预处理 | `prepare_chapter3_research_data(...)` | 输出后复权价格、压缩收益、股票池掩码、可交易掩码、月末调仓日。 |
+| 财务 PIT 规范化 | `canonicalize_chapter3_financials(...)` | 对同一 symbol/report_period/available_at 多记录按第三章 PIT 优先级去重。 |
+| Newey-West | `newey_west_t_stat(...)` | 默认使用 Newey-West 1994 常见自适应滞后阶数。 |
+| Fama-MacBeth | `fama_macbeth_regression(...)` | 对每日截面回归系数取时序均值，并报告 Newey-West t 值。 |
 
 ## 第三章因子注册清单
 
@@ -73,15 +99,14 @@ PYTHONPYCACHEPREFIX=/tmp/local-backtest-pycompile uv run --python 3.11 python -m
 
 | 验证 | 结果 |
 |---|---|
-| 新增第三章复刻测试 | 5 passed |
+| 新增第三章复刻测试 | 10 passed |
 | CR030 合同/面板/评价/组合测试 | 23 passed |
 | py_compile | passed |
 
-## 剩余 P0 缺口
+## 剩余需授权或真实数据接入事项
 
-1. 财务 PIT canonical schema 仍未补齐，价值、盈利、投资因子目前只能消费调用方已处理好的离线字段。
-2. 复权口径仍需决定是否新增严格后复权研究字段；当前模块接受 `adjusted_close/hfq_close/qfq_close/close`，不会自行证明复权 PIT 无泄漏。
-3. 长期停牌复牌异常收益 +/-10% 压缩规则仍未实现。
-4. ST、退市、负净资产、次新、停牌、一字板剔除仍需作为实际组合筛选进入 runner。
-5. Fama-MacBeth 和通用 Newey-West 统计模块仍需补齐。
-6. 科创板边界、金融股默认保留策略、等权/市值加权并列报告仍需在第三章正式 runner 中冻结。
+1. 本轮未读取 `.env`、未触发 provider fetch、lake write、catalog publish、QMT、simulation、live、账户或订单能力，因此没有证明真实数据 lake 中已存在完整后复权、trade_status、prices_limit、stock_basic 和财报 revision/as-of 字段。
+2. `canonicalize_chapter3_financials` 已补离线 PIT 记录选择规则，但真实 Wind/Tushare 四类财报记录的全历史回填、质量审计和 catalog 发布需要单独授权。
+3. 后复权优先级已冻结为 `back_adjusted_close/hfq_close`，但如果当前 lake 只有 `qfq/adjusted_close`，正式实证 runner 必须把该限制写入 run metadata，不能声明严格后复权复刻。
+4. 本轮落地的是离线 runner 组件，不等于已经完成 2000-01-01 至 2019-12-31 A股全市场真实实证重跑。
+5. 无风险利率和 CAPM 超额收益的真实利率曲线未接入；当前市场 beta 工程入口仍可在无风险利率缺失时用普通收益近似，正式报告需补利率数据或声明限制。

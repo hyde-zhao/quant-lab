@@ -6,12 +6,20 @@ import pandas as pd
 import pytest
 
 from engine.chapter3_factor_replication import (
+    Chapter3ResearchPolicy,
     DEFAULT_FACTOR_IDS,
     audit_chapter3_data_issues,
+    build_chapter3_return_matrix,
+    canonicalize_chapter3_financials,
     chapter3_factor_definitions,
+    conditional_double_sort_returns,
+    fama_macbeth_regression,
     factor_matrices_to_panel,
     independent_double_sort_returns,
     long_short_summary,
+    long_short_summary_from_double_sort,
+    newey_west_t_stat,
+    prepare_chapter3_research_data,
     replicate_chapter3_factors,
     single_sort_returns,
 )
@@ -149,6 +157,40 @@ def test_chapter3_factor_definitions_cover_book_factor_set() -> None:
     }
 
 
+def test_canonicalize_chapter3_financials_prefers_latest_pit_record() -> None:
+    financials = pd.DataFrame(
+        [
+            {
+                "symbol": "000001.SZ",
+                "available_at": "2023-04-30",
+                "report_period": "20221231",
+                "record_type": "type3_original_initial",
+                "book_equity": 90.0,
+            },
+            {
+                "symbol": "000001.SZ",
+                "available_at": "2023-04-30",
+                "report_period": "20221231",
+                "record_type": "type1_initial_latest",
+                "book_equity": 100.0,
+            },
+            {
+                "symbol": "000001.SZ",
+                "available_at": "2024-04-30",
+                "report_period": "20221231",
+                "record_type": "type2_baseline_latest",
+                "book_equity": 110.0,
+            },
+        ]
+    )
+
+    canonical = canonicalize_chapter3_financials(financials)
+
+    assert len(canonical) == 2
+    assert canonical.loc[canonical["available_at"] == pd.Timestamp("2023-04-30").date(), "book_equity"].iloc[0] == 100.0
+    assert canonical.loc[canonical["available_at"] == pd.Timestamp("2024-04-30").date(), "book_equity"].iloc[0] == 110.0
+
+
 def test_replicate_chapter3_factors_builds_matrices_panel_and_sorting_results() -> None:
     frames = _fixture_frames()
 
@@ -220,3 +262,156 @@ def test_replicate_chapter3_factors_reports_missing_required_inputs() -> None:
 def test_replicate_chapter3_factors_rejects_bad_price_schema() -> None:
     with pytest.raises(ValueError, match="prices 缺少"):
         replicate_chapter3_factors(pd.DataFrame({"trade_date": ["2024-01-02"], "symbol": ["000001.SZ"]}))
+
+
+def test_prepare_chapter3_research_data_applies_book_data_policies() -> None:
+    dates = pd.bdate_range("2023-01-02", periods=4)
+    symbols = ["000001.SZ", "000002.SZ", "000003.SZ", "000004.SZ", "688001.SH", "000005.SZ"]
+    rows: list[dict[str, object]] = []
+    for symbol in symbols:
+        for day_index, trade_date in enumerate(dates):
+            price = 10.0 + day_index
+            rows.append(
+                {
+                    "trade_date": trade_date.date().isoformat(),
+                    "symbol": symbol,
+                    "hfq_close": 20.0 if symbol == "000001.SZ" and day_index == 1 else price,
+                    "close": 20.0 if symbol == "000001.SZ" and day_index == 1 else price,
+                    "open": price,
+                    "high": price,
+                    "low": price,
+                    "is_suspended": symbol == "000002.SZ" and day_index == 1,
+                    "limit_up": symbol == "000003.SZ" and day_index == 2,
+                    "limit_down": False,
+                }
+            )
+    stock_basic = pd.DataFrame(
+        [
+            {"symbol": "000001.SZ", "list_date": "2020-01-01", "list_status": "L", "book_equity": 10.0},
+            {"symbol": "000002.SZ", "list_date": "2020-01-01", "list_status": "L", "is_st": True, "book_equity": 10.0},
+            {"symbol": "000003.SZ", "list_date": "2020-01-01", "list_status": "L", "book_equity": 10.0},
+            {"symbol": "000004.SZ", "list_date": "2023-01-01", "list_status": "L", "book_equity": 10.0},
+            {"symbol": "688001.SH", "list_date": "2020-01-01", "list_status": "L", "book_equity": 10.0},
+            {"symbol": "000005.SZ", "list_date": "2020-01-01", "list_status": "D", "book_equity": -1.0},
+        ]
+    )
+
+    prepared = prepare_chapter3_research_data(
+        pd.DataFrame(rows),
+        stock_basic=stock_basic,
+        trade_calendar=pd.DataFrame({"trade_date": [item.date().isoformat() for item in dates], "is_open": True}),
+        research_policy=Chapter3ResearchPolicy(new_stock_min_days=365),
+    )
+
+    assert prepared.selected_price_column == "hfq_close"
+    assert prepared.returns.loc[dates[1].date(), "000001.SZ"] == pytest.approx(0.10)
+    assert not prepared.universe_mask["000002.SZ"].any()
+    assert not prepared.universe_mask["688001.SH"].any()
+    assert not prepared.universe_mask["000004.SZ"].any()
+    assert not prepared.universe_mask["000005.SZ"].any()
+    assert not prepared.tradable_mask.loc[dates[1].date(), "000002.SZ"]
+    assert not prepared.tradable_mask.loc[dates[2].date(), "000003.SZ"]
+    assert prepared.rebalance_dates == (dates[-1].date(),)
+
+
+def test_replicate_chapter3_factors_applies_universe_and_tradability_masks() -> None:
+    frames = _fixture_frames(days=280, symbols=6)
+    stock_basic = frames["stock_basic"].copy()
+    stock_basic["list_date"] = "2020-01-01"
+    stock_basic.loc[stock_basic["symbol"] == "000002.SZ", "is_st"] = True
+    prices = frames["prices"].copy()
+    blocked_date = pd.to_datetime(prices["trade_date"]).dt.date.max().isoformat()
+    prices.loc[(prices["symbol"] == "000003.SZ") & (prices["trade_date"] == blocked_date), ["open", "high", "low", "close"]] = 10.0
+    prices.loc[(prices["symbol"] == "000003.SZ") & (prices["trade_date"] == blocked_date), "limit_up"] = True
+
+    result = replicate_chapter3_factors(
+        prices,
+        market_cap=frames["market_cap"],
+        financials=frames["financials"],
+        stock_basic=stock_basic,
+        min_period_ratio=0.5,
+        min_cross_section=3,
+        research_policy=Chapter3ResearchPolicy(new_stock_min_days=0),
+    )
+
+    assert result.raw_matrices["size_total_market_cap"]["000002.SZ"].isna().all()
+    assert pd.isna(result.raw_matrices["size_total_market_cap"].loc[pd.Timestamp(blocked_date).date(), "000003.SZ"])
+
+
+def test_weighted_sort_double_sort_summary_and_newey_west_are_available() -> None:
+    frames = _fixture_frames(days=280, symbols=6)
+    result = replicate_chapter3_factors(
+        frames["prices"],
+        market_cap=frames["market_cap"],
+        financials=frames["financials"],
+        trade_calendar=frames["trade_calendar"],
+        min_period_ratio=0.5,
+        min_cross_section=3,
+    )
+    close = frames["prices"].pivot_table(index="trade_date", columns="symbol", values="adjusted_close", aggfunc="last")
+    close.index = pd.to_datetime(close.index).date
+    forward_returns = close.shift(-20) / close - 1.0
+    weights = frames["market_cap"].pivot_table(index="trade_date", columns="symbol", values="market_cap", aggfunc="last")
+    weights.index = pd.to_datetime(weights.index).date
+
+    value_groups = single_sort_returns(
+        result.zscore_matrices["value_bm"],
+        forward_returns,
+        weights=weights,
+        weight_method="value",
+        quantiles=3,
+        min_cross_section=6,
+    )
+    summary = long_short_summary(value_groups, t_stat_method="newey_west")
+    double_sort = independent_double_sort_returns(
+        result.zscore_matrices["abnormal_turnover_21_252"],
+        result.raw_matrices["size_total_market_cap"],
+        forward_returns,
+        weights=weights,
+        weight_method="market_cap",
+        groups=3,
+        min_cross_section=6,
+    )
+    double_summary = long_short_summary_from_double_sort(double_sort)
+
+    assert set(value_groups["weight_method"]) == {"value"}
+    assert summary["t_stat_method"] == "newey_west"
+    assert summary["observation_count"] > 0
+    assert set(double_sort["weight_method"]) == {"market_cap"}
+    assert double_summary["status"] == "pass"
+    assert newey_west_t_stat(pd.Series([0.01, 0.02, 0.00, 0.03])) is not None
+
+
+def test_conditional_double_sort_and_fama_macbeth_regression() -> None:
+    frames = _fixture_frames(days=280, symbols=6)
+    result = replicate_chapter3_factors(
+        frames["prices"],
+        market_cap=frames["market_cap"],
+        financials=frames["financials"],
+        trade_calendar=frames["trade_calendar"],
+        min_period_ratio=0.5,
+        min_cross_section=3,
+    )
+    close = frames["prices"].pivot_table(index="trade_date", columns="symbol", values="adjusted_close", aggfunc="last")
+    close.index = pd.to_datetime(close.index).date
+    forward_returns = close.shift(-20) / close - 1.0
+    conditional = conditional_double_sort_returns(
+        result.raw_matrices["profitability_roe_ttm"],
+        result.zscore_matrices["investment_asset_growth"],
+        forward_returns,
+        groups=2,
+        min_cross_section=6,
+    )
+    fmb = fama_macbeth_regression(
+        forward_returns,
+        {
+            "value_bm": result.zscore_matrices["value_bm"],
+            "profitability_roe_ttm": result.zscore_matrices["profitability_roe_ttm"],
+        },
+        min_cross_section=6,
+    )
+
+    assert not conditional.empty
+    assert {"conditioning_group", "factor_group", "mean_forward_return"} <= set(conditional.columns)
+    assert set(fmb["coefficient"]) == {"intercept", "value_bm", "profitability_roe_ttm"}
+    assert fmb["observation_count"].min() > 0
