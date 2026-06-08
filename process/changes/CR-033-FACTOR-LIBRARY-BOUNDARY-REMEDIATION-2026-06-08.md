@@ -69,6 +69,7 @@ related_changes:
 | 通用定义合同 | `engine.factor_library` 导出 CR030 `FactorSpec`。 | 另造新 FactorDefinition 合同。 | 采用推荐方案，复用 CR030 主合同。 |
 | 第三章模块定位 | 保留为复刻适配层。 | 删除第三章模块，只保留通用模块。 | 保留适配层以保存书籍口径和复刻入口。 |
 | 统计工具归属 | 迁移到 `engine.factor_statistics`。 | 继续放在第三章模块。 | 迁移，支持后续论文/书籍复用。 |
+| 长期扩展方式 | 因子定义注册 + calculator registry。 | 每新增因子都修改第三章模块或硬编码 if/else。 | 采用推荐方案，后续新增因子不依赖第三章模块。 |
 
 ## 不授权范围
 
@@ -97,7 +98,10 @@ git revert <CR033提交>
 - 通用因子 canonical 定义位于 `engine/factor_library.py`。
 - 因子 ID 不含 `chapter3` 前缀。
 - 七个因子能导出 CR030 `FactorSpec` 并通过合同校验。
+- 自定义因子定义可通过 `build_equity_factor_library(...)` 合入通用库。
+- 章节命名空间因子 ID 可被 `validate_equity_factor_library(...)` 拒绝。
 - 通用因子计算位于 `engine/factor_calculators.py`。
+- 自定义因子计算器可通过 `calculator_registry` 接入。
 - 通用排序和统计位于 `engine/factor_statistics.py`。
 - `engine/chapter3_factor_replication.py` 只作为第三章口径适配层。
 - 第三章测试、通用因子测试和 CR030 回归测试通过。

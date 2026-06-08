@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pandas as pd
 
-from engine.factor_calculators import compute_equity_factor_matrices, factor_matrices_to_panel
+from engine.factor_calculators import FactorCalculationContext, compute_equity_factor_matrices, factor_matrices_to_panel
 from engine.factor_library import DEFAULT_EQUITY_CORE_FACTOR_IDS
 
 
@@ -102,3 +102,39 @@ def test_compute_equity_factor_matrices_reports_missing_inputs() -> None:
     assert any("size_total_market_cap 缺 market_cap" in item for item in result.limitations)
     assert any("value_bm 缺 book_equity" in item for item in result.limitations)
     assert any("profitability_roe_ttm 缺 roe_ttm" in item for item in result.limitations)
+
+
+def test_compute_equity_factor_matrices_accepts_custom_calculator_registry() -> None:
+    fixture = _calculator_fixture()
+
+    def quality_proxy(context: FactorCalculationContext) -> pd.DataFrame:
+        return context.financial_daily["roe_ttm"] * context.financial_daily["asset_growth"]
+
+    result = compute_equity_factor_matrices(
+        close=fixture["close"],
+        returns=fixture["returns"],
+        price_frame=fixture["prices"],
+        financial_daily=fixture["financial_daily"],
+        factor_ids=("quality_profit_growth_proxy",),
+        calculator_registry={"quality_profit_growth_proxy": quality_proxy},
+        min_cross_section=3,
+    )
+
+    assert set(result.raw_matrices) == {"quality_profit_growth_proxy"}
+    assert result.limitations == ()
+    assert result.zscore_matrices["quality_profit_growth_proxy"].notna().sum().sum() > 0
+
+
+def test_compute_equity_factor_matrices_reports_unknown_calculator() -> None:
+    fixture = _calculator_fixture()
+
+    result = compute_equity_factor_matrices(
+        close=fixture["close"],
+        returns=fixture["returns"],
+        price_frame=fixture["prices"],
+        factor_ids=("unknown_factor",),
+        min_cross_section=3,
+    )
+
+    assert result.raw_matrices == {}
+    assert result.limitations == ("unknown_factor 缺 calculator，无法计算。",)

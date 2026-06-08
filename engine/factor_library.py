@@ -7,7 +7,7 @@
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
-from typing import Any, Mapping
+from typing import Any, Mapping, Sequence
 
 from engine.multifactor_contracts import FactorDirection, FactorSpec
 
@@ -63,6 +63,45 @@ class EquityFactorDefinition:
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
+
+
+def validate_equity_factor_definition(definition: EquityFactorDefinition) -> tuple[str, ...]:
+    """校验单个因子定义是否满足长期因子库最小合同。"""
+
+    issues: list[str] = []
+    if not definition.factor_id:
+        issues.append("factor_id 不能为空")
+    if definition.factor_id.startswith("chapter"):
+        issues.append("factor_id 不得使用书籍章节作为命名空间")
+    if not definition.factor_id.replace("_", "").replace("-", "").isalnum():
+        issues.append("factor_id 只能包含字母、数字、下划线或连字符")
+    if not definition.name:
+        issues.append("name 不能为空")
+    if definition.direction not in {item.value for item in FactorDirection}:
+        issues.append("direction 必须是 positive/negative/neutral/custom")
+    if not definition.input_fields:
+        issues.append("input_fields 不能为空")
+    if not definition.formula:
+        issues.append("formula 不能为空")
+    if not definition.source_refs:
+        issues.append("source_refs 不能为空")
+    return tuple(issues)
+
+
+def validate_equity_factor_library(definitions: Mapping[str, EquityFactorDefinition] | Sequence[EquityFactorDefinition]) -> dict[str, tuple[str, ...]]:
+    """校验因子库并返回有问题的因子。"""
+
+    items = definitions.values() if isinstance(definitions, Mapping) else definitions
+    seen: set[str] = set()
+    issues_by_factor: dict[str, tuple[str, ...]] = {}
+    for definition in items:
+        issues = list(validate_equity_factor_definition(definition))
+        if definition.factor_id in seen:
+            issues.append("factor_id 重复")
+        seen.add(definition.factor_id)
+        if issues:
+            issues_by_factor[definition.factor_id or "<missing>"] = tuple(issues)
+    return issues_by_factor
 
 
 def equity_core_factor_definitions() -> tuple[EquityFactorDefinition, ...]:
@@ -162,11 +201,46 @@ def equity_core_factor_definition_map() -> dict[str, EquityFactorDefinition]:
     return {item.factor_id: item for item in equity_core_factor_definitions()}
 
 
+def build_equity_factor_library(
+    additional_definitions: Sequence[EquityFactorDefinition] = (),
+    *,
+    duplicate_policy: str = "fail",
+) -> dict[str, EquityFactorDefinition]:
+    """构建可扩展因子库。
+
+    `duplicate_policy`:
+    - `fail`: 发现重复因子时报错。
+    - `replace`: 允许 additional definition 覆盖核心定义。
+    """
+
+    if duplicate_policy not in {"fail", "replace"}:
+        raise ValueError("duplicate_policy 只能是 fail/replace")
+    library = equity_core_factor_definition_map()
+    for definition in additional_definitions:
+        issues = validate_equity_factor_definition(definition)
+        if issues:
+            raise ValueError(f"因子定义无效 {definition.factor_id}: " + "; ".join(issues))
+        if definition.factor_id in library and duplicate_policy == "fail":
+            raise ValueError(f"重复因子定义: {definition.factor_id}")
+        library[definition.factor_id] = definition
+    return library
+
+
 def get_equity_factor_definition(factor_id: str) -> EquityFactorDefinition:
     definitions = equity_core_factor_definition_map()
     if factor_id not in definitions:
         raise KeyError(f"未知因子: {factor_id}")
     return definitions[factor_id]
+
+
+def to_factor_specs(
+    definitions: Mapping[str, EquityFactorDefinition] | Sequence[EquityFactorDefinition],
+    *,
+    version: str = "v1",
+    universe: str | Mapping[str, Any] = "project_research_universe",
+) -> tuple[FactorSpec, ...]:
+    items = definitions.values() if isinstance(definitions, Mapping) else definitions
+    return tuple(to_factor_spec(definition, version=version, universe=universe) for definition in items)
 
 
 def to_factor_spec(

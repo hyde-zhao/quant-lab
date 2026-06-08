@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Mapping, Sequence
+from typing import Any, Callable, Mapping, Sequence
 
 import numpy as np
 import pandas as pd
@@ -12,6 +12,26 @@ from engine.factor_library import DEFAULT_EQUITY_CORE_FACTOR_IDS, equity_core_fa
 
 
 FACTOR_CALCULATOR_SCHEMA = "factor_calculator_v1"
+FactorCalculator = Callable[["FactorCalculationContext"], pd.DataFrame | None]
+
+
+@dataclass(frozen=True, slots=True)
+class FactorCalculationContext:
+    close: pd.DataFrame
+    returns: pd.DataFrame
+    price_frame: pd.DataFrame
+    market_cap_matrix: pd.DataFrame | None
+    turnover_matrix: pd.DataFrame | None
+    financial_daily: Mapping[str, pd.DataFrame]
+    min_period_ratio: float
+
+    @property
+    def calendar(self) -> list[Any]:
+        return list(self.close.index)
+
+    @property
+    def symbols(self) -> tuple[str, ...]:
+        return tuple(str(item) for item in self.close.columns)
 
 
 @dataclass(frozen=True, slots=True)
@@ -35,6 +55,7 @@ def compute_equity_factor_matrices(
     turnover_matrix: pd.DataFrame | None = None,
     financial_daily: Mapping[str, pd.DataFrame] | None = None,
     factor_ids: Sequence[str] = DEFAULT_EQUITY_CORE_FACTOR_IDS,
+    calculator_registry: Mapping[str, FactorCalculator] | None = None,
     eligibility_mask: pd.DataFrame | None = None,
     winsor_limits: tuple[float, float] = (0.01, 0.99),
     min_period_ratio: float = 2.0 / 3.0,
@@ -57,48 +78,33 @@ def compute_equity_factor_matrices(
     symbols = tuple(str(item) for item in close.columns)
     financial_daily = financial_daily or {}
     requested = set(factor_ids)
+    context = FactorCalculationContext(
+        close=close,
+        returns=returns,
+        price_frame=price_frame,
+        market_cap_matrix=market_cap_matrix,
+        turnover_matrix=turnover_matrix,
+        financial_daily=financial_daily,
+        min_period_ratio=min_period_ratio,
+    )
     market_factor_return = _market_return(returns, market_cap_matrix)
 
     raw: dict[str, pd.DataFrame] = {}
     limitations: list[str] = []
+    calculators = dict(core_equity_factor_calculators())
+    if calculator_registry:
+        calculators.update(calculator_registry)
 
-    if "market_beta_252" in requested:
-        raw["market_beta_252"] = _rolling_beta(returns, market_factor_return, window=252, min_period_ratio=min_period_ratio)
-    if "size_total_market_cap" in requested:
-        if market_cap_matrix is None:
-            limitations.append("size_total_market_cap 缺 market_cap，无法复刻。")
-        else:
-            raw["size_total_market_cap"] = np.log(market_cap_matrix.where(market_cap_matrix > 0))
-    if "value_bm" in requested:
-        bm = _bm_matrix(price_frame, market_cap_matrix, financial_daily, calendar, symbols)
-        if bm is None:
-            limitations.append("value_bm 缺 book_equity/book_to_market 或 market_cap，无法复刻。")
-        else:
-            raw["value_bm"] = bm
-    if "momentum_12_1" in requested:
-        raw["momentum_12_1"] = close.shift(21) / close.shift(252) - 1.0
-    if "profitability_roe_ttm" in requested:
-        roe = _roe_ttm_matrix(financial_daily)
-        if roe is None:
-            limitations.append("profitability_roe_ttm 缺 roe_ttm 或 operating_profit_ttm/book_equity，无法复刻。")
-        else:
-            raw["profitability_roe_ttm"] = roe
-    if "investment_asset_growth" in requested:
-        inv = _asset_growth_matrix(financial_daily)
-        if inv is None:
-            limitations.append("investment_asset_growth 缺 total_assets/asset_growth，无法复刻。")
-        else:
-            raw["investment_asset_growth"] = inv
-    if "abnormal_turnover_21_252" in requested:
-        if turnover_matrix is None:
-            limitations.append("abnormal_turnover_21_252 缺 turnover_rate，无法复刻。")
-        else:
-            short_window = _window_min_periods(21, min_period_ratio)
-            long_window = _window_min_periods(252, min_period_ratio)
-            raw["abnormal_turnover_21_252"] = (
-                turnover_matrix.rolling(21, min_periods=short_window).mean()
-                / turnover_matrix.rolling(252, min_periods=long_window).mean()
-            )
+    for factor_id in factor_ids:
+        calculator = calculators.get(factor_id)
+        if calculator is None:
+            limitations.append(f"{factor_id} 缺 calculator，无法计算。")
+            continue
+        matrix = calculator(context)
+        if matrix is None:
+            limitations.append(_missing_input_message(factor_id))
+            continue
+        raw[factor_id] = matrix
 
     if eligibility_mask is not None:
         eligibility = eligibility_mask.reindex(index=calendar, columns=symbols, fill_value=False).astype(bool)
@@ -124,6 +130,73 @@ def compute_equity_factor_matrices(
         preprocessing_summary=summary,
         limitations=tuple(limitations),
     )
+
+
+def core_equity_factor_calculators() -> dict[str, FactorCalculator]:
+    return {
+        "market_beta_252": _calculate_market_beta_252,
+        "size_total_market_cap": _calculate_size_total_market_cap,
+        "value_bm": _calculate_value_bm,
+        "momentum_12_1": _calculate_momentum_12_1,
+        "profitability_roe_ttm": _calculate_profitability_roe_ttm,
+        "investment_asset_growth": _calculate_investment_asset_growth,
+        "abnormal_turnover_21_252": _calculate_abnormal_turnover_21_252,
+    }
+
+
+def _calculate_market_beta_252(context: FactorCalculationContext) -> pd.DataFrame | None:
+    market_return = _market_return(context.returns, context.market_cap_matrix)
+    return _rolling_beta(context.returns, market_return, window=252, min_period_ratio=context.min_period_ratio)
+
+
+def _calculate_size_total_market_cap(context: FactorCalculationContext) -> pd.DataFrame | None:
+    if context.market_cap_matrix is None:
+        return None
+    return np.log(context.market_cap_matrix.where(context.market_cap_matrix > 0))
+
+
+def _calculate_value_bm(context: FactorCalculationContext) -> pd.DataFrame | None:
+    return _bm_matrix(
+        context.price_frame,
+        context.market_cap_matrix,
+        context.financial_daily,
+        context.calendar,
+        context.symbols,
+    )
+
+
+def _calculate_momentum_12_1(context: FactorCalculationContext) -> pd.DataFrame | None:
+    return context.close.shift(21) / context.close.shift(252) - 1.0
+
+
+def _calculate_profitability_roe_ttm(context: FactorCalculationContext) -> pd.DataFrame | None:
+    return _roe_ttm_matrix(context.financial_daily)
+
+
+def _calculate_investment_asset_growth(context: FactorCalculationContext) -> pd.DataFrame | None:
+    return _asset_growth_matrix(context.financial_daily)
+
+
+def _calculate_abnormal_turnover_21_252(context: FactorCalculationContext) -> pd.DataFrame | None:
+    if context.turnover_matrix is None:
+        return None
+    short_window = _window_min_periods(21, context.min_period_ratio)
+    long_window = _window_min_periods(252, context.min_period_ratio)
+    return (
+        context.turnover_matrix.rolling(21, min_periods=short_window).mean()
+        / context.turnover_matrix.rolling(252, min_periods=long_window).mean()
+    )
+
+
+def _missing_input_message(factor_id: str) -> str:
+    messages = {
+        "size_total_market_cap": "size_total_market_cap 缺 market_cap，无法复刻。",
+        "value_bm": "value_bm 缺 book_equity/book_to_market 或 market_cap，无法复刻。",
+        "profitability_roe_ttm": "profitability_roe_ttm 缺 roe_ttm 或 operating_profit_ttm/book_equity，无法复刻。",
+        "investment_asset_growth": "investment_asset_growth 缺 total_assets/asset_growth，无法复刻。",
+        "abnormal_turnover_21_252": "abnormal_turnover_21_252 缺 turnover_rate，无法复刻。",
+    }
+    return messages.get(factor_id, f"{factor_id} 缺必要输入，无法计算。")
 
 
 def factor_matrices_to_panel(

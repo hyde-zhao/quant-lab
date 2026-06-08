@@ -55,6 +55,7 @@
 4. 通用因子矩阵计算迁移到 `engine/factor_calculators.py`。
 5. 通用排序检验和统计方法迁移到 `engine/factor_statistics.py`。
 6. `engine/chapter3_factor_replication.py` 保留为第三章复刻适配层，负责后复权优先、收益压缩、停牌置缺、股票池和可交易过滤、月末调仓等第三章专用口径。
+7. 长期新增因子入口已收敛为 `EquityFactorDefinition -> to_factor_spec(...) -> calculator_registry -> factor panel / evaluation`，说明见 `docs/CR030-FACTOR-RESEARCH-QUICKSTART.md`。
 
 追溯文件：
 
@@ -84,7 +85,9 @@
 |---|---|---|
 | 通用因子定义注册 | `engine.factor_library.equity_core_factor_definitions()` | canonical 注册市场、规模、价值、动量、盈利、投资、异常换手率七个通用权益因子；第三章只写入 `source_refs`。 |
 | CR030 FactorSpec 导出 | `engine.factor_library.to_factor_spec(...)` | 将通用因子定义导出为项目 CR030 `FactorSpec`，避免另造平行合同。 |
+| 因子定义校验和扩展 | `engine.factor_library.validate_equity_factor_library(...)`、`build_equity_factor_library(...)` | 支持长期新增因子，拒绝 `chapter*` 章节命名空间污染因子 ID。 |
 | 通用因子矩阵计算 | `engine.factor_calculators.compute_equity_factor_matrices(...)` | 生成 raw/directional/winsorized/zscore 矩阵，不绑定第三章样本口径。 |
+| 通用计算器注册 | `compute_equity_factor_matrices(..., calculator_registry=...)` | 支持长期新增自定义因子计算器，不需要修改第三章模块。 |
 | 通用因子面板输出 | `engine.factor_calculators.factor_matrices_to_panel(...)` | 输出包含 raw/directional/winsorized/zscore 的长表面板，便于接 CR030 合同。 |
 | 通用排序和统计 | `engine.factor_statistics.*` | 单变量排序、独立双重排序、条件双重排序、Newey-West、Fama-MacBeth。 |
 | 第三章数据问题审计 | `audit_chapter3_data_issues(frames)` | 对传入的离线 DataFrame 字段做 covered/partial/missing 审计。 |
@@ -123,8 +126,8 @@ PYTHONPYCACHEPREFIX=/tmp/local-backtest-factor-boundary-pycompile uv run --pytho
 | 验证 | 结果 |
 |---|---|
 | 新增第三章复刻测试 | 10 passed |
-| 通用因子库/计算/统计 + 第三章测试 | 17 passed |
-| 通用模块 + 第三章 + CR030 合同回归 | 40 passed |
+| 通用因子库/计算/统计 + 第三章测试 | 21 passed |
+| 通用模块 + 第三章 + CR030 合同回归 | 44 passed |
 | CR030 合同/面板/评价/组合测试 | 23 passed |
 | py_compile | passed |
 

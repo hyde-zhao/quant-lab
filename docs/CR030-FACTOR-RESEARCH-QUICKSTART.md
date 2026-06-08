@@ -47,7 +47,52 @@ FactorSpec / FactorRunSpec
 
 ## 4. 新增一个因子
 
-优先从 `FactorSpec` 开始。下面是最小形态：
+长期维护优先从通用因子库开始，而不是把因子写到某个书籍章节或实验脚本里：
+
+```python
+from engine.factor_library import (
+    EquityFactorDefinition,
+    build_equity_factor_library,
+    to_factor_spec,
+)
+
+definition = EquityFactorDefinition(
+    factor_id="quality_gross_profit_assets",
+    name="毛利资产质量因子",
+    category="quality",
+    raw_variable="gross_profit_ttm / total_assets",
+    direction="positive",
+    input_fields=("financials.gross_profit_ttm", "financials.total_assets"),
+    formula="gross_profit_ttm / total_assets",
+    default_window=1,
+    source_refs=("internal:research:quality_factor:v1",),
+)
+
+factor_library = build_equity_factor_library([definition])
+factor_spec = to_factor_spec(factor_library["quality_gross_profit_assets"])
+```
+
+如果因子有自定义公式计算，把计算器注册到 `engine.factor_calculators.compute_equity_factor_matrices(...)` 的 `calculator_registry`，不要把新因子塞进第三章复刻模块：
+
+```python
+from engine.factor_calculators import FactorCalculationContext, compute_equity_factor_matrices
+
+def quality_gross_profit_assets(context: FactorCalculationContext):
+    return context.financial_daily["gross_profit_ttm"] / context.financial_daily["total_assets"]
+
+result = compute_equity_factor_matrices(
+    close=close,
+    returns=returns,
+    price_frame=prices,
+    financial_daily=financial_daily,
+    factor_ids=("quality_gross_profit_assets",),
+    calculator_registry={"quality_gross_profit_assets": quality_gross_profit_assets},
+)
+```
+
+已沉淀的第三章七个因子位于 `engine.factor_library.equity_core_factor_definitions()`；第三章来源只在 `source_refs` 中记录，因子 ID 不使用 `chapter3` 前缀。
+
+若只是一次性探索，也可以直接从 `FactorSpec` 开始。下面是最小形态：
 
 ```python
 from engine.multifactor_contracts import (
