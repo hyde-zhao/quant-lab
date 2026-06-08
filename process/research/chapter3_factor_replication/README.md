@@ -45,33 +45,54 @@
 | 十分组和 5x5 双重排序 | covered/offline | 新增单变量排序、独立双重排序、条件双重排序，均支持等权和总市值加权。 |
 | Newey-West / Fama-MacBeth | covered/offline | 新增 `newey_west_t_stat`、`long_short_summary(..., t_stat_method="newey_west")` 和 `fama_macbeth_regression`。 |
 
+## 2026-06-08 边界整改记录
+
+用户审查指出：因子以 `chapter3` 作为长期命名空间不合理，且 `engine/` 目录中的第三章模块不应同时承载通用因子库、计算公式和复刻实验。整改决策如下：
+
+1. `chapter3` 只表示书籍第三章复刻来源、数据口径和 runner policy，不作为通用因子身份。
+2. 因子 ID 保持通用语义，例如 `value_bm`、`momentum_12_1`，不得改为 `chapter3_value_bm`。
+3. 通用因子定义迁移到 `engine/factor_library.py`，并通过 `source_refs` 记录第三章来源。
+4. 通用因子矩阵计算迁移到 `engine/factor_calculators.py`。
+5. 通用排序检验和统计方法迁移到 `engine/factor_statistics.py`。
+6. `engine/chapter3_factor_replication.py` 保留为第三章复刻适配层，负责后复权优先、收益压缩、停牌置缺、股票池和可交易过滤、月末调仓等第三章专用口径。
+
+追溯文件：
+
+- `process/changes/CR-033-FACTOR-LIBRARY-BOUNDARY-REMEDIATION-2026-06-08.md`
+- `process/checks/CP6-CR033-factor-library-boundary-remediation-CODING-DONE.md`
+- `process/checks/CP7-CR033-factor-library-boundary-remediation-VERIFICATION-DONE.md`
+
 ## 已新增实现
 
 新增模块：
 
+- `engine/factor_library.py`
+- `engine/factor_calculators.py`
+- `engine/factor_statistics.py`
 - `engine/chapter3_factor_replication.py`
 
 新增测试：
 
+- `tests/test_factor_library.py`
+- `tests/test_factor_calculators.py`
+- `tests/test_factor_statistics.py`
 - `tests/test_chapter3_factor_replication.py`
 
 模块能力：
 
 | 能力 | 入口 | 说明 |
 |---|---|---|
+| 通用因子定义注册 | `engine.factor_library.equity_core_factor_definitions()` | canonical 注册市场、规模、价值、动量、盈利、投资、异常换手率七个通用权益因子；第三章只写入 `source_refs`。 |
+| CR030 FactorSpec 导出 | `engine.factor_library.to_factor_spec(...)` | 将通用因子定义导出为项目 CR030 `FactorSpec`，避免另造平行合同。 |
+| 通用因子矩阵计算 | `engine.factor_calculators.compute_equity_factor_matrices(...)` | 生成 raw/directional/winsorized/zscore 矩阵，不绑定第三章样本口径。 |
+| 通用因子面板输出 | `engine.factor_calculators.factor_matrices_to_panel(...)` | 输出包含 raw/directional/winsorized/zscore 的长表面板，便于接 CR030 合同。 |
+| 通用排序和统计 | `engine.factor_statistics.*` | 单变量排序、独立双重排序、条件双重排序、Newey-West、Fama-MacBeth。 |
 | 第三章数据问题审计 | `audit_chapter3_data_issues(frames)` | 对传入的离线 DataFrame 字段做 covered/partial/missing 审计。 |
-| 因子定义注册 | `chapter3_factor_definitions()` | 注册市场、规模、价值、动量、盈利、投资、异常换手率七个第三章因子。 |
-| 第三章因子复刻 | `replicate_chapter3_factors(...)` | 从本地 `prices`、`market_cap`、`financials`、`trade_calendar` 生成 raw/directional/winsorized/zscore 矩阵。 |
-| 因子面板输出 | `factor_matrices_to_panel(result)` | 输出包含 raw/directional/winsorized/zscore 的长表面板，便于接 CR030 合同。 |
-| 单变量排序 | `single_sort_returns(...)` | 支持十分组或自定义分组。 |
-| 独立双重排序 | `independent_double_sort_returns(...)` | 支持市值 x 目标因子的 5x5 或自定义组数双重排序。 |
-| 条件双重排序 | `conditional_double_sort_returns(...)` | 支持投资因子中 ROA 先分组、总资产增长率组内再分组的条件双重排序。 |
-| 多空摘要 | `long_short_summary(...)` | 输出 spread 均值、t 值和观察数量。 |
-| 双重排序多空摘要 | `long_short_summary_from_double_sort(...)` | 按外层组内 High-Low/Low-High 后再跨外层平均。 |
+| 第三章因子定义视图 | `chapter3_factor_definitions()` | 返回通用因子库中带第三章来源的七个因子定义，保留复刻入口兼容。 |
+| 第三章因子复刻 | `replicate_chapter3_factors(...)` | 从本地 `prices`、`market_cap`、`financials`、`trade_calendar` 生成第三章口径下的 raw/directional/winsorized/zscore 矩阵。 |
+| 第三章因子面板输出 | `factor_matrices_to_panel(result)` | 第三章兼容 wrapper，内部调用通用 `engine.factor_calculators.factor_matrices_to_panel(...)`。 |
 | 第三章研究预处理 | `prepare_chapter3_research_data(...)` | 输出后复权价格、压缩收益、股票池掩码、可交易掩码、月末调仓日。 |
 | 财务 PIT 规范化 | `canonicalize_chapter3_financials(...)` | 对同一 symbol/report_period/available_at 多记录按第三章 PIT 优先级去重。 |
-| Newey-West | `newey_west_t_stat(...)` | 默认使用 Newey-West 1994 常见自适应滞后阶数。 |
-| Fama-MacBeth | `fama_macbeth_regression(...)` | 对每日截面回归系数取时序均值，并报告 Newey-West t 值。 |
 
 ## 第三章因子注册清单
 
@@ -91,8 +112,10 @@
 
 ```bash
 PYTHONDONTWRITEBYTECODE=1 PYTEST_ADDOPTS='-p no:cacheprovider' UV_PROJECT_ENVIRONMENT=/tmp/local-backtest-qa-venv uv run --python 3.11 pytest -q tests/test_chapter3_factor_replication.py
+PYTHONDONTWRITEBYTECODE=1 PYTEST_ADDOPTS='-p no:cacheprovider' UV_PROJECT_ENVIRONMENT=/tmp/local-backtest-qa-venv uv run --python 3.11 pytest -q tests/test_factor_library.py tests/test_factor_calculators.py tests/test_factor_statistics.py tests/test_chapter3_factor_replication.py
+PYTHONDONTWRITEBYTECODE=1 PYTEST_ADDOPTS='-p no:cacheprovider' UV_PROJECT_ENVIRONMENT=/tmp/local-backtest-qa-venv uv run --python 3.11 pytest -q tests/test_factor_library.py tests/test_factor_calculators.py tests/test_factor_statistics.py tests/test_chapter3_factor_replication.py tests/test_cr030_factor_spec_run_spec_contract.py tests/test_cr030_factor_panel_label_window_gates.py tests/test_cr030_factor_evaluation_report.py tests/test_cr030_multifactor_combiner.py
 PYTHONDONTWRITEBYTECODE=1 PYTEST_ADDOPTS='-p no:cacheprovider' UV_PROJECT_ENVIRONMENT=/tmp/local-backtest-qa-venv uv run --python 3.11 pytest -q tests/test_cr030_factor_spec_run_spec_contract.py tests/test_cr030_factor_panel_label_window_gates.py tests/test_cr030_factor_evaluation_report.py tests/test_cr030_multifactor_combiner.py
-PYTHONPYCACHEPREFIX=/tmp/local-backtest-pycompile uv run --python 3.11 python -m py_compile engine/chapter3_factor_replication.py tests/test_chapter3_factor_replication.py
+PYTHONPYCACHEPREFIX=/tmp/local-backtest-factor-boundary-pycompile uv run --python 3.11 python -m py_compile engine/factor_library.py engine/factor_calculators.py engine/factor_statistics.py engine/chapter3_factor_replication.py tests/test_factor_library.py tests/test_factor_calculators.py tests/test_factor_statistics.py tests/test_chapter3_factor_replication.py
 ```
 
 结果：
@@ -100,6 +123,8 @@ PYTHONPYCACHEPREFIX=/tmp/local-backtest-pycompile uv run --python 3.11 python -m
 | 验证 | 结果 |
 |---|---|
 | 新增第三章复刻测试 | 10 passed |
+| 通用因子库/计算/统计 + 第三章测试 | 17 passed |
+| 通用模块 + 第三章 + CR030 合同回归 | 40 passed |
 | CR030 合同/面板/评价/组合测试 | 23 passed |
 | py_compile | passed |
 
