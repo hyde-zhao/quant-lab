@@ -809,7 +809,10 @@ def _optional_date(value: Any) -> date | None:
     if value is None or pd.isna(value):
         return None
     try:
-        return pd.Timestamp(value).date()
+        timestamp = pd.Timestamp(value)
+        if pd.isna(timestamp):
+            return None
+        return timestamp.date()
     except (TypeError, ValueError):
         return None
 

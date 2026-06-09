@@ -30,6 +30,8 @@ change_id: "CR-034"
 | 停牌 / ST 交易状态 | PASS | `trade_status` aggregate_start 为 `2000-01-04`，覆盖目标窗口 |
 | ST / 生命周期事件 | PASS | `events` aggregate_start 为 `1990-12-01`，覆盖目标窗口 |
 | publish / QMT / 仿真 / 实盘 | PASS | `catalog_current_pointer_publish=0`、`qmt_operation=0`、`simulation_or_live_run=0` |
+| 2000-2019 全样本实证 | PASS | `process/research/chapter3_empirical/run-chapter3-empirical-2000-2019/EMPIRICAL-RUN-REPORT.md`，status=`PASS` |
+| 实证资源预算 | PASS | 报告记录 `max_memory_gb=16.0`、`max_rss_gb_observed=2.152325`、`memory_status=pass` |
 
 ## Real Run Evidence
 
@@ -39,6 +41,7 @@ change_id: "CR-034"
 | `run-cr034-chapter3-w3-2000-2014` | 2000-2014 | prices_limit、events；trade_status 未形成 2000-2014 canonical |
 | `run-cr034-financial-pit-2000-2019` | 2000-2019 | financial_pit 207,730 行 |
 | `run-cr034-chapter3-constraints-2000-2019` | 2000-2019 | `trade_status` 9,888,131 行；`prices_limit` 9,378,718 行；`events` 24,196 行；audited `financial_pit` 198,538 行 |
+| `run-chapter3-empirical-2000-2019` | 2000-2019 | 因子面板 2,640,077 行；标签 447,186 行；调仓期数 239；7 因子单因子指标和多因子研究准入摘要 |
 
 ## Automated Verification
 
@@ -46,6 +49,8 @@ change_id: "CR-034"
 |---|---|
 | `PYTHONDONTWRITEBYTECODE=1 PYTEST_ADDOPTS='-p no:cacheprovider' uv run --python 3.11 pytest -q tests/test_chapter3_real_data_readiness.py tests/test_cr034_chapter3_backfill.py` | PASS，`10 passed` |
 | `set -a; . .env; set +a; PYTHONDONTWRITEBYTECODE=1 uv run --python 3.11 python scripts/chapter3_real_data_readiness.py --output-dir process/research/chapter3_real_data_readiness` | PASS，生成 PASS readiness 报告 |
+| `set -a; . .env; set +a; OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 NUMEXPR_NUM_THREADS=1 PYTHONDONTWRITEBYTECODE=1 uv run --python 3.11 python scripts/run_chapter3_empirical.py --lake-root "$MARKET_DATA_LAKE_ROOT" --start 2000-01-01 --end 2019-12-31 --run-id run-chapter3-empirical-2000-2019 --output-root process/research/chapter3_empirical --panel-root reports/chapter3_factor_panel --min-cross-section 30 --min-period-ratio 0.6666666667 --execution-mode chunked --chunk-lookback-days 540 --max-memory-gb 16 --resume` | PASS，生成全样本实证报告 |
+| `PYTHONDONTWRITEBYTECODE=1 PYTEST_ADDOPTS='-p no:cacheprovider' uv run --python 3.11 pytest -q tests/test_chapter3_empirical_runner.py tests/test_chapter3_factor_replication.py tests/test_chapter3_real_data_readiness.py tests/test_cr034_chapter3_backfill.py tests/test_factor_library.py tests/test_factor_calculators.py tests/test_factor_statistics.py` | PASS，`34 passed` |
 
 ## Exit Criteria
 
@@ -53,8 +58,9 @@ change_id: "CR-034"
 |---|---|---|
 | 可声明核心行情/后复权/市值/财务候选已补齐 | PASS | 仅限 candidate 研究输入，不是 published current truth |
 | 可声明第三章真实数据 readiness 问题已解决 | PASS | readiness 报告 status 为 `PASS` |
-| 可进入全样本实证 | PASS | 数据层已具备 2000-2019 第三章因子复刻输入 |
+| 可声明第三章真实实证已完成 | PASS | 2000-2019 全样本实证报告 status 为 `PASS` |
+| 可进入后续多因子研究 | PASS | 仅限 research candidate / admission 输入，不构成交易或仿真授权 |
 
 ## 结论
 
-CR-034 验证结论为 `PASS`。第三章真实数据问题已在 CR-034 candidate 层解决，readiness 报告为 `PASS`；下一步仍需执行 2000-2019 全样本实证复跑，才能声明“第三章真实实证复刻完成”。
+CR-034 验证结论为 `PASS`。第三章真实数据问题已在 CR-034 candidate 层解决，readiness 报告为 `PASS`；2000-2019 全样本实证复跑已完成并生成研究准入产物。该结论仍不授权 production-valid、QMT-ready、simulation-ready、live-ready 或 broker order。
