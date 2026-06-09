@@ -1,7 +1,7 @@
 ---
 cr_id: CR-034
 title: 第三章真实数据 readiness 与财务 PIT 审计
-status: open
+status: blocked-with-partial-pass
 created_at: 2026-06-09
 created_by: codex
 owner: meta-po
@@ -12,9 +12,9 @@ workflow_mode_before: fast-lane
 workflow_mode_after_change: standard
 fast_lane_upgrade_reason: "涉及真实 lake readiness、可能读取 .env 中 lake root、财务 PIT/as-of 审计和后续 2000-2019 全样本实证门禁，必须标准模式管理运行授权与人工决策。"
 rollback_to: "68f79b6 Add long-term factor extension registry"
-approval_result: pending
-approved_by: ""
-approved_at: ""
+approval_result: approved-for-env-read-tushare-backfill-and-in-cr-real-run
+approved_by: "user"
+approved_at: "2026-06-09T07:04:16+08:00"
 parent_cr: ""
 source_checkpoint: ""
 source_decision_id: "USER-20260609-CHAPTER3-CR"
@@ -34,7 +34,9 @@ related_changes:
 
 用户在完成第三章因子复刻、缺口整改、因子库边界整改和长期因子扩展入口后，追问“第三章描述的数据问题都解决好了吗”。当前结论是：代码层已经具备本地离线处理能力，但真实数据层尚未验证，不能声明第三章严格实证口径已经全部解决。
 
-本 CR 的目标是把第三章数据问题从“离线工程能力覆盖”推进到“真实数据 readiness 可审计”。本 CR 创建本身不授权读取 `.env`、真实 lake、provider、publish、QMT、simulation 或 live；后续执行真实数据审计前必须经过明确运行授权。
+本 CR 的目标是把第三章数据问题从“离线工程能力覆盖”推进到“真实数据 readiness 可审计”，并在用户授权范围内补齐第三章复刻所需真实数据后完成 2000-01-01 至 2019-12-31 全样本实证。
+
+用户已在 2026-06-09 明确授权本 CR 读取 `.env`、调用 Tushare 接口补齐数据，并要求后复权与全样本实证均在本 CR 内完成。该授权只覆盖 CR-034 的第三章研究数据补齐、候选数据落地、readiness 审计与实证运行；仍不授权 QMT、simulation、live、账户、订单、外部交易能力或 catalog current pointer publish。
 
 ## 当前基线
 
@@ -54,14 +56,14 @@ related_changes:
 5. 评估盈利、价值、投资因子所需 TTM / book equity / total assets 等字段的 PIT 可用性。
 6. 审计 CAPM / 市场因子严格超额收益所需无风险利率数据是否存在。
 7. 生成第三章真实数据 readiness 报告，明确 `PASS`、`PASS_WITH_LIMITATIONS` 或 `BLOCKED`。
-8. 只有 readiness 通过或用户接受限制后，才允许另行启动 2000-01-01 至 2019-12-31 A 股全市场第三章实证复跑。
+8. readiness 通过或限制明确后，在本 CR 内完成 2000-01-01 至 2019-12-31 A 股全市场第三章实证复跑，不另起 CR。
 
 ## Non-Goals
 
-- 不在本 CR 创建阶段读取 `.env` 或任何凭据。
-- 不在未授权情况下读取真实 lake。
-- 不触发 provider fetch。
-- 不写 lake。
+- 不超出 CR-034 授权范围读取 `.env` 或任何凭据；允许读取 `.env` 中第三章数据补齐所需的 Tushare / lake 配置，但不得打印 token 或凭据。
+- 不在 CR-034 范围外读取真实 lake；允许读取第三章数据 readiness 所需 lake metadata / candidate 数据。
+- 不在 CR-034 范围外触发 provider fetch；允许调用 Tushare 补齐第三章真实数据缺口。
+- 不在 CR-034 范围外写 lake；允许写入 CR-034 专属 run-id 的 raw / canonical candidate / report artifact。
 - 不 catalog publish。
 - 不 QMT、simulation、live。
 - 不访问账户、订单或外部交易能力。
@@ -71,11 +73,12 @@ related_changes:
 
 | 受影响文档 | 处理方式 | 旧基线保留方式 | 修订记录位置 | 批准状态 |
 |---|---|---|---|---|
-| `process/research/chapter3_factor_replication/README.md` | 原文档更新 | 保留 CR-032/CR-033 离线工程基线，追加 CR-034 真实数据 readiness 结果链接 | 新增 `## CR-034 真实数据 readiness 审计` | pending |
-| `docs/CR030-FACTOR-RESEARCH-QUICKSTART.md` | 原文档更新 | 保留长期因子库入口，追加第三章真实数据 readiness 前置条件 | 相关章节追加说明 | pending |
-| `process/changes/CR-034-CHAPTER3-REAL-DATA-READINESS-PIT-AUDIT-2026-06-09.md` | 新增 | N/A | 本文件 | pending |
-| `process/research/chapter3_real_data_readiness/README.md` | 新增 | N/A | 新文档 | pending |
-| `process/research/chapter3_real_data_readiness/READINESS-REPORT.md` | 新增 | N/A | 新文档 | pending |
+| `process/research/chapter3_factor_replication/README.md` | 原文档更新 | 保留 CR-032/CR-033 离线工程基线，追加 CR-034 真实数据 readiness 结果链接 | 新增 `## CR-034 真实数据 readiness 审计` | approved |
+| `docs/CR030-FACTOR-RESEARCH-QUICKSTART.md` | 原文档更新 | 保留长期因子库入口，追加第三章真实数据 readiness 前置条件 | 相关章节追加说明 | approved |
+| `process/changes/CR-034-CHAPTER3-REAL-DATA-READINESS-PIT-AUDIT-2026-06-09.md` | 新增并更新 | N/A | 本文件 | approved |
+| `process/research/chapter3_real_data_readiness/README.md` | 新增 | N/A | 新文档 | approved |
+| `process/research/chapter3_real_data_readiness/READINESS-REPORT.md` | 新增 | N/A | 新文档 | approved |
+| `process/research/chapter3_real_data_readiness/EMPIRICAL-RUN-REPORT.md` | 新增 | N/A | 新文档 | approved |
 
 ## 旧基线映射
 
@@ -91,8 +94,8 @@ related_changes:
 |------|----------|-----------|------|---------|
 | 需求层 | 是否新增、删除或重定义 REQ-* | 第三章真实数据 readiness 要求 | true | 新增 readiness 审计需求，不改变 CR032/CR033 已完成范围。 |
 | 场景层 | 是否改变测试矩阵覆盖范围 | 第三章真实数据字段覆盖、PIT、复权、股票池、调仓可交易性 | true | 新增真实数据 readiness 场景和报告验收；fixture 测试不再足以关闭数据问题。 |
-| 计划层 | 是否改变 Phase、Wave、Story / 任务依赖 | 后续真实实证复跑依赖 readiness 结果 | true | 标准模式；先审计 readiness，再决定是否启动真实全样本复跑 CR/Story。 |
-| 安全层 | 是否引入新的高风险动作或权限要求 | `.env`、真实 lake、可能数据目录读取 | true | CR 创建不授权执行；运行前必须单独收集 runtime authorization。 |
+| 计划层 | 是否改变 Phase、Wave、Story / 任务依赖 | 真实实证复跑依赖 readiness 结果 | true | 标准模式；先审计 readiness 和补齐数据，再在本 CR 内执行真实全样本复跑。 |
+| 安全层 | 是否引入新的高风险动作或权限要求 | `.env`、真实 lake、Tushare provider、候选数据写入 | true | 用户已授权 CR-034 范围内 credential read / provider fetch / candidate lake write；仍禁止 publish/QMT/simulation/live/账户/订单。 |
 | 交付层 | 是否需要重新生成交付物或回归子集 | readiness report、第三章 README、CR030 快速手册 | true | 生成报告与 CP6/CP7 证据，回归通用因子和第三章适配层测试。 |
 
 ## 第三章数据问题审计清单
@@ -119,10 +122,19 @@ related_changes:
 
 | 决策 ID | 类型 | 待确认问题 | 推荐方案 | 备选方案 | 影响 / 风险 | 回退 / 切换条件 |
 |---|---|---|---|---|---|---|
-| D-CR034-01 | runtime_authorization | 是否允许读取 `.env` 中的 `MARKET_DATA_LAKE_ROOT` 并只读审计真实 lake？ | 暂不授权；先创建 CR 和审计计划，等待用户明确授权。 | 授权只读 `.env` + lake metadata，不 provider fetch、不写入。 | 未授权则只能停留在计划；授权后可生成真实 readiness 报告。 | 用户明确回复授权范围后进入执行。 |
-| D-CR034-02 | risk_acceptance | 若真实 lake 只有 qfq/adjusted_close，没有严格后复权，是否允许 `PASS_WITH_LIMITATIONS`？ | 默认不接受严格复刻声明，仅允许 limited。 | 用户接受替代复权口径并在报告中标红限制。 | 影响第三章复刻可信度。 | 若后续补齐后复权字段，可升级为 PASS。 |
-| D-CR034-03 | implementation | 财务 PIT 若缺 revision/as-of，是否先做字段 readiness 报告还是补数据？ | 先出 readiness 报告，不补数据。 | 另起数据补齐 CR。 | 补数据会涉及 provider/lake/publish 授权。 | readiness BLOCKED 后再决策。 |
-| D-CR034-04 | follow_up_tracking | readiness 通过后是否启动 2000-2019 全样本实证复跑？ | 不在本 CR 自动启动，作为后续 CR 候选。 | 本 CR 后半段继续跑实证。 | 全样本复跑可能耗时并涉及真实 lake 访问。 | readiness PASS 后再人工确认。 |
+| D-CR034-01 | runtime_authorization | 是否允许读取 `.env` 中的 `MARKET_DATA_LAKE_ROOT` 并审计真实 lake？ | 已批准读取 `.env` 与真实 lake。 | N/A | 可进入真实 readiness 审计；必须避免打印凭据。 | 已按用户 2026-06-09 回复关闭。 |
+| D-CR034-02 | risk_acceptance | 若真实 lake 只有 qfq/adjusted_close，没有严格后复权，是否允许 `PASS_WITH_LIMITATIONS`？ | 已确认需要增加后复权。 | 临时 limited 只能作为中间阻塞状态，不可作为严格复刻关闭依据。 | 后复权字段未补齐前，第三章严格实证不得 PASS。 | 后复权补齐并通过覆盖率审计后关闭。 |
+| D-CR034-03 | implementation | 财务 PIT 若缺 revision/as-of，是否先做字段 readiness 报告还是补数据？ | 已批准本 CR 内补齐数据，可读取 `.env` 并调用 Tushare。 | 若 Tushare 源本身不提供 revision/as-of，只能报告 source limitation 并用公告日 PIT 降级。 | 补数据涉及 provider fetch 和 candidate lake write；不得 publish current pointer。 | 数据补齐完成或源限制明确后关闭。 |
+| D-CR034-04 | follow_up_tracking | readiness 通过后是否启动 2000-2019 全样本实证复跑？ | 已确认不另补 CR，在 CR-034 内完成。 | N/A | CR-034 范围扩大为 readiness + 数据补齐 + 全样本实证。 | 实证报告生成后关闭。 |
+
+## 用户授权记录
+
+| 授权项 | 结论 | 用户原文 | 允许动作 | 禁止动作 |
+|---|---|---|---|---|
+| D-CR034-01 | approved | “同意读取” | 读取 `.env` 中第三章数据补齐所需配置；读取真实 lake metadata / candidate 数据 | 打印凭据；读取与本 CR 无关的账户 / 交易配置 |
+| D-CR034-02 | approved-with-required-remediation | “需要增加后复权” | 补齐或派生后复权价格 / 收益，并把覆盖率纳入 readiness gate | 用 qfq/adjusted_close 替代后复权后声明严格 PASS |
+| D-CR034-03 | approved | “需要补齐数据，你可以读取.env调用tushare接口补齐数据” | 调用 Tushare 补齐第三章所需行情、复权、生命周期、交易状态、涨跌停、财务 PIT 等数据；写入 CR-034 专属候选 run-id | catalog current pointer publish；QMT / simulation / live |
+| D-CR034-04 | approved | “不补CR，在本CR内完成” | 在 CR-034 内执行 2000-01-01 至 2019-12-31 全样本实证并产出报告 | 另起 CR 作为必需前置 |
 
 ## 回退决策
 
@@ -155,17 +167,18 @@ related_changes:
   - [ ] 批次内全部 Story 设计证据已输出。
   - [ ] 批次内全部 Story CP5 自动预检已通过。
   - [ ] 批次 CP5 人工确认结论为 `approved`。
-  - [ ] 真实 lake 读取前已获得 runtime authorization。
+  - [x] 真实 lake / provider / candidate write 已获得 CR-034 runtime authorization。
 
 ## 执行链路
 
 | 顺序 | 责任角色 | 动作 | 输入 | 输出 | 门控 | 完成后下一步 |
 |---|---|---|---|---|---|---|
-| 1 | meta-po | 创建 CR034 并收集运行授权决策 | 用户请求、CR032/CR033、第三章 README | 本 CR、待决策项 | 用户确认是否授权只读真实数据审计 | 进入 LLD 批次或保持 open |
-| 2 | meta-se/meta-dev | 设计 readiness runner 和报告格式 | 本 CR、第三章适配层、CR030 合同 | Story / LLD / 测试计划 | CP5 批次确认 | 实现只读审计 |
-| 3 | meta-dev | 实现只读 readiness audit | LLD、授权范围 | 审计脚本/模块、fixture 测试 | CP6 | 交验证 |
-| 4 | meta-qa | 执行 fixture + 授权范围内真实 readiness 验证 | 审计产物、lake metadata | CP7、READINESS-REPORT | 不触发未授权操作 | 交 meta-po |
-| 5 | meta-po | 发起 CP8 人工决策 | CP7、readiness report、后续 CR 候选 | CP8 人工稿 | 用户 approve / 修改 / reject | 关闭或回修 |
+| 1 | meta-po | 创建 CR034 并收集运行授权决策 | 用户请求、CR032/CR033、第三章 README | 本 CR、待决策项 | 用户确认是否授权真实数据审计和补齐 | 已完成 |
+| 2 | meta-dev | 设计并实现 readiness runner 和报告格式 | 本 CR、第三章适配层、CR030 合同 | 审计模块/脚本、fixture 测试、报告模板 | CP6 | 执行真实审计 |
+| 3 | meta-dev | 在授权范围内补齐缺口数据 | `.env`、Tushare、真实 lake、readiness 缺口 | CR-034 专属 raw/canonical candidate 数据 | 不 publish current pointer | 重新审计 readiness |
+| 4 | meta-qa | 执行 fixture + 授权范围内真实 readiness 验证 | 审计产物、lake metadata、candidate 数据 | CP7、READINESS-REPORT | 不触发未授权操作 | 全样本实证 |
+| 5 | meta-dev/meta-qa | 本 CR 内执行 2000-2019 第三章全样本实证并验证报告 | readiness PASS / PASS_WITH_LIMITATIONS、第三章因子库 | EMPIRICAL-RUN-REPORT、回归结果 | 不 QMT / 不 simulation / 不 live | 交 CP8 |
+| 6 | meta-po | 发起 CP8 人工决策 | CP7、readiness report、empirical report | CP8 人工稿 | 用户 approve / 修改 / reject | 关闭或回修 |
 
 ## 自动终验授权
 
@@ -186,16 +199,16 @@ related_changes:
 
 | 候选编号 | 标题 | 状态 | 类型 | 优先级 | 正式 CR 路径 | 相关 active CR / blocked_by / superseded_by | 当前门控 | 阻塞原因 | 下一步 |
 |---|---|---|---|---:|---|---|---|---|---|
-| CR034-FU-01 | 2000-2019 第三章全样本真实实证复跑 | candidate | CR | 1 |  | CR-034 | readiness PASS / PASS_WITH_LIMITATIONS 后 | 未完成真实数据 readiness | 等待 CR034 readiness 结果 |
-| CR034-FU-02 | 财务 PIT / revision 数据补齐 | candidate | CR | 1 |  | CR-034 | readiness BLOCKED 后 | 可能缺少 revision/as-of 或 TTM 字段 | 等待真实数据审计 |
+| CR034-FU-01 | 2000-2019 第三章全样本真实实证复跑 | in-scope | CR-034 task | 1 | 本 CR | CR-034 | readiness PASS / PASS_WITH_LIMITATIONS 后 | 未完成真实数据 readiness | 在本 CR 内执行 |
+| CR034-FU-02 | 财务 PIT / revision 数据补齐 | in-scope | CR-034 task | 1 | 本 CR | CR-034 | readiness BLOCKED 或缺口确认后 | 可能缺少 revision/as-of 或 TTM 字段 | 在本 CR 内补齐或记录源限制 |
 | CR034-FU-03 | 无风险利率曲线接入 | candidate | CR | 2 |  | CR-034 | CAPM 严格复刻需要 | 当前未接入 | 等待 readiness 报告 |
 
 ## 处理结论
 
-- 审批结论：pending
+- 审批结论：approved for CR-034 scoped `.env` read, Tushare fetch, candidate data write, readiness audit, and in-CR empirical run
 - [ ] 自动批准（低风险）
-- [x] 待人工确认（中风险/高风险运行授权）
-- [x] 待人工审批（真实 lake / `.env` 读取）
+- [x] 已人工确认（中风险/高风险运行授权）
+- [x] 已人工审批（真实 lake / `.env` 读取 / Tushare 补数）
 
 ## 关联对象
 
@@ -208,6 +221,19 @@ related_changes:
 | 代码 | `engine/chapter3_factor_replication.py` | 第三章复刻适配层。 |
 | 代码 | `engine/factor_library.py` / `engine/factor_calculators.py` / `engine/factor_statistics.py` | 通用因子定义、计算和统计。 |
 
+## CR-034 执行结果更新
+
+| 项目 | 结果 | 证据 |
+|---|---|---|
+| prices / adj_factor | PASS | `process/research/chapter3_real_data_readiness/READINESS-REPORT.md` |
+| 后复权 `prices_hfq` | PASS | readiness `hfq_status=PASS` |
+| trade_calendar / stock_basic | PASS | readiness Dataset Coverage |
+| market_cap / liquidity_capacity | PASS | readiness Dataset Coverage |
+| financial_pit | PASS_WITH_LIMITATIONS | `run-cr034-financial-pit-2000-2019`，207,730 行；公告日 PIT，无完整 revision/as-of |
+| prices_limit | BLOCKED_SOURCE_LIMITATION | Tushare `stk_limit` candidate aggregate_start 为 2007-01-04 |
+| trade_status / ST events | BLOCKED_SOURCE_LIMITATION | `trade_status` aggregate_start 为 2015-01-05；events aggregate_start 为 2015-12-05 |
+| publish / QMT / simulation / live | PASS | operation counts 均为 0 |
+
 ## 当前状态
 
-CR 已创建，尚未获得读取 `.env` 或真实 lake 的运行授权。下一步应先由 meta-po 发起 D-CR034-01 至 D-CR034-04 的人工决策，再进入 LLD 批次或只读审计实现。
+CR 已创建并获得用户对 D-CR034-01 至 D-CR034-04 的明确授权；本轮已完成真实 lake readiness 工具、Tushare 候选补数和 CP6/CP7 验证。结论为 `blocked-with-partial-pass`：核心行情、后复权、市值、流动性和公告日财务 PIT 已补齐；严格第三章全口径仍被 2000-2014 历史 ST/停牌、2000-2006 涨跌停和财务 revision/as-of 源限制阻断。不得声明“第三章真实数据问题全部解决”，除非后续用户明确接受这些限制或授权接入替代源 / 推断策略。
