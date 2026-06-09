@@ -13,9 +13,10 @@ import os
 import sys
 import time
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import date, datetime, timedelta
+from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 from pathlib import Path
-from typing import Any, Iterable, Sequence
+from typing import Any, Iterable, Mapping, Sequence
 
 import pandas as pd
 
@@ -26,12 +27,24 @@ if str(PROJECT_ROOT) not in sys.path:
 from market_data.contracts import (
     CR005_CANONICAL_PRICES_COLUMNS,
     CANONICAL_ADJ_FACTOR_COLUMNS,
+    CANONICAL_EVENTS_COLUMNS,
+    CANONICAL_PRICES_LIMIT_COLUMNS,
+    CANONICAL_STOCK_BASIC_COLUMNS,
+    CANONICAL_TRADE_STATUS_COLUMNS,
     CANONICAL_TRADE_CALENDAR_COLUMNS,
     DATASET_ADJ_FACTOR,
+    DATASET_EVENTS,
     DATASET_PRICES,
+    DATASET_PRICES_LIMIT,
+    DATASET_STOCK_BASIC,
+    DATASET_TRADE_STATUS,
     DATASET_TRADE_CALENDAR,
+    INTERFACE_EVENTS_DISCLOSURE,
     INTERFACE_PRICES_ADJ_FACTOR,
     INTERFACE_PRICES_DAILY,
+    INTERFACE_PRICES_LIMIT_DAILY,
+    INTERFACE_STOCK_BASIC_SNAPSHOT,
+    INTERFACE_TRADE_STATUS_DAILY,
     INTERFACE_TRADE_CALENDAR_DAILY,
     SCHEMA_VERSION,
     SOURCE_TUSHARE,
@@ -148,6 +161,19 @@ CANONICAL_FINANCIAL_PIT_COLUMNS = (
     "payload",
 )
 
+AUDITED_FINANCIAL_PIT_COLUMNS = (
+    *CANONICAL_FINANCIAL_PIT_COLUMNS,
+    "revision_as_of",
+    "revision_sequence",
+    "is_latest_known_on_available_at",
+    "pit_policy",
+    "revision_source_limitation",
+)
+
+DERIVED_EVENTS_INTERFACE = "stock_basic.lifecycle+namechange.history"
+DERIVED_TRADE_STATUS_INTERFACE = "prices.daily+stock_basic.lifecycle+namechange.history"
+DERIVED_PRICES_LIMIT_INTERFACE = "prices.daily+stock_basic.lifecycle+namechange.history"
+
 
 @dataclass(slots=True)
 class DatasetSummary:
@@ -183,9 +209,17 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--datasets",
         default="trade_calendar,prices,adj_factor,prices_hfq,market_cap,liquidity",
-        help="逗号分隔：trade_calendar,prices,adj_factor,prices_hfq,market_cap,liquidity,financial_pit",
+        help=(
+            "逗号分隔：trade_calendar,prices,adj_factor,prices_hfq,market_cap,liquidity,"
+            "financial_pit,financial_pit_audit,trade_status,prices_limit,events"
+        ),
     )
     parser.add_argument("--symbols", default="", help="财务 PIT 可选 symbol CSV；缺省时读取 Tushare stock_basic L/D/P")
+    parser.add_argument(
+        "--namechange-symbols",
+        default="",
+        help="历史 ST/namechange 可选 symbol CSV；缺省时读取 lake stock_basic 符号",
+    )
     return parser.parse_args()
 
 
@@ -226,6 +260,18 @@ def main() -> int:
     if "financial_pit" in selected:
         symbols = [item.strip().upper() for item in str(args.symbols).split(",") if item.strip()]
         fetch_financial_pit(pro, ctx, symbols=symbols)
+    if "financial_pit_audit" in selected:
+        write_financial_pit_audit(ctx)
+    if {"trade_status", "prices_limit", "events"} & selected:
+        stock_basic = load_stock_basic_lifecycle(ctx)
+        namechange_symbols = [item.strip().upper() for item in str(args.namechange_symbols).split(",") if item.strip()]
+        if not namechange_symbols:
+            namechange_symbols = sorted(stock_basic["symbol"].dropna().astype(str).str.upper().unique().tolist())
+        namechange = fetch_namechange_history(pro, ctx, symbols=namechange_symbols)
+        if "events" in selected:
+            write_chapter3_events(ctx, stock_basic, namechange)
+        if "trade_status" in selected or "prices_limit" in selected:
+            write_tradability_and_limit_datasets(ctx, stock_basic, namechange, write_trade_status="trade_status" in selected, write_prices_limit="prices_limit" in selected)
     summary_path = write_summary(ctx)
     print(
         json.dumps(
@@ -597,6 +643,295 @@ def fetch_financial_pit(pro: Any, ctx: BackfillContext, *, symbols: Sequence[str
     return frame
 
 
+def write_financial_pit_audit(ctx: BackfillContext) -> pd.DataFrame:
+    """把已有公告日财务 PIT 固化为带 revision/as-of 审计字段的候选 run。"""
+
+    frame = read_canonical_dataset(
+        ctx,
+        DATASET_FINANCIAL_PIT,
+        columns=CANONICAL_FINANCIAL_PIT_COLUMNS,
+        start=ctx.start,
+        end=ctx.end,
+        date_column="available_at",
+    )
+    if frame.empty:
+        audited = pd.DataFrame(columns=AUDITED_FINANCIAL_PIT_COLUMNS)
+        write_dataset_frame(ctx, DATASET_FINANCIAL_PIT, audited, "part-financial-pit-audited.parquet")
+        ctx.summaries[DATASET_FINANCIAL_PIT].notes.append("financial_pit_audit_empty")
+        return audited
+    audited = frame.copy()
+    audited["available_at"] = audited["available_at"].map(lambda value: timestamp(iso_day(value), "16:00:00") if "T" not in str(value) else str(value))
+    audited["revision_as_of"] = audited["available_at"]
+    audited = audited.sort_values(["symbol", "report_period", "available_at", "update_flag"]).reset_index(drop=True)
+    audited["revision_sequence"] = audited.groupby(["symbol", "report_period"]).cumcount() + 1
+    max_sequence = audited.groupby(["symbol", "report_period"])["revision_sequence"].transform("max")
+    audited["is_latest_known_on_available_at"] = audited["revision_sequence"].eq(max_sequence)
+    audited["pit_policy"] = "ann_date_available_at_no_lookahead"
+    audited["revision_source_limitation"] = (
+        "Tushare income/balancesheet/fina_indicator expose ann_date/report_period/update_flag; "
+        "vendor revision ingestion timestamp is not provided, so revision_as_of equals available_at."
+    )
+    audited["source_run_id"] = ctx.run_id
+    audited["source_interface"] = INTERFACE_FINANCIAL_PIT + "+audit"
+    audited["lineage_raw_checksum"] = checksum_text(f"{ctx.run_id}:financial_pit_audit:{len(audited)}")
+    audited = audited[list(AUDITED_FINANCIAL_PIT_COLUMNS)].drop_duplicates(
+        ["symbol", "report_period", "available_at", "update_flag", "revision_sequence"]
+    )
+    write_dataset_frame(ctx, DATASET_FINANCIAL_PIT, audited, "part-financial-pit-audited.parquet")
+    return audited
+
+
+def load_stock_basic_lifecycle(ctx: BackfillContext) -> pd.DataFrame:
+    frame = read_canonical_dataset(ctx, DATASET_STOCK_BASIC, columns=CANONICAL_STOCK_BASIC_COLUMNS)
+    if frame.empty:
+        raise RuntimeError("缺少 stock_basic canonical，无法构造第三章历史股票生命周期分母")
+    frame = frame.copy()
+    frame["symbol"] = frame["symbol"].astype(str).str.upper()
+    frame["list_date"] = frame["list_date"].map(iso_day)
+    frame["delist_date"] = frame["delist_date"].map(lambda value: iso_day(value) if str(value).strip() else "")
+    frame["_list_date_sort"] = frame["list_date"].replace("", "9999-12-31")
+    frame["_delist_date_sort"] = frame["delist_date"].replace("", "9999-12-31")
+    frame["_status_priority"] = frame.get("list_status", "").map(lambda value: {"L": 0, "D": 1, "P": 2}.get(str(value), 9))
+    frame = frame.sort_values(["symbol", "_status_priority", "_list_date_sort", "_delist_date_sort"])
+    frame = frame.drop_duplicates(["symbol"], keep="first")
+    return frame.drop(columns=[column for column in ("_list_date_sort", "_delist_date_sort", "_status_priority") if column in frame.columns])
+
+
+def fetch_namechange_history(pro: Any, ctx: BackfillContext, *, symbols: Sequence[str]) -> pd.DataFrame:
+    rows: list[dict[str, Any]] = []
+    for index, symbol in enumerate(symbols, start=1):
+        if index == 1 or index % 500 == 0:
+            print(f"[namechange] {index}/{len(symbols)} {symbol}", flush=True)
+        try:
+            raw = fetch_records(pro, ctx, "namechange", ts_code=symbol)
+        except Exception as exc:  # noqa: BLE001
+            ctx.summaries.setdefault(DATASET_EVENTS, DatasetSummary()).notes.append(f"namechange_failed:{symbol}:{exc.__class__.__name__}")
+            continue
+        for row in raw:
+            start_date = row.get("start_date") or row.get("ann_date") or row.get("change_date") or row.get("trade_date")
+            if not start_date:
+                continue
+            end_date = row.get("end_date") or ""
+            rows.append(
+                {
+                    "symbol": symbol_value(row) or symbol,
+                    "name": str(row.get("name") or ""),
+                    "start_date": iso_day(start_date),
+                    "end_date": iso_day(end_date) if str(end_date).strip() else "",
+                    "ann_date": iso_day(row.get("ann_date")) if str(row.get("ann_date") or "").strip() else iso_day(start_date),
+                    "change_reason": str(row.get("change_reason") or row.get("reason") or ""),
+                }
+            )
+    frame = pd.DataFrame(rows, columns=["symbol", "name", "start_date", "end_date", "ann_date", "change_reason"])
+    if frame.empty:
+        return frame
+    frame["symbol"] = frame["symbol"].astype(str).str.upper()
+    frame = frame.drop_duplicates(["symbol", "start_date", "end_date", "name", "change_reason"])
+    frame = frame.sort_values(["symbol", "start_date", "end_date", "name"]).reset_index(drop=True)
+    ctx.summaries.setdefault(DATASET_EVENTS, DatasetSummary()).notes.append(f"namechange_rows={len(frame)}")
+    return frame
+
+
+def write_chapter3_events(ctx: BackfillContext, stock_basic: pd.DataFrame, namechange: pd.DataFrame) -> pd.DataFrame:
+    rows: list[dict[str, Any]] = []
+    checksum = checksum_text(f"{ctx.run_id}:events:lifecycle:{len(stock_basic)}:namechange:{len(namechange)}")
+    for row in records_from_frame(stock_basic):
+        symbol = str(row.get("symbol") or "").upper()
+        if not symbol:
+            continue
+        list_date = str(row.get("list_date") or "")
+        delist_date = str(row.get("delist_date") or "")
+        if list_date:
+            rows.append(event_row(ctx, symbol, "list", list_date, "stock_basic_lifecycle", row, checksum))
+        if delist_date:
+            rows.append(event_row(ctx, symbol, "delist", delist_date, "stock_basic_lifecycle", row, checksum))
+    for row in records_from_frame(namechange):
+        symbol = str(row.get("symbol") or "").upper()
+        event_date = str(row.get("ann_date") or row.get("start_date") or "")
+        if not symbol or not event_date:
+            continue
+        event_type = "st_status" if row_indicates_st(row) else "name_change"
+        rows.append(event_row(ctx, symbol, event_type, event_date, "namechange_history", row, checksum))
+    frame = pd.DataFrame(rows, columns=CANONICAL_EVENTS_COLUMNS).drop_duplicates(["symbol", "event_type", "event_date", "available_at"])
+    frame = frame.sort_values(["symbol", "event_date", "event_type"]).reset_index(drop=True)
+    write_dataset_frame(ctx, DATASET_EVENTS, frame, "part-events-lifecycle-namechange.parquet")
+    return frame
+
+
+def write_tradability_and_limit_datasets(
+    ctx: BackfillContext,
+    stock_basic: pd.DataFrame,
+    namechange: pd.DataFrame,
+    *,
+    write_trade_status: bool,
+    write_prices_limit: bool,
+) -> None:
+    open_dates = existing_open_dates(ctx)
+    if not open_dates:
+        raise RuntimeError("缺少 trade_calendar open dates，无法派生 trade_status/prices_limit")
+    st_intervals = build_st_intervals(namechange)
+    previous_close_by_symbol: dict[str, float] = {}
+    for year in range(parse_date(ctx.start).year, parse_date(ctx.end).year + 1):
+        year_start = max(ctx.start, f"{year}-01-01")
+        year_end = min(ctx.end, f"{year}-12-31")
+        year_open_dates = [item for item in open_dates if year_start <= item <= year_end]
+        if not year_open_dates:
+            continue
+        print(f"[chapter3_constraints] {year} open_dates={len(year_open_dates)}", flush=True)
+        prices = read_price_close_for_window(ctx, year_start, year_end)
+        price_pairs = prices[["trade_date", "symbol"]].drop_duplicates(["trade_date", "symbol"]) if not prices.empty else pd.DataFrame(columns=["trade_date", "symbol"])
+        active_pairs = active_lifecycle_pairs(stock_basic, year_open_dates)
+        st_pairs = st_pairs_for_dates(st_intervals, year_open_dates)
+        if write_trade_status:
+            trade_status = build_trade_status_frame(ctx, year, active_pairs, price_pairs, st_pairs)
+            write_dataset_frame(ctx, DATASET_TRADE_STATUS, trade_status, f"part-trade-status-derived-{year}.parquet")
+        if write_prices_limit:
+            prices_limit, previous_close_by_symbol = build_prices_limit_frame(ctx, year, prices, st_pairs, previous_close_by_symbol)
+            write_dataset_frame(ctx, DATASET_PRICES_LIMIT, prices_limit, f"part-prices-limit-derived-{year}.parquet")
+
+
+def build_trade_status_frame(
+    ctx: BackfillContext,
+    year: int,
+    active_pairs: pd.DataFrame,
+    price_pairs: pd.DataFrame,
+    st_pairs: pd.DataFrame,
+) -> pd.DataFrame:
+    frame = active_pairs.merge(price_pairs.assign(_has_price=True), on=["trade_date", "symbol"], how="left")
+    frame = frame.merge(st_pairs.assign(_is_st=True), on=["trade_date", "symbol"], how="left")
+    frame["is_suspended"] = ~frame["_has_price"].eq(True)
+    frame["is_st"] = frame["_is_st"].eq(True)
+    frame["is_tradable"] = ~frame["is_suspended"]
+    frame["status_reason"] = "trading"
+    frame.loc[frame["is_st"], "status_reason"] = "st"
+    frame.loc[frame["is_suspended"], "status_reason"] = "suspended_derived_missing_daily"
+    frame.loc[frame["is_suspended"] & frame["is_st"], "status_reason"] = "st_suspended_derived_missing_daily"
+    frame["source"] = SOURCE_TUSHARE
+    frame["source_interface"] = DERIVED_TRADE_STATUS_INTERFACE
+    frame["source_run_id"] = ctx.run_id
+    frame["available_at"] = frame["trade_date"].map(lambda value: timestamp(value, "09:30:00"))
+    frame["available_at_rule"] = "derived_from_lifecycle_daily_namechange_09:30"
+    frame["schema_version"] = SCHEMA_VERSION
+    frame["lineage_raw_checksum"] = checksum_text(f"{ctx.run_id}:trade_status:{year}:{len(frame)}")
+    return frame[list(CANONICAL_TRADE_STATUS_COLUMNS)].sort_values(["trade_date", "symbol"]).reset_index(drop=True)
+
+
+def build_prices_limit_frame(
+    ctx: BackfillContext,
+    year: int,
+    prices: pd.DataFrame,
+    st_pairs: pd.DataFrame,
+    previous_close_by_symbol: Mapping[str, float],
+) -> tuple[pd.DataFrame, dict[str, float]]:
+    if prices.empty:
+        empty = pd.DataFrame(columns=CANONICAL_PRICES_LIMIT_COLUMNS)
+        return empty, dict(previous_close_by_symbol)
+    frame = prices.sort_values(["symbol", "trade_date"]).reset_index(drop=True)
+    frame["previous_close"] = frame.groupby("symbol")["close"].shift(1)
+    first_indices = frame.groupby("symbol", sort=False).head(1).index
+    frame.loc[first_indices, "previous_close"] = frame.loc[first_indices, "symbol"].map(previous_close_by_symbol)
+    st_keys = {tuple(item) for item in st_pairs[["trade_date", "symbol"]].itertuples(index=False, name=None)}
+    frame["_is_st"] = [tuple(item) in st_keys for item in frame[["trade_date", "symbol"]].itertuples(index=False, name=None)]
+    frame["limit_ratio"] = frame["_is_st"].map(lambda value: 0.05 if value else 0.10)
+    frame["limit_up"] = [
+        round_price_half_up(previous_close * (1.0 + ratio))
+        for previous_close, ratio in frame[["previous_close", "limit_ratio"]].itertuples(index=False, name=None)
+    ]
+    frame["limit_down"] = [
+        round_price_half_up(previous_close * (1.0 - ratio))
+        for previous_close, ratio in frame[["previous_close", "limit_ratio"]].itertuples(index=False, name=None)
+    ]
+    frame.loc[frame["previous_close"].isna(), ["limit_up", "limit_down"]] = pd.NA
+    frame["source"] = SOURCE_TUSHARE
+    frame["source_interface"] = DERIVED_PRICES_LIMIT_INTERFACE
+    frame["source_run_id"] = ctx.run_id
+    frame["available_at"] = frame["trade_date"].map(lambda value: timestamp(value, "08:40:00"))
+    frame["available_at_rule"] = "derived_from_previous_close_st_policy_08:40"
+    frame["schema_version"] = SCHEMA_VERSION
+    frame["lineage_raw_checksum"] = checksum_text(f"{ctx.run_id}:prices_limit:{year}:{len(frame)}")
+    last_close = frame.dropna(subset=["close"]).groupby("symbol")["close"].last().to_dict()
+    output = frame[list(CANONICAL_PRICES_LIMIT_COLUMNS)].drop_duplicates(["trade_date", "symbol"])
+    return output.sort_values(["trade_date", "symbol"]).reset_index(drop=True), {str(key): float(value) for key, value in last_close.items()}
+
+
+def read_price_close_for_window(ctx: BackfillContext, start: str, end: str) -> pd.DataFrame:
+    frame = read_canonical_dataset(ctx, DATASET_PRICES, columns=("trade_date", "symbol", "close"), start=start, end=end)
+    if frame.empty:
+        return pd.DataFrame(columns=["trade_date", "symbol", "close"])
+    frame["trade_date"] = frame["trade_date"].astype(str)
+    frame["symbol"] = frame["symbol"].astype(str).str.upper()
+    frame["close"] = pd.to_numeric(frame["close"], errors="coerce")
+    return frame.dropna(subset=["close"]).drop_duplicates(["trade_date", "symbol"], keep="last")
+
+
+def active_lifecycle_pairs(stock_basic: pd.DataFrame, open_dates: Sequence[str]) -> pd.DataFrame:
+    rows: list[dict[str, str]] = []
+    for day in open_dates:
+        active = stock_basic[
+            (stock_basic["list_date"].astype(str) <= day)
+            & ((stock_basic["delist_date"].astype(str) == "") | (stock_basic["delist_date"].astype(str) >= day))
+        ]
+        rows.extend({"trade_date": day, "symbol": symbol} for symbol in active["symbol"].astype(str).str.upper().tolist())
+    if not rows:
+        return pd.DataFrame(columns=["trade_date", "symbol"])
+    return pd.DataFrame(rows).drop_duplicates(["trade_date", "symbol"])
+
+
+def build_st_intervals(namechange: pd.DataFrame) -> dict[str, list[tuple[str, str]]]:
+    intervals: dict[str, list[tuple[str, str]]] = {}
+    if namechange.empty:
+        return intervals
+    for row in records_from_frame(namechange):
+        if not row_indicates_st(row):
+            continue
+        symbol = str(row.get("symbol") or "").upper()
+        start_date = str(row.get("start_date") or row.get("ann_date") or "")
+        if not symbol or not start_date:
+            continue
+        end_date = str(row.get("end_date") or "9999-12-31")
+        intervals.setdefault(symbol, []).append((start_date, end_date))
+    return intervals
+
+
+def st_pairs_for_dates(intervals: Mapping[str, Sequence[tuple[str, str]]], open_dates: Sequence[str]) -> pd.DataFrame:
+    rows: list[dict[str, str]] = []
+    for symbol, ranges in intervals.items():
+        for start_date, end_date in ranges:
+            rows.extend({"trade_date": day, "symbol": symbol} for day in open_dates if start_date <= day <= end_date)
+    if not rows:
+        return pd.DataFrame(columns=["trade_date", "symbol"])
+    return pd.DataFrame(rows).drop_duplicates(["trade_date", "symbol"])
+
+
+def row_indicates_st(row: Mapping[str, Any]) -> bool:
+    text = " ".join(str(row.get(key) or "") for key in ("name", "change_reason", "type_name", "event_type")).upper()
+    return "ST" in text or "退" in text
+
+
+def event_row(
+    ctx: BackfillContext,
+    symbol: str,
+    event_type: str,
+    event_date: str,
+    available_at_rule: str,
+    payload: Mapping[str, Any],
+    checksum: str,
+) -> dict[str, Any]:
+    return {
+        "symbol": symbol,
+        "event_type": event_type,
+        "event_date": iso_day(event_date),
+        "available_at": timestamp(event_date, "09:20:00"),
+        "available_at_rule": available_at_rule,
+        "payload": json.dumps(dict(payload), ensure_ascii=False, sort_keys=True, default=str),
+        "source": SOURCE_TUSHARE,
+        "source_interface": DERIVED_EVENTS_INTERFACE,
+        "source_run_id": ctx.run_id,
+        "schema_version": SCHEMA_VERSION,
+        "lineage_raw_checksum": checksum,
+    }
+
+
 def fetch_stock_symbols(pro: Any, ctx: BackfillContext) -> list[str]:
     symbols: set[str] = set()
     for status in ("L", "D", "P"):
@@ -665,6 +1000,55 @@ def write_dataset_frame(ctx: BackfillContext, dataset: str, frame: pd.DataFrame,
     return path
 
 
+def read_canonical_dataset(
+    ctx: BackfillContext,
+    dataset: str,
+    *,
+    columns: Sequence[str] | None = None,
+    start: str = "",
+    end: str = "",
+    date_column: str = "trade_date",
+) -> pd.DataFrame:
+    root = ctx.layout.canonical_dataset_root(dataset, SCHEMA_VERSION)
+    if not root.exists():
+        return pd.DataFrame(columns=list(columns or ()))
+    frames: list[pd.DataFrame] = []
+    for path in sorted(root.glob("run_id=*/*.parquet")):
+        try:
+            frame = pd.read_parquet(path, columns=list(columns) if columns else None)
+        except Exception:
+            try:
+                frame = pd.read_parquet(path)
+            except Exception:
+                continue
+            if columns:
+                for column in columns:
+                    if column not in frame.columns:
+                        frame[column] = pd.NA
+                frame = frame[list(columns)]
+        if frame.empty:
+            continue
+        if date_column in frame.columns and (start or end):
+            dates = frame[date_column].map(iso_day)
+            if start:
+                frame = frame[dates >= start]
+                dates = dates.loc[frame.index]
+            if end:
+                frame = frame[dates <= end]
+        if not frame.empty:
+            frames.append(frame)
+    if not frames:
+        return pd.DataFrame(columns=list(columns or ()))
+    return pd.concat(frames, ignore_index=True)
+
+
+def records_from_frame(frame: pd.DataFrame) -> list[dict[str, Any]]:
+    if frame.empty:
+        return []
+    clean = frame.where(pd.notna(frame), None)
+    return [dict(row) for row in clean.to_dict("records")]
+
+
 def write_summary(ctx: BackfillContext) -> Path:
     payload = {
         "schema_name": "cr034.chapter3_backfill_summary.v1",
@@ -703,6 +1087,10 @@ def compact_day(value: Any) -> str:
     return iso_day(value).replace("-", "")
 
 
+def parse_date(value: Any) -> date:
+    return datetime.strptime(compact_day(value), "%Y%m%d").date()
+
+
 def timestamp(day: Any, time_text: str) -> str:
     return f"{iso_day(day)}T{time_text}+08:00"
 
@@ -723,6 +1111,15 @@ def float_or_none(value: Any) -> float | None:
 def float_or_default(value: Any, default: float) -> float:
     result = float_or_none(value)
     return default if result is None else result
+
+
+def round_price_half_up(value: Any) -> float | None:
+    if value in (None, "") or pd.isna(value):
+        return None
+    try:
+        return float(Decimal(str(value)).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP))
+    except (InvalidOperation, ValueError, TypeError):
+        return None
 
 
 if __name__ == "__main__":

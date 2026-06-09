@@ -1,6 +1,6 @@
 # CR-034 第三章真实数据 Readiness Report
 
-- status: `BLOCKED`
+- status: `PASS`
 - target_window: `2000-01-01`..`2019-12-31`
 - lake_root: `/mnt/ugreen-data-lake`
 - catalog_current_pointer_publish: `0`
@@ -15,9 +15,9 @@
 | `adj_factor` | `PASS` | `2000-01-04` | `2026-05-28` | 29865789 | `` | 36 |
 | `trade_calendar` | `PASS` | `2000-01-01` | `2026-05-29` | 10924 | `` | 25 |
 | `stock_basic` | `PASS` | `1990-12-01` | `2026-05-28` | 49309 | `` | 12 |
-| `trade_status` | `BLOCKED` | `2015-01-05` | `2026-05-28` | 11575214 | `target_window_not_covered` | 6 |
-| `prices_limit` | `BLOCKED` | `2007-01-04` | `2026-05-28` | 31436631 | `target_window_not_covered` | 7 |
-| `events` | `BLOCKED` | `2015-12-05` | `2026-05-28` | 323698 | `target_window_not_covered` | 1 |
+| `trade_status` | `PASS` | `2000-01-04` | `2026-05-28` | 21465195 | `` | 8 |
+| `prices_limit` | `PASS` | `2000-01-04` | `2026-05-28` | 40817179 | `` | 9 |
+| `events` | `PASS` | `1990-12-01` | `2026-06-09` | 354073 | `` | 3 |
 | `market_cap` | `PASS` | `2000-01-04` | `2026-05-28` | 16898211 | `` | 17 |
 | `liquidity_capacity` | `PASS` | `2000-01-04` | `2026-05-28` | 16990776 | `` | 17 |
 
@@ -25,12 +25,12 @@
 
 - hfq_status: `PASS`
 - hfq_reason: 已有后复权 canonical dataset。
-- financial_pit_status: `PASS_WITH_LIMITATIONS`
-- financial_pit_reason: 发现财务候选数据集 financial_pit；仍需逐字段审计 ann_date/report_period/update_flag/revision/as_of。
+- financial_pit_status: `PASS`
+- financial_pit_reason: financial_pit 已在目标窗口首月调仓日前可用并覆盖到窗口结束，且包含 ann_date/report_period/update_flag/revision_as_of 等 PIT 审计字段。
 
 ## Source Limitations
 
-- Tushare 财务接口通常提供公告日/报告期字段；若源端不提供完整 revision/as-of 链，需要在实证报告中降级为公告日 PIT 并显式披露。
+- 财务 PIT 采用公告日 available_at 和 revision_as_of 审计字段；Tushare 未提供独立 vendor ingestion timestamp，本轮以公告日 PIT 满足第三章 no-lookahead 因子构造。
 
 ## Operation Counts
 

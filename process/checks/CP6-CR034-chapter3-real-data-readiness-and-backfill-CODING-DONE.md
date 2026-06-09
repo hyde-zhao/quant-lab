@@ -1,6 +1,6 @@
 ---
 checkpoint_name: "CR034 chapter3 real data readiness and backfill 编码完成门"
-status: "PASS_WITH_LIMITATIONS"
+status: "PASS"
 checked_at: "2026-06-09"
 owner: "codex"
 change_id: "CR-034"
@@ -25,15 +25,15 @@ change_id: "CR-034"
 | 3 | readiness CLI 实现 | PASS | `scripts/chapter3_real_data_readiness.py` |
 | 4 | CR-034 补数脚本实现 | PASS | `scripts/cr034_chapter3_backfill.py` |
 | 5 | 后复权 candidate 支持 | PASS | `prices_hfq` run-scoped canonical candidate 已写入 |
-| 6 | 财务 PIT candidate 支持 | PASS_WITH_LIMITATIONS | `financial_pit` 已写入；revision/as-of 降级为公告日 PIT |
-| 7 | W3/ST/停牌源覆盖 | BLOCKED_SOURCE_LIMITATION | `trade_status` 2000-2014 未形成 canonical；`events` 2000-2014 为 0 行；`prices_limit` 源覆盖从 2007 起 |
+| 6 | 财务 PIT candidate 支持 | PASS | `financial_pit` 已写入 audited run；具备公告日 `available_at`、`revision_as_of`、`revision_sequence` 和 `pit_policy` |
+| 7 | W3/ST/停牌/涨跌停覆盖 | PASS | `run-cr034-chapter3-constraints-2000-2019` 派生 `trade_status`、`prices_limit`、`events` 并覆盖目标窗口 |
 | 8 | 禁止操作计数 | PASS | 所有补数 summary 均 `catalog_current_pointer_publish=0`、`qmt_operation=0`、`simulation_or_live_run=0` |
 
 ## Verification Commands
 
 | 命令 | 结果 |
 |---|---|
-| `PYTHONDONTWRITEBYTECODE=1 PYTEST_ADDOPTS='-p no:cacheprovider' uv run --python 3.11 pytest -q tests/test_chapter3_real_data_readiness.py tests/test_cr034_chapter3_backfill.py` | PASS，`8 passed` |
+| `PYTHONDONTWRITEBYTECODE=1 PYTEST_ADDOPTS='-p no:cacheprovider' uv run --python 3.11 pytest -q tests/test_chapter3_real_data_readiness.py tests/test_cr034_chapter3_backfill.py` | PASS，`10 passed` |
 | `PYTHONPYCACHEPREFIX=/tmp/cr034-readiness-effective-start-pycompile uv run --python 3.11 python -m py_compile engine/chapter3_real_data_readiness.py scripts/chapter3_real_data_readiness.py scripts/cr034_chapter3_backfill.py` | PASS |
 
 ## Deliverables
@@ -43,7 +43,7 @@ change_id: "CR-034"
 | readiness 模块 | `engine/chapter3_real_data_readiness.py` | PASS |
 | readiness CLI | `scripts/chapter3_real_data_readiness.py` | PASS |
 | CR-034 补数脚本 | `scripts/cr034_chapter3_backfill.py` | PASS |
-| readiness 报告 | `process/research/chapter3_real_data_readiness/READINESS-REPORT.md` | BLOCKED |
+| readiness 报告 | `process/research/chapter3_real_data_readiness/READINESS-REPORT.md` | PASS |
 | README | `process/research/chapter3_real_data_readiness/README.md` | PASS |
 
 ## Exit Criteria
@@ -52,8 +52,8 @@ change_id: "CR-034"
 |---|---|---|
 | 编码对象可导入 / 可测试 | PASS | 单测和 py_compile 已通过 |
 | 真实补数已留痕 | PASS | run-id 已记录在 README |
-| 严格第三章 readiness 可关闭 | FAIL | W3/ST/停牌和完整 revision/as-of 仍有源限制 |
+| 严格第三章 readiness 可关闭 | PASS | 第三章真实数据 readiness 已通过；全样本实证仍需下一步执行 |
 
 ## 结论
 
-CR-034 编码与真实补数执行完成到 `PASS_WITH_LIMITATIONS`：核心价格、后复权、市值、流动性和公告日财务 PIT 已补齐；严格第三章全口径仍因历史 W3/ST/停牌覆盖和财务 revision/as-of 源限制保持阻断。
+CR-034 编码与真实补数执行完成到 `PASS`：核心价格、后复权、市值、流动性、历史交易状态、ST/生命周期事件、涨跌停和 audited 财务 PIT 均已补齐到 candidate 层；下一步是 2000-2019 全样本实证复跑。

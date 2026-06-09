@@ -1,7 +1,7 @@
 ---
 cr_id: CR-034
 title: 第三章真实数据 readiness 与财务 PIT 审计
-status: blocked-with-partial-pass
+status: readiness-pass-pending-empirical-run
 created_at: 2026-06-09
 created_by: codex
 owner: meta-po
@@ -229,11 +229,19 @@ related_changes:
 | 后复权 `prices_hfq` | PASS | readiness `hfq_status=PASS` |
 | trade_calendar / stock_basic | PASS | readiness Dataset Coverage |
 | market_cap / liquidity_capacity | PASS | readiness Dataset Coverage |
-| financial_pit | PASS_WITH_LIMITATIONS | `run-cr034-financial-pit-2000-2019`，207,730 行；公告日 PIT，无完整 revision/as-of |
-| prices_limit | BLOCKED_SOURCE_LIMITATION | Tushare `stk_limit` candidate aggregate_start 为 2007-01-04 |
-| trade_status / ST events | BLOCKED_SOURCE_LIMITATION | `trade_status` aggregate_start 为 2015-01-05；events aggregate_start 为 2015-12-05 |
+| financial_pit | PASS | `run-cr034-chapter3-constraints-2000-2019` 生成 audited financial PIT 198,538 行；具备 `ann_date/report_period/update_flag/revision_as_of/revision_sequence/pit_policy` |
+| prices_limit | PASS | `run-cr034-chapter3-constraints-2000-2019` 派生 2000-2019 涨跌停候选数据 9,378,718 行；aggregate_start 为 2000-01-04 |
+| trade_status / ST events | PASS | `run-cr034-chapter3-constraints-2000-2019` 派生交易状态 9,888,131 行、生命周期/namechange/ST 事件 24,196 行 |
 | publish / QMT / simulation / live | PASS | operation counts 均为 0 |
 
 ## 当前状态
 
-CR 已创建并获得用户对 D-CR034-01 至 D-CR034-04 的明确授权；本轮已完成真实 lake readiness 工具、Tushare 候选补数和 CP6/CP7 验证。结论为 `blocked-with-partial-pass`：核心行情、后复权、市值、流动性和公告日财务 PIT 已补齐；严格第三章全口径仍被 2000-2014 历史 ST/停牌、2000-2006 涨跌停和财务 revision/as-of 源限制阻断。不得声明“第三章真实数据问题全部解决”，除非后续用户明确接受这些限制或授权接入替代源 / 推断策略。
+CR 已创建并获得用户对 D-CR034-01 至 D-CR034-04 的明确授权；本轮已完成真实 lake readiness 工具、Tushare 候选补数、CR-034 历史约束派生和 CP6/CP7 验证。结论为 `readiness-pass-pending-empirical-run`：第三章真实数据 readiness 已通过，数据问题已在 CR-034 candidate 层解决；仍未执行 2000-2019 全样本实证复跑，因此不得声明“第三章真实实证复刻完成”。
+
+## CR-034 历史约束补齐更新
+
+| run_id | 范围 | 输出 | 禁止操作计数 |
+|---|---|---|---|
+| `run-cr034-chapter3-constraints-2000-2019` | 2000-01-01 至 2019-12-31 | `trade_status` 9,888,131 行；`prices_limit` 9,378,718 行；`events` 24,196 行；audited `financial_pit` 198,538 行 | `catalog_current_pointer_publish=0`、`qmt_operation=0`、`simulation_or_live_run=0` |
+
+readiness 复验结果：`process/research/chapter3_real_data_readiness/READINESS-REPORT.md` 已为 `status=PASS`。财务 PIT 采用公告日 `available_at` 和 `revision_as_of` 审计字段；Tushare 未提供独立 vendor ingestion timestamp，本轮以公告日 PIT 满足第三章 no-lookahead 因子构造。

@@ -9,11 +9,17 @@ from scripts.cr034_chapter3_backfill import (
     fetch_market_cap,
     fetch_prices,
     fetch_trade_calendar,
+    fetch_namechange_history,
     write_liquidity_capacity,
     write_prices_hfq,
+    write_chapter3_events,
     fetch_financial_pit,
+    write_financial_pit_audit,
+    write_tradability_and_limit_datasets,
+    write_dataset_frame,
     write_summary,
 )
+from market_data.contracts import CANONICAL_STOCK_BASIC_COLUMNS, DATASET_STOCK_BASIC
 
 
 class FakePro:
@@ -111,6 +117,21 @@ class FakePro:
             ]
         )
 
+    def namechange(self, **params: object) -> pd.DataFrame:
+        symbol = str(params["ts_code"])
+        return pd.DataFrame(
+            [
+                {
+                    "ts_code": symbol,
+                    "name": "*ST测试",
+                    "start_date": "20000104",
+                    "end_date": "20000105",
+                    "ann_date": "20000104",
+                    "change_reason": "ST",
+                }
+            ]
+        )
+
 
 def test_cr034_backfill_writes_candidate_without_publish(tmp_path: Path) -> None:
     ctx = BackfillContext(
@@ -148,3 +169,66 @@ def test_cr034_backfill_writes_candidate_without_publish(tmp_path: Path) -> None
     assert summary["simulation_or_live_run"] == 0
     assert (tmp_path / "canonical" / "prices_hfq" / "1.0" / "run_id=run-cr034-test" / "part-prices-hfq.parquet").exists()
     assert (tmp_path / "canonical" / "financial_pit" / "1.0" / "run_id=run-cr034-test" / "part-financial-pit.parquet").exists()
+
+
+def test_cr034_derives_chapter3_constraints_and_audited_financial_pit(tmp_path: Path) -> None:
+    ctx = BackfillContext(
+        lake_root=tmp_path,
+        run_id="run-cr034-derived",
+        start="2000-01-01",
+        end="2000-01-05",
+        sleep_seconds=0.0,
+    )
+    pro = FakePro()
+
+    open_dates = fetch_trade_calendar(pro, ctx)
+    fetch_prices(pro, ctx, open_dates)
+    financial = fetch_financial_pit(pro, ctx, symbols=("000001.SZ",))
+    audited = write_financial_pit_audit(ctx)
+
+    stock_basic = pd.DataFrame(
+        [
+            {
+                "symbol": "000001.SZ",
+                "name": "测试银行",
+                "market": "主板",
+                "list_status": "L",
+                "list_date": "1999-01-01",
+                "delist_date": "",
+                "effective_date": "1999-01-01",
+                "available_date": "2000-01-05",
+                "available_at": "2000-01-05T00:00:00+08:00",
+                "available_at_rule": "fixture",
+                "pit_status": "available",
+                "readiness_status": "available",
+                "source": "fixture",
+                "source_interface": "fixture",
+                "source_run_id": ctx.run_id,
+                "schema_version": "1.0",
+                "lineage_raw_checksum": "sha256:fixture",
+            }
+        ],
+        columns=CANONICAL_STOCK_BASIC_COLUMNS,
+    )
+    write_dataset_frame(ctx, DATASET_STOCK_BASIC, stock_basic, "part-stock-basic.parquet")
+
+    lifecycle = stock_basic
+    namechange = fetch_namechange_history(pro, ctx, symbols=("000001.SZ",))
+    events = write_chapter3_events(ctx, lifecycle, namechange)
+    write_tradability_and_limit_datasets(ctx, lifecycle, namechange, write_trade_status=True, write_prices_limit=True)
+
+    trade_status = pd.read_parquet(
+        tmp_path / "canonical" / "trade_status" / "1.0" / "run_id=run-cr034-derived" / "part-trade-status-derived-2000.parquet"
+    )
+    prices_limit = pd.read_parquet(
+        tmp_path / "canonical" / "prices_limit" / "1.0" / "run_id=run-cr034-derived" / "part-prices-limit-derived-2000.parquet"
+    )
+
+    assert len(financial) == 1
+    assert {"revision_as_of", "revision_sequence", "pit_policy"} <= set(audited.columns)
+    assert set(events["event_type"]) >= {"list", "st_status"}
+    assert trade_status["is_st"].all()
+    assert trade_status["is_tradable"].all()
+    second_day_limit = prices_limit.loc[prices_limit["trade_date"] == "2000-01-05"].iloc[0]
+    assert second_day_limit["limit_up"] == 11.03
+    assert second_day_limit["limit_down"] == 9.98

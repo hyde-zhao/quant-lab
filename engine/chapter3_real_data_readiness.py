@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass, field
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Iterable, Mapping, Sequence
 
@@ -45,6 +46,17 @@ FINANCIAL_PIT_DATASET_CANDIDATES: tuple[str, ...] = (
     "fina_indicator",
     "financials",
     "financial_pit",
+)
+
+FINANCIAL_PIT_REQUIRED_COLUMNS: tuple[str, ...] = (
+    "symbol",
+    "report_period",
+    "ann_date",
+    "available_at",
+    "update_flag",
+    "revision_as_of",
+    "revision_sequence",
+    "pit_policy",
 )
 
 HFQ_DATASET_CANDIDATES: tuple[str, ...] = (
@@ -168,7 +180,12 @@ def build_chapter3_readiness_report(
         target_start=target_start,
         target_end=target_end,
     )
-    financial_status, financial_reason = evaluate_financial_pit_readiness(discovered)
+    financial_status, financial_reason = evaluate_financial_pit_readiness(
+        discovered,
+        runs=collect_dataset_runs(root, "financial_pit"),
+        target_start=target_start,
+        target_end=target_end,
+    )
     statuses = [item.status for item in dataset_results] + [hfq_status, financial_status]
     if any(status == BLOCKED or status == MISSING for status in statuses):
         status = BLOCKED
@@ -187,7 +204,8 @@ def build_chapter3_readiness_report(
         financial_pit_status=financial_status,
         financial_pit_reason=financial_reason,
         source_limitations=(
-            "Tushare 财务接口通常提供公告日/报告期字段；若源端不提供完整 revision/as-of 链，需要在实证报告中降级为公告日 PIT 并显式披露。",
+            "财务 PIT 采用公告日 available_at 和 revision_as_of 审计字段；Tushare 未提供独立 vendor ingestion timestamp，"
+            "本轮以公告日 PIT 满足第三章 no-lookahead 因子构造。",
         ),
         operation_counts={
             "credential_read": 0,
@@ -334,13 +352,40 @@ def evaluate_hfq_readiness(
     )
 
 
-def evaluate_financial_pit_readiness(discovered_datasets: Iterable[str]) -> tuple[str, str]:
+def evaluate_financial_pit_readiness(
+    discovered_datasets: Iterable[str],
+    *,
+    runs: Sequence[DatasetRunCoverage] = (),
+    target_start: str = CHAPTER3_START_DATE,
+    target_end: str = CHAPTER3_END_DATE,
+) -> tuple[str, str]:
     discovered = set(discovered_datasets)
     matched = sorted(discovered.intersection(FINANCIAL_PIT_DATASET_CANDIDATES))
     if not matched:
         return BLOCKED, (
             "未发现 income/balance/cashflow/fina_indicator/financial_pit 等 canonical 财务 PIT 数据集。"
         )
+    financial_runs = [run for run in runs if run.has_rows]
+    if financial_runs:
+        start_values = [run.start_date for run in financial_runs if run.start_date]
+        end_values = [run.end_date for run in financial_runs if run.end_date]
+        aggregate_start = min(start_values) if start_values else ""
+        aggregate_end = max(end_values) if end_values else ""
+        available_columns = {column for run in financial_runs for column in run.columns}
+        missing_columns = tuple(column for column in FINANCIAL_PIT_REQUIRED_COLUMNS if column not in available_columns)
+        first_rebalance_deadline = _first_month_end(target_start)
+        if aggregate_end and aggregate_end < target_end:
+            return BLOCKED, "financial_pit 未覆盖到目标窗口结束，不能支撑第三章公告日 PIT 财务因子。"
+        if aggregate_start and aggregate_start > first_rebalance_deadline:
+            return BLOCKED, (
+                "financial_pit 首条可用公告日晚于目标窗口首月调仓日，不能支撑第三章起始窗口。"
+            )
+        if not missing_columns:
+            return PASS, (
+                "financial_pit 已在目标窗口首月调仓日前可用并覆盖到窗口结束，且包含 "
+                "ann_date/report_period/update_flag/revision_as_of 等 PIT 审计字段。"
+            )
+        return BLOCKED, "financial_pit 缺少 PIT 审计字段: " + ", ".join(missing_columns)
     return PASS_WITH_LIMITATIONS, (
         "发现财务候选数据集 "
         + ", ".join(matched)
@@ -405,6 +450,15 @@ def render_readiness_markdown(report: Chapter3ReadinessReport) -> str:
         lines.append(f"| `{key}` | {value} |")
     lines.append("")
     return "\n".join(lines)
+
+
+def _first_month_end(day: str) -> str:
+    start = datetime.strptime(day[:10], "%Y-%m-%d").date()
+    if start.month == 12:
+        next_month = start.replace(year=start.year + 1, month=1, day=1)
+    else:
+        next_month = start.replace(month=start.month + 1, day=1)
+    return (next_month - timedelta(days=1)).isoformat()
 
 
 def write_readiness_report(report: Chapter3ReadinessReport, output_dir: str | Path) -> tuple[Path, Path]:

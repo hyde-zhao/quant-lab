@@ -132,6 +132,37 @@ def test_financial_pit_readiness_limited_when_candidate_dataset_exists() -> None
     assert "income" in reason
 
 
+def test_financial_pit_readiness_passes_with_audited_pit_columns_and_coverage() -> None:
+    status, reason = evaluate_financial_pit_readiness(
+        {"financial_pit"},
+        runs=(
+            DatasetRunCoverage(
+                dataset="financial_pit",
+                run_id="run-audited",
+                path="/lake/financial_pit",
+                row_count=10,
+                columns=(
+                    "symbol",
+                    "report_period",
+                    "ann_date",
+                    "available_at",
+                    "update_flag",
+                    "revision_as_of",
+                    "revision_sequence",
+                    "pit_policy",
+                ),
+                start_date="2000-01-08",
+                end_date="2019-12-31",
+            ),
+        ),
+        target_start="2000-01-01",
+        target_end="2019-12-31",
+    )
+
+    assert status == PASS
+    assert "PIT 审计字段" in reason
+
+
 def test_render_markdown_includes_forbidden_operation_counts() -> None:
     prices = evaluate_dataset_readiness(
         (),
