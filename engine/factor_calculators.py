@@ -331,18 +331,32 @@ def _bm_matrix(
 
 
 def _roe_ttm_matrix(financial_daily: Mapping[str, pd.DataFrame]) -> pd.DataFrame | None:
-    direct = _first_existing_matrix(financial_daily, ("roe_ttm", "roe"))
+    direct = _first_existing_matrix(financial_daily, ("roe_ttm", "chapter3_roe_ttm", "roe"))
     if direct is not None:
         return direct
     profit = _first_existing_matrix(financial_daily, ("operating_profit_ttm", "operate_profit_ttm", "net_profit_ttm"))
-    book = _first_existing_matrix(financial_daily, ("book_equity", "total_equity", "net_assets", "total_hldr_eqy_exc_min_int"))
+    book = _first_existing_matrix(
+        financial_daily,
+        (
+            "chapter3_book_equity_avg4q",
+            "book_equity_avg_4q",
+            "book_equity_mean_4q",
+            "book_equity",
+            "total_equity",
+            "net_assets",
+            "total_hldr_eqy_exc_min_int",
+        ),
+    )
     if profit is None or book is None:
         return None
     return profit / book.replace(0, np.nan)
 
 
 def _asset_growth_matrix(financial_daily: Mapping[str, pd.DataFrame]) -> pd.DataFrame | None:
-    direct = _first_existing_matrix(financial_daily, ("asset_growth", "total_assets_growth", "total_asset_growth"))
+    direct = _first_existing_matrix(
+        financial_daily,
+        ("asset_growth", "chapter3_annual_asset_growth", "total_assets_growth", "total_asset_growth"),
+    )
     if direct is not None:
         return direct
     assets = _first_existing_matrix(financial_daily, ("total_assets", "total_asset"))

@@ -259,6 +259,70 @@ def test_replicate_chapter3_factors_reports_missing_required_inputs() -> None:
     assert any("profitability_roe_ttm 缺 roe_ttm" in item for item in result.limitations)
 
 
+def test_replicate_chapter3_factors_derives_book_profitability_and_annual_investment() -> None:
+    calendar = pd.bdate_range("2024-04-29", periods=5)
+    symbols = ("000001.SZ", "000002.SZ", "000003.SZ")
+    price_rows: list[dict[str, object]] = []
+    market_rows: list[dict[str, object]] = []
+    financial_rows: list[dict[str, object]] = []
+    for symbol_index, symbol in enumerate(symbols):
+        for day_index, trade_date in enumerate(calendar):
+            price_rows.append(
+                {
+                    "trade_date": trade_date.date().isoformat(),
+                    "symbol": symbol,
+                    "hfq_close": 10.0 + symbol_index + day_index * 0.1,
+                    "close": 10.0 + symbol_index + day_index * 0.1,
+                    "turnover_rate": 0.5,
+                }
+            )
+            market_rows.append(
+                {
+                    "trade_date": trade_date.date().isoformat(),
+                    "symbol": symbol,
+                    "market_cap": 1000.0 + symbol_index * 100.0,
+                    "turnover_rate": 0.5,
+                }
+            )
+        equity_values = (80.0, 90.0, 100.0, 110.0)
+        report_periods = ("20230630", "20230930", "20231231", "20240331")
+        available_dates = ("2023-08-31", "2023-10-31", "2024-04-30", "2024-04-30")
+        for report_period, available_at, equity in zip(report_periods, available_dates, equity_values):
+            financial_rows.append(
+                {
+                    "symbol": symbol,
+                    "available_at": available_at,
+                    "report_period": report_period,
+                    "book_equity": equity + symbol_index,
+                    "operating_profit_ttm": 22.0 + symbol_index,
+                    "total_assets": 1210.0 + symbol_index * 10.0 if report_period == "20231231" else 900.0,
+                }
+            )
+        financial_rows.append(
+            {
+                "symbol": symbol,
+                "available_at": "2023-04-30",
+                "report_period": "20221231",
+                "book_equity": 70.0 + symbol_index,
+                "operating_profit_ttm": 18.0 + symbol_index,
+                "total_assets": 1000.0 + symbol_index * 10.0,
+            }
+        )
+
+    result = replicate_chapter3_factors(
+        pd.DataFrame(price_rows),
+        market_cap=pd.DataFrame(market_rows),
+        financials=pd.DataFrame(financial_rows),
+        trade_calendar=pd.DataFrame({"trade_date": [item.date().isoformat() for item in calendar], "is_open": True}),
+        factor_ids=("profitability_roe_ttm", "investment_asset_growth"),
+        min_cross_section=3,
+    )
+
+    first_date = calendar[1].date()
+    assert result.raw_matrices["profitability_roe_ttm"].loc[first_date, "000001.SZ"] == pytest.approx(22.0 / 95.0)
+    assert result.raw_matrices["investment_asset_growth"].loc[first_date, "000001.SZ"] == pytest.approx(0.21)
+
+
 def test_replicate_chapter3_factors_rejects_bad_price_schema() -> None:
     with pytest.raises(ValueError, match="prices 缺少"):
         replicate_chapter3_factors(pd.DataFrame({"trade_date": ["2024-01-02"], "symbol": ["000001.SZ"]}))

@@ -737,6 +737,7 @@ def _build_financial_daily(
     work["available_date"] = pd.to_datetime(work[available_column]).dt.date
     work["symbol"] = work["symbol"].astype("string").str.strip()
     work = work.dropna(subset=["available_date", "symbol"]).sort_values(["symbol", "available_date"])
+    work = _add_chapter3_financial_derived_columns(work)
     result: dict[str, pd.DataFrame] = {}
     value_columns = [
         column
@@ -763,6 +764,73 @@ def _build_financial_daily(
         matrix = matrix.reindex(index=list(calendar), columns=list(symbols)).sort_index().ffill()
         result[column] = matrix
     return result
+
+
+def _add_chapter3_financial_derived_columns(financials: pd.DataFrame) -> pd.DataFrame:
+    """补充第三章盈利和投资因子的 PIT 衍生变量。"""
+
+    work = financials.copy()
+    report_column = _first_existing(work, ("report_period", "end_date", "f_ann_date"))
+    if report_column is None or "available_date" not in work.columns or "symbol" not in work.columns:
+        return work
+    work["chapter3_report_period"] = pd.to_datetime(work[report_column], errors="coerce").dt.strftime("%Y%m%d")
+    work = work.sort_values(["symbol", "available_date", "chapter3_report_period"])
+    equity_column = _first_existing(work, ("book_equity", "total_equity", "net_assets", "total_hldr_eqy_exc_min_int"))
+    profit_column = _first_existing(work, ("operating_profit_ttm", "operate_profit_ttm", "net_profit_ttm"))
+    assets_column = _first_existing(work, ("total_assets", "total_asset"))
+
+    if equity_column is not None:
+        work["chapter3_book_equity_avg4q"] = _derive_pit_rolling_report_mean(
+            work,
+            value_column=equity_column,
+            periods=4,
+        )
+    if profit_column is not None and "chapter3_book_equity_avg4q" in work.columns:
+        denominator = pd.to_numeric(work["chapter3_book_equity_avg4q"], errors="coerce").replace(0, np.nan)
+        work["chapter3_roe_ttm"] = pd.to_numeric(work[profit_column], errors="coerce") / denominator
+    if assets_column is not None:
+        work["chapter3_annual_asset_growth"] = _derive_pit_annual_asset_growth(work, value_column=assets_column)
+        work["chapter3_annual_asset_growth"] = work.groupby("symbol", sort=False)["chapter3_annual_asset_growth"].ffill()
+    return work
+
+
+def _derive_pit_rolling_report_mean(
+    financials: pd.DataFrame,
+    *,
+    value_column: str,
+    periods: int,
+) -> pd.Series:
+    values = pd.Series(np.nan, index=financials.index, dtype="float64")
+    for _, group in financials.groupby("symbol", sort=False):
+        report_values: dict[str, float] = {}
+        for index, row in group.iterrows():
+            report_period = str(row.get("chapter3_report_period", ""))
+            value = _safe_float(row.get(value_column))
+            if report_period and np.isfinite(value):
+                report_values[report_period] = value
+            eligible_periods = sorted(period for period in report_values if period <= report_period)[-periods:]
+            eligible_values = [report_values[period] for period in eligible_periods if np.isfinite(report_values[period])]
+            if eligible_values:
+                values.loc[index] = float(np.mean(eligible_values))
+    return values
+
+
+def _derive_pit_annual_asset_growth(financials: pd.DataFrame, *, value_column: str) -> pd.Series:
+    values = pd.Series(np.nan, index=financials.index, dtype="float64")
+    for _, group in financials.groupby("symbol", sort=False):
+        annual_assets: dict[str, float] = {}
+        for index, row in group.iterrows():
+            report_period = str(row.get("chapter3_report_period", ""))
+            value = _safe_float(row.get(value_column))
+            if report_period.endswith("1231") and np.isfinite(value):
+                if len(report_period) != 8 or not report_period[:4].isdigit():
+                    continue
+                previous_period = f"{int(report_period[:4]) - 1}1231"
+                previous = annual_assets.get(previous_period)
+                if previous is not None and previous != 0 and np.isfinite(previous):
+                    values.loc[index] = value / previous - 1.0
+                annual_assets[report_period] = value
+    return values
 
 
 def _first_existing_matrix(financial_daily: Mapping[str, pd.DataFrame], names: Sequence[str]) -> pd.DataFrame | None:
@@ -827,6 +895,12 @@ def _first_row_value(row: pd.Series, columns: Sequence[str]) -> float | None:
     return None
 
 
+def _safe_float(value: Any) -> float:
+    try:
+        result = float(value)
+    except (TypeError, ValueError):
+        return float("nan")
+    return result if np.isfinite(result) else float("nan")
 
 
 def _financial_record_priority(row: pd.Series) -> int:

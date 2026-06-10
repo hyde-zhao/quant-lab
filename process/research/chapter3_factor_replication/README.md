@@ -30,6 +30,8 @@
 
 项目已经具备较强的 CR030 多因子研究合同和门禁能力，包括 `FactorSpec`、`FactorRunSpec`、`FactorPanelContract`、`LabelWindowSpec`、`FactorEvaluationReport` 和组合层 blocked claims。基线时按第三章严格实证口径衡量，项目没有完整处理好第三章全部数据问题；本轮已把第三章 P0 缺口整改为本地离线工程能力，但仍未读取真实 lake、未触发 provider、未声明真实实证结果。
 
+2026-06-10 复核结论：书中第3章正文明确将 `3.2` 到 `3.8` 定义为七类主流因子，即市场、规模、价值、动量、盈利、投资和换手率。当前项目不需要额外新增低波动、特质波动、流动性、短期反转等第5章/第6章异象因子来满足“第三章复刻”范围。第三章因子数量已覆盖完整；本轮继续整改的是盈利和投资因子的 fallback 公式追溯性，使其在缺少直接 `roe_ttm` / `asset_growth` 字段时也按书中定义衍生。
+
 覆盖状态摘要：
 
 | 领域 | 状态 | 结论 |
@@ -105,9 +107,21 @@
 | `size_total_market_cap` | 规模因子 | `log(total_market_cap)` 后方向取负，统一为小市值更高分 | negative |
 | `value_bm` | 价值因子 | 优先使用 `book_to_market/bm`；否则 `book_equity / market_cap` | positive |
 | `momentum_12_1` | 动量因子 | 日频近似 `close[t-21] / close[t-252] - 1`，排除最近 21 个交易日 | positive |
-| `profitability_roe_ttm` | 盈利因子 | 优先 `roe_ttm`；否则 `operating_profit_ttm / book_equity` | positive |
-| `investment_asset_growth` | 投资因子 | 优先 `asset_growth`；否则 `total_assets / total_assets.shift(252) - 1` 后方向取负 | negative |
+| `profitability_roe_ttm` | 盈利因子 | 优先 `roe_ttm`；否则按书中口径用 `operating_profit_ttm / 最近四个报告期平均股东权益` 衍生 | positive |
+| `investment_asset_growth` | 投资因子 | 优先 `asset_growth`；否则按书中口径用 `年报总资产 / 上一年年报总资产 - 1` 衍生，方向取负 | negative |
 | `abnormal_turnover_21_252` | 换手率因子 | `mean(turnover_rate, 21) / mean(turnover_rate, 252)` 后方向取负 | negative |
+
+## 2026-06-10 因子复刻收尾整改
+
+本轮没有新增因子 ID，原因是第三章复刻边界已经完整覆盖七个因子；新增第5章的特质波动率异象或第6章的行为金融异象会污染第三章复刻范围。整改内容如下：
+
+| 项目 | 处理 |
+|---|---|
+| 第三章因子范围复核 | 重新核对书籍 Markdown：第3章说明 `3.2` 到 `3.8` 依次为市场、规模、价值、动量、盈利、投资、换手率。 |
+| 盈利 fallback | `engine/chapter3_factor_replication.py` 从 PIT 财报按 `symbol/available_date/report_period` 顺序衍生 `chapter3_book_equity_avg4q` 和 `chapter3_roe_ttm`；`engine/factor_calculators.py` 在缺少直接 `roe_ttm` 时优先使用该衍生列。 |
+| 投资 fallback | `engine/chapter3_factor_replication.py` 从 PIT 年报总资产衍生 `chapter3_annual_asset_growth` 并按可用日向后填充；`engine/factor_calculators.py` 在缺少直接 `asset_growth` 时优先使用该衍生列。 |
+| 通用因子定义 | `engine/factor_library.py` 的盈利和投资公式说明已更新为书中口径，避免长期研究误读为简化实现。 |
+| 验证 | 新增 fixture 覆盖“无直接 `roe_ttm/asset_growth` 时按书中口径衍生”的路径。 |
 
 ## 已验证
 
@@ -119,6 +133,7 @@ PYTHONDONTWRITEBYTECODE=1 PYTEST_ADDOPTS='-p no:cacheprovider' UV_PROJECT_ENVIRO
 PYTHONDONTWRITEBYTECODE=1 PYTEST_ADDOPTS='-p no:cacheprovider' UV_PROJECT_ENVIRONMENT=/tmp/local-backtest-qa-venv uv run --python 3.11 pytest -q tests/test_factor_library.py tests/test_factor_calculators.py tests/test_factor_statistics.py tests/test_chapter3_factor_replication.py tests/test_cr030_factor_spec_run_spec_contract.py tests/test_cr030_factor_panel_label_window_gates.py tests/test_cr030_factor_evaluation_report.py tests/test_cr030_multifactor_combiner.py
 PYTHONDONTWRITEBYTECODE=1 PYTEST_ADDOPTS='-p no:cacheprovider' UV_PROJECT_ENVIRONMENT=/tmp/local-backtest-qa-venv uv run --python 3.11 pytest -q tests/test_cr030_factor_spec_run_spec_contract.py tests/test_cr030_factor_panel_label_window_gates.py tests/test_cr030_factor_evaluation_report.py tests/test_cr030_multifactor_combiner.py
 PYTHONPYCACHEPREFIX=/tmp/local-backtest-factor-boundary-pycompile uv run --python 3.11 python -m py_compile engine/factor_library.py engine/factor_calculators.py engine/factor_statistics.py engine/chapter3_factor_replication.py tests/test_factor_library.py tests/test_factor_calculators.py tests/test_factor_statistics.py tests/test_chapter3_factor_replication.py
+PYTHONDONTWRITEBYTECODE=1 PYTEST_ADDOPTS='-p no:cacheprovider' uv run --python 3.11 pytest -q tests/test_chapter3_factor_replication.py tests/test_factor_library.py tests/test_factor_calculators.py tests/test_factor_statistics.py tests/test_chapter3_empirical_runner.py
 ```
 
 结果：
@@ -130,6 +145,7 @@ PYTHONPYCACHEPREFIX=/tmp/local-backtest-factor-boundary-pycompile uv run --pytho
 | 通用模块 + 第三章 + CR030 合同回归 | 44 passed |
 | CR030 合同/面板/评价/组合测试 | 23 passed |
 | py_compile | passed |
+| 2026-06-10 第三章因子复刻收尾回归 | 26 passed |
 
 ## 剩余需授权或真实数据接入事项
 
