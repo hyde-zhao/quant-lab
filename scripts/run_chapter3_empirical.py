@@ -8,6 +8,7 @@ simulation / live。
 from __future__ import annotations
 
 import argparse
+import fnmatch
 import gc
 import json
 import os
@@ -109,7 +110,7 @@ class Chapter3EmpiricalResult:
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="运行第三章 2000-2019 真实因子面板和单因子实证")
+    parser = argparse.ArgumentParser(description="运行第三章真实因子面板和单因子实证")
     parser.add_argument("--lake-root", default=os.environ.get("MARKET_DATA_LAKE_ROOT", "/mnt/ugreen-data-lake"))
     parser.add_argument("--start", default=TARGET_START)
     parser.add_argument("--end", default=TARGET_END)
@@ -180,19 +181,22 @@ def assert_full_mode_window_allowed(start: str, end: str, *, allow_large: bool) 
     days = (_parse_date(end) - _parse_date(start)).days + 1
     if days > 731:
         raise RuntimeError(
-            "full 模式只允许两年以内调试窗口；2000-2019 等长窗口必须使用默认 chunked 模式。"
+            "full 模式只允许两年以内调试窗口；长窗口必须使用默认 chunked 模式。"
         )
 
 
 def load_chapter3_lake_frames(lake_root: Path, *, start: str, end: str) -> dict[str, pd.DataFrame]:
     start_year = _parse_date(start).year
     end_year = _parse_date(end).year
-    cr034_years = yearly_run_ids("run-cr034-chapter3-backfill", max(2000, start_year), min(2014, end_year))
-    cr014_years = yearly_run_ids("run-cr014-s14-prices-adj-factor", max(2015, start_year), min(2019, end_year), fuzzy=True)
+    price_run_ids = chapter3_price_run_ids(start_year, end_year)
+    market_run_ids = chapter3_market_cap_run_ids(start_year, end_year)
+    financial_run_ids = chapter3_financial_run_ids(start_year, end_year)
+    trade_status_run_ids = chapter3_trade_status_run_ids(start_year, end_year)
+    prices_limit_run_ids = chapter3_prices_limit_run_ids(start_year, end_year)
     prices = read_dataset_runs(
         lake_root,
         "prices",
-        selected_run_ids=cr034_years + cr014_years,
+        selected_run_ids=price_run_ids,
         columns=("trade_date", "symbol", "open", "high", "low", "close", "volume", "amount"),
         start=start,
         end=end,
@@ -200,7 +204,7 @@ def load_chapter3_lake_frames(lake_root: Path, *, start: str, end: str) -> dict[
     adj_factor = read_dataset_runs(
         lake_root,
         "adj_factor",
-        selected_run_ids=cr034_years + cr014_years,
+        selected_run_ids=price_run_ids,
         columns=("trade_date", "symbol", "adj_factor"),
         start=start,
         end=end,
@@ -209,7 +213,7 @@ def load_chapter3_lake_frames(lake_root: Path, *, start: str, end: str) -> dict[
     market_cap = read_dataset_runs(
         lake_root,
         "market_cap",
-        selected_run_ids=cr034_years + (("run-cr018-missing-data-backfill-20150101-20260528-p0p1-20260529",) if end_year >= 2015 else ()),
+        selected_run_ids=market_run_ids,
         columns=("trade_date", "symbol", "market_cap", "float_market_cap", "turnover_rate", "turnover_rate_f"),
         start=start,
         end=end,
@@ -217,7 +221,7 @@ def load_chapter3_lake_frames(lake_root: Path, *, start: str, end: str) -> dict[
     liquidity = read_dataset_runs(
         lake_root,
         "liquidity_capacity",
-        selected_run_ids=cr034_years + (("run-cr018-missing-data-backfill-20150101-20260528-p0p1-20260529",) if end_year >= 2015 else ()),
+        selected_run_ids=market_run_ids,
         columns=("trade_date", "symbol", "turnover_rate", "turnover_rate_f", "adv20_amount", "adv20_volume"),
         start=start,
         end=end,
@@ -229,7 +233,7 @@ def load_chapter3_lake_frames(lake_root: Path, *, start: str, end: str) -> dict[
         "financials": read_dataset_runs(
             lake_root,
             "financial_pit",
-            selected_run_ids=("run-cr034-chapter3-constraints-2000-2019",),
+            selected_run_ids=financial_run_ids,
             columns=None,
             start=start,
             end=end,
@@ -241,7 +245,7 @@ def load_chapter3_lake_frames(lake_root: Path, *, start: str, end: str) -> dict[
         "trade_status": read_dataset_runs(
             lake_root,
             "trade_status",
-            selected_run_ids=("run-cr034-chapter3-constraints-2000-2019",),
+            selected_run_ids=trade_status_run_ids,
             columns=("trade_date", "symbol", "is_tradable", "is_suspended", "is_st", "status_reason"),
             start=start,
             end=end,
@@ -249,7 +253,7 @@ def load_chapter3_lake_frames(lake_root: Path, *, start: str, end: str) -> dict[
         "prices_limit": read_dataset_runs(
             lake_root,
             "prices_limit",
-            selected_run_ids=("run-cr034-chapter3-constraints-2000-2019",),
+            selected_run_ids=prices_limit_run_ids,
             columns=("trade_date", "symbol", "limit_up", "limit_down"),
             start=start,
             end=end,
@@ -262,6 +266,60 @@ def load_chapter3_lake_frames(lake_root: Path, *, start: str, end: str) -> dict[
             end=end,
         ).drop_duplicates(["trade_date"], keep="last"),
     }
+
+
+def chapter3_price_run_ids(start_year: int, end_year: int) -> tuple[str, ...]:
+    run_ids: list[str] = []
+    run_ids.extend(yearly_run_ids("run-cr034-chapter3-backfill", max(2000, start_year), min(2014, end_year)))
+    run_ids.extend(yearly_run_ids("run-cr014-s14-prices-adj-factor", max(2015, start_year), min(2025, end_year), fuzzy=True))
+    if start_year <= 2026 <= end_year:
+        run_ids.append("run-cr014-s11-full-a-2026-ytd-date-batch-143508")
+    return tuple(run_ids)
+
+
+def chapter3_market_cap_run_ids(start_year: int, end_year: int) -> tuple[str, ...]:
+    run_ids: list[str] = []
+    run_ids.extend(yearly_run_ids("run-cr034-chapter3-backfill", max(2000, start_year), min(2014, end_year)))
+    if end_year >= 2015:
+        run_ids.append("run-cr018-missing-data-backfill-20150101-20260528-p0p1-20260529")
+    return tuple(run_ids)
+
+
+def chapter3_financial_run_ids(start_year: int, end_year: int) -> tuple[str, ...]:
+    run_ids: list[str] = []
+    if start_year <= 2019:
+        run_ids.extend(("run-cr034-chapter3-constraints-2000-2019", "run-cr034-financial-pit-2000-2019"))
+    if end_year >= 2020:
+        run_ids.append("run-cr034-financial-pit-2020-2026*ytd*audited")
+    return tuple(run_ids)
+
+
+def chapter3_trade_status_run_ids(start_year: int, end_year: int) -> tuple[str, ...]:
+    run_ids: list[str] = []
+    if start_year <= 2019:
+        run_ids.append("run-cr034-chapter3-constraints-2000-2019")
+    if end_year >= 2020:
+        run_ids.extend(
+            (
+                "run-cr018-missing-data-backfill-20150101-20260528-p0p1-20260529",
+                "run-cr014-s13-trade-status-missing-2026-ytd-231252",
+            )
+        )
+    return tuple(run_ids)
+
+
+def chapter3_prices_limit_run_ids(start_year: int, end_year: int) -> tuple[str, ...]:
+    run_ids: list[str] = []
+    if start_year <= 2019:
+        run_ids.append("run-cr034-chapter3-constraints-2000-2019")
+    if end_year >= 2020:
+        run_ids.extend(
+            (
+                "run-cr018-missing-data-backfill-20150101-20260528-p0p1-20260529",
+                "run-cr018-price-limit-lifecycle-cleanup-20150101-20260528-20260529",
+            )
+        )
+    return tuple(run_ids)
 
 
 def run_empirical_from_frames(
@@ -309,6 +367,8 @@ def run_empirical_from_frames(
         result.preprocessing_summary,
         tuple(result.limitations) + tuple(prepared.limitations),
         run_id=run_id,
+        start=start,
+        end=end,
         artifacts=artifacts,
         max_memory_gb=max_memory_gb,
     )
@@ -426,6 +486,8 @@ def run_empirical_from_lake_chunked(
         preprocessing,
         tuple(dict.fromkeys(limitations)),
         run_id=run_id,
+        start=start,
+        end=end,
         artifacts=artifacts,
         max_memory_gb=max_memory_gb,
     )
@@ -438,16 +500,19 @@ def finalize_empirical_outputs(
     limitations: Sequence[str],
     *,
     run_id: str,
+    start: str,
+    end: str,
     artifacts: Chapter3EmpiricalArtifacts,
     max_memory_gb: float = 16.0,
 ) -> Chapter3EmpiricalResult:
     monthly_panel.to_parquet(artifacts.factor_panel_path, index=False)
     preprocessing_summary.to_csv(artifacts.preprocessing_summary_path, index=False)
     manifest = build_panel_manifest(run_id, monthly_panel, labels, limitations)
+    manifest["evaluation_window"] = {"start": start, "end": end}
     manifest["memory_budget"] = memory_budget_summary(max_memory_gb)
     artifacts.manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     enforce_memory_budget(max_memory_gb, "panel_write")
-    factor_summaries, reports = evaluate_factors(monthly_panel, labels, run_id=run_id)
+    factor_summaries, reports = evaluate_factors(monthly_panel, labels, run_id=run_id, start=start, end=end)
     enforce_memory_budget(max_memory_gb, "factor_evaluation")
     factor_correlation = factor_correlation_matrix(monthly_panel)
     portfolio_plan = build_research_portfolio_plan(run_id, reports)
@@ -468,7 +533,7 @@ def finalize_empirical_outputs(
         memory_budget=memory_budget_summary(max_memory_gb),
     )
     artifacts.report_json_path.write_text(json.dumps(empirical.to_dict(), ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    artifacts.report_md_path.write_text(render_empirical_markdown(empirical), encoding="utf-8")
+    artifacts.report_md_path.write_text(render_empirical_markdown(empirical, start=start, end=end), encoding="utf-8")
     artifacts.portfolio_plan_path.write_text(json.dumps(_json_safe(dict(portfolio_plan)), ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     return empirical
 
@@ -550,7 +615,14 @@ def build_next_rebalance_labels(close: pd.DataFrame, rebalance_dates: Sequence[A
     return labels
 
 
-def evaluate_factors(panel: pd.DataFrame, labels: pd.DataFrame, *, run_id: str) -> tuple[list[dict[str, Any]], list[Any]]:
+def evaluate_factors(
+    panel: pd.DataFrame,
+    labels: pd.DataFrame,
+    *,
+    run_id: str,
+    start: str,
+    end: str,
+) -> tuple[list[dict[str, Any]], list[Any]]:
     summaries: list[dict[str, Any]] = []
     reports: list[Any] = []
     for factor_id in DEFAULT_FACTOR_IDS:
@@ -567,7 +639,7 @@ def evaluate_factors(panel: pd.DataFrame, labels: pd.DataFrame, *, run_id: str) 
                 "factor_version": FACTOR_VERSION,
                 "dataset_release": "cr034_readiness_pass_candidate",
                 "label_window": {"kind": "next_rebalance_return"},
-                "evaluation_window": {"start": TARGET_START, "end": TARGET_END},
+                "evaluation_window": {"start": start, "end": end},
                 "quantiles": 10,
                 "permission_counters": dict(FORBIDDEN_OPERATION_COUNTS),
                 "evidence_refs": ["process/research/chapter3_real_data_readiness/READINESS-REPORT.md"],
@@ -659,12 +731,13 @@ def build_panel_manifest(
     }
 
 
-def render_empirical_markdown(result: Chapter3EmpiricalResult) -> str:
+def render_empirical_markdown(result: Chapter3EmpiricalResult, *, start: str, end: str) -> str:
     lines = [
-        "# CR-034 第三章 2000-2019 全样本实证报告",
+        f"# CR-034 第三章 {start}..{end} 全样本实证报告",
         "",
         f"- status: `{result.status}`",
         f"- run_id: `{result.run_id}`",
+        f"- evaluation_window: `{start}`..`{end}`",
         f"- factor_panel_rows: `{result.monthly_panel_rows}`",
         f"- label_rows: `{result.label_rows}`",
             f"- rebalance_count: `{result.rebalance_count}`",
@@ -739,7 +812,7 @@ def read_dataset_runs(
     selected = tuple(selected_run_ids)
     for run_dir in sorted(root.glob("run_id=*")):
         run_id = run_dir.name.removeprefix("run_id=")
-        if selected and not any(run_id == item or (item.endswith("*") and run_id.startswith(item[:-1])) for item in selected):
+        if selected and not any(run_id == item or fnmatch.fnmatch(run_id, item) for item in selected):
             continue
         for path in sorted(run_dir.glob("*.parquet")):
             read_kwargs: dict[str, Any] = {}

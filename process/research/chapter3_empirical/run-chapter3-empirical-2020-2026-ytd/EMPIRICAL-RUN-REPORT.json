@@ -1,0 +1,561 @@
+{
+  "artifacts": {
+    "factor_panel_path": "reports/chapter3_factor_panel/run-chapter3-empirical-2020-2026-ytd/factor_panel.parquet",
+    "manifest_path": "reports/chapter3_factor_panel/run-chapter3-empirical-2020-2026-ytd/factor_panel_manifest.json",
+    "metrics_csv_path": "process/research/chapter3_empirical/run-chapter3-empirical-2020-2026-ytd/factor_metrics.csv",
+    "output_dir": "process/research/chapter3_empirical/run-chapter3-empirical-2020-2026-ytd",
+    "portfolio_plan_path": "process/research/chapter3_empirical/run-chapter3-empirical-2020-2026-ytd/MULTIFACTOR-ADMISSION-SUMMARY.json",
+    "preprocessing_summary_path": "reports/chapter3_factor_panel/run-chapter3-empirical-2020-2026-ytd/preprocessing_summary.csv",
+    "report_json_path": "process/research/chapter3_empirical/run-chapter3-empirical-2020-2026-ytd/EMPIRICAL-RUN-REPORT.json",
+    "report_md_path": "process/research/chapter3_empirical/run-chapter3-empirical-2020-2026-ytd/EMPIRICAL-RUN-REPORT.md",
+    "run_id": "run-chapter3-empirical-2020-2026-ytd"
+  },
+  "factor_correlation": {
+    "abnormal_turnover_21_252": {
+      "abnormal_turnover_21_252": 1.0,
+      "investment_asset_growth": -0.04794289790996057,
+      "market_beta_252": 0.07865348044072358,
+      "momentum_12_1": -0.081133976779659,
+      "profitability_roe_ttm": 0.03400520564889313,
+      "size_total_market_cap": 0.03278074724126575,
+      "value_bm": 0.021353133217923266
+    },
+    "investment_asset_growth": {
+      "abnormal_turnover_21_252": -0.04794289790996057,
+      "investment_asset_growth": 1.0,
+      "market_beta_252": -0.0661188639412346,
+      "momentum_12_1": -0.061609748253185145,
+      "profitability_roe_ttm": -0.2904416216147492,
+      "size_total_market_cap": 0.1553521297630816,
+      "value_bm": 0.12053223137075499
+    },
+    "market_beta_252": {
+      "abnormal_turnover_21_252": 0.07865348044072358,
+      "investment_asset_growth": -0.0661188639412346,
+      "market_beta_252": 1.0,
+      "momentum_12_1": 0.05499958348047678,
+      "profitability_roe_ttm": 0.009038304507567664,
+      "size_total_market_cap": -0.013422699336963571,
+      "value_bm": -0.2632014676531661
+    },
+    "momentum_12_1": {
+      "abnormal_turnover_21_252": -0.081133976779659,
+      "investment_asset_growth": -0.061609748253185145,
+      "market_beta_252": 0.05499958348047678,
+      "momentum_12_1": 1.0,
+      "profitability_roe_ttm": 0.10903411378686419,
+      "size_total_market_cap": -0.11702866020027893,
+      "value_bm": -0.22740041227301291
+    },
+    "profitability_roe_ttm": {
+      "abnormal_turnover_21_252": 0.03400520564889313,
+      "investment_asset_growth": -0.2904416216147492,
+      "market_beta_252": 0.009038304507567664,
+      "momentum_12_1": 0.10903411378686419,
+      "profitability_roe_ttm": 1.0,
+      "size_total_market_cap": -0.32103179625725575,
+      "value_bm": 0.016382862149369924
+    },
+    "size_total_market_cap": {
+      "abnormal_turnover_21_252": 0.03278074724126575,
+      "investment_asset_growth": 0.1553521297630816,
+      "market_beta_252": -0.013422699336963571,
+      "momentum_12_1": -0.11702866020027893,
+      "profitability_roe_ttm": -0.32103179625725575,
+      "size_total_market_cap": 1.0,
+      "value_bm": -0.08588234561372332
+    },
+    "value_bm": {
+      "abnormal_turnover_21_252": 0.021353133217923266,
+      "investment_asset_growth": 0.12053223137075499,
+      "market_beta_252": -0.2632014676531661,
+      "momentum_12_1": -0.22740041227301291,
+      "profitability_roe_ttm": 0.016382862149369924,
+      "size_total_market_cap": -0.08588234561372332,
+      "value_bm": 1.0
+    }
+  },
+  "factor_ids": [
+    "market_beta_252",
+    "size_total_market_cap",
+    "value_bm",
+    "momentum_12_1",
+    "profitability_roe_ttm",
+    "investment_asset_growth",
+    "abnormal_turnover_21_252"
+  ],
+  "factor_summaries": [
+    {
+      "admission": "watch_or_reweight",
+      "factor_id": "market_beta_252",
+      "ic_mean": -0.0015690374115264055,
+      "icir": -0.01086456667617787,
+      "long_short_return": 0.003698727944559544,
+      "observations": 276565,
+      "rank_ic_mean": -0.021522820345737693,
+      "status": "pass",
+      "turnover": 0.2745915615858017
+    },
+    {
+      "admission": "research_candidate",
+      "factor_id": "size_total_market_cap",
+      "ic_mean": 0.041861263587564874,
+      "icir": 0.28160099674445244,
+      "long_short_return": 0.013318869267958527,
+      "observations": 317008,
+      "rank_ic_mean": 0.05738245028989959,
+      "status": "pass",
+      "turnover": 0.21145664258091004
+    },
+    {
+      "admission": "research_candidate",
+      "factor_id": "value_bm",
+      "ic_mean": 0.014716033384466917,
+      "icir": 0.11320448541818667,
+      "long_short_return": 0.010025810647395975,
+      "observations": 304294,
+      "rank_ic_mean": 0.059444644688039824,
+      "status": "pass",
+      "turnover": 0.16010452415585363
+    },
+    {
+      "admission": "watch_or_reweight",
+      "factor_id": "momentum_12_1",
+      "ic_mean": -0.02035966436952709,
+      "icir": -0.1658799756353382,
+      "long_short_return": 0.005074046662222954,
+      "observations": 273116,
+      "rank_ic_mean": -0.03282813688402453,
+      "status": "pass",
+      "turnover": 0.4371694744916575
+    },
+    {
+      "admission": "watch_or_reweight",
+      "factor_id": "profitability_roe_ttm",
+      "ic_mean": -0.0039190892017964786,
+      "icir": -0.0393573295887323,
+      "long_short_return": -0.00154573544940966,
+      "observations": 303289,
+      "rank_ic_mean": 0.001546531926065751,
+      "status": "pass",
+      "turnover": 0.1906981191256307
+    },
+    {
+      "admission": "research_candidate",
+      "factor_id": "investment_asset_growth",
+      "ic_mean": 0.006467574936250191,
+      "icir": 0.08543418119740011,
+      "long_short_return": 0.0012490087106707699,
+      "observations": 251911,
+      "rank_ic_mean": 0.008630099217373432,
+      "status": "pass",
+      "turnover": 0.22958839569415504
+    },
+    {
+      "admission": "research_candidate",
+      "factor_id": "abnormal_turnover_21_252",
+      "ic_mean": 0.03907900573360034,
+      "icir": 0.3422618095870024,
+      "long_short_return": 0.014623669924362967,
+      "observations": 288128,
+      "rank_ic_mean": 0.07710696774505765,
+      "status": "pass",
+      "turnover": 0.6469796555611835
+    }
+  ],
+  "label_rows": 371877,
+  "limitations": [],
+  "memory_budget": {
+    "budget_bytes": 17179869184,
+    "max_memory_gb": 16.0,
+    "max_rss_bytes_observed": 5958955008,
+    "max_rss_gb_observed": 5.549709320068359,
+    "status": "pass"
+  },
+  "monthly_panel_rows": 2019002,
+  "operation_counts": {
+    "catalog_current_pointer_publish": 0,
+    "credential_read": 0,
+    "lake_write": 0,
+    "provider_fetch": 0,
+    "qmt_operation": 0,
+    "simulation_or_live_run": 0
+  },
+  "portfolio_plan": {
+    "allowed_claims": [
+      {
+        "claim": "multifactor_research_plan",
+        "code": "MF_COMBINER_RESEARCH_PLAN_ALLOWED",
+        "evidence_ref": "combo-run-chapter3-empirical-2020-2026-ytd",
+        "limitation": "后续准入、模拟盘或真实交易必须走独立 CR / per-run authorization。",
+        "reason": "仅允许作为项目自有多因子研究和后续 S07 admission 输入，不构成生产、QMT、模拟盘或实盘声明。",
+        "status": "allowed"
+      }
+    ],
+    "benchmark_deviation": {
+      "active_weight_claim": "not_claimed",
+      "benchmark": {
+        "benchmark_id": "A_share_cross_section_equal_weight"
+      },
+      "deviation_cap": null,
+      "status": "pass"
+    },
+    "blocked_claims": [
+      {
+        "claim": "production_valid",
+        "code": "MF_COMBINER_CLAIM_NOT_AUTHORIZED",
+        "evidence_ref": "",
+        "limitation": "真实运行或交易类能力必须由后续独立 CR / per-run authorization 解锁。",
+        "reason": "MultiFactorPortfolioPlan 不构成生产、QMT、模拟盘、实盘或真实可交易证据。",
+        "status": "blocked"
+      },
+      {
+        "claim": "qmt_ready",
+        "code": "MF_COMBINER_CLAIM_NOT_AUTHORIZED",
+        "evidence_ref": "",
+        "limitation": "真实运行或交易类能力必须由后续独立 CR / per-run authorization 解锁。",
+        "reason": "MultiFactorPortfolioPlan 不构成生产、QMT、模拟盘、实盘或真实可交易证据。",
+        "status": "blocked"
+      },
+      {
+        "claim": "simulation_ready",
+        "code": "MF_COMBINER_CLAIM_NOT_AUTHORIZED",
+        "evidence_ref": "",
+        "limitation": "真实运行或交易类能力必须由后续独立 CR / per-run authorization 解锁。",
+        "reason": "MultiFactorPortfolioPlan 不构成生产、QMT、模拟盘、实盘或真实可交易证据。",
+        "status": "blocked"
+      },
+      {
+        "claim": "live_ready",
+        "code": "MF_COMBINER_CLAIM_NOT_AUTHORIZED",
+        "evidence_ref": "",
+        "limitation": "真实运行或交易类能力必须由后续独立 CR / per-run authorization 解锁。",
+        "reason": "MultiFactorPortfolioPlan 不构成生产、QMT、模拟盘、实盘或真实可交易证据。",
+        "status": "blocked"
+      },
+      {
+        "claim": "tradable_evidence",
+        "code": "MF_COMBINER_CLAIM_NOT_AUTHORIZED",
+        "evidence_ref": "",
+        "limitation": "真实运行或交易类能力必须由后续独立 CR / per-run authorization 解锁。",
+        "reason": "MultiFactorPortfolioPlan 不构成生产、QMT、模拟盘、实盘或真实可交易证据。",
+        "status": "blocked"
+      }
+    ],
+    "blocked_reasons": [],
+    "capacity_summary": {
+      "capacity": {
+        "status": "not_evaluated"
+      },
+      "capacity_claim": "bounded",
+      "status": "pass"
+    },
+    "combiner_id": "combo-run-chapter3-empirical-2020-2026-ytd",
+    "constraints": {
+      "max_factor_weight": 1.0,
+      "min_factor_weight": 0.0
+    },
+    "cost_summary": {
+      "cost_adjusted_claim": "bounded",
+      "cost_config": {
+        "commission_bps": 3.0,
+        "slippage_bps": 5.0
+      },
+      "status": "pass"
+    },
+    "draft_handoff": {
+      "benchmark_deviation": {
+        "active_weight_claim": "not_claimed",
+        "benchmark": {
+          "benchmark_id": "A_share_cross_section_equal_weight"
+        },
+        "deviation_cap": null,
+        "status": "pass"
+      },
+      "capacity_summary": {
+        "capacity": {
+          "status": "not_evaluated"
+        },
+        "capacity_claim": "bounded",
+        "status": "pass"
+      },
+      "combiner_id": "combo-run-chapter3-empirical-2020-2026-ytd",
+      "consumer": "CR030-S07-admission-package-or-research-runner",
+      "cost_summary": {
+        "cost_adjusted_claim": "bounded",
+        "cost_config": {
+          "commission_bps": 3.0,
+          "slippage_bps": 5.0
+        },
+        "status": "pass"
+      },
+      "freeze_policy": {
+        "change_policy": "cp_or_cr_required",
+        "version": "chapter3-real-v1"
+      },
+      "limitations": [
+        "not_qmt_ready",
+        "not_simulation_ready",
+        "not_live_ready",
+        "not_broker_order",
+        "requires_s07_admission_before_execution_route"
+      ],
+      "not_authorization": true,
+      "not_broker_order": true,
+      "plan_id": "combo-run-chapter3-empirical-2020-2026-ytd:chapter3-real-v1",
+      "rebalance_frequency": "monthly",
+      "schema_version": "multifactor_portfolio_plan_draft_v1",
+      "status": "pass",
+      "target_count": 7,
+      "target_weights": {
+        "abnormal_turnover_21_252": 0.14285714285714288,
+        "investment_asset_growth": 0.14285714285714288,
+        "market_beta_252": 0.14285714285714288,
+        "momentum_12_1": 0.14285714285714288,
+        "profitability_roe_ttm": 0.14285714285714288,
+        "size_total_market_cap": 0.14285714285714288,
+        "value_bm": 0.14285714285714288
+      }
+    },
+    "factor_weights": [
+      {
+        "factor_id": "market_beta_252",
+        "policy": "rule_weight",
+        "raw_score": 0.14285714285714285,
+        "reason": "规则权重来自 weighting_policy.weights；缺省时使用等权。",
+        "report_id": "run-chapter3-empirical-2020-2026-ytd-market_beta_252-2020-01-01-2026-05-28-factor_evaluation_report_v1",
+        "source_metric_refs": [
+          "weighting_policy.weights"
+        ],
+        "weight": 0.14285714285714288
+      },
+      {
+        "factor_id": "size_total_market_cap",
+        "policy": "rule_weight",
+        "raw_score": 0.14285714285714285,
+        "reason": "规则权重来自 weighting_policy.weights；缺省时使用等权。",
+        "report_id": "run-chapter3-empirical-2020-2026-ytd-size_total_market_cap-2020-01-01-2026-05-28-factor_evaluation_report_v1",
+        "source_metric_refs": [
+          "weighting_policy.weights"
+        ],
+        "weight": 0.14285714285714288
+      },
+      {
+        "factor_id": "value_bm",
+        "policy": "rule_weight",
+        "raw_score": 0.14285714285714285,
+        "reason": "规则权重来自 weighting_policy.weights；缺省时使用等权。",
+        "report_id": "run-chapter3-empirical-2020-2026-ytd-value_bm-2020-01-01-2026-05-28-factor_evaluation_report_v1",
+        "source_metric_refs": [
+          "weighting_policy.weights"
+        ],
+        "weight": 0.14285714285714288
+      },
+      {
+        "factor_id": "momentum_12_1",
+        "policy": "rule_weight",
+        "raw_score": 0.14285714285714285,
+        "reason": "规则权重来自 weighting_policy.weights；缺省时使用等权。",
+        "report_id": "run-chapter3-empirical-2020-2026-ytd-momentum_12_1-2020-01-01-2026-05-28-factor_evaluation_report_v1",
+        "source_metric_refs": [
+          "weighting_policy.weights"
+        ],
+        "weight": 0.14285714285714288
+      },
+      {
+        "factor_id": "profitability_roe_ttm",
+        "policy": "rule_weight",
+        "raw_score": 0.14285714285714285,
+        "reason": "规则权重来自 weighting_policy.weights；缺省时使用等权。",
+        "report_id": "run-chapter3-empirical-2020-2026-ytd-profitability_roe_ttm-2020-01-01-2026-05-28-factor_evaluation_report_v1",
+        "source_metric_refs": [
+          "weighting_policy.weights"
+        ],
+        "weight": 0.14285714285714288
+      },
+      {
+        "factor_id": "investment_asset_growth",
+        "policy": "rule_weight",
+        "raw_score": 0.14285714285714285,
+        "reason": "规则权重来自 weighting_policy.weights；缺省时使用等权。",
+        "report_id": "run-chapter3-empirical-2020-2026-ytd-investment_asset_growth-2020-01-01-2026-05-28-factor_evaluation_report_v1",
+        "source_metric_refs": [
+          "weighting_policy.weights"
+        ],
+        "weight": 0.14285714285714288
+      },
+      {
+        "factor_id": "abnormal_turnover_21_252",
+        "policy": "rule_weight",
+        "raw_score": 0.14285714285714285,
+        "reason": "规则权重来自 weighting_policy.weights；缺省时使用等权。",
+        "report_id": "run-chapter3-empirical-2020-2026-ytd-abnormal_turnover_21_252-2020-01-01-2026-05-28-factor_evaluation_report_v1",
+        "source_metric_refs": [
+          "weighting_policy.weights"
+        ],
+        "weight": 0.14285714285714288
+      }
+    ],
+    "freeze_policy": {
+      "change_policy": "cp_or_cr_required",
+      "version": "chapter3-real-v1"
+    },
+    "limitations": [
+      "not_qmt_ready",
+      "not_simulation_ready",
+      "not_live_ready",
+      "not_broker_order",
+      "requires_s07_admission_before_execution_route"
+    ],
+    "lineage": {
+      "combiner_id": "combo-run-chapter3-empirical-2020-2026-ytd",
+      "evidence_refs": [
+        "process/research/chapter3_real_data_readiness/READINESS-REPORT.md"
+      ],
+      "freeze_version": "chapter3-real-v1",
+      "source_reports": [
+        {
+          "factor_id": "market_beta_252",
+          "report_id": "run-chapter3-empirical-2020-2026-ytd-market_beta_252-2020-01-01-2026-05-28-factor_evaluation_report_v1",
+          "status": "pass"
+        },
+        {
+          "factor_id": "size_total_market_cap",
+          "report_id": "run-chapter3-empirical-2020-2026-ytd-size_total_market_cap-2020-01-01-2026-05-28-factor_evaluation_report_v1",
+          "status": "pass"
+        },
+        {
+          "factor_id": "value_bm",
+          "report_id": "run-chapter3-empirical-2020-2026-ytd-value_bm-2020-01-01-2026-05-28-factor_evaluation_report_v1",
+          "status": "pass"
+        },
+        {
+          "factor_id": "momentum_12_1",
+          "report_id": "run-chapter3-empirical-2020-2026-ytd-momentum_12_1-2020-01-01-2026-05-28-factor_evaluation_report_v1",
+          "status": "pass"
+        },
+        {
+          "factor_id": "profitability_roe_ttm",
+          "report_id": "run-chapter3-empirical-2020-2026-ytd-profitability_roe_ttm-2020-01-01-2026-05-28-factor_evaluation_report_v1",
+          "status": "pass"
+        },
+        {
+          "factor_id": "investment_asset_growth",
+          "report_id": "run-chapter3-empirical-2020-2026-ytd-investment_asset_growth-2020-01-01-2026-05-28-factor_evaluation_report_v1",
+          "status": "pass"
+        },
+        {
+          "factor_id": "abnormal_turnover_21_252",
+          "report_id": "run-chapter3-empirical-2020-2026-ytd-abnormal_turnover_21_252-2020-01-01-2026-05-28-factor_evaluation_report_v1",
+          "status": "pass"
+        }
+      ]
+    },
+    "live_allowed": false,
+    "not_broker_order": true,
+    "permission_counters": {
+      "account_or_order_operation": 0,
+      "catalog_publish": 0,
+      "credential_read": 0,
+      "dependency_change": 0,
+      "external_project_clone": 0,
+      "external_project_install": 0,
+      "external_project_run": 0,
+      "lake_write": 0,
+      "provider_fetch": 0,
+      "qmt_operation": 0,
+      "reports_overwrite": 0,
+      "simulation_or_live": 0,
+      "source_migration_or_vendor": 0
+    },
+    "plan_id": "combo-run-chapter3-empirical-2020-2026-ytd:chapter3-real-v1",
+    "qmt_allowed": false,
+    "rebalance_dates": [],
+    "rebalance_frequency": "monthly",
+    "schema_version": "multifactor_portfolio_plan_v1",
+    "simulation_allowed": false,
+    "status": "pass",
+    "target_count": 7,
+    "target_weights": {
+      "abnormal_turnover_21_252": 0.14285714285714288,
+      "investment_asset_growth": 0.14285714285714288,
+      "market_beta_252": 0.14285714285714288,
+      "momentum_12_1": 0.14285714285714288,
+      "profitability_roe_ttm": 0.14285714285714288,
+      "size_total_market_cap": 0.14285714285714288,
+      "value_bm": 0.14285714285714288
+    },
+    "turnover_cap": {
+      "enabled": false
+    },
+    "weight_sources": {
+      "abnormal_turnover_21_252": {
+        "policy": "rule_weight",
+        "raw_score": 0.14285714285714285,
+        "reason": "规则权重来自 weighting_policy.weights；缺省时使用等权。",
+        "report_id": "run-chapter3-empirical-2020-2026-ytd-abnormal_turnover_21_252-2020-01-01-2026-05-28-factor_evaluation_report_v1",
+        "source_metric_refs": [
+          "weighting_policy.weights"
+        ]
+      },
+      "investment_asset_growth": {
+        "policy": "rule_weight",
+        "raw_score": 0.14285714285714285,
+        "reason": "规则权重来自 weighting_policy.weights；缺省时使用等权。",
+        "report_id": "run-chapter3-empirical-2020-2026-ytd-investment_asset_growth-2020-01-01-2026-05-28-factor_evaluation_report_v1",
+        "source_metric_refs": [
+          "weighting_policy.weights"
+        ]
+      },
+      "market_beta_252": {
+        "policy": "rule_weight",
+        "raw_score": 0.14285714285714285,
+        "reason": "规则权重来自 weighting_policy.weights；缺省时使用等权。",
+        "report_id": "run-chapter3-empirical-2020-2026-ytd-market_beta_252-2020-01-01-2026-05-28-factor_evaluation_report_v1",
+        "source_metric_refs": [
+          "weighting_policy.weights"
+        ]
+      },
+      "momentum_12_1": {
+        "policy": "rule_weight",
+        "raw_score": 0.14285714285714285,
+        "reason": "规则权重来自 weighting_policy.weights；缺省时使用等权。",
+        "report_id": "run-chapter3-empirical-2020-2026-ytd-momentum_12_1-2020-01-01-2026-05-28-factor_evaluation_report_v1",
+        "source_metric_refs": [
+          "weighting_policy.weights"
+        ]
+      },
+      "profitability_roe_ttm": {
+        "policy": "rule_weight",
+        "raw_score": 0.14285714285714285,
+        "reason": "规则权重来自 weighting_policy.weights；缺省时使用等权。",
+        "report_id": "run-chapter3-empirical-2020-2026-ytd-profitability_roe_ttm-2020-01-01-2026-05-28-factor_evaluation_report_v1",
+        "source_metric_refs": [
+          "weighting_policy.weights"
+        ]
+      },
+      "size_total_market_cap": {
+        "policy": "rule_weight",
+        "raw_score": 0.14285714285714285,
+        "reason": "规则权重来自 weighting_policy.weights；缺省时使用等权。",
+        "report_id": "run-chapter3-empirical-2020-2026-ytd-size_total_market_cap-2020-01-01-2026-05-28-factor_evaluation_report_v1",
+        "source_metric_refs": [
+          "weighting_policy.weights"
+        ]
+      },
+      "value_bm": {
+        "policy": "rule_weight",
+        "raw_score": 0.14285714285714285,
+        "reason": "规则权重来自 weighting_policy.weights；缺省时使用等权。",
+        "report_id": "run-chapter3-empirical-2020-2026-ytd-value_bm-2020-01-01-2026-05-28-factor_evaluation_report_v1",
+        "source_metric_refs": [
+          "weighting_policy.weights"
+        ]
+      }
+    }
+  },
+  "rebalance_count": 76,
+  "run_id": "run-chapter3-empirical-2020-2026-ytd",
+  "schema_version": "chapter3_empirical_run_v1",
+  "status": "PASS"
+}

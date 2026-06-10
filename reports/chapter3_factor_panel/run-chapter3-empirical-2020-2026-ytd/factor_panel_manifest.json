@@ -1,0 +1,39 @@
+{
+  "date_count": 76,
+  "evaluation_window": {
+    "end": "2026-05-28",
+    "start": "2020-01-01"
+  },
+  "factor_ids": [
+    "market_beta_252",
+    "size_total_market_cap",
+    "value_bm",
+    "momentum_12_1",
+    "profitability_roe_ttm",
+    "investment_asset_growth",
+    "abnormal_turnover_21_252"
+  ],
+  "factor_version": "chapter3-real-v1",
+  "label_rows": 371877,
+  "limitations": [],
+  "memory_budget": {
+    "budget_bytes": 17179869184,
+    "max_memory_gb": 16.0,
+    "max_rss_bytes_observed": 5958955008,
+    "max_rss_gb_observed": 5.549709320068359,
+    "status": "pass"
+  },
+  "operation_counts": {
+    "catalog_current_pointer_publish": 0,
+    "credential_read": 0,
+    "lake_write": 0,
+    "provider_fetch": 0,
+    "qmt_operation": 0,
+    "simulation_or_live_run": 0
+  },
+  "panel_rows": 2019002,
+  "run_id": "run-chapter3-empirical-2020-2026-ytd",
+  "schema_version": "chapter3_factor_panel_manifest_v1",
+  "source_dataset": "cr034_readiness_pass_candidate",
+  "symbol_count": 5005
+}

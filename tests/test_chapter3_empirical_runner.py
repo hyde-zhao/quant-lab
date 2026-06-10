@@ -8,6 +8,10 @@ import pytest
 
 from scripts.run_chapter3_empirical import (
     assert_full_mode_window_allowed,
+    chapter3_financial_run_ids,
+    chapter3_price_run_ids,
+    chapter3_prices_limit_run_ids,
+    chapter3_trade_status_run_ids,
     memory_budget_summary,
     run_empirical_from_frames,
 )
@@ -138,3 +142,14 @@ def test_memory_budget_summary_reports_observed_rss() -> None:
     assert summary["max_rss_bytes_observed"] > 0
     assert summary["budget_bytes"] == 16 * 1024 * 1024 * 1024
     assert summary["status"] == "pass"
+
+
+def test_chapter3_run_id_selection_covers_2020_2026_ytd() -> None:
+    price_run_ids = chapter3_price_run_ids(2020, 2026)
+    assert "run-cr014-s14-prices-adj-factor-2020*" in price_run_ids
+    assert "run-cr014-s14-prices-adj-factor-2025*" in price_run_ids
+    assert "run-cr014-s11-full-a-2026-ytd-date-batch-143508" in price_run_ids
+
+    assert chapter3_financial_run_ids(2020, 2026) == ("run-cr034-financial-pit-2020-2026*ytd*audited",)
+    assert "run-cr018-missing-data-backfill-20150101-20260528-p0p1-20260529" in chapter3_trade_status_run_ids(2020, 2026)
+    assert "run-cr018-price-limit-lifecycle-cleanup-20150101-20260528-20260529" in chapter3_prices_limit_run_ids(2020, 2026)

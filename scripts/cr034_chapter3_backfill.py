@@ -980,7 +980,20 @@ def fetch_records(pro: Any, ctx: BackfillContext, method_name: str, **params: An
     if ctx.dry_run:
         return []
     method = getattr(pro, method_name)
-    frame = method(**params)
+    max_attempts = 5
+    for attempt in range(1, max_attempts + 1):
+        try:
+            frame = method(**params)
+            break
+        except Exception as exc:  # noqa: BLE001
+            if attempt >= max_attempts:
+                raise
+            wait_seconds = min(60.0, max(ctx.sleep_seconds, 1.0) * (2 ** (attempt - 1)))
+            dataset_key = DATASET_FINANCIAL_PIT if method_name in {"income", "balancesheet", "fina_indicator"} else method_name
+            ctx.summaries.setdefault(dataset_key, DatasetSummary()).notes.append(
+                f"retry:{method_name}:attempt={attempt}:error={exc.__class__.__name__}"
+            )
+            time.sleep(wait_seconds)
     ctx.network_calls += 1
     if ctx.sleep_seconds > 0:
         time.sleep(ctx.sleep_seconds)
