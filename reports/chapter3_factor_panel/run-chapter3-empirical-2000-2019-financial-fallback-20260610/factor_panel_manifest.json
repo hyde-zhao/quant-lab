@@ -1,0 +1,39 @@
+{
+  "date_count": 239,
+  "evaluation_window": {
+    "end": "2019-12-31",
+    "start": "2000-01-01"
+  },
+  "factor_ids": [
+    "market_beta_252",
+    "size_total_market_cap",
+    "value_bm",
+    "momentum_12_1",
+    "profitability_roe_ttm",
+    "investment_asset_growth",
+    "abnormal_turnover_21_252"
+  ],
+  "factor_version": "chapter3-real-v1",
+  "label_rows": 447186,
+  "limitations": [],
+  "memory_budget": {
+    "budget_bytes": 17179869184,
+    "max_memory_gb": 16.0,
+    "max_rss_bytes_observed": 3742089216,
+    "max_rss_gb_observed": 3.4850921630859375,
+    "status": "pass"
+  },
+  "operation_counts": {
+    "catalog_current_pointer_publish": 0,
+    "credential_read": 0,
+    "lake_write": 0,
+    "provider_fetch": 0,
+    "qmt_operation": 0,
+    "simulation_or_live_run": 0
+  },
+  "panel_rows": 2550289,
+  "run_id": "run-chapter3-empirical-2000-2019-financial-fallback-20260610",
+  "schema_version": "chapter3_factor_panel_manifest_v1",
+  "source_dataset": "cr034_readiness_pass_candidate",
+  "symbol_count": 3662
+}
