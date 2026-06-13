@@ -13,6 +13,7 @@ from typing import Mapping, Sequence
 
 
 GATEWAY_CONFIG_SCHEMA_VERSION = "cr019-s04-gateway-config-v1"
+CR020_GATEWAY_RUNTIME_SCHEMA_VERSION = "cr020-s01-gateway-runtime-admission-v1"
 DEFAULT_GATEWAY_PORT = 18765
 DEFAULT_CONFIG_PATH = "<config-path>"
 DEFAULT_AUTH_MODE = "pairing_hmac"
@@ -54,6 +55,7 @@ GATEWAY_FORBIDDEN_COUNTER_FIELDS: tuple[str, ...] = (
     "http_client_call",
     "gateway_socket_open",
     "public_exposure_allowed_count",
+    "public_bind_allowed_count",
 )
 
 
@@ -246,9 +248,58 @@ class GatewaySafetyCounters:
     http_client_call: int = 0
     gateway_socket_open: int = 0
     public_exposure_allowed_count: int = 0
+    public_bind_allowed_count: int = 0
 
     def to_dict(self) -> dict[str, int]:
         return {key: int(getattr(self, key)) for key in GATEWAY_FORBIDDEN_COUNTER_FIELDS}
+
+
+@dataclass(frozen=True, slots=True)
+class GatewayRuntimeFlags:
+    """CR020 gateway 运行准入开关；默认全部 fail-closed。"""
+
+    implementation_allowed: bool = False
+    dependency_change_allowed: bool = False
+    service_start_allowed: bool = False
+    port_bind_allowed: bool = False
+    credential_read_allowed: bool = False
+    qmt_operation_allowed: bool = False
+    runtime_authorization_ref: str = ""
+    dry_run_only: bool = True
+    public_bind_allowed_count: int = 0
+    schema_version: str = CR020_GATEWAY_RUNTIME_SCHEMA_VERSION
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "implementation_allowed": self.implementation_allowed,
+            "dependency_change_allowed": self.dependency_change_allowed,
+            "service_start_allowed": self.service_start_allowed,
+            "port_bind_allowed": self.port_bind_allowed,
+            "credential_read_allowed": self.credential_read_allowed,
+            "qmt_operation_allowed": self.qmt_operation_allowed,
+            "runtime_authorization_ref": self.runtime_authorization_ref,
+            "dry_run_only": self.dry_run_only,
+            "public_bind_allowed_count": self.public_bind_allowed_count,
+            "schema_version": self.schema_version,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class GatewayRuntimeAdmissionConfig:
+    """gateway 配置与 CR020 runtime gate 的组合合同。"""
+
+    gateway: GatewayConfig = field(default_factory=lambda: GatewayConfig())
+    flags: GatewayRuntimeFlags = field(default_factory=GatewayRuntimeFlags)
+    counters: Mapping[str, int] = field(default_factory=lambda: collect_gateway_runtime_counters())
+    schema_version: str = CR020_GATEWAY_RUNTIME_SCHEMA_VERSION
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "gateway": self.gateway.to_dict(),
+            "flags": self.flags.to_dict(),
+            "counters": dict(self.counters),
+            "schema_version": self.schema_version,
+        }
 
 
 @dataclass(frozen=True, slots=True)
@@ -407,6 +458,72 @@ def collect_gateway_safety_counters(
     for key, value in raw.items():
         normalized[str(key)] = int(value)
     return normalized
+
+
+def build_gateway_runtime_flags(
+    source: Mapping[str, object] | GatewayRuntimeFlags | None = None,
+    **overrides: object,
+) -> GatewayRuntimeFlags:
+    """从显式 mapping 构造 CR020 runtime gate；不读取环境或文件。"""
+
+    if isinstance(source, GatewayRuntimeFlags) and not overrides:
+        return source
+    raw: dict[str, object] = {}
+    if isinstance(source, Mapping):
+        nested_flags = source.get("runtime_flags", source)
+        if isinstance(nested_flags, GatewayRuntimeFlags):
+            raw.update(nested_flags.to_dict())
+        else:
+            raw.update(_as_mapping(nested_flags))
+    raw.update(overrides)
+
+    return GatewayRuntimeFlags(
+        implementation_allowed=_as_bool(raw.get("implementation_allowed", False)),
+        dependency_change_allowed=_as_bool(raw.get("dependency_change_allowed", False)),
+        service_start_allowed=_as_bool(raw.get("service_start_allowed", False)),
+        port_bind_allowed=_as_bool(raw.get("port_bind_allowed", False)),
+        credential_read_allowed=_as_bool(raw.get("credential_read_allowed", False)),
+        qmt_operation_allowed=_as_bool(raw.get("qmt_operation_allowed", False)),
+        runtime_authorization_ref=str(raw.get("runtime_authorization_ref", "")),
+        dry_run_only=_as_bool(raw.get("dry_run_only", True)),
+        public_bind_allowed_count=int(raw.get("public_bind_allowed_count", 0)),
+        schema_version=str(
+            raw.get("schema_version", CR020_GATEWAY_RUNTIME_SCHEMA_VERSION)
+        ),
+    )
+
+
+def build_gateway_runtime_admission_config(
+    source: Mapping[str, object] | GatewayRuntimeAdmissionConfig | GatewayConfig | None = None,
+    *,
+    flags: Mapping[str, object] | GatewayRuntimeFlags | None = None,
+    counters: Mapping[str, int] | GatewaySafetyCounters | None = None,
+    **overrides: object,
+) -> GatewayRuntimeAdmissionConfig:
+    """组合 gateway config、runtime flags 与 no-real-operation counters。"""
+
+    if isinstance(source, GatewayRuntimeAdmissionConfig) and not flags and not overrides:
+        return source
+    raw = dict(source) if isinstance(source, Mapping) else {}
+    gateway_source: Mapping[str, object] | GatewayConfig | None
+    if isinstance(source, GatewayConfig):
+        gateway_source = source
+    else:
+        gateway_source = _as_mapping(raw.get("gateway", raw))
+
+    return GatewayRuntimeAdmissionConfig(
+        gateway=build_gateway_config(gateway_source, **overrides),
+        flags=build_gateway_runtime_flags(flags or raw.get("runtime_flags", raw)),
+        counters=collect_gateway_runtime_counters(counters or raw.get("counters")),
+    )
+
+
+def collect_gateway_runtime_counters(
+    counters: Mapping[str, int] | GatewaySafetyCounters | None = None,
+) -> dict[str, int]:
+    """归一化 CR020 gateway 禁止操作计数；fixture 默认全部为 0。"""
+
+    return collect_gateway_safety_counters(counters)
 
 
 def _build_bind_config(raw: object) -> GatewayBindConfig:

@@ -1,7 +1,7 @@
 ---
 cr_id: CR-035
 title: 第4章多因子模型复刻与 A 股定价检验
-status: draft-not-active
+status: closed-user-approved
 created_at: 2026-06-10
 created_by: codex
 owner: meta-po
@@ -9,7 +9,7 @@ source: user
 change_type: add
 impact_level: high
 workflow_mode_after_change: standard
-activation_policy: "draft only; must pass CR conflict precheck before becoming active because CR-020 is currently active-manual-validation-pending"
+activation_policy: "activated by user request on 2026-06-10; conflict precheck passed because CR-035 is local offline research and does not touch CR-020 QMT gateway/runtime surfaces; closed by user request on 2026-06-10"
 parent_cr: CR-034
 source_decision_id: USER-20260610-BOOK-RESEARCH-PLAN
 related_changes:
@@ -60,6 +60,16 @@ related_changes:
 | 安全层 | 只读本地 parquet / manifest / 报告 | 禁止 provider、lake write、publish、QMT、simulation、live |
 | 交付层 | 新增 reports/chapter4_factor_models 和 process/research/chapter4_factor_models | 小型报告可提交，大型 parquet 默认不提交 |
 
+## CR 冲突预检（2026-06-10）
+
+| 检查项 | 结论 |
+|---|---|
+| 当前 active CR | `CR-020` 仍为 `active-manual-validation-pending`，等待 MiniQMT 权限和 Windows/QMT 只读实机验证。 |
+| 文件所有权冲突 | 无重叠。CR-035 只新增 `engine/chapter4_factor_models.py`、`scripts/run_chapter4_factor_models.py`、`tests/test_chapter4_factor_models.py`、`reports/chapter4_factor_models/` 和 `process/research/chapter4_factor_models/`。 |
+| 外部接口 / 运行权限 | 无重叠。CR-035 只读取本地第三章 parquet 与 label parts，不读取凭据、不访问 provider、不触发 QMT / simulation / live。 |
+| 数据写入 / publish | 无。CR-035 不写 data lake、不发布 catalog current pointer，只写本地 research artifact。 |
+| 结论 | 允许与 CR-020 并行推进。CR-020 顶层 `active_change` 保持不变；CR-035 记录为离线研究 active item，完成后等待人工审查关闭。 |
+
 ## 输入合同
 
 | 输入 | 必需字段 | 失败行为 |
@@ -91,18 +101,83 @@ related_changes:
 
 ## 验收标准
 
-- [ ] Fama-MacBeth 回归覆盖七个第三章因子，并输出 t 值和样本数。
-- [ ] 模型比较至少覆盖书中第4章涉及的主流模型和 A 股示例模型的项目内可执行版本。
-- [ ] 报告区分样本内、验证期和 2020-2026 YTD 观察期。
-- [ ] 输出模型准入结论：baseline / watch / reject / needs-robustness-review。
-- [ ] operation counts 中 provider fetch、lake write、publish、QMT、simulation、live 均为 0。
-- [ ] 峰值内存低于 16GB。
-- [ ] 报告不声明 production-valid、QMT-ready、simulation-ready 或 live-ready。
+- [x] Fama-MacBeth 回归覆盖七个第三章因子，并输出 t 值和样本数。
+- [x] 模型比较至少覆盖书中第4章涉及的主流模型和 A 股示例模型的项目内可执行版本。
+- [x] 报告区分样本内、验证期和 2020-2026 YTD 观察期。
+- [x] 输出模型准入结论：baseline / watch / reject / needs-robustness-review。
+- [x] operation counts 中 provider fetch、lake write、publish、QMT、simulation、live 均为 0。
+- [x] 峰值内存低于 16GB。
+- [x] 报告不声明 production-valid、QMT-ready、simulation-ready 或 live-ready。
+
+## 实现与验证结果（2026-06-10）
+
+### 实现对象
+
+| 类型 | 路径 | 说明 |
+|---|---|---|
+| 计算模块 | `engine/chapter4_factor_models.py` | 第四章模型定义、输入校验、Fama-MacBeth、模型收益、模型比较、相关性和准入摘要。 |
+| Runner | `scripts/run_chapter4_factor_models.py` | 只读消费第三章 factor panel 与 label parts，输出 CR-035 research artifacts。 |
+| 测试 | `tests/test_chapter4_factor_models.py` | 覆盖输入字段、前视阻断、模型输出、runner artifact 和第三章报告限制阻断。 |
+| 报告产物 | `reports/chapter4_factor_models/run-cr035-chapter4-factor-models-20260610/` | Fama-MacBeth、模型收益、模型比较、相关性、manifest。 |
+| 过程产物 | `process/research/chapter4_factor_models/run-cr035-chapter4-factor-models-20260610/` | 人读报告、机器报告和模型准入摘要。 |
+
+### 实证摘要
+
+| 样本 | 状态 | panel 行数 | label 行数 | 匹配行数 | 调仓期数 | FMB 行数 | 模型收益行数 |
+|---|---|---:|---:|---:|---:|---:|---:|
+| `in_sample_2000_2019` | PASS | 2,550,289 | 447,186 | 407,599 | 239 | 37 | 1,378 |
+| `observation_2020_2026_ytd` | PASS | 1,957,024 | 371,877 | 317,132 | 76 | 37 | 419 |
+
+### 关键产物
+
+| 产物 | 路径 |
+|---|---|
+| 运行报告 | `process/research/chapter4_factor_models/run-cr035-chapter4-factor-models-20260610/CHAPTER4-RUN-REPORT.md` |
+| 机器报告 | `process/research/chapter4_factor_models/run-cr035-chapter4-factor-models-20260610/CHAPTER4-RUN-REPORT.json` |
+| 模型准入摘要 | `process/research/chapter4_factor_models/run-cr035-chapter4-factor-models-20260610/MODEL-ADMISSION-SUMMARY.json` |
+| Fama-MacBeth | `reports/chapter4_factor_models/run-cr035-chapter4-factor-models-20260610/fama_macbeth_results.csv` |
+| 模型比较 | `reports/chapter4_factor_models/run-cr035-chapter4-factor-models-20260610/model_comparison.csv` |
+| manifest | `reports/chapter4_factor_models/run-cr035-chapter4-factor-models-20260610/factor_model_manifest.json` |
+
+### 验证命令
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 PYTEST_ADDOPTS='-p no:cacheprovider' uv run --python 3.11 pytest -q tests/test_chapter4_factor_models.py
+PYTHONPYCACHEPREFIX=/tmp/cr035-chapter4-pycompile uv run --python 3.11 python -m py_compile engine/chapter4_factor_models.py scripts/run_chapter4_factor_models.py tests/test_chapter4_factor_models.py
+OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 NUMEXPR_NUM_THREADS=1 PYTHONDONTWRITEBYTECODE=1 uv run --python 3.11 python scripts/run_chapter4_factor_models.py --run-id run-cr035-chapter4-factor-models-20260610 --max-memory-gb 16
+```
+
+结果：
+
+| 验证 | 结果 |
+|---|---|
+| focused pytest | 4 passed |
+| py_compile | passed |
+| CR-035 真实本地离线 runner | PASS |
+| 禁止操作计数 | provider/lake/publish/QMT/simulation/live/account/credential 均为 0 |
+
+### 模型准入结论
+
+2000-2019 样本内，`ff3_equity_core`、`carhart4_momentum`、`ashare_pricing_candidate` 和 `seven_factor_full` 为 baseline candidate；`ff5_like_profit_investment` 与 `q_factor_like` 需要 CR-037 稳健性复验；`capm_market` 只能观察或重加权。
+
+2020-2026 YTD 观察期，多数模型表现为 baseline candidate，但仍不得跳过 CR-037 稳健性、样本外和数据窥探复验。所有结论只作为研究输入，不构成 production-valid、QMT-ready、simulation-ready 或 live-ready。
+
+## 关闭结果（2026-06-10）
+
+用户已明确要求“关闭 CR35”。关闭范围如下：
+
+| 项目 | 结论 |
+|---|---|
+| 交付状态 | `closed-user-approved` |
+| 已交付 | 第4章 Fama-MacBeth、模型收益、模型比较、相关性、manifest、运行报告和模型准入摘要 |
+| 不授权项 | provider fetch、lake write、catalog publish、QMT、simulation、live、账户、订单、凭据读取均仍不授权 |
+| 后续输入 | `process/research/chapter4_factor_models/run-cr035-chapter4-factor-models-20260610/MODEL-ADMISSION-SUMMARY.json` 作为 CR-036/CR-037/CR-038/CR-039 的研究输入 |
+| 剩余风险 | 模型候选仍需 CR-037 稳健性、样本外和数据窥探复验；CR-035 结果不得直接解释为 production-valid、QMT-ready、simulation-ready 或 live-ready |
 
 ## 激活条件
 
-本 CR 当前为 `draft-not-active`。正式启动前必须完成：
+本 CR 已于 2026-06-10 由用户请求启动并完成本地离线实现。原激活条件处理如下：
 
-1. CR 冲突预检，确认不会影响 CR-020 QMT gateway 当前活跃验证。
-2. 用户确认启动 CR-035。
-3. 若需要修改正式文档或新增 runner，进入 standard 流程并生成 Story / LLD / CP5 证据。
+1. CR 冲突预检：已通过，CR-035 与 CR-020 无文件、运行权限和外部接口冲突。
+2. 用户确认启动 CR-035：已由 `@meta-po 请帮我完成出cr-35的分析和实现` 触发。
+3. 新增 runner 与报告：已按离线只读研究边界完成；当前状态为 `implemented-local-pass-pending-review`，等待人工审查后关闭。

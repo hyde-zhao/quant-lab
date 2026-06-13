@@ -1,0 +1,109 @@
+context_id: CP6-CR045-IMPLEMENTATION-CONTEXT
+change_id: CR-045
+phase: story-execution
+batch_id: CR045-BRIDGE-BATCH-A
+status: ready
+created_at: '2026-06-11T23:16:11+08:00'
+owner: meta-po
+read_profile: compact
+source_gates:
+  cp3_checkpoint: process/checkpoints/CP3-CR045-HLD-REVIEW.md
+  cp3_status: approved
+  cp4_auto_check: process/checks/CP4-CR045-STORY-DAG-PARALLEL-SAFETY.md
+  cp4_status: PASS
+  cp5_checkpoint: process/checkpoints/CP5-CR045-BRIDGE-BATCH-A-LLD-BATCH.md
+  cp5_status: approved
+implementation_scope:
+  allowed:
+    - L2 bridge skeleton
+    - fixture-only responses
+    - static validation
+    - redaction evidence without raw secrets
+    - user runbook
+  not_authorized:
+    - credential/token/account_id read or capture
+    - Windows bridge runtime start
+    - Goldminer login/connect
+    - account/cash/position/order/fill query
+    - order submit / cancel
+    - simulation / live runtime
+    - provider fetch / lake write / catalog publish
+  max_parallel_dev: 1
+  implementation_order:
+    - CR045-S01
+    - CR045-S02
+    - CR045-S03
+    - CR045-S04
+    - CR045-S05
+    - CR045-S06
+story_inputs:
+  - story_id: CR045-S01
+    card: process/stories/CR045-S01-windows-bridge-security-boundary.md
+    design_evidence: process/stories/CR045-S01-windows-bridge-security-boundary-LLD.md
+    evidence_type: full-lld
+    status: lld-approved
+  - story_id: CR045-S02
+    card: process/stories/CR045-S02-bridge-health-capabilities-skeleton.md
+    design_evidence: process/stories/CR045-S02-bridge-health-capabilities-skeleton-LLD.md
+    evidence_type: full-lld
+    status: lld-approved
+  - story_id: CR045-S03
+    card: process/stories/CR045-S03-wsl-linux-client-contract-and-network-precheck.md
+    design_evidence: process/stories/CR045-S03-wsl-linux-client-contract-and-network-precheck-LLD.md
+    evidence_type: full-lld
+    status: lld-approved
+  - story_id: CR045-S04
+    card: process/stories/CR045-S04-readonly-probe-allowlist-and-blocked-first.md
+    design_evidence: process/stories/CR045-S04-readonly-probe-allowlist-and-blocked-first-LLD.md
+    evidence_type: full-lld
+    status: lld-approved
+  - story_id: CR045-S05
+    card: process/stories/CR045-S05-redaction-and-no-operation-static-validation.md
+    design_evidence: process/stories/CR045-S05-redaction-and-no-operation-static-validation-LLD.md
+    evidence_type: full-lld
+    status: lld-approved
+  - story_id: CR045-S06
+    card: process/stories/CR045-S06-user-runbook-and-follow-up-gates.md
+    design_evidence: process/stories/CR045-S06-user-runbook-and-follow-up-gates.md#技术说明
+    evidence_type: technical-note
+    status: lld-approved
+file_ownership:
+  engine/goldminer_bridge_contract.py: CR045-S02
+  tests/test_cr045_goldminer_bridge_contract.py: CR045-S02
+  engine/goldminer_bridge_client.py: CR045-S03
+  tests/test_cr045_goldminer_bridge_client.py: CR045-S03
+  engine/goldminer_bridge_probe.py: CR045-S04
+  tests/test_cr045_goldminer_readonly_probe.py: CR045-S04
+  tests/test_cr045_goldminer_no_operation_static.py: CR045-S05
+  docs/goldminer/CR045-BRIDGE-RUNBOOK.md: CR045-S06
+forbidden_paths:
+  - .env
+  - .env.*
+  - data/market_data
+  - reports/live
+  - reports/simulation_runtime
+  - catalog
+forbidden_runtime_import_roots:
+  - gm
+  - gmtrade
+validation_commands:
+  targeted:
+    - PYTHONDONTWRITEBYTECODE=1 PYTEST_ADDOPTS='-p no:cacheprovider' uv run --python 3.11 pytest -q tests/test_cr045_goldminer_bridge_contract.py tests/test_cr045_goldminer_bridge_client.py tests/test_cr045_goldminer_readonly_probe.py tests/test_cr045_goldminer_no_operation_static.py
+  static:
+    - git diff --check
+required_outputs:
+  implementation_evidence: process/stories/CR045-BRIDGE-BATCH-A-IMPLEMENTATION.md
+  cp6_check: process/checks/CP6-CR045-BRIDGE-BATCH-A-CODING-DONE.md
+  dev_log: DEV-LOG.md
+safety_assertions:
+  windows_bridge_runtime_started: false
+  goldminer_connected: false
+  credentials_read_or_printed: false
+  account_or_order_query_executed: false
+  order_submit_cancel_executed: false
+  provider_lake_publish_executed: false
+read_expansion_log:
+  - at: '2026-06-11T23:16:11+08:00'
+    actor: meta-po
+    reason: CP6 implementation handoff requires approved CP5 batch summary and file ownership map.
+    full_doc_read_reason: N/A; compact context capsule lists required Story cards and design evidence paths.

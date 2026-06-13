@@ -47,7 +47,7 @@ CR-030 或后续 `StrategyAdmissionPackage` 不构成 QMT-ready、simulation-rea
 
 ## 4. CR-026 Qlib isolated runner 后置条件
 
-CR-026 保持后续 Spike candidate，不并入 CR-030 P0，也不与 CR-030 当前 Story 并行启动。
+CR-026 保持后续 Spike candidate，不并入 CR-030 P0，也不与 CR-030 当前 Story 并行启动。2026-06-11 覆盖复核后，CR-026 已收窄为 **Qlib isolated runner optional Spike**：多因子研究主框架、自有合同、factor panel / label window、report catalog、组合实践和策略准入已经由 CR030-039 覆盖；Qlib runtime / qrun / provider_uri / 依赖隔离运行仍未覆盖。
 
 CR-026 重启条件：
 
@@ -58,6 +58,12 @@ CR-026 重启条件：
 | provider 禁用 | 明确不使用外部 provider 或官方数据下载，不让 `provider_uri` 接管本项目数据事实源。 |
 | 运行授权 | 用户单独批准 CR-026 或 bounded Spike 的运行范围、命令、输入、输出和回归边界。 |
 | source-of-truth boundary | Qlib runtime 只能消费内部已冻结合同，不得反向改写内部 truth。 |
+
+| 覆盖状态 | 2026-06-11 结论 |
+|---|---|
+| 已覆盖 | CR030-039 已覆盖自有多因子研究闭环、合同、组合实践、策略准入和 no-real-operation 边界。 |
+| 未覆盖 | Qlib isolated runner runtime、qrun / task 执行、`qlib.init`、`provider_uri`、`.bin` 数据格式、依赖隔离运行和 fixture-only runner 对照。 |
+| 当前动作 | 保留 CR-026 为 narrowed optional Spike；启动前必须重新做冲突预检、依赖隔离设计和用户运行授权。 |
 
 ## 5. No-Real-Operation 计数合同
 

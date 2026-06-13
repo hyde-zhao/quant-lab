@@ -1,0 +1,81 @@
+schema_version: "1.0"
+context_id: "CP2-CR046-REQUIREMENT-CONTEXT"
+change_id: "CR-046"
+status: ready
+phase: requirement-clarification
+read_profile: compact
+created_at: "2026-06-13T21:46:39+08:00"
+updated_at: "2026-06-13T21:46:39+08:00"
+owner: meta-po
+
+source_request:
+  user_summary: "继续推进 CR046；当前 CR046 是 framework-first：先定 QMT / MiniQMT 双目标策略交付框架、验证框架、MiniQMT runner 安装设计和策略包契约。"
+  interpretation: "本轮只推进 CP2 需求 / 场景基线和后续门禁，不执行 HLD、LLD、实现、真实运行、连接或交易动作。"
+
+upstream_evidence:
+  formal_cr: "process/changes/CR-046-TERMINAL-NATIVE-SIMULATION-STRATEGY-EXPORT-2026-06-13.md"
+  cr_index: "process/changes/CR-INDEX.yaml"
+  follow_up_tracking: "process/changes/CR-046-FOLLOW-UP-TRACKING-2026-06-13.md"
+  use_cases: "process/USE-CASES.md"
+  requirements: "process/REQUIREMENTS.md"
+  prior_inputs:
+    - "CR041 API-less paper simulation runner"
+    - "CR042 broker-neutral adapter contract"
+    - "CR043/CR044/CR045 Goldminer route evidence and no-runtime boundaries"
+    - "USER-20260613-QMT-BROKER-OPENED"
+    - "USER-20260613-DUAL-TARGET-FRAMEWORK"
+    - "USER-20260613-FRAMEWORK-FIRST-RESEARCH-FOLLOWUP"
+
+scope:
+  included:
+    - "QMT / MiniQMT dual-target strategy delivery framework"
+    - "strategy core contract"
+    - "QMT terminal target package shape"
+    - "MiniQMT runner install design"
+    - "verification framework and evidence model"
+    - "follow-up strategy delivery gate"
+    - "research framework follow-up contract"
+  excluded:
+    - "concrete strategy delivery"
+    - "QMT terminal runtime validation"
+    - "MiniQMT / XtQuant connection"
+    - "MiniQMT runner real install"
+    - "account/cash/position/order/fill query"
+    - "order submit/cancel"
+    - "simulation/live runtime"
+    - "provider fetch / lake write / catalog publish"
+    - "credential or account_id read"
+
+platform_facts:
+  qmt_terminal: "用户已有 QMT 终端权限，可作为后续人工运行目标。"
+  miniqmt_runner: "用户当前没有 MiniQMT 权限；本轮只设计 runner 安装与验证框架。"
+  goldminer: "保留为次级参考和安全边界输入，不作为本轮券商执行主线。"
+
+decision_items:
+  - id: DQ-CR046-01
+    type: scope
+    summary: "Confirm CR046 as framework-first, not concrete strategy delivery."
+  - id: DQ-CR046-02
+    type: architecture
+    summary: "Confirm QMT terminal + MiniQMT runner dual target as standard delivery contract."
+  - id: DQ-CR046-03
+    type: implementation
+    summary: "Include MiniQMT runner install design and dry-run plan, but no real install or connection."
+  - id: DQ-CR046-04
+    type: security
+    summary: "Keep QMT runtime validation, account query, submit/cancel, live and MiniQMT connection not authorized."
+  - id: DQ-CR046-05
+    type: follow_up_tracking
+    summary: "Track first concrete strategy delivery as CR047-candidate."
+  - id: DQ-CR046-06
+    type: follow_up_tracking
+    summary: "Track research framework improvement as CR051-candidate."
+
+next_gate:
+  checkpoint: "process/checkpoints/CP2-CR046-REQUIREMENTS-BASELINE.md"
+  auto_check: "process/checks/CP2-CR046-REQUIREMENTS-BASELINE.md"
+  launch_message: "process/checks/CP2-CR046-HUMAN-GATE-LAUNCH-MESSAGE.md"
+  expected_user_replies:
+    - approve
+    - "修改: <具体修改点>"
+    - reject

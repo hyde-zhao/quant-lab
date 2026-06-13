@@ -1,9 +1,9 @@
 ---
 cr_id: "CR-008"
-status: "story-execution-batch-a-verified-pending-cp8"
+status: "closed"
 impact_level: "high"
 rollback_to: "solution-design"
-approval_result: "story-execution-batch-a-verified-pending-cp8"
+approval_result: "closed-cp8-approved"
 created_at: "2026-05-20T22:56:53+08:00"
 updated_at: "2026-05-31T21:43:48+08:00"
 created_by: "codex"
@@ -16,6 +16,11 @@ linked_change: "CR-007"
 priority_rule: "CR008-over-CR007-on-conflict"
 implementation_allowed: true
 implementation_scope: "offline-only"
+closed_by: "user"
+closed_at: "2026-06-05T23:11:48+08:00"
+cp8_manual_status: "approved"
+cp8_manual_review: "checkpoints/CP8-CR007-CR008-DELIVERY-READINESS.md"
+cp8_auto_check: "process/checks/CP8-CR007-CR008-DELIVERY-READINESS.md"
 cp3_auto_status: "PASS"
 cp3_auto_check: "process/checks/CP3-CR008-HLD-PRECHECK.md"
 cp3_manual_review: "checkpoints/CP3-CR008-HLD-REVIEW.md"
@@ -151,6 +156,8 @@ s06_verified_at: "2026-05-22T04:53:48+08:00"
 ---
 
 # CR-008：研究级数据层口径硬化
+
+> 2026-06-05T23:11:48+08:00 关闭记录：用户接受 CP8 推荐方案，CR-008 当前 verified 范围关闭。关闭范围包含 CR008-S01..S06 的研究输入合同、proxy/real benchmark 分离、research dataset builder、quality / label gates、PIT universe consumption 和 auxiliary data contract；不授权真实 provider fetch、真实 lake 写入、publish、凭据读取、QMT、simulation 或 live。
 
 > 2026-05-22T04:53:48+08:00 状态更新：`CR008-S06` 已完成 CP7 验证并收敛为 `verified`，CP7=`process/checks/CP7-CR008-S06-factor-research-auxiliary-data-contract-VERIFICATION-DONE.md`，S06 定向测试 `11 passed`、S03/S04/S05 回归 `29 passed`、实验十五回归 `3 passed`、py_compile 通过，无阻断项。至此 `CR008-BATCH-A` 六个 Story 均已 verified；CR008 对 CR007-S04/S05 的优先阻塞可进入重新计算。
 
@@ -595,12 +602,12 @@ CR008 未完成六份 LLD、六份 CP5 自动预检与 CP5 批次人工确认前
 
 ## 处理结论
 
-- 审批结论：`story-execution-batch-a-verified-pending-cp8`
+- 审批结论：`closed-cp8-approved`
 - [ ] 自动批准（低风险）
 - [x] 用户已批准 CP3/CP4，进入 LLD/CP5 自动预检批次
 - [x] 六份 LLD 与六份 Story 级 CP5 自动预检均已完成且 PASS
 - [x] CP5 批次人工审批 approved
-- [x] 六个 Story 均已完成离线 story-execution 并 verified；下一步进入 CP8 / 关闭决策
+- [x] 六个 Story 均已完成离线 story-execution 并 verified；用户已于 2026-06-05T23:11:48+08:00 接受 CP8 推荐关闭方案，CR-008 当前范围关闭
 
 用户回复“通过”已作为 CR008-BATCH-A CP5 批次人工审查 approved 回填。CR008-BATCH-A 六份 LLD 与六份 Story 级 CP5 自动预检已完成且均为 PASS，真实 `spawn_agent` 调度证据已回填。当前 `CR008-S01` 至 `CR008-S06` 均已完成 CP6 / CP7 并收敛为 `verified`；下一步进入 CP8 / 关闭决策。`implementation_allowed=true` 仅限离线实现；不得真实 Tushare 抓取、不得真实 lake read/write、不得读取/打印凭据、不得操作旧 `data/**` 或读取/覆盖旧 `reports/data_quality_report.csv`。
 

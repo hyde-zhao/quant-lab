@@ -1,0 +1,72 @@
+{
+  "checkpoint_id": "CP3-CR046-DISCUSSION-CHECKPOINT",
+  "change_id": "CR-046",
+  "status": "PASS",
+  "created_at": "2026-06-13T22:03:22+08:00",
+  "owner": "meta-po",
+  "discussion_log": "process/discussions/CP3-CR046-HLD-DISCUSSION-LOG.md",
+  "architecture_gray_areas": [
+    {
+      "id": "AGQ-CR046-01",
+      "question": "双目标策略交付框架是否独立成 FEAT-09？",
+      "classification": "decision-item",
+      "decision_id": "DQ-CP3-CR046-01"
+    },
+    {
+      "id": "AGQ-CR046-02",
+      "question": "策略核心是否允许平台 API？",
+      "classification": "decision-item",
+      "decision_id": "DQ-CP3-CR046-02"
+    },
+    {
+      "id": "AGQ-CR046-03",
+      "question": "MiniQMT runner 本轮做到什么程度？",
+      "classification": "decision-item",
+      "decision_id": "DQ-CP3-CR046-03"
+    },
+    {
+      "id": "AGQ-CR046-04",
+      "question": "验证框架如何避免误导？",
+      "classification": "decision-item",
+      "decision_id": "DQ-CP3-CR046-04"
+    },
+    {
+      "id": "AGQ-CR046-05",
+      "question": "首个具体策略何时交付？",
+      "classification": "decision-item",
+      "decision_id": "DQ-CP3-CR046-05"
+    },
+    {
+      "id": "AGQ-CR046-06",
+      "question": "研究框架完善何时启动？",
+      "classification": "decision-item",
+      "decision_id": "DQ-CP3-CR046-06"
+    }
+  ],
+  "decision_items": [
+    "DQ-CP3-CR046-01",
+    "DQ-CP3-CR046-02",
+    "DQ-CP3-CR046-03",
+    "DQ-CP3-CR046-04",
+    "DQ-CP3-CR046-05",
+    "DQ-CP3-CR046-06"
+  ],
+  "not_authorized": [
+    "concrete_strategy_delivery",
+    "qmt_terminal_runtime_validation",
+    "miniqmt_connection",
+    "miniqmt_real_install",
+    "credential_read",
+    "account_query",
+    "order_submit",
+    "order_cancel",
+    "simulation_live",
+    "provider_lake_publish"
+  ],
+  "exit_criteria": {
+    "architecture_gray_areas_processed": true,
+    "advisor_table_present": true,
+    "decision_items_mapped": true,
+    "runtime_authorization_granted": false
+  }
+}

@@ -1,0 +1,190 @@
+schema_version: "1.0"
+context_id: "RELEASE-CONTEXT-CR044"
+cr_id: "CR-044"
+status: ready
+release_artifact_profile: compact
+release_decision: READY_WITH_RISK
+created_at: "2026-06-11T12:25:04+08:00"
+updated_at: "2026-06-11T21:28:16+08:00"
+source_gate: CP8
+owner: meta-po
+
+manual_review:
+  checkpoint_path: "process/checkpoints/CP8-CR044-DELIVERY-READINESS.md"
+  status: approved
+  reviewed_by: user
+  reviewed_at: "2026-06-11T21:28:16+08:00"
+  approval_text: "同意"
+  interpretation: "Accepted DQ-CP8-CR044-01..05; closes current offline admission delivery and does not authorize L3+ runtime."
+
+release_scope:
+  current_version: "cr043-spike-complete"
+  target_version: "cr044-goldminer-admission-alpha"
+  included_features:
+    - "Goldminer blocked-first admission guard"
+    - "CR044 authorization layers and not-authorized action table"
+    - "Redaction-first fixture evidence"
+    - "Readonly field static/unknown mapping"
+    - "Submit/cancel kill switch contract"
+    - "Reconciliation redacted evidence summary"
+  included_stories:
+    - CR044-S01
+    - CR044-S02
+    - CR044-S03
+    - CR044-S04
+    - CR044-S05
+    - CR044-S06
+  excluded_scope:
+    - "credential read"
+    - "Goldminer login/connect"
+    - "account/cash/position/order/fill real query"
+    - "order submit/cancel runtime"
+    - "simulation/live runtime"
+    - "provider fetch / lake write / catalog publish"
+  user_visible_changes:
+    - "新增离线 Goldminer admission guard，可审计地证明未授权时 fail-closed。"
+    - "新增 CR044 质量报告和发布就绪文档，明确 offline admission 不等于 simulation/live ready。"
+  internal_changes:
+    - "engine/broker_adapter.py 新增 CR044 fixture-only helper 和 Goldminer stub blocked-first 合同。"
+    - "tests/test_cr044_goldminer_admission_guard.py 覆盖 S01-S06 的 no-real-operation guard。"
+    - ".gitignore 新增 docs/quality/*.md 反忽略，确保质量报告可跟踪。"
+  breaking_changes: []
+  known_risks:
+    - "CR044-RISK-01: L3+ credential/account permission not authorized."
+    - "CR044-RISK-02: readonly mapping remains static_candidate / unknown_broker_field, not real_verified."
+    - "CR044-RISK-03: simulation_ready=false and live_ready=false remain release facts."
+    - "CR044-RISK-04: S06 remains technical-note unless future executable guard/script/schema appears."
+
+version_decision:
+  current_version: "cr043-spike-complete"
+  target_version: "cr044-goldminer-admission-alpha"
+  change_type: alpha
+  compatibility: compatible
+  reason: "新增离线 blocked-first admission 工程资产和测试，不启用真实 broker runtime，不改变已交付 paper simulation 运行语义。"
+
+quality_summary:
+  cp6_results:
+    - "S01..S06 PASS"
+  cp7_results:
+    - "PASS_WITH_RISK"
+  test_report_path: "docs/quality/TEST-REPORT-CR044.md"
+  review_path: "docs/quality/REVIEW-CR044.md"
+  verification_report_path: "docs/quality/VERIFICATION-REPORT-CR044.md"
+  fixes_path: "docs/quality/FIXES-CR044.md"
+  blocker_count: 0
+  high_count: 0
+  accepted_risk_ids:
+    - DQ-CP8-CR044-01
+    - DQ-CP8-CR044-02
+    - DQ-CP8-CR044-03
+  unresolved_findings: []
+  verification_commands:
+    - command: "PYTHONDONTWRITEBYTECODE=1 PYTEST_ADDOPTS='-p no:cacheprovider' uv run --python 3.11 pytest -q tests/test_cr042_broker_adapter_contract.py tests/test_cr044_goldminer_admission_guard.py"
+      result: "PASS: 13 passed"
+    - command: "uv run --python 3.11 python scripts/check_cr_tracking_consistency.py --project-root ."
+      result: "PASS"
+    - command: "git diff --check -- CR044 scoped files"
+      result: "PASS"
+
+affected_surface:
+  platforms:
+    - "Python 3.11 / uv local test"
+  components:
+    - engine/broker_adapter.py
+    - tests/test_cr044_goldminer_admission_guard.py
+    - process/stories/CR044-*
+    - process/checks/CP6-CR044-*
+    - process/checks/CP7-CR044-*
+    - docs/quality/*CR044.md
+    - docs/release/*
+    - .gitignore
+  install_scopes: []
+  config_changes:
+    - ".gitignore: allow docs/quality/*.md while keeping quality/ data-lake partition ignored"
+  permission_changes:
+    - "No runtime permission granted; L3+ remains not-authorized."
+  migration_required: false
+  external_interfaces:
+    - "Goldminer remains stub-only; no real external interface enabled."
+  state_schema_changes: []
+  command_parameter_changes: []
+
+install_validation_summary:
+  commands:
+    - "N/A: no installer or deploy script changed."
+  results:
+    - "N/A"
+  log_paths: []
+  skipped_with_reason:
+    - "CR044 delivers local Python code/tests/process evidence only; no install package or runtime service is released."
+
+release_documents:
+  release_notes:
+    path: "docs/release/RELEASE-NOTES.md"
+    status: generated
+    na_reason: ""
+  deploy_checklist:
+    path: "docs/release/DEPLOY-CHECKLIST.md"
+    status: generated
+    na_reason: ""
+  rollback:
+    path: "docs/release/ROLLBACK.md"
+    status: generated
+    na_reason: ""
+  migration:
+    path: "docs/release/MIGRATION.md"
+    status: generated
+    na_reason: ""
+  feedback:
+    path: "docs/release/FEEDBACK.md"
+    status: generated
+    na_reason: ""
+
+non_authorized_items:
+  - id: NA-CR044-01
+    operation: "credential_read / login / connect"
+    reason: "CP8 approve only accepts offline admission delivery readiness."
+    required_authorization: "Separate L3+ per-run authorization with credential handling gate."
+  - id: NA-CR044-02
+    operation: "account/cash/position/order/fill real query"
+    reason: "Readonly mapping remains static candidate / unknown, not real verified."
+    required_authorization: "Separate L4 readonly probe authorization and evidence."
+  - id: NA-CR044-03
+    operation: "order_submit / order_cancel / simulation_runtime / live_runtime"
+    reason: "Kill switch remains blocked and ready flags remain false."
+    required_authorization: "Separate L5 runtime CR with run manifest, whitelist, kill switch, and risk acceptance."
+  - id: NA-CR044-04
+    operation: "provider_fetch / lake_write / catalog_publish"
+    reason: "Out of CR044 delivery scope."
+    required_authorization: "Separate data/publish authorization."
+
+follow_up_summary:
+  observation_items:
+    - id: OBS-CR044-01
+      status: open
+      summary: "If real Goldminer account permission is granted, re-enter L3/L4/L5 authorization gates."
+    - id: OBS-CR044-02
+      status: open
+      summary: "If S06 becomes executable guard/script/schema, upgrade to full-lld and re-run CP5/CP7."
+  feedback_items:
+    - id: FB-CR044-01
+      type: risk
+      summary: "Offline admission assets are ready with risk; no simulation/live readiness."
+  follow_up_candidates:
+    - id: CR-045-candidate
+      summary: "Goldminer credential/readonly probe authorization, only if user explicitly grants L3/L4 scope."
+      status: not-created
+  risk_acceptance_items:
+    - DQ-CP8-CR044-01
+    - DQ-CP8-CR044-02
+    - DQ-CP8-CR044-03
+
+token_control:
+  default_read_mode: capsule-first
+  copied_long_text: false
+  allowed_payload: "summary, count, risk id, decision id, evidence path"
+  full_doc_read_triggers:
+    - missing_capsule_field
+    - unreadable_evidence_path
+    - conflicting_conclusion
+    - user_requested_deep_review

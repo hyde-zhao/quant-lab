@@ -1,0 +1,77 @@
+context_id: CP5-CR041-LLD-CONTEXT
+cr_id: CR-041
+phase: story-planning
+status: approved
+created_at: "2026-06-10T22:48:00+08:00"
+owner: meta-po
+read_profile: compact
+source_artifacts:
+  - process/changes/CR-041-API-LESS-PAPER-SIMULATION-RUNNER-2026-06-10.md
+  - process/checks/CP4-CR041-STORY-DAG-PARALLEL-SAFETY.md
+  - process/stories/CR041-S01-strategy-admission-package-reader-LLD.md
+  - process/stories/CR041-S02-target-portfolio-order-intent-builder-LLD.md
+  - process/stories/CR041-S03-paper-broker-fill-engine-LLD.md
+  - process/stories/CR041-S04-position-cash-equity-ledger-LLD.md
+  - process/stories/CR041-S05-cli-report-artifacts-LLD.md
+  - process/checks/CP5-CR041-S01-strategy-admission-package-reader-LLD-IMPLEMENTABILITY.md
+  - process/checks/CP5-CR041-S02-target-portfolio-order-intent-builder-LLD-IMPLEMENTABILITY.md
+  - process/checks/CP5-CR041-S03-paper-broker-fill-engine-LLD-IMPLEMENTABILITY.md
+  - process/checks/CP5-CR041-S04-position-cash-equity-ledger-LLD-IMPLEMENTABILITY.md
+  - process/checks/CP5-CR041-S05-cli-report-artifacts-LLD-IMPLEMENTABILITY.md
+design_evidence_distribution:
+  full_lld: 5
+  technical_note: 0
+  waived: 0
+story_batch:
+  - id: CR041-S01
+    slug: strategy-admission-package-reader
+    status: ready-for-verification
+    cp5: APPROVED
+  - id: CR041-S02
+    slug: target-portfolio-order-intent-builder
+    status: ready-for-verification
+    cp5: APPROVED_WITH_OPEN_ACCEPTED
+  - id: CR041-S03
+    slug: paper-broker-fill-engine
+    status: ready-for-verification
+    cp5: APPROVED
+  - id: CR041-S04
+    slug: position-cash-equity-ledger
+    status: ready-for-verification
+    cp5: APPROVED
+  - id: CR041-S05
+    slug: cli-report-artifacts
+    status: ready-for-verification
+    cp5: APPROVED
+clarification_queue:
+  blocking_open_items: 0
+  non_blocking_open_items:
+    - id: O-CR041-S02-01
+      type: OPEN
+      question: "CR039 package 当前不直接提供逐日目标组合 artifact，S02 第一版如何取目标组合？"
+      recommendation: "第一版 CLI 接受显式 target portfolio fixture/path；CR039 package 只提供策略准入，不臆造目标持仓。"
+      decision_status: approved
+      decided_by: user
+      decided_at: "2026-06-10T23:11:00+08:00"
+      decision: "接受推荐方案：CR041 第一版 target portfolio 由 CLI 显式输入；CR039 package 只作为策略准入证据。"
+      alternatives:
+        - "从 CR038 alpha_scores / portfolio artifact 推导目标组合。"
+        - "暂停 CR041，先补一个目标组合生成 CR。"
+      impact: "影响 CLI 输入、测试 fixture 和报告 lineage；不阻断 LLD；已由用户接受。"
+not_authorized:
+  - "broker / QMT / MiniQMT / XtQuant / Goldminer connection"
+  - "Backtrader default runtime or dependency change"
+  - "account/order/fill live query"
+  - "real or simulated broker order submit/cancel"
+  - "credential read"
+  - "provider fetch / lake write / catalog publish"
+next_gate: CP7 CR041 verification
+read_expansion_log:
+  - at: "2026-06-10T22:48:00+08:00"
+    actor: meta-po
+    phase: story-planning
+    capsule_path: process/context/CP5-CR041-LLD-CONTEXT.yaml
+    expanded_to:
+      - process/research/multifactor_strategy_candidates/run-cr039-multifactor-strategy-candidates-20260610/STRATEGY-ADMISSION-PACKAGE.json
+      - engine/order_intent_draft.py
+    reason: "核对 CR039 package 字段与既有 order_intent_draft 边界，确保 CR041 LLD 不升级真实运行授权。"

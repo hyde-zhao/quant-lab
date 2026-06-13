@@ -1,0 +1,458 @@
+project_id: local_backtest
+cr_id: CR-045
+version: "1.0"
+created_at: "2026-06-11T23:05:00+08:00"
+owner: meta-se
+status: draft-for-cp4
+phase: story-planning
+source_context: process/context/CP3-CR045-DESIGN-CONTEXT.yaml
+source_hld: docs/design/HLD-CR045-GOLDMINER-WINDOWS-BRIDGE.md
+source_adr: docs/design/ARCHITECTURE-DECISION-CR045.md
+feature_design_matrix: docs/design/FEATURE-DESIGN-MATRIX-CR045.md
+feature_design:
+  design: docs/features/cr045-goldminer-bridge/DESIGN.md
+  test_plan: docs/features/cr045-goldminer-bridge/TEST-PLAN.md
+  tasks: docs/features/cr045-goldminer-bridge/TASKS.md
+cp5_batch:
+  batch_id: CR045-BRIDGE-BATCH-A
+  checkpoint_path: process/checkpoints/CP5-CR045-BRIDGE-BATCH-A-LLD-BATCH.md
+  scope:
+    - CR045-S01
+    - CR045-S02
+    - CR045-S03
+    - CR045-S04
+    - CR045-S05
+    - CR045-S06
+  implementation_allowed: false
+  implementation_allowed_until: CP5 approved
+authorization_boundary:
+  authorized:
+    - L1 formal CR orchestration
+    - L2 Windows bridge design
+    - L2 skeleton planning
+    - fixture-only and static validation planning
+  not_authorized:
+    - credential_read
+    - token_or_account_id_collection
+    - windows_bridge_runtime_start
+    - goldminer_login
+    - goldminer_connect
+    - account_query
+    - cash_query
+    - position_query
+    - order_query
+    - fill_query
+    - order_submit
+    - order_cancel
+    - simulation_runtime
+    - live_runtime
+    - provider_fetch
+    - lake_write
+    - catalog_publish
+  fail_closed_rule: Any L3+ runtime behavior must return blocked / fail-closed unless a later per-run authorization is explicitly approved.
+parallel_policy:
+  max_parallel_lld: 3
+  max_parallel_dev: 1
+  max_parallel_qa: 2
+  rationale: LLD can be batched with limited parallelism after CP4; development is conservative because S02/S04/S05 may share CR045 bridge contract and test files.
+global_file_ownership:
+  merge_owners:
+    engine/goldminer_bridge_contract.py: CR045-S02
+    tests/test_cr045_goldminer_bridge_contract.py: CR045-S02
+    engine/goldminer_bridge_client.py: CR045-S03
+    tests/test_cr045_goldminer_bridge_client.py: CR045-S03
+    engine/goldminer_bridge_probe.py: CR045-S04
+    tests/test_cr045_goldminer_readonly_probe.py: CR045-S04
+    tests/test_cr045_goldminer_no_operation_static.py: CR045-S05
+    docs/goldminer/CR045-BRIDGE-RUNBOOK.md: CR045-S06
+  forbidden_paths:
+    - .env
+    - .env.*
+    - data/market_data
+    - reports/live
+    - reports/simulation_runtime
+    - catalog
+  forbidden_runtime_import_roots:
+    - gm
+    - gmtrade
+  forbidden_runtime_actions:
+    - login
+    - connect
+    - account_query
+    - cash_query
+    - position_query
+    - order_query
+    - fill_query
+    - order_submit
+    - order_cancel
+    - provider_fetch
+    - lake_write
+    - catalog_publish
+completion_criteria:
+  cp4:
+    - Feature Design Matrix covers FEAT-CR045-GOLDMINER-BRIDGE and S01-S06 lld_policy.
+    - Required Feature DESIGN / TEST-PLAN / TASKS exist.
+    - Story cards contain feature_design_refs, lld_policy, dependencies, file owner, dev_gate and not-authorized boundary.
+    - Development Plan DAG has no invalid references or cycles.
+    - Files have primary/shared owners and no unresolved write conflict.
+    - CP4 summary states that it will be folded into CP5 Decision Brief.
+  cp5_entry:
+    - S01-S05 full LLD and S06 technical-note or upgraded full LLD are generated.
+    - No unanswered blocks_lld=true clarification item exists.
+    - No L3+ runtime authorization is implied by design evidence.
+waves:
+  - wave: W1
+    name: security-boundary
+    phase_order: 1
+    parallel_lld: false
+    parallel_dev: false
+    entry_gate:
+      - CP3 approved
+      - Feature Design Matrix ready
+      - No L3+ runtime authorization required
+    exit_gate:
+      - S01 design evidence ready for CP5 batch
+    stories:
+      - story_id: CR045-S01
+        title: Windows Bridge Security Boundary
+        priority: P0
+        assignee: meta-dev
+        depends_on: []
+        dependency_type: []
+        status: lld-pending
+        output_files:
+          - process/stories/CR045-S01-windows-bridge-security-boundary.md
+          - process/stories/CR045-S01-windows-bridge-security-boundary-LLD.md
+        file_ownership:
+          primary:
+            - process/stories/CR045-S01-windows-bridge-security-boundary.md
+            - process/stories/CR045-S01-windows-bridge-security-boundary-LLD.md
+          shared:
+            - docs/features/cr045-goldminer-bridge/DESIGN.md
+          merge_owner: CR045-S01
+          forbidden:
+            - .env
+            - .env.*
+            - engine/goldminer_bridge_contract.py
+            - engine/goldminer_bridge_client.py
+        feature_design_refs:
+          - docs/features/cr045-goldminer-bridge/DESIGN.md#权限与安全
+          - docs/features/cr045-goldminer-bridge/TEST-PLAN.md#权限--安全--失败路径
+          - docs/features/cr045-goldminer-bridge/TASKS.md#cr045-s01
+        lld_policy:
+          required_level: full-lld
+          trigger_reasons:
+            - security
+            - permission
+            - runtime_authorization
+            - shared-story-boundary
+          rationale: Authorization, credential, hard-off and not-authorized rules are root contracts for all downstream stories.
+        lld_gate:
+          required_inputs:
+            - process/checkpoints/CP3-CR045-HLD-REVIEW.md
+            - docs/design/FEATURE-DESIGN-MATRIX-CR045.md
+            - docs/features/cr045-goldminer-bridge/DESIGN.md
+          status: not-started
+        dev_gate:
+          implementation_allowed: false
+          allowed_after: CP5 approved
+          design_evidence_confirmed: false
+          dependencies_satisfied: true
+          file_conflict_free: true
+          real_runtime_authorized: false
+  - wave: W2
+    name: bridge-and-client-contracts
+    phase_order: 2
+    parallel_lld: true
+    parallel_dev: false
+    entry_gate:
+      - S01 authorization contract declared
+    exit_gate:
+      - S02 and S03 design evidence ready for CP5 batch
+    stories:
+      - story_id: CR045-S02
+        title: Bridge Health Capabilities Skeleton
+        priority: P0
+        assignee: meta-dev
+        depends_on:
+          - CR045-S01
+        dependency_type:
+          - contract
+        status: lld-pending
+        output_files:
+          - process/stories/CR045-S02-bridge-health-capabilities-skeleton.md
+          - process/stories/CR045-S02-bridge-health-capabilities-skeleton-LLD.md
+          - engine/goldminer_bridge_contract.py
+          - tests/test_cr045_goldminer_bridge_contract.py
+        file_ownership:
+          primary:
+            - process/stories/CR045-S02-bridge-health-capabilities-skeleton.md
+            - process/stories/CR045-S02-bridge-health-capabilities-skeleton-LLD.md
+            - engine/goldminer_bridge_contract.py
+            - tests/test_cr045_goldminer_bridge_contract.py
+          shared:
+            - docs/features/cr045-goldminer-bridge/DESIGN.md
+          merge_owner: CR045-S02
+          forbidden:
+            - .env
+            - .env.*
+            - engine/goldminer_bridge_client.py
+        feature_design_refs:
+          - docs/features/cr045-goldminer-bridge/DESIGN.md#api--接口设计
+          - docs/features/cr045-goldminer-bridge/TEST-PLAN.md#测试范围
+          - docs/features/cr045-goldminer-bridge/TASKS.md#cr045-s02
+        lld_policy:
+          required_level: full-lld
+          trigger_reasons:
+            - cross-module-contract
+            - external-interface
+            - data-model
+          rationale: Health and capabilities schema are shared bridge contracts and must be frozen before implementation.
+        lld_gate:
+          required_inputs:
+            - CR045-S01 design evidence
+            - docs/features/cr045-goldminer-bridge/DESIGN.md
+          status: not-started
+        dev_gate:
+          implementation_allowed: false
+          allowed_after: CP5 approved
+          design_evidence_confirmed: false
+          dependencies_satisfied: false
+          file_conflict_free: true
+          real_runtime_authorized: false
+      - story_id: CR045-S03
+        title: WSL Linux Client Contract and Network Precheck
+        priority: P0
+        assignee: meta-dev
+        depends_on:
+          - CR045-S01
+        dependency_type:
+          - contract
+        status: lld-pending
+        output_files:
+          - process/stories/CR045-S03-wsl-linux-client-contract-and-network-precheck.md
+          - process/stories/CR045-S03-wsl-linux-client-contract-and-network-precheck-LLD.md
+          - engine/goldminer_bridge_client.py
+          - tests/test_cr045_goldminer_bridge_client.py
+        file_ownership:
+          primary:
+            - process/stories/CR045-S03-wsl-linux-client-contract-and-network-precheck.md
+            - process/stories/CR045-S03-wsl-linux-client-contract-and-network-precheck-LLD.md
+            - engine/goldminer_bridge_client.py
+            - tests/test_cr045_goldminer_bridge_client.py
+          shared:
+            - engine/goldminer_bridge_contract.py
+          merge_owner: CR045-S03
+          forbidden:
+            - .env
+            - .env.*
+            - gm
+            - gmtrade
+        feature_design_refs:
+          - docs/features/cr045-goldminer-bridge/DESIGN.md#feature-边界与相邻对象
+          - docs/features/cr045-goldminer-bridge/TEST-PLAN.md#风险驱动测试
+          - docs/features/cr045-goldminer-bridge/TASKS.md#cr045-s03
+        lld_policy:
+          required_level: full-lld
+          trigger_reasons:
+            - cross-platform-contract
+            - external-interface
+            - failure-path
+          rationale: WSL/Linux client must not hold SDK or credentials and must model runtime-not-started behavior.
+        lld_gate:
+          required_inputs:
+            - CR045-S01 design evidence
+            - CR045-S02 API contract from Feature DESIGN
+          status: not-started
+        dev_gate:
+          implementation_allowed: false
+          allowed_after: CP5 approved
+          design_evidence_confirmed: false
+          dependencies_satisfied: false
+          file_conflict_free: true
+          real_runtime_authorized: false
+  - wave: W3
+    name: readonly-and-evidence-contracts
+    phase_order: 3
+    parallel_lld: true
+    parallel_dev: false
+    entry_gate:
+      - S01/S02/S03 contracts declared
+    exit_gate:
+      - S04 and S05 design evidence ready for CP5 batch
+    stories:
+      - story_id: CR045-S04
+        title: Readonly Probe Allowlist and Blocked-First
+        priority: P0
+        assignee: meta-dev
+        depends_on:
+          - CR045-S01
+          - CR045-S02
+          - CR045-S03
+        dependency_type:
+          - contract
+        status: lld-pending
+        output_files:
+          - process/stories/CR045-S04-readonly-probe-allowlist-and-blocked-first.md
+          - process/stories/CR045-S04-readonly-probe-allowlist-and-blocked-first-LLD.md
+          - engine/goldminer_bridge_probe.py
+          - tests/test_cr045_goldminer_readonly_probe.py
+        file_ownership:
+          primary:
+            - process/stories/CR045-S04-readonly-probe-allowlist-and-blocked-first.md
+            - process/stories/CR045-S04-readonly-probe-allowlist-and-blocked-first-LLD.md
+            - engine/goldminer_bridge_probe.py
+            - tests/test_cr045_goldminer_readonly_probe.py
+          shared:
+            - engine/goldminer_bridge_contract.py
+          merge_owner: CR045-S04
+          forbidden:
+            - .env
+            - .env.*
+            - data/market_data
+            - catalog
+        feature_design_refs:
+          - docs/features/cr045-goldminer-bridge/DESIGN.md#异常失败与降级策略
+          - docs/features/cr045-goldminer-bridge/TEST-PLAN.md#权限--安全--失败路径
+          - docs/features/cr045-goldminer-bridge/TASKS.md#cr045-s04
+        lld_policy:
+          required_level: full-lld
+          trigger_reasons:
+            - external-interface
+            - security
+            - permission
+            - rollback
+          rationale: Readonly probe must stay skeleton-only and blocked-first while L4 is not authorized.
+        lld_gate:
+          required_inputs:
+            - CR045-S01 design evidence
+            - CR045-S02 design evidence
+            - CR045-S03 design evidence
+          status: not-started
+        dev_gate:
+          implementation_allowed: false
+          allowed_after: CP5 approved
+          design_evidence_confirmed: false
+          dependencies_satisfied: false
+          file_conflict_free: false
+          real_runtime_authorized: false
+      - story_id: CR045-S05
+        title: Redaction and No-Operation Static Validation
+        priority: P0
+        assignee: meta-dev
+        depends_on:
+          - CR045-S01
+          - CR045-S02
+          - CR045-S03
+        dependency_type:
+          - contract
+        status: lld-pending
+        output_files:
+          - process/stories/CR045-S05-redaction-and-no-operation-static-validation.md
+          - process/stories/CR045-S05-redaction-and-no-operation-static-validation-LLD.md
+          - tests/test_cr045_goldminer_no_operation_static.py
+        file_ownership:
+          primary:
+            - process/stories/CR045-S05-redaction-and-no-operation-static-validation.md
+            - process/stories/CR045-S05-redaction-and-no-operation-static-validation-LLD.md
+            - tests/test_cr045_goldminer_no_operation_static.py
+          shared:
+            - engine/goldminer_bridge_contract.py
+            - tests/test_cr045_goldminer_bridge_contract.py
+            - tests/test_cr045_goldminer_readonly_probe.py
+          merge_owner: CR045-S05
+          forbidden:
+            - .env
+            - .env.*
+            - reports/live
+            - reports/simulation_runtime
+        feature_design_refs:
+          - docs/features/cr045-goldminer-bridge/DESIGN.md#测试与验收策略
+          - docs/features/cr045-goldminer-bridge/TEST-PLAN.md#风险驱动测试
+          - docs/features/cr045-goldminer-bridge/TASKS.md#cr045-s05
+        lld_policy:
+          required_level: full-lld
+          trigger_reasons:
+            - security
+            - audit
+            - validation
+            - data-model
+          rationale: Redaction evidence and operation counters are CP7/CP8 safety proof and must be fully designed.
+        lld_gate:
+          required_inputs:
+            - CR045-S01 design evidence
+            - CR045-S02 design evidence
+            - CR045-S03 design evidence
+          status: not-started
+        dev_gate:
+          implementation_allowed: false
+          allowed_after: CP5 approved
+          design_evidence_confirmed: false
+          dependencies_satisfied: false
+          file_conflict_free: false
+          real_runtime_authorized: false
+  - wave: W4
+    name: runbook-and-follow-up
+    phase_order: 4
+    parallel_lld: false
+    parallel_dev: false
+    entry_gate:
+      - S01-S05 design evidence declared
+    exit_gate:
+      - S06 technical-note ready for CP5 batch
+    stories:
+      - story_id: CR045-S06
+        title: User Runbook and Follow-up Gates
+        priority: P1
+        assignee: meta-dev
+        depends_on:
+          - CR045-S01
+          - CR045-S02
+          - CR045-S03
+          - CR045-S04
+          - CR045-S05
+        dependency_type:
+          - contract
+        status: lld-pending
+        output_files:
+          - process/stories/CR045-S06-user-runbook-and-follow-up-gates.md
+          - docs/goldminer/CR045-BRIDGE-RUNBOOK.md
+        file_ownership:
+          primary:
+            - process/stories/CR045-S06-user-runbook-and-follow-up-gates.md
+            - docs/goldminer/CR045-BRIDGE-RUNBOOK.md
+          shared:
+            - docs/features/cr045-goldminer-bridge/DESIGN.md
+          merge_owner: CR045-S06
+          forbidden:
+            - .env
+            - .env.*
+            - engine/goldminer_bridge_contract.py
+            - engine/goldminer_bridge_client.py
+            - engine/goldminer_bridge_probe.py
+        feature_design_refs:
+          - docs/features/cr045-goldminer-bridge/DESIGN.md#人机协作与确认点
+          - docs/features/cr045-goldminer-bridge/TEST-PLAN.md#手工验收
+          - docs/features/cr045-goldminer-bridge/TASKS.md#cr045-s06
+        lld_policy:
+          required_level: technical-note
+          trigger_reasons:
+            - docs-handoff
+            - runtime_authorization
+            - follow_up_tracking
+          rationale: S06 is doc/runbook handoff only unless executable manifest/schema/guard is introduced.
+        lld_gate:
+          required_inputs:
+            - CR045-S01 design evidence
+            - CR045-S02 design evidence
+            - CR045-S03 design evidence
+            - CR045-S04 design evidence
+            - CR045-S05 design evidence
+          status: not-started
+        dev_gate:
+          implementation_allowed: false
+          allowed_after: CP5 approved
+          design_evidence_confirmed: false
+          dependencies_satisfied: false
+          file_conflict_free: true
+          real_runtime_authorized: false

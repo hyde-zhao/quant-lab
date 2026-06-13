@@ -1,0 +1,64 @@
+context_id: CP3-CR044-DESIGN-CONTEXT
+cr_id: CR-044
+phase: solution-design
+gate: CP3
+status: ready
+read_profile: compact
+generated_at: '2026-06-11T10:57:32+08:00'
+owner: meta-po
+source_files:
+  - process/checkpoints/CP2-CR044-REQUIREMENTS-BASELINE.md
+  - process/handoffs/META-SE-CR044-CP2-CP3-DESIGN-2026-06-11.md
+  - process/changes/CR-044-GOLDMINER-SIMULATION-ADMISSION-2026-06-11.md
+  - process/research/cr043_goldminer_adapter_spike/INTERFACE-MAPPING-MATRIX.md
+summary:
+  cp2_status: approved
+  cp3_recommendation: blocked-first Goldminer admission gate + GoldminerStubBrokerAdapter retained + fixture-only guardrails + staged L3+ per-run authorization
+  sdk_policy: gm remains Python 3.11 primary static candidate; gmtrade remains Python 3.10 fallback and must not be introduced into current runtime by CP3 approval.
+  story_batch: CR044-LLD-BATCH-A-ADMISSION-GUARD
+  lld_policy:
+    CR044-S01: full-lld
+    CR044-S02: full-lld
+    CR044-S03: full-lld
+    CR044-S04: full-lld
+    CR044-S05: full-lld
+    CR044-S06: technical-note unless runbook drives automatic guard, then full-lld
+  not_authorized_scope:
+    - credential_read
+    - login
+    - connect
+    - account_query
+    - cash_query
+    - position_query
+    - order_query
+    - fill_query
+    - order_submit
+    - order_cancel
+    - simulation_runtime
+    - live_runtime
+    - provider_fetch
+    - lake_write
+    - catalog_publish
+decision_items:
+  - id: DQ-CP3-CR044-01
+    type: architecture
+    recommendation: blocked-first admission gate with GoldminerStubBrokerAdapter retained.
+  - id: DQ-CP3-CR044-02
+    type: architecture
+    recommendation: gm as Python 3.11 primary static candidate; gmtrade as Python 3.10 fallback.
+  - id: DQ-CP3-CR044-03
+    type: security
+    recommendation: zero credential retention, redaction-first evidence, and no real SDK import/call in L2.
+  - id: DQ-CP3-CR044-04
+    type: implementation
+    recommendation: approve CR044-LLD-BATCH-A-ADMISSION-GUARD with S01-S05 full-lld and S06 technical-note/full-lld condition.
+  - id: DQ-CP3-CR044-05
+    type: risk_acceptance
+    recommendation: accept that CP3 architecture does not grant simulation_ready/live_ready and all L3+ actions remain not-authorized.
+read_expansion_log:
+  - at: '2026-06-11T10:57:32+08:00'
+    actor: meta-po
+    phase: solution-design
+    capsule_path: process/context/CP3-CR044-DESIGN-CONTEXT.yaml
+    expanded_to: CP2 checkpoint, meta-se handoff, CR044 formal CR, CR043 interface mapping
+    reason: CR044 CP3 launch requires architecture decision inputs and Story/LLD batch proposal.

@@ -1,0 +1,74 @@
+context_id: CP5-CR045-LLD-CONTEXT
+change_id: CR-045
+phase: story-planning
+batch_id: CR045-BRIDGE-BATCH-A
+status: ready
+created_at: '2026-06-11T23:08:23+08:00'
+owner: meta-po
+read_profile: compact
+source_gates:
+  cp3_checkpoint: process/checkpoints/CP3-CR045-HLD-REVIEW.md
+  cp3_status: approved
+  cp4_auto_check: process/checks/CP4-CR045-STORY-DAG-PARALLEL-SAFETY.md
+  cp4_status: PASS
+design_evidence:
+  full_lld:
+    - story_id: CR045-S01
+      path: process/stories/CR045-S01-windows-bridge-security-boundary-LLD.md
+      cp5_auto_check: process/checks/CP5-CR045-S01-windows-bridge-security-boundary-LLD-IMPLEMENTABILITY.md
+      status: ready-for-review
+    - story_id: CR045-S02
+      path: process/stories/CR045-S02-bridge-health-capabilities-skeleton-LLD.md
+      cp5_auto_check: process/checks/CP5-CR045-S02-bridge-health-capabilities-skeleton-LLD-IMPLEMENTABILITY.md
+      status: ready-for-review
+    - story_id: CR045-S03
+      path: process/stories/CR045-S03-wsl-linux-client-contract-and-network-precheck-LLD.md
+      cp5_auto_check: process/checks/CP5-CR045-S03-wsl-linux-client-contract-and-network-precheck-LLD-IMPLEMENTABILITY.md
+      status: ready-for-review
+    - story_id: CR045-S04
+      path: process/stories/CR045-S04-readonly-probe-allowlist-and-blocked-first-LLD.md
+      cp5_auto_check: process/checks/CP5-CR045-S04-readonly-probe-allowlist-and-blocked-first-LLD-IMPLEMENTABILITY.md
+      status: ready-for-review
+    - story_id: CR045-S05
+      path: process/stories/CR045-S05-redaction-and-no-operation-static-validation-LLD.md
+      cp5_auto_check: process/checks/CP5-CR045-S05-redaction-and-no-operation-static-validation-LLD-IMPLEMENTABILITY.md
+      status: ready-for-review
+  technical_note:
+    - story_id: CR045-S06
+      path: process/stories/CR045-S06-user-runbook-and-follow-up-gates.md#技术说明
+      cp5_auto_check: process/checks/CP5-CR045-S06-user-runbook-and-follow-up-gates-TECHNICAL-NOTE-IMPLEMENTABILITY.md
+      status: ready-for-review
+      upgraded_to_full_lld: false
+      upgrade_condition: automatic manifest/schema/guard script, state machine, install path, or executable runtime gate
+cp5_auto_summary:
+  total_story_checks: 6
+  pass: 6
+  fail: 0
+  waived: 0
+  blocker_count: 0
+  blocks_lld_true_open_items: 0
+  clarification_queue_status: none
+implementation_gate:
+  implementation_allowed_before_cp5_approval: false
+  after_cp5_approval_scope: L2 skeleton / fixture / static validation only
+  max_parallel_dev: 1
+  reason: Shared bridge contract and test files require conservative merge order.
+non_authorized_items:
+  - credential/token/account_id read or capture
+  - Windows bridge runtime start
+  - Goldminer login/connect
+  - account/cash/position/order/fill query
+  - order submit / cancel
+  - simulation / live runtime
+  - provider fetch / lake write / catalog publish
+pending_human_decisions:
+  - DQ-CP5-CR045-01
+  - DQ-CP5-CR045-02
+  - DQ-CP5-CR045-03
+  - DQ-CP5-CR045-04
+  - DQ-CP5-CR045-05
+read_expansion_log:
+  - at: '2026-06-11T23:08:23+08:00'
+    actor: meta-po
+    reason: CP5 gate creation required batch-level scan of LLD evidence, technical-note, CP5 auto checks, CP4 precheck and subagent handoff.
+    full_doc_read_reason: CP5 Decision Brief must collect design evidence distribution, clarification queue status, cross-story contracts, file owner and merge order.

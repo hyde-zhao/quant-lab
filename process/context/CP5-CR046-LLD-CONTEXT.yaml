@@ -1,0 +1,105 @@
+version: 1
+context_id: CP5-CR046-LLD-CONTEXT
+status: ready
+change_id: CR-046
+phase: story-planning
+created_at: '2026-06-13T23:58:00+08:00'
+owner: host-orchestrator
+read_profile: compact
+cp5_batch: CR046-DUAL-TARGET-FRAMEWORK-BATCH-A
+context_policy:
+  require_capsule_first: true
+  must_read:
+  - process/checkpoints/CP3-CR046-HLD-REVIEW.md
+  - process/checks/CP4-CR046-STORY-DAG-PARALLEL-SAFETY.md
+  - docs/design/HLD-CR046-QMT-MINIQMT-DUAL-TARGET-FRAMEWORK.md
+  - docs/design/ARCHITECTURE-DECISION-CR046.md
+  - docs/features/qmt-miniqmt-dual-target-framework/DESIGN.md
+  - docs/features/qmt-miniqmt-dual-target-framework/TEST-PLAN.md
+  - process/stories/CR046-S01-dual-target-strategy-architecture-LLD.md
+  - process/stories/CR046-S02-strategy-package-contract-and-schema-LLD.md
+  - process/stories/CR046-S03-qmt-terminal-target-framework-LLD.md
+  - process/stories/CR046-S04-miniqmt-runner-install-and-runtime-boundary-LLD.md
+  - process/stories/CR046-S05-verification-framework-and-evidence-model-LLD.md
+  - process/stories/CR046-S06-follow-up-strategy-delivery-gate.md
+  - process/stories/CR046-S07-research-framework-follow-up-contract.md
+  read_if_needed:
+  - process/changes/CR-046-TERMINAL-NATIVE-SIMULATION-STRATEGY-EXPORT-2026-06-13.md
+  - process/changes/CR-046-FOLLOW-UP-TRACKING-2026-06-13.md
+  - docs/qmt/CR046-DUAL-TARGET-STRATEGY-FRAMEWORK.md
+  - docs/qmt/CR046-MINIQMT-RUNNER-INSTALL-DESIGN.md
+  - docs/qmt/CR046-VERIFICATION-FRAMEWORK.md
+  - docs/research/CR046-RESEARCH-FRAMEWORK-FOLLOWUP.md
+  - process/checks/CP5-CR046-*
+  do_not_read_by_default:
+  - full git diff
+  - credentials
+  - .env
+  - QMT / MiniQMT runtime files
+  - account / cash / position / order / fill data
+summary:
+  cp2_result: approved
+  cp3_result: approved
+  cp4_result: PASS
+  cp5_auto_result: PASS
+  design_scope:
+  - dual_target_strategy_framework
+  - package_contract_and_schema
+  - qmt_terminal_target_framework
+  - miniqmt_runner_install_design
+  - verification_framework_and_evidence_model
+  - follow_up_strategy_delivery_gate
+  - research_framework_follow_up_contract
+  out_of_scope:
+  - concrete_strategy_delivery
+  - qmt_terminal_runtime_validation
+  - qmt_terminal_real_import
+  - real_transfer_to_trading_pc
+  - miniqmt_real_install
+  - miniqmt_connection
+  - market_subscription
+  - credential_or_account_read
+  - order_submit_cancel
+  - simulation_live
+  - provider_fetch
+  - lake_write
+  - catalog_publish
+design_evidence:
+  full_lld:
+  - process/stories/CR046-S01-dual-target-strategy-architecture-LLD.md
+  - process/stories/CR046-S02-strategy-package-contract-and-schema-LLD.md
+  - process/stories/CR046-S03-qmt-terminal-target-framework-LLD.md
+  - process/stories/CR046-S04-miniqmt-runner-install-and-runtime-boundary-LLD.md
+  - process/stories/CR046-S05-verification-framework-and-evidence-model-LLD.md
+  technical_note:
+  - process/stories/CR046-S06-follow-up-strategy-delivery-gate.md#技术说明
+  - process/stories/CR046-S07-research-framework-follow-up-contract.md#技术说明
+cp5_auto_checks:
+  status: PASS
+  files:
+  - process/checks/CP5-CR046-S01-dual-target-strategy-architecture-LLD-IMPLEMENTABILITY.md
+  - process/checks/CP5-CR046-S02-strategy-package-contract-and-schema-LLD-IMPLEMENTABILITY.md
+  - process/checks/CP5-CR046-S03-qmt-terminal-target-framework-LLD-IMPLEMENTABILITY.md
+  - process/checks/CP5-CR046-S04-miniqmt-runner-install-and-runtime-boundary-LLD-IMPLEMENTABILITY.md
+  - process/checks/CP5-CR046-S05-verification-framework-and-evidence-model-LLD-IMPLEMENTABILITY.md
+  - process/checks/CP5-CR046-S06-follow-up-strategy-delivery-gate-TECHNICAL-NOTE-IMPLEMENTABILITY.md
+  - process/checks/CP5-CR046-S07-research-framework-follow-up-contract-TECHNICAL-NOTE-IMPLEMENTABILITY.md
+pending_human_decisions:
+  - DQ-CP5-CR046-01
+  - DQ-CP5-CR046-02
+  - DQ-CP5-CR046-03
+  - DQ-CP5-CR046-04
+  - DQ-CP5-CR046-05
+safety_boundary:
+  implementation_allowed: false
+  runtime_authorized: false
+  qmt_connection_authorized: false
+  miniqmt_connection_authorized: false
+  credential_read_authorized: false
+  account_query_authorized: false
+  submit_cancel_authorized: false
+  simulation_live_authorized: false
+read_expansion_log:
+  - at: '2026-06-13T23:58:00+08:00'
+    actor: host-orchestrator
+    full_doc_read_reason: CP5 发起需要读取 CR046 Story LLD、technical-note、CP4 自动预检、HLD/ADR 和 scoped framework 文档以生成 Decision Brief。

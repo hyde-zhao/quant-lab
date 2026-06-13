@@ -114,3 +114,202 @@ real_operation_permission_claims: 0
 | Misleading permission semantics | `0` |
 | Dependency / lock / `.env` modification | `0` |
 | Real operation count | `0` |
+
+## 9. CR020 Manual Install Debug Guide
+
+本节覆盖 CR-020 手工安装调试。Windows S 端启动和 QMT 连接由用户手动执行；Linux C 端用 CLI 手动验证 `query_positions` 是否可用。本文档不授权 agent 读取真实 `.env`、启动 gateway、连接 QMT、执行真实查询或保存未脱敏输出。
+
+### 9.1 CR020 Contract Summary
+
+| Layer | Runtime entry | Purpose |
+|---|---|---|
+| Windows S 端 | `uv run --with typer --python 3.11 python -m trading.qmt_runtime_cli serve` | 启动本地 HTTP gateway，登录 XtQuant session，暴露只读 positions endpoint |
+| Linux C 端 CLI | `uv run --with typer --python 3.11 python -m trading.qmt_runtime_cli query-positions` | 手工 CP7 / smoke 验证，不作为业务 runtime |
+| Linux C 端业务 runtime | `QmtClient` + `StdlibQmtRestTransport` + `QmtHmacHeaderProvider` | Python 代码直接调用 REST API |
+| Endpoint | `POST /qmt/account/positions` | 唯一 CR020 只读 QMT 查询接口 |
+| Scope | `qmt:positions:read` | exact scope，其他 scope 不替代 |
+| Response | redacted positions summary | 不输出账号、证券代码、精确数量、市值或 raw payload |
+
+### 9.2 Authorization Boundary
+
+| 动作 | CR020 当前状态 |
+|---|---|
+| 用户在 Windows 手动启动 S 端 gateway | allowed for manual validation |
+| 用户在 Linux 手动执行 C 端 `query-positions` CLI | allowed for manual validation |
+| agent 代为读取 `.env`、启动 server、连接 QMT 或查询持仓 | not-authorized |
+| 业务代码通过 `QmtClient.query_positions()` 调 REST API | allowed after user deploys S 端 and provides runtime config |
+| 任何发单、撤单、改单、账户写入、simulation/live、provider/lake/publish | not-authorized |
+| `query_positions` 以外的真实 QMT endpoint | not-authorized in CR020 |
+
+### 9.3 Linux C 端安装准备
+
+1. 进入项目目录。
+
+```bash
+cd /home/hyde/workspace/local_backtest
+```
+
+2. 同步 Linux 依赖。Linux C 端不需要 XtQuant，也不应安装 Windows QMT 依赖。
+
+```bash
+uv sync --python 3.11
+```
+
+3. 创建 Linux C 端本地 `.env`。C 端只需要 REST 和 HMAC 相关字段，必须与 Windows S 端一致。
+
+```bash
+cp .env.example .env
+```
+
+至少填写：
+
+```dotenv
+QMT_GATEWAY_HOST=<windows-host>
+QMT_GATEWAY_PORT=<port>
+QMT_CLIENT_ID=<same-client-id-as-windows>
+QMT_CLIENT_SECRET=<same-client-secret-as-windows>
+QMT_RUNTIME_REF=<manual-runtime-authorization-ref>
+```
+
+不要在 Linux C 端填写或安装 XtQuant；`QMT_MINIQMT_PATH`、`QMT_ACCOUNT_REF` 等 Windows 专属字段可以保留占位或空值。
+
+### 9.4 Linux C 端连通性检查
+
+先确认 Windows S 端已经按 [QMT Gateway 安装与运行边界](QMT-GATEWAY-INSTALL.md) 启动，并且 health 中 `session_ready=true`。
+
+Linux 上检查端口：
+
+```bash
+timeout 5 nc -vz <windows-host> <port>
+```
+
+如果没有 `nc`，可以直接执行 client diagnostics：
+
+```bash
+uv run --with typer --python 3.11 python -m trading.qmt_runtime_cli client-diagnostics --env-file .env --base-url http://<windows-host>:<port>
+```
+
+预期输出：
+
+| 字段 | 预期 |
+|---|---|
+| `status` | `ok` |
+| `base_url` | `http://<windows-host>:<port>` |
+| `client_id_hash` | 非空 hash |
+| `client_secret_ref` | `[REDACTED]` |
+
+### 9.5 Linux C 端手动验证 `query_positions`
+
+执行：
+
+```bash
+uv run --with typer --python 3.11 python -m trading.qmt_runtime_cli query-positions --env-file .env --base-url http://<windows-host>:<port> --run-id manual-cr020-query-positions --request-id manual-cr020-query-positions-001
+```
+
+成功时，C 端 CLI 输出 `QmtResponse` JSON。关键字段：
+
+| 字段路径 | 成功预期 |
+|---|---|
+| `status` | `ok` |
+| `endpoint` | `positions` |
+| `payload.query_positions.position_count` | 整数，可能为 0 |
+| `payload.query_positions.positions_digest` | `positions:<hash>` |
+| `payload.query_positions.items_redacted` | 只包含 `position_ref`、`instrument_ref`、`side_ref`、`quantity_bucket`、`value_bucket` |
+| `payload.operation_authorized` | `false` |
+| `payload.real_operation` | `false` |
+| `counters.real_order` / `real_cancel` / `account_write` / `provider_fetch` / `lake_write` / `publish` / `simulation_or_live_run` | 全部 `0` |
+
+输出中不应出现：
+
+| 禁止出现 | 说明 |
+|---|---|
+| 账号原文 | 包括资金账号、交易账号、broker account |
+| `QMT_CLIENT_SECRET` 原文 | HMAC secret 只能存在本地 `.env` |
+| 未脱敏证券代码 | 例如直接显示股票代码原文 |
+| 精确持仓数量 / 市值组合 | 只能出现 bucket |
+| raw positions payload | 只能出现 redacted summary |
+
+### 9.6 Python 业务代码调用示例
+
+CLI 只用于手工验证。业务代码应直接使用 Python REST client：
+
+```python
+from trading.qmt_client import QmtClient, QmtClientConfig
+from trading.qmt_runtime import (
+    StdlibQmtRestTransport,
+    build_runtime_config,
+    build_runtime_hmac_provider,
+    load_runtime_env,
+)
+
+env = load_runtime_env(".env")
+config = build_runtime_config(env)
+
+client = QmtClient(
+    config=QmtClientConfig(
+        base_url="http://<windows-host>:<port>",
+        default_stage="manual_cp7",
+        default_mode="live_readonly",
+    ),
+    transport=StdlibQmtRestTransport(),
+    auth_header_provider=build_runtime_hmac_provider(config),
+)
+
+response = client.query_positions(
+    run_id="manual-cr020-query-positions",
+    request_id="manual-cr020-query-positions-001",
+    authorization_ref=config.runtime_authorization_ref,
+)
+print(response.to_dict())
+```
+
+该示例仍只调用 `query_positions`，不提供任何交易、撤单、改单或账户写入入口。
+
+### 9.7 C/S 排障表
+
+| C 端输出 / reason | 可能原因 | 处理 |
+|---|---|---|
+| `transport_error` / `gateway_unavailable` | Windows S 端未启动、host/port 错误、防火墙阻断 | 先检查 S 端 `serve` 是否运行，再检查 Windows 防火墙和 Linux 到 Windows 网络 |
+| `transport_timeout` | 网络延迟或 S 端阻塞 | 增大 timeout，检查 S 端日志和 MiniQMT 状态 |
+| `auth_required` | C 端没有 HMAC provider 或 secret 缺失 | 检查 C 端 `.env` 的 `QMT_CLIENT_ID` / `QMT_CLIENT_SECRET` |
+| `auth_client_not_approved` | C/S client id 不一致 | 确保两端 `QMT_CLIENT_ID` 相同并重启 S 端 |
+| `auth_secret_unavailable` | S 端缺少对应 client secret | 确保 Windows S 端 `.env` 也填了同一 secret |
+| `auth_signature_mismatch` | secret 不一致或请求体被改写 | 同步两端 secret，避免 HTTP 代理修改 body |
+| `auth_allowlist_mismatch` | Linux IP 不在 S 端 allowlist | Windows `.env` 设置 `QMT_GATEWAY_ALLOWED_SOURCE=<linux-ip>/32` 并重启 |
+| `auth_timestamp_skew` | Windows/Linux 时间不同步 | 同步系统时间 |
+| `auth_nonce_replay` | 重复使用同一个请求 header | 重新执行 CLI |
+| `scope_denied` / `auth_scope_denied` | scope 不是 `qmt:positions:read` | 使用 runtime CLI，不要自定义其他 scope |
+| `session_not_ready` | S 端 QMT login/session 未 ready | 回 Windows S 端检查 health 和 `xtquant-*` reason |
+| `adapter_unavailable` | S 端没有注入 XtQuant adapter | 使用 `qmt_runtime_cli serve`，不要只运行离线合同 CLI |
+| `redaction_failed` | 响应脱敏失败 | 停止验证，不保存 raw 输出，回修 redaction |
+| `endpoint_not_supported` | 调用了非 CR020 白名单 endpoint | 只调用 `query_positions` |
+
+### 9.8 CP7 Readonly Evidence Schema
+
+手动验证后，可向 meta-po/meta-qa 提供脱敏摘要：
+
+| Evidence field | Required value |
+|---|---|
+| `endpoint_id` | `query_positions` |
+| `scope` | `qmt:positions:read` |
+| `run_id` | 本次手工 run id |
+| `request_id` | 本次手工 request id |
+| `status` | `ok` 或 blocked/error reason |
+| `session_ready` | S 端 health 的脱敏状态 |
+| `auth_status` | C 端输出中的 auth/error reason，不含 raw headers |
+| `redaction_status` | `pass` |
+| `position_count` | 整数 |
+| `positions_digest` | `positions:<hash>` |
+| `forbidden_counters` | order/cancel/modify/account_write/broker_lake/provider/lake/publish/simulation_live 均为 `0` |
+
+禁止提交：真实 `.env`、账号、密码、token、session、cookie、HMAC secret、raw signature、raw positions、未脱敏证券代码、精确持仓数量、市值组合、MiniQMT 本机私有路径。
+
+### 9.9 回滚和停止条件
+
+| 条件 | 动作 |
+|---|---|
+| 输出出现真实凭据或 raw positions | 立即停止，删除输出记录，回修脱敏 |
+| 任何非 `query_positions` endpoint 被允许 | 立即停止，回滚 CR020-S05 |
+| forbidden counters 任一非 0 | 立即停止，回滚并重新验证 |
+| Windows S 端停止后 Linux 仍可查询 | 查找并关闭旧 server 进程 |
+| 用户需要交易 / 撤单 / simulation/live | 启动后续 CR，不在 CR020 内扩展 |

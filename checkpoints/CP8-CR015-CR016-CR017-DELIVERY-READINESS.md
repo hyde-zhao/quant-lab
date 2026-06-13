@@ -2,11 +2,11 @@
 checkpoint_id: "CP8"
 checkpoint_name: "CR-015 / CR-016 / CR-017 QMT 受控离线交付就绪人工终验"
 type: "auto_then_manual"
-status: "pending"
+status: "approved"
 owner: "meta-po"
 created_at: "2026-05-28T12:15:37+08:00"
-reviewed_by: ""
-reviewed_at: ""
+reviewed_by: "user"
+reviewed_at: "2026-06-05T23:11:48+08:00"
 auto_check_result: "process/checks/CP8-CR015-CR016-CR017-DELIVERY-READINESS.md"
 target:
   phase: "documentation"
@@ -89,32 +89,32 @@ target:
 
 | 条目 | 审查结果 | 证据 | 审查意见 |
 |---|---|---|---|
-| 用户明确 approve / 修改 / reject | 待审查 | 用户回复 |  |
-| 若 approve：当前受控离线批次可关闭 | 待审查 | CP8 自动预检 PASS + 本人工确认 |  |
-| 若修改或 reject：回退目标明确 | 待审查 | 用户修改意见或拒绝理由 |  |
+| 用户明确 approve / 修改 / reject | 通过 | 用户本轮回复 | 用户接受推荐方案。 |
+| 若 approve：当前受控离线批次可关闭 | 通过 | CP8 自动预检 PASS + 本人工确认 | 可关闭当前受控离线批次。 |
+| 若修改或 reject：回退目标明确 | N/A | 用户未要求修改或拒绝 | 不适用。 |
 
 ## Deliverables
 
 | 交付物 | 路径 | 审查结果 | 审查意见 |
 |---|---|---|---|
-| CP8 自动预检 | `process/checks/CP8-CR015-CR016-CR017-DELIVERY-READINESS.md` | 待审查 |  |
-| Story 状态汇总 | `process/STORY-STATUS.md` | 待审查 |  |
-| 开发计划状态 | `process/DEVELOPMENT-PLAN.yaml` | 待审查 |  |
-| README | `README.md` | 待审查 |  |
-| 用户手册 | `docs/USER-MANUAL.md` | 待审查 |  |
-| QMT foundation runbook | `docs/QMT-TRADING-RUNBOOK.md` | 待审查 |  |
-| QMT simulation/live runbook | `docs/QMT-SIMULATION-LIVE-RUNBOOK.md` | 待审查 |  |
-| QMT incident playbook | `docs/QMT-INCIDENT-PLAYBOOK.md` | 待审查 |  |
-| 复权迁移文档 | `docs/ADJUSTMENT-POLICY-MIGRATION.md` | 待审查 |  |
-| 测试策略 | `process/TEST-STRATEGY.md` | 待审查 |  |
+| CP8 自动预检 | `process/checks/CP8-CR015-CR016-CR017-DELIVERY-READINESS.md` | 通过 | PASS。 |
+| Story 状态汇总 | `process/STORY-STATUS.md` | 通过 | 受控离线 verified；S05/S06 later-gated。 |
+| 开发计划状态 | `process/DEVELOPMENT-PLAN.yaml` | 通过 | 受控离线范围可关闭。 |
+| README | `README.md` | 通过 | 不授权真实运行。 |
+| 用户手册 | `docs/USER-MANUAL.md` | 通过 | 不授权真实运行。 |
+| QMT foundation runbook | `docs/QMT-TRADING-RUNBOOK.md` | 通过 | runbook 不构成 simulation/live 授权。 |
+| QMT simulation/live runbook | `docs/QMT-SIMULATION-LIVE-RUNBOOK.md` | 通过 | S05/S06 later-gated。 |
+| QMT incident playbook | `docs/QMT-INCIDENT-PLAYBOOK.md` | 通过 | 只覆盖文档与静态边界。 |
+| 复权迁移文档 | `docs/ADJUSTMENT-POLICY-MIGRATION.md` | 通过 | CR017 verified 不等于 scale-up 解禁。 |
+| 测试策略 | `process/TEST-STRATEGY.md` | 通过 | 与 CP7 状态一致。 |
 
 ## 人工审查结果
 
-- 结论：`approved | changes_requested | rejected`
-- 审查人：
-- 审查时间：
-- 修改意见：
-- 风险接受项：
+- 结论：`approved`
+- 审查人：user
+- 审查时间：2026-06-05T23:11:48+08:00
+- 修改意见：无
+- 风险接受项：接受 CR016-S05 / S06 later-gated，接受本 CP8 不授权真实 QMT / broker、真实发单 / 撤单 / 账户查询、凭据读取、真实抓取、真实写湖、broker lake 写入、publish、simulation、live_readonly、small_live 或 scale_up；接受 CR017 verified 不等于 production adjustment governance / scale_up 解禁。
 
 请直接回复以下任一整行：
 

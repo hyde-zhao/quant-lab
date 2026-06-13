@@ -1,0 +1,71 @@
+context_id: CP6-CR041-CODING-CONTEXT
+cr_id: CR-041
+phase: story-execution
+status: verified-with-risk
+created_at: "2026-06-10T23:55:00+08:00"
+owner: meta-po
+read_profile: compact
+source_artifacts:
+  - process/context/CP5-CR041-LLD-CONTEXT.yaml
+  - engine/paper_simulation.py
+  - scripts/run_paper_simulation.py
+  - tests/test_cr041_paper_simulation.py
+  - process/checks/CP6-CR041-S01-strategy-admission-package-reader-CODING-DONE.md
+  - process/checks/CP6-CR041-S02-target-portfolio-order-intent-builder-CODING-DONE.md
+  - process/checks/CP6-CR041-S03-paper-broker-fill-engine-CODING-DONE.md
+  - process/checks/CP6-CR041-S04-position-cash-equity-ledger-CODING-DONE.md
+  - process/checks/CP6-CR041-S05-cli-report-artifacts-CODING-DONE.md
+implementation_summary:
+  engine: engine/paper_simulation.py
+  cli: scripts/run_paper_simulation.py
+  tests: tests/test_cr041_paper_simulation.py
+  result: "CP6 PASS; target test suite 21 passed after CP7-F01 blocker fix"
+story_batch:
+  - id: CR041-S01
+    slug: strategy-admission-package-reader
+    status: verified-with-risk
+    cp6: PASS
+  - id: CR041-S02
+    slug: target-portfolio-order-intent-builder
+    status: verified-with-risk
+    cp6: PASS
+  - id: CR041-S03
+    slug: paper-broker-fill-engine
+    status: verified-with-risk
+    cp6: PASS
+  - id: CR041-S04
+    slug: position-cash-equity-ledger
+    status: verified-with-risk
+    cp6: PASS
+  - id: CR041-S05
+    slug: cli-report-artifacts
+    status: verified-with-risk
+    cp6: PASS
+verification_commands:
+  - command: "uv run --python 3.11 python -m py_compile engine/paper_simulation.py scripts/run_paper_simulation.py tests/test_cr041_paper_simulation.py"
+    result: PASS
+  - command: "PYTHONDONTWRITEBYTECODE=1 PYTEST_ADDOPTS='-p no:cacheprovider' uv run --python 3.11 pytest -q tests/test_cr041_paper_simulation.py"
+    result: "PASS: 21 passed in 0.11s"
+  - command: "uv run --python 3.11 python -c \"from engine.paper_simulation import PaperSimulationViolation, PaperSimulationValidation; v=PaperSimulationValidation(False,(PaperSimulationViolation('x','msg','blocker','field'),)); print(v.blocked_reasons); print(v.to_dict())\""
+    result: "PASS: failure validation to_dict is JSON-safe"
+parallel_dispatch:
+  - agent_id: "019eb229-171a-7d82-96c7-b25e65acf600"
+    nickname: Gauss
+    role: CLI worker
+    write_scope:
+      - scripts/run_paper_simulation.py
+    status: completed-closed
+  - agent_id: "019eb229-3b62-7a80-a051-5ce05ef5b4cc"
+    nickname: Euclid
+    role: test worker
+    write_scope:
+      - tests/test_cr041_paper_simulation.py
+    status: completed-closed
+not_authorized:
+  - "broker / QMT / MiniQMT / XtQuant / Goldminer connection"
+  - "Backtrader default runtime or dependency change"
+  - "account/order/fill live query"
+  - "real or simulated broker order submit/cancel"
+  - "credential read"
+  - "provider fetch / lake write / catalog publish"
+next_gate: CP8 CR041 delivery readiness

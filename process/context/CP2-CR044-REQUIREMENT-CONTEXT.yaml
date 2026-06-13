@@ -1,0 +1,59 @@
+context_id: CP2-CR044-REQUIREMENT-CONTEXT
+cr_id: CR-044
+phase: requirement-clarification
+gate: CP2
+status: ready
+read_profile: compact
+generated_at: '2026-06-11T10:00:43+08:00'
+owner: meta-po
+source_files:
+  - process/changes/CR-044-GOLDMINER-SIMULATION-ADMISSION-2026-06-11.md
+  - process/changes/CR-043-GOLDMINER-ADAPTER-SPIKE-2026-06-11.md
+  - process/research/cr043_goldminer_adapter_spike/SPIKE-CONCLUSION.md
+  - process/research/cr043_goldminer_adapter_spike/INTERFACE-MAPPING-MATRIX.md
+  - process/handoffs/META-SE-CR044-CP2-CP3-DESIGN-2026-06-11.md
+summary:
+  current_state: CR044 active-cp2-intake; no other active formal CR.
+  authorized_scope:
+    - L1 formal CR orchestration
+    - L2 offline engineering design and fixture-only / blocked-first engineering
+    - subagent dispatch allowed
+  not_authorized_scope:
+    - credential_read
+    - login
+    - connect
+    - account_query
+    - position_query
+    - cash_query
+    - order_submit
+    - order_cancel
+    - simulation_runtime
+    - live_runtime
+    - provider_fetch
+    - lake_write
+    - catalog_publish
+  cp2_recommendation: approve L1/L2 scope and keep all L3+ runtime actions not authorized.
+  cp3_recommendation: blocked-first Goldminer admission gate; keep GoldminerStubBrokerAdapter as only runtime object until later authorization.
+decision_items:
+  - id: DQ-CP2-CR044-01
+    type: scope
+    recommendation: continue CR044 as standard scoped admission design.
+  - id: DQ-CP2-CR044-02
+    type: runtime_authorization
+    recommendation: keep authorization limited to L1/L2.
+  - id: DQ-CP2-CR044-03
+    type: security
+    recommendation: zero credential/account material retention.
+  - id: DQ-CP2-CR044-04
+    type: risk_acceptance
+    recommendation: accept offline admission design or account-permission blocked as possible CR044 outcomes.
+  - id: DQ-CP2-CR044-05
+    type: follow_up_tracking
+    recommendation: split any L3+ action into future per-run authorization.
+read_expansion_log:
+  - at: '2026-06-11T10:00:43+08:00'
+    actor: meta-po
+    phase: requirement-clarification
+    capsule_path: process/context/CP2-CR044-REQUIREMENT-CONTEXT.yaml
+    expanded_to: CR044 formal CR, CR043 Spike conclusion, CR043 interface mapping, meta-se handoff
+    reason: CR044 CP2 launch requires source facts and subagent design input.

@@ -123,6 +123,9 @@ def test_run_chapter3_empirical_from_frames_writes_panel_and_report(tmp_path: Pa
     assert result.artifacts.factor_panel_path.exists()
     assert result.artifacts.report_md_path.exists()
     assert result.artifacts.portfolio_plan_path.exists()
+    assert all("long_short_t_stat" in item for item in result.factor_summaries)
+    report_text = result.artifacts.report_md_path.read_text(encoding="utf-8")
+    assert "| factor_id | status | observations | long_short_return | long_short_t_stat |" in report_text
     assert result.memory_budget["max_memory_gb"] == 16.0
     assert result.memory_budget["status"] == "pass"
 

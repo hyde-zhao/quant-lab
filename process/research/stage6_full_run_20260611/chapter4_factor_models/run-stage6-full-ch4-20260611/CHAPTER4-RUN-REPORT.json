@@ -1,0 +1,414 @@
+{
+  "artifacts": {
+    "factor_correlation_path": "reports/stage6_full_run_20260611/chapter4_factor_models/run-stage6-full-ch4-20260611/factor_correlation.csv",
+    "factor_model_returns_path": "reports/stage6_full_run_20260611/chapter4_factor_models/run-stage6-full-ch4-20260611/factor_model_returns.parquet",
+    "fama_macbeth_results_path": "reports/stage6_full_run_20260611/chapter4_factor_models/run-stage6-full-ch4-20260611/fama_macbeth_results.csv",
+    "manifest_path": "reports/stage6_full_run_20260611/chapter4_factor_models/run-stage6-full-ch4-20260611/factor_model_manifest.json",
+    "model_admission_summary_path": "process/research/stage6_full_run_20260611/chapter4_factor_models/run-stage6-full-ch4-20260611/MODEL-ADMISSION-SUMMARY.json",
+    "model_comparison_path": "reports/stage6_full_run_20260611/chapter4_factor_models/run-stage6-full-ch4-20260611/model_comparison.csv",
+    "model_correlation_path": "reports/stage6_full_run_20260611/chapter4_factor_models/run-stage6-full-ch4-20260611/model_correlation.csv",
+    "process_dir": "process/research/stage6_full_run_20260611/chapter4_factor_models/run-stage6-full-ch4-20260611",
+    "report_dir": "reports/stage6_full_run_20260611/chapter4_factor_models/run-stage6-full-ch4-20260611",
+    "report_json_path": "process/research/stage6_full_run_20260611/chapter4_factor_models/run-stage6-full-ch4-20260611/CHAPTER4-RUN-REPORT.json",
+    "report_md_path": "process/research/stage6_full_run_20260611/chapter4_factor_models/run-stage6-full-ch4-20260611/CHAPTER4-RUN-REPORT.md",
+    "run_id": "run-stage6-full-ch4-20260611"
+  },
+  "model_admission_summary": {
+    "blocked_claims": [
+      {
+        "claim": "production_valid",
+        "evidence_ref": "run-stage6-full-ch4-20260611",
+        "reason": "CR-035 仅生成离线研究证据，不构成生产有效声明。",
+        "status": "blocked"
+      },
+      {
+        "claim": "qmt_ready",
+        "evidence_ref": "run-stage6-full-ch4-20260611",
+        "reason": "CR-035 不授权 QMT、账户、订单或 broker runtime。",
+        "status": "blocked"
+      },
+      {
+        "claim": "simulation_ready",
+        "evidence_ref": "run-stage6-full-ch4-20260611",
+        "reason": "CR-035 不授权 simulation 或 live。",
+        "status": "blocked"
+      },
+      {
+        "claim": "live_ready",
+        "evidence_ref": "run-stage6-full-ch4-20260611",
+        "reason": "CR-035 不授权 simulation 或 live。",
+        "status": "blocked"
+      }
+    ],
+    "handoff": "CR-038/CR-039 只能消费本摘要作为研究输入；QMT、simulation、live 仍需独立 CR 和运行授权。",
+    "not_authorization": true,
+    "operation_counts": {
+      "account_or_order_operation": 0,
+      "catalog_publish": 0,
+      "credential_read": 0,
+      "dependency_change": 0,
+      "external_project_clone": 0,
+      "external_project_install": 0,
+      "external_project_run": 0,
+      "lake_write": 0,
+      "provider_fetch": 0,
+      "qmt_operation": 0,
+      "reports_overwrite": 0,
+      "simulation_or_live": 0,
+      "source_migration_or_vendor": 0
+    },
+    "samples": [
+      {
+        "model_admission_summary": [
+          {
+            "admission": "baseline_candidate",
+            "handoff": "CR-037 robustness review required before CR-038/CR-039 strategy admission",
+            "model_id": "ashare_pricing_candidate",
+            "reason": "样本内模型收益为正且 t 值达到 baseline 候选阈值；仍需 CR-037 稳健性复验。"
+          },
+          {
+            "admission": "reject_or_reweight",
+            "handoff": "CR-037 robustness review required before CR-038/CR-039 strategy admission",
+            "model_id": "capm_market",
+            "reason": "模型收益或显著性方向不满足进入 baseline 的下限，后续只能作为观察或重加权对象。"
+          },
+          {
+            "admission": "baseline_candidate",
+            "handoff": "CR-037 robustness review required before CR-038/CR-039 strategy admission",
+            "model_id": "carhart4_momentum",
+            "reason": "样本内模型收益为正且 t 值达到 baseline 候选阈值；仍需 CR-037 稳健性复验。"
+          },
+          {
+            "admission": "baseline_candidate",
+            "handoff": "CR-037 robustness review required before CR-038/CR-039 strategy admission",
+            "model_id": "ff3_equity_core",
+            "reason": "样本内模型收益为正且 t 值达到 baseline 候选阈值；仍需 CR-037 稳健性复验。"
+          },
+          {
+            "admission": "needs_robustness_review",
+            "handoff": "CR-037 robustness review required before CR-038/CR-039 strategy admission",
+            "model_id": "ff5_like_profit_investment",
+            "reason": "模型收益为正但显著性、冗余性或稳定性仍需第6章稳健性复验。"
+          },
+          {
+            "admission": "needs_robustness_review",
+            "handoff": "CR-037 robustness review required before CR-038/CR-039 strategy admission",
+            "model_id": "q_factor_like",
+            "reason": "模型收益为正但显著性、冗余性或稳定性仍需第6章稳健性复验。"
+          },
+          {
+            "admission": "baseline_candidate",
+            "handoff": "CR-037 robustness review required before CR-038/CR-039 strategy admission",
+            "model_id": "seven_factor_full",
+            "reason": "样本内模型收益为正且 t 值达到 baseline 候选阈值；仍需 CR-037 稳健性复验。"
+          }
+        ],
+        "sample_id": "in_sample_2000_2019",
+        "status": "PASS"
+      },
+      {
+        "model_admission_summary": [
+          {
+            "admission": "baseline_candidate",
+            "handoff": "CR-037 robustness review required before CR-038/CR-039 strategy admission",
+            "model_id": "ashare_pricing_candidate",
+            "reason": "样本内模型收益为正且 t 值达到 baseline 候选阈值；仍需 CR-037 稳健性复验。"
+          },
+          {
+            "admission": "needs_robustness_review",
+            "handoff": "CR-037 robustness review required before CR-038/CR-039 strategy admission",
+            "model_id": "capm_market",
+            "reason": "模型收益为正但显著性、冗余性或稳定性仍需第6章稳健性复验。"
+          },
+          {
+            "admission": "baseline_candidate",
+            "handoff": "CR-037 robustness review required before CR-038/CR-039 strategy admission",
+            "model_id": "carhart4_momentum",
+            "reason": "样本内模型收益为正且 t 值达到 baseline 候选阈值；仍需 CR-037 稳健性复验。"
+          },
+          {
+            "admission": "baseline_candidate",
+            "handoff": "CR-037 robustness review required before CR-038/CR-039 strategy admission",
+            "model_id": "ff3_equity_core",
+            "reason": "样本内模型收益为正且 t 值达到 baseline 候选阈值；仍需 CR-037 稳健性复验。"
+          },
+          {
+            "admission": "baseline_candidate",
+            "handoff": "CR-037 robustness review required before CR-038/CR-039 strategy admission",
+            "model_id": "ff5_like_profit_investment",
+            "reason": "样本内模型收益为正且 t 值达到 baseline 候选阈值；仍需 CR-037 稳健性复验。"
+          },
+          {
+            "admission": "baseline_candidate",
+            "handoff": "CR-037 robustness review required before CR-038/CR-039 strategy admission",
+            "model_id": "q_factor_like",
+            "reason": "样本内模型收益为正且 t 值达到 baseline 候选阈值；仍需 CR-037 稳健性复验。"
+          },
+          {
+            "admission": "baseline_candidate",
+            "handoff": "CR-037 robustness review required before CR-038/CR-039 strategy admission",
+            "model_id": "seven_factor_full",
+            "reason": "样本内模型收益为正且 t 值达到 baseline 候选阈值；仍需 CR-037 稳健性复验。"
+          }
+        ],
+        "sample_id": "observation_2020_2026_ytd",
+        "status": "PASS"
+      }
+    ],
+    "schema_version": "chapter4_model_admission_summary_v1"
+  },
+  "operation_counts": {
+    "account_or_order_operation": 0,
+    "catalog_publish": 0,
+    "credential_read": 0,
+    "dependency_change": 0,
+    "external_project_clone": 0,
+    "external_project_install": 0,
+    "external_project_run": 0,
+    "lake_write": 0,
+    "provider_fetch": 0,
+    "qmt_operation": 0,
+    "reports_overwrite": 0,
+    "simulation_or_live": 0,
+    "source_migration_or_vendor": 0
+  },
+  "run_id": "run-stage6-full-ch4-20260611",
+  "sample_results": [
+    {
+      "blocked_claims": [
+        {
+          "claim": "production_valid",
+          "evidence_ref": "run-stage6-full-ch4-20260611",
+          "reason": "CR-035 仅生成离线研究证据，不构成生产有效声明。",
+          "status": "blocked"
+        },
+        {
+          "claim": "qmt_ready",
+          "evidence_ref": "run-stage6-full-ch4-20260611",
+          "reason": "CR-035 不授权 QMT、账户、订单或 broker runtime。",
+          "status": "blocked"
+        },
+        {
+          "claim": "simulation_ready",
+          "evidence_ref": "run-stage6-full-ch4-20260611",
+          "reason": "CR-035 不授权 simulation 或 live。",
+          "status": "blocked"
+        },
+        {
+          "claim": "live_ready",
+          "evidence_ref": "run-stage6-full-ch4-20260611",
+          "reason": "CR-035 不授权 simulation 或 live。",
+          "status": "blocked"
+        }
+      ],
+      "factor_ids": [
+        "market_beta_252",
+        "size_total_market_cap",
+        "value_bm",
+        "momentum_12_1",
+        "profitability_roe_ttm",
+        "investment_asset_growth",
+        "abnormal_turnover_21_252"
+      ],
+      "factor_model_return_rows": 1378,
+      "fama_macbeth_rows": 37,
+      "label_rows": 447186,
+      "limitations": [],
+      "matched_rows": 407599,
+      "model_admission_summary": [
+        {
+          "admission": "baseline_candidate",
+          "handoff": "CR-037 robustness review required before CR-038/CR-039 strategy admission",
+          "model_id": "ashare_pricing_candidate",
+          "reason": "样本内模型收益为正且 t 值达到 baseline 候选阈值；仍需 CR-037 稳健性复验。"
+        },
+        {
+          "admission": "reject_or_reweight",
+          "handoff": "CR-037 robustness review required before CR-038/CR-039 strategy admission",
+          "model_id": "capm_market",
+          "reason": "模型收益或显著性方向不满足进入 baseline 的下限，后续只能作为观察或重加权对象。"
+        },
+        {
+          "admission": "baseline_candidate",
+          "handoff": "CR-037 robustness review required before CR-038/CR-039 strategy admission",
+          "model_id": "carhart4_momentum",
+          "reason": "样本内模型收益为正且 t 值达到 baseline 候选阈值；仍需 CR-037 稳健性复验。"
+        },
+        {
+          "admission": "baseline_candidate",
+          "handoff": "CR-037 robustness review required before CR-038/CR-039 strategy admission",
+          "model_id": "ff3_equity_core",
+          "reason": "样本内模型收益为正且 t 值达到 baseline 候选阈值；仍需 CR-037 稳健性复验。"
+        },
+        {
+          "admission": "needs_robustness_review",
+          "handoff": "CR-037 robustness review required before CR-038/CR-039 strategy admission",
+          "model_id": "ff5_like_profit_investment",
+          "reason": "模型收益为正但显著性、冗余性或稳定性仍需第6章稳健性复验。"
+        },
+        {
+          "admission": "needs_robustness_review",
+          "handoff": "CR-037 robustness review required before CR-038/CR-039 strategy admission",
+          "model_id": "q_factor_like",
+          "reason": "模型收益为正但显著性、冗余性或稳定性仍需第6章稳健性复验。"
+        },
+        {
+          "admission": "baseline_candidate",
+          "handoff": "CR-037 robustness review required before CR-038/CR-039 strategy admission",
+          "model_id": "seven_factor_full",
+          "reason": "样本内模型收益为正且 t 值达到 baseline 候选阈值；仍需 CR-037 稳健性复验。"
+        }
+      ],
+      "model_comparison_rows": 7,
+      "model_ids": [
+        "capm_market",
+        "ff3_equity_core",
+        "carhart4_momentum",
+        "ff5_like_profit_investment",
+        "q_factor_like",
+        "ashare_pricing_candidate",
+        "seven_factor_full"
+      ],
+      "operation_counts": {
+        "account_or_order_operation": 0,
+        "catalog_publish": 0,
+        "credential_read": 0,
+        "dependency_change": 0,
+        "external_project_clone": 0,
+        "external_project_install": 0,
+        "external_project_run": 0,
+        "lake_write": 0,
+        "provider_fetch": 0,
+        "qmt_operation": 0,
+        "reports_overwrite": 0,
+        "simulation_or_live": 0,
+        "source_migration_or_vendor": 0
+      },
+      "panel_rows": 2550289,
+      "rebalance_count": 239,
+      "run_id": "run-stage6-full-ch4-20260611",
+      "sample_id": "in_sample_2000_2019",
+      "schema_version": "chapter4_factor_models_v1",
+      "status": "PASS"
+    },
+    {
+      "blocked_claims": [
+        {
+          "claim": "production_valid",
+          "evidence_ref": "run-stage6-full-ch4-20260611",
+          "reason": "CR-035 仅生成离线研究证据，不构成生产有效声明。",
+          "status": "blocked"
+        },
+        {
+          "claim": "qmt_ready",
+          "evidence_ref": "run-stage6-full-ch4-20260611",
+          "reason": "CR-035 不授权 QMT、账户、订单或 broker runtime。",
+          "status": "blocked"
+        },
+        {
+          "claim": "simulation_ready",
+          "evidence_ref": "run-stage6-full-ch4-20260611",
+          "reason": "CR-035 不授权 simulation 或 live。",
+          "status": "blocked"
+        },
+        {
+          "claim": "live_ready",
+          "evidence_ref": "run-stage6-full-ch4-20260611",
+          "reason": "CR-035 不授权 simulation 或 live。",
+          "status": "blocked"
+        }
+      ],
+      "factor_ids": [
+        "market_beta_252",
+        "size_total_market_cap",
+        "value_bm",
+        "momentum_12_1",
+        "profitability_roe_ttm",
+        "investment_asset_growth",
+        "abnormal_turnover_21_252"
+      ],
+      "factor_model_return_rows": 419,
+      "fama_macbeth_rows": 37,
+      "label_rows": 371877,
+      "limitations": [],
+      "matched_rows": 317132,
+      "model_admission_summary": [
+        {
+          "admission": "baseline_candidate",
+          "handoff": "CR-037 robustness review required before CR-038/CR-039 strategy admission",
+          "model_id": "ashare_pricing_candidate",
+          "reason": "样本内模型收益为正且 t 值达到 baseline 候选阈值；仍需 CR-037 稳健性复验。"
+        },
+        {
+          "admission": "needs_robustness_review",
+          "handoff": "CR-037 robustness review required before CR-038/CR-039 strategy admission",
+          "model_id": "capm_market",
+          "reason": "模型收益为正但显著性、冗余性或稳定性仍需第6章稳健性复验。"
+        },
+        {
+          "admission": "baseline_candidate",
+          "handoff": "CR-037 robustness review required before CR-038/CR-039 strategy admission",
+          "model_id": "carhart4_momentum",
+          "reason": "样本内模型收益为正且 t 值达到 baseline 候选阈值；仍需 CR-037 稳健性复验。"
+        },
+        {
+          "admission": "baseline_candidate",
+          "handoff": "CR-037 robustness review required before CR-038/CR-039 strategy admission",
+          "model_id": "ff3_equity_core",
+          "reason": "样本内模型收益为正且 t 值达到 baseline 候选阈值；仍需 CR-037 稳健性复验。"
+        },
+        {
+          "admission": "baseline_candidate",
+          "handoff": "CR-037 robustness review required before CR-038/CR-039 strategy admission",
+          "model_id": "ff5_like_profit_investment",
+          "reason": "样本内模型收益为正且 t 值达到 baseline 候选阈值；仍需 CR-037 稳健性复验。"
+        },
+        {
+          "admission": "baseline_candidate",
+          "handoff": "CR-037 robustness review required before CR-038/CR-039 strategy admission",
+          "model_id": "q_factor_like",
+          "reason": "样本内模型收益为正且 t 值达到 baseline 候选阈值；仍需 CR-037 稳健性复验。"
+        },
+        {
+          "admission": "baseline_candidate",
+          "handoff": "CR-037 robustness review required before CR-038/CR-039 strategy admission",
+          "model_id": "seven_factor_full",
+          "reason": "样本内模型收益为正且 t 值达到 baseline 候选阈值；仍需 CR-037 稳健性复验。"
+        }
+      ],
+      "model_comparison_rows": 7,
+      "model_ids": [
+        "capm_market",
+        "ff3_equity_core",
+        "carhart4_momentum",
+        "ff5_like_profit_investment",
+        "q_factor_like",
+        "ashare_pricing_candidate",
+        "seven_factor_full"
+      ],
+      "operation_counts": {
+        "account_or_order_operation": 0,
+        "catalog_publish": 0,
+        "credential_read": 0,
+        "dependency_change": 0,
+        "external_project_clone": 0,
+        "external_project_install": 0,
+        "external_project_run": 0,
+        "lake_write": 0,
+        "provider_fetch": 0,
+        "qmt_operation": 0,
+        "reports_overwrite": 0,
+        "simulation_or_live": 0,
+        "source_migration_or_vendor": 0
+      },
+      "panel_rows": 1957024,
+      "rebalance_count": 76,
+      "run_id": "run-stage6-full-ch4-20260611",
+      "sample_id": "observation_2020_2026_ytd",
+      "schema_version": "chapter4_factor_models_v1",
+      "status": "PASS"
+    }
+  ],
+  "schema_version": "chapter4_factor_models_run_v1",
+  "status": "PASS"
+}

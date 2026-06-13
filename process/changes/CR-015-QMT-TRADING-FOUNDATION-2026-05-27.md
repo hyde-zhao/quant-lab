@@ -1,12 +1,12 @@
 ---
 cr_id: "CR-015"
-status: "controlled-offline-verified-pending-cp8"
+status: "closed"
 impact_level: "high"
 workflow_mode_before: "standard"
 workflow_mode_after_change: "standard"
 fast_lane_upgrade_reason: "QMT 接入引入外部交易接口、Windows 交易节点、broker adapter、OMS、订单状态机、pre-trade risk、broker lake、凭据和审计边界，命中架构、安全、权限、外部接口和多 Story 依赖，必须走 standard。"
 rollback_to: "requirement-clarification"
-approval_result: "controlled-offline-verified-pending-cp8"
+approval_result: "closed-cp8-approved"
 created_at: "2026-05-27T22:22:05+08:00"
 created_by: "meta-po"
 approved_by: "user"
@@ -17,9 +17,16 @@ linked_issue: ""
 implementation_authorization: false
 real_order_authorization: false
 updated_at: "2026-05-31T21:43:48+08:00"
+closed_by: "user"
+closed_at: "2026-06-05T23:11:48+08:00"
+cp8_manual_status: "approved"
+cp8_manual_review: "checkpoints/CP8-CR015-CR016-CR017-DELIVERY-READINESS.md"
+cp8_auto_check: "process/checks/CP8-CR015-CR016-CR017-DELIVERY-READINESS.md"
 ---
 
 # CR-015 QMT 交易接入基础：Adapter / OMS / Risk / Broker Lake
+
+> 2026-06-05T23:11:48+08:00 关闭记录：用户接受 CP8 推荐方案，CR-015 当前受控离线交付范围关闭。关闭范围仅包含 QMT foundation 的环境边界、adapter 合同、OMS、pre-trade risk、broker lake dry-run writer、shadow order intent 与 runbook；不授权真实 QMT / broker、发单、撤单、账户查询、凭据读取、真实抓取、真实写湖、broker lake 写入、publish、simulation、live_readonly、small_live 或 scale_up。
 
 ## 变更描述
 
@@ -183,10 +190,10 @@ updated_at: "2026-05-31T21:43:48+08:00"
 
 ## 处理结论
 
-- 审批结论：`controlled-offline-verified-pending-cp8`
+- 审批结论：`closed-cp8-approved`
 - [ ] 自动批准（低风险）
-- [ ] 待人工确认（中风险）
-- [x] 待人工审批（高风险）
+- [x] 用户已于 2026-06-05T23:11:48+08:00 接受 CP8 推荐关闭方案
+- [ ] 待人工审批（高风险）
 
 当前禁止事项：
 

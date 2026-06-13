@@ -40,6 +40,7 @@ from engine.chapter3_factor_replication import (
 )
 from engine.factor_evaluation import build_factor_evaluation_report
 from engine.multifactor_combiner import MultiFactorCombiner, build_multifactor_portfolio_plan
+from engine.factor_statistics import long_short_summary, single_sort_returns
 from market_data.contracts import SCHEMA_VERSION
 
 
@@ -627,6 +628,7 @@ def evaluate_factors(
     reports: list[Any] = []
     for factor_id in DEFAULT_FACTOR_IDS:
         factor_panel = panel[panel["factor_id"] == factor_id]
+        book_metrics = chapter3_book_style_metrics(factor_panel, labels)
         report = build_factor_evaluation_report(
             factor_panel.to_dict("records"),
             labels.to_dict("records"),
@@ -655,12 +657,52 @@ def evaluate_factors(
                 "rank_ic_mean": data["RankIC"].get("mean"),
                 "ic_mean": data["IC"].get("mean"),
                 "icir": data["ICIR"].get("value"),
-                "long_short_return": data["long_short_returns"].get("value"),
+                "long_short_return": book_metrics.get("long_short_return"),
+                "long_short_t_stat": book_metrics.get("long_short_t_stat"),
+                "long_short_t_stat_method": book_metrics.get("long_short_t_stat_method"),
+                "long_short_observations": book_metrics.get("long_short_observations"),
                 "turnover": data["turnover"].get("value"),
                 "admission": factor_admission(data),
             }
         )
     return summaries, reports
+
+
+def chapter3_book_style_metrics(factor_panel: pd.DataFrame, labels: pd.DataFrame) -> dict[str, Any]:
+    """按第三章展示习惯计算收益和 t 值。
+
+    CR030 的 `build_factor_evaluation_report` 负责通用研究准入指标；
+    第三章复刻报告额外保留书中更直观的多空收益和 Newey-West t 值。
+    """
+
+    missing = {
+        "long_short_return": None,
+        "long_short_t_stat": None,
+        "long_short_t_stat_method": "newey_west",
+        "long_short_observations": 0,
+    }
+    if factor_panel.empty or labels.empty:
+        return missing
+    required_panel = {"trade_date", "symbol", "zscore_value"}
+    required_labels = {"trade_date", "symbol", "forward_return"}
+    if not required_panel <= set(factor_panel.columns) or not required_labels <= set(labels.columns):
+        return missing
+
+    factor_matrix = factor_panel.pivot_table(index="trade_date", columns="symbol", values="zscore_value", aggfunc="last")
+    label_matrix = labels.pivot_table(index="trade_date", columns="symbol", values="forward_return", aggfunc="last")
+    group_returns = single_sort_returns(
+        factor_matrix,
+        label_matrix,
+        quantiles=10,
+        min_cross_section=30,
+    )
+    summary = long_short_summary(group_returns, high_minus_low=True, t_stat_method="newey_west")
+    return {
+        "long_short_return": summary.get("mean"),
+        "long_short_t_stat": summary.get("t_stat"),
+        "long_short_t_stat_method": summary.get("t_stat_method", "newey_west"),
+        "long_short_observations": summary.get("observation_count", 0),
+    }
 
 
 def factor_admission(report: Mapping[str, Any]) -> str:
@@ -750,19 +792,21 @@ def render_empirical_markdown(result: Chapter3EmpiricalResult, *, start: str, en
         "",
         "## 单因子摘要",
         "",
-        "| factor_id | status | observations | RankIC | IC | ICIR | long_short | turnover | admission |",
-        "|---|---|---:|---:|---:|---:|---:|---:|---|",
+        "| factor_id | status | observations | long_short_return | long_short_t_stat | t_stat_method | RankIC | IC | ICIR | turnover | admission |",
+        "|---|---|---:|---:|---:|---|---:|---:|---:|---:|---|",
     ]
     for item in result.factor_summaries:
         lines.append(
-            "| `{factor_id}` | `{status}` | {obs} | {rank_ic} | {ic} | {icir} | {ls} | {turnover} | `{admission}` |".format(
+            "| `{factor_id}` | `{status}` | {obs} | {ls} | {ls_t} | `{t_method}` | {rank_ic} | {ic} | {icir} | {turnover} | `{admission}` |".format(
                 factor_id=item["factor_id"],
                 status=item["status"],
                 obs=item.get("observations") or 0,
+                ls=_fmt(item.get("long_short_return")),
+                ls_t=_fmt(item.get("long_short_t_stat")),
+                t_method=item.get("long_short_t_stat_method") or "",
                 rank_ic=_fmt(item.get("rank_ic_mean")),
                 ic=_fmt(item.get("ic_mean")),
                 icir=_fmt(item.get("icir")),
-                ls=_fmt(item.get("long_short_return")),
                 turnover=_fmt(item.get("turnover")),
                 admission=item.get("admission") or "",
             )

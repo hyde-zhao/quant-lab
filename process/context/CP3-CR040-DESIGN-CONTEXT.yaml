@@ -1,0 +1,48 @@
+context_id: CP3-CR040-DESIGN-CONTEXT
+cr_id: CR-040
+phase: solution-design
+status: ready-for-review
+created_at: "2026-06-10T22:45:00+08:00"
+owner: meta-po
+read_profile: compact
+source_artifacts:
+  - process/context/CP2-CR040-REQUIREMENT-CONTEXT.yaml
+  - process/changes/CR-040-QMT-ROUTE-DELETION-BACKTRADER-PAPER-SIM-GOLDMINER-ADAPTER-2026-06-10.md
+  - engine/order_intent_draft.py
+  - engine/strategy_admission_package.py
+  - engine/backtrader_adapter.py
+architecture_decision:
+  primary: "CR040 不新增 runtime；后续 CR041 采用 API-less Paper Simulation Runner，消费 CR039 strategy admission package 与既有 order_intent_draft 语义。"
+  alternatives:
+    - "直接复用 Backtrader 作为默认运行时。"
+    - "直接接入掘金量化 SDK。"
+  rationale: "主选方案不引入外部依赖、不接触凭据和账户、不复制 Backtrader 源码，适合先验证订单意图、模拟成交、持仓账本和净值曲线。"
+implementation_implications:
+  future_cr041_candidate_modules:
+    - engine/paper_simulation.py
+    - scripts/run_paper_simulation.py
+    - tests/test_paper_simulation.py
+  likely_inputs:
+    - process/research/multifactor_strategy_candidates/run-cr039-multifactor-strategy-candidates-20260610/STRATEGY-ADMISSION-PACKAGE.json
+  likely_outputs:
+    - order_intents.csv
+    - fills.csv
+    - positions.csv
+    - equity_curve.csv
+    - reconciliation.json
+not_authorized:
+  - "Backtrader import/run as default path"
+  - "Goldminer SDK install/login/connect"
+  - "QMT/MiniQMT/XtQuant connection"
+  - "account/order/fill live query"
+  - "real or simulated broker order submit/cancel"
+read_expansion_log:
+  - at: "2026-06-10T22:45:00+08:00"
+    actor: meta-po
+    phase: solution-design
+    capsule_path: process/context/CP3-CR040-DESIGN-CONTEXT.yaml
+    expanded_to:
+      - engine/order_intent_draft.py
+      - engine/strategy_admission_package.py
+      - engine/backtrader_adapter.py
+    reason: "确认 CR041 paper simulation 的既有代码落点，避免重复设计已有 order intent / strategy admission / Backtrader no-copy guardrail。"

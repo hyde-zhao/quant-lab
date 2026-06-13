@@ -26,6 +26,7 @@ pnpm-debug.log*
 .agent/
 .agents/
 .codex/
+.claude/
 
 # 本地数据湖与报告产物不得入库；真实 lake root 必须通过 --lake-root
 # 或 MARKET_DATA_LAKE_ROOT 指向仓库外部目录。
@@ -59,3 +60,7 @@ credentials/
 # 允许小型脱敏测试 fixture 进入版本控制。
 !tests/fixtures/
 !tests/fixtures/**
+
+# 允许元工作流质量报告进入版本控制；上方 quality/ 仅用于数据湖质量分区。
+!docs/quality/
+!docs/quality/*.md

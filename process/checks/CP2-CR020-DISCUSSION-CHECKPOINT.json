@@ -1,0 +1,44 @@
+{
+  "checkpoint_id": "CP2-CR020-DISCUSSION-CHECKPOINT",
+  "change_id": "CR-020",
+  "status": "ready-for-cp2-human-gate",
+  "created_at": "2026-06-04T22:28:31+08:00",
+  "owner": "meta-po",
+  "discussion_log": "process/discussions/CP2-CR020-SCENARIO-DISCUSSION-LOG.md",
+  "resolved_by_user": [
+    "scope-upgraded-to-server-login-and-readonly-query",
+    "server-qmt-login-required",
+    "server-side-commands-powershell",
+    "client-side-pairing-validation-linux-cli",
+    "client-side-runtime-python-rest-client",
+    "credentials-use-local-untracked-dotenv-form"
+  ],
+  "decision_items": [
+    "DQ-CP2-CR020-01",
+    "DQ-CP2-CR020-02",
+    "DQ-CP2-CR020-03",
+    "DQ-CP2-CR020-04",
+    "DQ-CP2-CR020-05",
+    "DQ-CP2-CR020-06",
+    "DQ-CP2-CR020-07"
+  ],
+  "blocking_open_items": [],
+  "non_blocking_open_items": [
+    {
+      "id": "O-CR020-01",
+      "item": "Windows host、gateway port、MiniQMT / XtQuant 版本、日志目录、允许来源和回滚方式尚未填写真实值。",
+      "handling": "在 CP2 approve 后进入 CP3 / LLD 时作为环境字段落入 .env / install doc / validation plan；不要求在 CP2 发起前暴露真实凭据或主机细节。"
+    }
+  ],
+  "forbidden_authorizations": [
+    "order",
+    "cancel",
+    "account_write",
+    "simulation",
+    "live",
+    "provider_fetch",
+    "lake_write",
+    "publish",
+    "secret_in_repo_or_logs"
+  ]
+}

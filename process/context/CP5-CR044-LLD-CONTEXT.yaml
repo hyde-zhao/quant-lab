@@ -1,0 +1,89 @@
+context_id: CP5-CR044-LLD-CONTEXT
+cr_id: CR-044
+phase: story-planning
+gate: CP5
+status: ready
+read_profile: compact
+generated_at: '2026-06-11T11:45:36+08:00'
+owner: meta-po
+source_files:
+  - process/checkpoints/CP2-CR044-REQUIREMENTS-BASELINE.md
+  - process/checkpoints/CP3-CR044-HLD-REVIEW.md
+  - docs/design/FEATURE-DESIGN-MATRIX-CR044.md
+  - process/DEVELOPMENT-PLAN-CR044.yaml
+  - process/checks/CP4-CR044-STORY-DAG-PARALLEL-SAFETY.md
+  - process/handoffs/META-DEV-CR044-LLD-BATCH-2026-06-11.md
+summary:
+  cp2_status: approved
+  cp3_status: approved
+  cp4_status: PASS
+  cp5_recommendation: approve S01-S05 full-lld and S06 technical-note as CR044 L2 blocked-first implementation baseline
+  design_evidence_distribution:
+    full_lld: 5
+    technical_note: 1
+    waived: 0
+  cp5_auto_status: PASS
+  cp5_auto_pass_count: 6
+  clarification_queue:
+    new_items: 0
+    blocking_unanswered: 0
+    open_or_spike: 0
+  story_evidence:
+    CR044-S01: process/stories/CR044-S01-authorization-and-secret-boundary-LLD.md
+    CR044-S02: process/stories/CR044-S02-admission-gate-and-capability-state-LLD.md
+    CR044-S03: process/stories/CR044-S03-readonly-query-field-mapping-blocked-first-LLD.md
+    CR044-S04: process/stories/CR044-S04-submit-cancel-kill-switch-contract-LLD.md
+    CR044-S05: process/stories/CR044-S05-reconciliation-and-redacted-evidence-LLD.md
+    CR044-S06: process/stories/CR044-S06-runbook-and-no-real-operation-guardrails.md#技术说明
+  cp5_auto_checks:
+    - process/checks/CP5-CR044-S01-authorization-and-secret-boundary-LLD-IMPLEMENTABILITY.md
+    - process/checks/CP5-CR044-S02-admission-gate-and-capability-state-LLD-IMPLEMENTABILITY.md
+    - process/checks/CP5-CR044-S03-readonly-query-field-mapping-blocked-first-LLD-IMPLEMENTABILITY.md
+    - process/checks/CP5-CR044-S04-submit-cancel-kill-switch-contract-LLD-IMPLEMENTABILITY.md
+    - process/checks/CP5-CR044-S05-reconciliation-and-redacted-evidence-LLD-IMPLEMENTABILITY.md
+    - process/checks/CP5-CR044-S06-runbook-and-no-real-operation-guardrails-LLD-IMPLEMENTABILITY.md
+  implementation_boundary:
+    allowed_after_cp5_approval:
+      - fixture-only blocked-first code
+      - static contract tests
+      - redaction tests with synthetic data only
+      - no-operation guard tests
+    not_authorized:
+      - credential_read
+      - login
+      - connect
+      - account_query
+      - cash_query
+      - position_query
+      - order_query
+      - fill_query
+      - order_submit
+      - order_cancel
+      - simulation_runtime
+      - live_runtime
+      - provider_fetch
+      - lake_write
+      - catalog_publish
+decision_items:
+  - id: DQ-CP5-CR044-01
+    type: implementation
+    recommendation: accept S01-S05 full-lld and S06 technical-note as CP5 design baseline.
+  - id: DQ-CP5-CR044-02
+    type: implementation
+    recommendation: keep S06 as technical-note unless future work adds executable guard, schema, script, or state machine.
+  - id: DQ-CP5-CR044-03
+    type: implementation
+    recommendation: accept serial merge order S01 -> S02 -> S03 -> S04 -> S05 -> S06 with CR044-S02 owning shared broker adapter guard changes.
+  - id: DQ-CP5-CR044-04
+    type: runtime_authorization
+    recommendation: CP5 approval does not authorize L3+ real broker/runtime operations.
+  - id: DQ-CP5-CR044-05
+    type: risk_acceptance
+    recommendation: accept blocked-first / fixture-only delivery with simulation_ready=false and live_ready=false until a separate per-run authorization is granted.
+read_expansion_log:
+  - at: '2026-06-11T11:45:36+08:00'
+    actor: meta-po
+    phase: story-planning
+    capsule_path: process/context/CP5-CR044-LLD-CONTEXT.yaml
+    expanded_to: CP2 checkpoint, CP3 checkpoint, Feature Design Matrix, Development Plan, CP4 check, meta-dev handoff, Story evidence summaries
+    reason: CP5 launch requires batch-level traceability, design evidence distribution, auto-check status, and runtime authorization boundary.

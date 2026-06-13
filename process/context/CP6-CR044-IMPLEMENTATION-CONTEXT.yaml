@@ -1,0 +1,90 @@
+context_id: CP6-CR044-IMPLEMENTATION-CONTEXT
+cr_id: CR-044
+phase: story-execution
+gate: CP6
+status: ready
+read_profile: compact
+generated_at: '2026-06-11T11:54:21+08:00'
+owner: meta-po
+source_files:
+  - process/context/CP5-CR044-LLD-CONTEXT.yaml
+  - process/checkpoints/CP5-CR044-ALL-STORIES-LLD-BATCH.md
+  - process/handoffs/META-DEV-CR044-LLD-BATCH-2026-06-11.md
+  - process/DEVELOPMENT-PLAN-CR044.yaml
+implementation_scope:
+  authorized_level: L2 blocked-first / fixture-only only
+  story_ids:
+    - CR044-S01
+    - CR044-S02
+    - CR044-S03
+    - CR044-S04
+    - CR044-S05
+    - CR044-S06
+  merge_order:
+    - CR044-S01
+    - CR044-S02
+    - CR044-S03
+    - CR044-S04
+    - CR044-S05
+    - CR044-S06
+  design_evidence:
+    CR044-S01: process/stories/CR044-S01-authorization-and-secret-boundary-LLD.md
+    CR044-S02: process/stories/CR044-S02-admission-gate-and-capability-state-LLD.md
+    CR044-S03: process/stories/CR044-S03-readonly-query-field-mapping-blocked-first-LLD.md
+    CR044-S04: process/stories/CR044-S04-submit-cancel-kill-switch-contract-LLD.md
+    CR044-S05: process/stories/CR044-S05-reconciliation-and-redacted-evidence-LLD.md
+    CR044-S06: process/stories/CR044-S06-runbook-and-no-real-operation-guardrails.md#技术说明
+  expected_code_targets:
+    - engine/broker_adapter.py
+    - tests/test_cr044_goldminer_admission_guard.py
+  expected_process_targets:
+    - process/stories/CR044-S01-authorization-and-secret-boundary-IMPLEMENTATION.md
+    - process/stories/CR044-S02-admission-gate-and-capability-state-IMPLEMENTATION.md
+    - process/stories/CR044-S03-readonly-query-field-mapping-blocked-first-IMPLEMENTATION.md
+    - process/stories/CR044-S04-submit-cancel-kill-switch-contract-IMPLEMENTATION.md
+    - process/stories/CR044-S05-reconciliation-and-redacted-evidence-IMPLEMENTATION.md
+    - process/stories/CR044-S06-runbook-and-no-real-operation-guardrails-IMPLEMENTATION.md
+    - process/checks/CP6-CR044-S01-authorization-and-secret-boundary-CODING-DONE.md
+    - process/checks/CP6-CR044-S02-admission-gate-and-capability-state-CODING-DONE.md
+    - process/checks/CP6-CR044-S03-readonly-query-field-mapping-blocked-first-CODING-DONE.md
+    - process/checks/CP6-CR044-S04-submit-cancel-kill-switch-contract-CODING-DONE.md
+    - process/checks/CP6-CR044-S05-reconciliation-and-redacted-evidence-CODING-DONE.md
+    - process/checks/CP6-CR044-S06-runbook-and-no-real-operation-guardrails-CODING-DONE.md
+runtime_boundary:
+  real_runtime_authorized: false
+  must_keep_false:
+    - simulation_ready
+    - live_ready
+  forbidden_actions:
+    - credential_read
+    - login
+    - connect
+    - account_query
+    - cash_query
+    - position_query
+    - order_query
+    - fill_query
+    - order_submit
+    - order_cancel
+    - simulation_runtime
+    - live_runtime
+    - provider_fetch
+    - lake_write
+    - catalog_publish
+validation_commands:
+  recommended:
+    - PYTHONDONTWRITEBYTECODE=1 PYTEST_ADDOPTS='-p no:cacheprovider' uv run --python 3.11 pytest -q tests/test_cr042_broker_adapter_contract.py tests/test_cr044_goldminer_admission_guard.py
+    - git diff --check -- engine/broker_adapter.py tests/test_cr044_goldminer_admission_guard.py process/stories/CR044-* process/checks/CP6-CR044-*
+decision_items_accepted:
+  - DQ-CP5-CR044-01
+  - DQ-CP5-CR044-02
+  - DQ-CP5-CR044-03
+  - DQ-CP5-CR044-04
+  - DQ-CP5-CR044-05
+read_expansion_log:
+  - at: '2026-06-11T11:54:21+08:00'
+    actor: meta-po
+    phase: story-execution
+    capsule_path: process/context/CP6-CR044-IMPLEMENTATION-CONTEXT.yaml
+    expanded_to: CP5 context, CP5 checkpoint, meta-dev LLD handoff, Development Plan
+    reason: CP5 approved; implementation handoff must include minimal design, file, validation, and authorization boundaries.

@@ -1,0 +1,57 @@
+context_id: CP2-CR041-REQUIREMENT-CONTEXT
+cr_id: CR-041
+phase: requirement-clarification
+status: ready
+created_at: "2026-06-10T23:05:00+08:00"
+owner: meta-po
+read_profile: minimal
+source_artifacts:
+  - process/changes/CR-041-API-LESS-PAPER-SIMULATION-RUNNER-2026-06-10.md
+  - process/changes/CR-039-MULTIFACTOR-STRATEGY-RESEARCH-ADMISSION-2026-06-10.md
+  - process/changes/CR-040-QMT-ROUTE-DELETION-BACKTRADER-PAPER-SIM-GOLDMINER-ADAPTER-2026-06-10.md
+  - process/STATE.md
+decision_basis:
+  user_decision: "用户同意将 CR041 定义为日频 realistic paper simulation（L2-minus），覆盖成本、滑点、涨跌停、停牌、成交量约束、A 股基础账户规则和可审计 artifact。"
+  accepted_input: "CR039 strategy_equal_weight_baseline / research_baseline / simulation_candidate=false"
+scope:
+  in_scope:
+    - "T 日收盘后生成信号，T+1 第一个开市日成交。"
+    - "成交价使用 raw open；估值使用 raw close。"
+    - "处理 commission、min commission、stamp duty、transfer fee。"
+    - "处理 fixed bps 滑点。"
+    - "处理成交量 participation cap 与 partial fill。"
+    - "trade_calendar、trade_status、prices_limit、raw OHLCV 为必需输入；缺失 fail-closed。"
+    - "处理 100 股 lot、现金不足、持仓不足、T+1 可卖规则。"
+    - "输出 order_intents、fills、rejected_fills、positions、cash_ledger、equity_curve、turnover_cost、reconciliation 和 summary。"
+  out_of_scope:
+    - "不连接 QMT、MiniQMT、XtQuant、掘金量化或任何 broker。"
+    - "不安装、导入或运行 Backtrader 默认 runtime。"
+    - "不读取账户、持仓、委托、成交或凭据。"
+    - "不下单、不撤单、不启动真实 simulation/live。"
+    - "不做分钟、tick、Level2、盘口排队或真实交易所撮合。"
+requirements:
+  - id: R-CR041-01
+    text: "Runner 必须只读消费 CR039 admission package，并拒绝 simulation_candidate=true 以外的真实交易解释。"
+  - id: R-CR041-02
+    text: "Runner 必须用本地 raw OHLCV、trade_calendar、trade_status、prices_limit 进行日频模拟。"
+  - id: R-CR041-03
+    text: "Runner 必须处理费用、滑点、涨跌停、停牌、成交量上限、partial fill 和基础账户约束。"
+  - id: R-CR041-04
+    text: "Runner 必须输出可审计 artifact 和 forbidden operation counters=0。"
+open_decisions:
+  - id: DQ-CP2-CR041-01
+    type: scope
+    question: "是否接受 CR041 目标为日频 realistic paper simulation（L2-minus），不承诺盘口级真实撮合？"
+    decision: approved
+    answer: "同意"
+  - id: DQ-CP2-CR041-02
+    type: implementation
+    question: "是否接受 T+1 raw open 成交、raw close 估值、fixed bps 滑点、participation cap、A 股基础账户规则作为第一版基线？"
+    decision: approved
+    answer: "同意"
+  - id: DQ-CP2-CR041-03
+    type: runtime_authorization
+    question: "是否保持无 broker / 无 SDK / 无账户 / 无订单运行授权？"
+    decision: approved
+    answer: "同意"
+read_expansion_log: []

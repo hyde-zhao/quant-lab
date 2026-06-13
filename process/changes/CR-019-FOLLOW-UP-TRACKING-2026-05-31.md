@@ -1,13 +1,13 @@
 ---
 tracking_id: "CR-019-FOLLOW-UP-TRACKING"
 source_change_id: "CR-019"
-status: "cr030-active-follow-up-candidates-open"
+status: "goldminer-route-cr045-active-story-execution"
 created_at: "2026-05-31T10:43:18+08:00"
-updated_at: "2026-06-02T23:24:25+08:00"
+updated_at: "2026-06-11T23:46:53+08:00"
 owner: "meta-po"
 cp8_decision: "approved-with-follow-up-tracking"
 real_operation_authorization: false
-formal_cr_files_precreated: "partial-cr025-closed-cr030-active"
+formal_cr_files_precreated: "cr025-closed-cr030-closed-cr020-deleted-cr040-closed-cr041-closed"
 cr_index: "process/changes/CR-INDEX.yaml"
 ---
 
@@ -26,7 +26,7 @@ cr_index: "process/changes/CR-INDEX.yaml"
 | 当前 provider fetch / lake write / broker lake write / publish 授权 | `false` |
 | 当前 simulation / live 授权 | `false` |
 | 后续跟踪方式 | 独立 CR / Spike，重新走标准门控 |
-| 正式 CR 文件预创建 | `CR-025 closed；CR-030 active；其他候选仍 false` |
+| 正式 CR 文件预创建 | `CR-025 closed；CR-030 closed；CR-020 deleted-by-user；CR-040 closed-current-delivery；CR-021..CR-024 cancelled-user-deleted；其他候选仍 false` |
 
 ## 状态字段约定
 
@@ -39,17 +39,19 @@ cr_index: "process/changes/CR-INDEX.yaml"
 | `converted-to-spike` | 已从候选 CR 转为正式 Spike CR | 链接正式 Spike CR 文件，后续按 Spike 门控推进。 |
 | `closed` | 对应正式 CR 已关闭 | 填写关闭证据，例如 CP8 approved 时间。 |
 | `cancelled` | 明确取消，不再推进 | 保留取消理由，不删除候选行。 |
+| `deleted-by-user` | 用户明确要求删除该路线或正式 CR，不再推进 | 保留历史文件和证据，只修改状态与下一步。 |
+| `cancelled-user-deleted` | 用户明确要求删除路线下的候选项 | 候选项不再作为后续入口，未来恢复必须重新发起 CR。 |
 | `superseded` | 被另一个 CR 替代 | 填写替代 CR 路径和替代原因。 |
 
 ## 分流总览
 
 | 类别 | 数量 | 阻断当前交付 | 说明 |
 |---|---:|---|---|
-| 关闭范围 | 2 | 否 | CR-019 当前离线合同 / fixture / dry-run / 文档边界已通过 CP8 关闭；CR-025 当前研究执行语义对齐交付已通过 CP8 关闭。 |
+| 关闭范围 | 3 | 否 | CR-019 当前离线合同 / fixture / dry-run / 文档边界已通过 CP8 关闭；CR-025 当前研究执行语义对齐交付已通过 CP8 关闭；CR-030 多因子研究闭环已通过 CP8 关闭。 |
 | 不授权范围 | 6 | 否 | 真实 QMT、服务启动、凭据、provider / lake / publish、simulation / live、外部 GitHub 项目依赖 / 源码迁移等均未授权。 |
 | 风险接受项 | 2 | 否 | 接受真实运行与后置能力进入后续跟踪，不阻塞 CR-019 当前 CP8。 |
-| 活跃后续 CR | 1 | 否 | CR-030 已按用户要求创建正式 CR，当前为 `active-cp2-intake`；仅授权 CR 编写与跟踪同步，不授权实现、依赖变更、外部项目运行或真实操作。 |
-| 后续 CR 候选项 | 6 | 否 | CR-020..CR-024、CR-026 为候选 CR；只记录台账，不预创建正式 CR 文件。 |
+| 活跃后续 CR | 0 | 否 | CR-041 已于 2026-06-11T00:20:00+08:00 CP8 approved 并关闭为 `closed-current-delivery`；CR040 已关闭为路线交付完成。 |
+| 后续 CR 候选项 | 1 | 否 | CR-026 仍为非 QMT 候选 CR；CR-021..CR-024 已按用户要求标记为 cancelled-user-deleted，不再作为候选入口。 |
 | 后续 Spike 候选项 | 2 | 否 | CR-027..CR-028 为 Spike 候选；不预创建正式 Spike CR 文件。 |
 | 取消 / deferred 项 | 4 | 否 | Backtrader / Qlib / minute / Level2 均保持 deferred / later-gated。 |
 
@@ -59,7 +61,7 @@ cr_index: "process/changes/CR-INDEX.yaml"
 
 | 标准对象 | 路径 / 状态 | 说明 |
 |---|---|---|
-| CR tracking index | `process/changes/CR-INDEX.yaml` | 记录 CR-030 active、CR-025 closed、CR-029 closed、CR-020..CR-028 和状态冲突收敛记录。 |
+| CR tracking index | `process/changes/CR-INDEX.yaml` | 记录 CR-041 closed-current-delivery、CR-040 closed-current-delivery、CR-020 deleted-by-user、CR-021..CR-024 cancelled-user-deleted、CR-030 closed、CR-025 closed、CR-029 closed、CR-026..CR-028 和状态冲突收敛记录。 |
 | STATE tracking view | `process/STATE.md.cr_tracking` | 记录 active / candidate / spike / stale conflict 视图。 |
 | 一致性检查脚本 | `scripts/check_cr_tracking_consistency.py` | 用于静态检查 CR-019 follow-up 台账、CR-INDEX 和 STATE tracking 是否同步。 |
 
@@ -69,17 +71,21 @@ cr_index: "process/changes/CR-INDEX.yaml"
 
 | 主线 | 目标 | 当前承接对象 | 当前状态 | 下一步建议 | 不授权边界 |
 |---|---|---|---|---|---|
-| A：研究可信度 | 让策略研究、数据、benchmark、PIT、tradability、cost、admission package 可审计、可复跑、可解释 | CR-018 / CR-029 真实数据链路结果；CR-030 多因子研究框架借鉴与研究闭环标准化；后续策略准入修复候选待用户决定 | 数据湖与 benchmark 链路 PASS；阶段六策略准入 blocked，`qmt_admission_allowed_count=0`；CR-030 已创建正式 CR，当前 `active-cp2-intake` | 下一步组织 CR-030 CP2，确认 FactorSpec / FactorRunSpec / IC / RankIC / 分层收益 / 多因子组合 / 实验追踪 / 策略准入包范围，并分流 CR-026 | 不把数据链路 PASS 写成策略可模拟盘；不自动启动 provider / publish / QMT；不安装、clone、运行或迁移 GitHub 项目 |
+| A：研究可信度 | 让策略研究、数据、benchmark、PIT、tradability、cost、admission package 可审计、可复跑、可解释 | CR-018 / CR-029 真实数据链路结果；CR-030 多因子研究框架借鉴与研究闭环标准化；CR-039 策略研究候选 | 数据湖与 benchmark 链路 PASS；CR-030 已通过 CP8 关闭，CR-039 已由用户接受并关闭；策略侧只到 research_baseline | CR041 已启动为 API-less Paper Simulation Runner | 不把 CR-030 / CR-039 写成 broker-ready、simulation-ready、live-ready 或真实可交易；不自动启动 provider / publish / QMT / 掘金；不安装、clone、运行或迁移外部项目 |
 | B：回测 / 模拟一致性 | 让 lightweight baseline、Backtrader optional semantic reference 和后续 QMT simulation 使用一致的 clean feed、成本、target portfolio / order intent 语义 | CR-025 closed | CP8 approved closed；S01/S04/S02/S03/S05/S06 已 verified；S06 首轮 CP7 FAIL 已由 blocker fix 和 CP7 复验关闭 | 当前关闭；HLD 已冻结 semantic diff schema、order_intent_draft_v1，并记录 `/home/hyde/download/backtrader` 模块级借鉴 / 适配 / 移植候选 / 禁止移植对比 | 不替代 lightweight 主路径；不改依赖、不复制 / 移植 Backtrader 源码、不运行真实 broker / QMT；关闭不授权真实运行 |
-| C：QMT 生产执行 | 通过 gateway、simulation、live-readonly、small-live、scale-up 阶段门控逐步进入真实环境 | CR-020..CR-024 candidate | 未启动；真实 QMT、服务启动、simulation/live 均未授权 | 用户可选择启动 CR-020 gateway health 准入；CR-021 以后必须等待前置关闭和 per-run 授权 | 不发单、不撤单、不查真实账户、不读取凭据正文；gateway health 不等于 simulation 授权 |
+| C：QMT 生产执行 | 原计划通过 gateway、simulation、live-readonly、small-live、scale-up 阶段门控逐步进入真实环境 | CR-020 deleted-by-user；CR-021..CR-024 cancelled-user-deleted | 用户确认无法获取 MiniQMT 权限，并要求将 QMT 相关 CR 全部标记为删除，不再做；历史 CP2-CP7 证据保留但不再作为活动路线 | 不再等待 MiniQMT，不再执行 Windows/QMT gateway 实机验证，不再启动 QMT simulation/live；未来恢复 QMT 必须重新发起 CR | 不发单、不撤单、不账户写入、不读取或记录真实凭据正文；历史 CR020 fixture/static CP7 不等于任何运行授权 |
+| D：本地 Paper Simulation / 掘金候选路线 | 先在无 broker 环境形成 order intent、模拟成交、持仓账本和净值曲线，再定义 broker-neutral adapter，最后评估掘金量化 adapter | CR-040 closed-current-delivery；CR-041 closed-current-delivery；CR-042 closed-current-delivery；CR-043 closed-spike-complete；CR-044 closed-current-delivery；CR-045 closed-current-delivery | CR-040 已写入 Backtrader 语义参考、QMT 删除范围和新路线，且 CP2/CP3 已由用户同意；CR041 API-less 本地 paper simulation runner 已 CP8 approved 并关闭；CR042 broker-neutral adapter fixture/stub 合同已本地验证；CR043 已以 `NEEDS_ACCOUNT_PERMISSION` 关闭；CR044 已以 `READY_WITH_RISK` / `offline-admission-design-ready` 关闭；CR045 已以 `READY_WITH_RISK` / `readonly-bridge-skeleton-ready` 关闭 | 当前无 active formal CR；真实 Goldminer L3/L4/L5 验证必须另起 CR / runtime_authorization gate 后启动 | 当前不安装、登录、连接掘金；不启动 Windows bridge runtime；不查询账户、不下单、不撤单、不读取 broker 凭据；不复制 Backtrader 源码；CR045 关闭不授权真实 broker 运行 |
 
 ### Related Formal CR
 
 | CR | 状态 | 来源决策 | 正式 CR 路径 | 与本台账关系 | 当前结论 / 下一步 |
 |---|---|---|---|---|---|
 | CR-025 | closed | `D-CP8-CR019-05` | `process/changes/CR-025-BACKTRADER-OPTIONAL-EXECUTION-BACKEND-HARDENING-2026-05-31.md` | 研究路线首个正式 CR，由候选转 active 后已 CP8 approved closed；归入回测 / 模拟一致性主线 | CP2 / CP3 approved，CP4 PASS，6 份 LLD 与 6 份 CP5 自动预检已完成，CP5 已 approved；S01/S04/S02/S03/S05/S06 已 verified；用户于 2026-06-02T23:10:16+08:00 回复“好的关闭CR025”。不得依赖变更、不得复制 / 移植 Backtrader 源码实现、不得真实 broker / QMT / provider / lake / publish。 |
+| CR-020 | deleted-by-user | `D-CP8-CR019-02` | `process/changes/CR-020-QMT-WINDOWS-GATEWAY-SERVER-LOGIN-READONLY-QUERY-ADMISSION-2026-06-04.md` | QMT 生产执行主线首个正式 CR，已按用户 2026-06-10 决策删除 | 用户确认无法获取 MiniQMT 权限，并要求将 QMT 相关 CR 全部标记为删除，不再做。CR020-S01..S06 历史 CP5 / CP6 / CP7 fixture/static 证据保留用于审计，但不再等待 MiniQMT、不再执行 Windows/QMT 实机验证、不再作为 CR021 或任何真实运行路线前置。 |
+| CR-041 | closed | `USER-20260610-ACCEPT-CR039-START-CR041` | `process/changes/CR-041-API-LESS-PAPER-SIMULATION-RUNNER-2026-06-10.md` | 本地 paper simulation 正式 CR，承接 CR039 research_baseline 输入与 CR040 路线规划 | CR041 真实度基线已确认为日频 realistic paper simulation（L2-minus）；CP2 / CP3 approved，CP4 PASS，S01..S05 full-lld、CP5 自动预检和 CP5 人工确认已完成；S01..S05 CP6 PASS；CP7 `PASS_WITH_RISK`，目标测试 21 passed；用户于 2026-06-11T00:20:00+08:00 回复“同意”，CP8 approved 并关闭为 `closed-current-delivery`。仍不授权 broker、Backtrader、掘金、QMT、账户、凭据、下单、撤单或 simulation/live。 |
+| CR-040 | closed | `USER-20260610-NO-MINIQMT-GOLDMINER-ROUTE` | `process/changes/CR-040-QMT-ROUTE-DELETION-BACKTRADER-PAPER-SIM-GOLDMINER-ADAPTER-2026-06-10.md` | 新路线正式 CR，承接 QMT 删除、Backtrader 语义参考、本地 paper simulation 和掘金候选 adapter 规划 | 用户已回复“同意”，CP2/CP3 approved，本路线 CR 关闭为 current delivery。后续推荐 CR041 API-less Paper Simulation Runner、CR042 BrokerAdapter 合同、CR043 掘金 adapter Spike、CR044 掘金仿真准入。当前不授权安装 / 登录 / 连接掘金，不读取 broker 凭据，不查询账户，不下单 / 撤单。 |
 | CR-029 | closed | `D-CP8-CR019-02` | `process/changes/CR-029-STAGE6-DATA-LAKE-ADMISSION-BENCHMARK-REAL-RUN-2026-05-31.md` | 独立真实数据湖运行授权 CR，不占用 CR-020..CR-028 候选编号；已从 active tracking 移除 | 真实 benchmark / admission 数据链路可用，但阶段六策略准入 blocked，`qmt_admission_allowed_count=0`；用户已接受结论并关闭 CR-029。 |
-| CR-030 | active | `D-CP8-CR019-05` | `process/changes/CR-030-MULTIFACTOR-RESEARCH-FRAMEWORK-REFERENCE-AND-RESEARCH-LOOP-STANDARDIZATION-2026-06-02.md` | 研究可信度主线正式 CR，由候选转 active；用于补齐多因子研究闭环和外部 GitHub 项目借鉴边界 | 当前为 `active-cp2-intake`；下一步进入 CP2 需求 / 场景基线。CR 创建不授权实现、依赖变更、外部项目 clone/install/run/source copy、provider/lake/publish、QMT/simulation/live 或凭据操作。 |
+| CR-030 | closed | `D-CP8-CR019-05` | `process/changes/CR-030-MULTIFACTOR-RESEARCH-FRAMEWORK-REFERENCE-AND-RESEARCH-LOOP-STANDARDIZATION-2026-06-02.md` | 研究可信度主线正式 CR，由候选转 active 后已 CP8 approved closed；用于补齐多因子研究闭环和外部 GitHub 项目借鉴边界 | CP8 自动预检 PASS，用户于 2026-06-04T06:46:13+08:00 确认已验证完成并要求关闭。关闭不授权实现扩容、依赖变更、外部项目 clone/install/run/source copy、provider/lake/publish、QMT/simulation/live 或凭据操作。 |
 
 ### Stale Status Conflicts
 
@@ -95,9 +101,9 @@ cr_index: "process/changes/CR-INDEX.yaml"
 推荐启动格式：
 
 ```text
-@meta-po 启动后续 CR：process/changes/CR-019-FOLLOW-UP-TRACKING-2026-05-31.md 中的 CR-020。
+@meta-po 启动后续 CR：process/changes/CR-019-FOLLOW-UP-TRACKING-2026-05-31.md 中的 CR-041。
 目标：<本次目标摘要>。
-授权边界：<本次是否授权服务启动 / 凭据 / 真实 QMT / provider / lake / publish / simulation/live>。
+授权边界：<本次是否授权服务启动 / 凭据 / broker 连接 / provider / lake / publish / simulation/live>。
 ```
 
 ## CR 冲突预检
@@ -111,22 +117,45 @@ cr_index: "process/changes/CR-INDEX.yaml"
 | 正式文档影响面是否重叠 | 待启动时检查 | 文档处理决策 | 重叠时默认等待或合并，不静默并行。 |
 | Story / LLD 批次是否重叠 | 待启动时检查 | Story / CR 影响分析 | 影响同一 Story、LLD 批次或 Wave 时默认阻断并行。 |
 | 文件 owner 是否冲突 | 待启动时检查 | Story file_ownership / CR 影响分析 | 冲突文件不得由两个 active CR 同时修改。 |
-| 外部接口 / 安全 / 运行授权是否重叠 | 待启动时检查 | Decision Brief / CR | 涉及 QMT、凭据、服务启动、provider、lake、publish、simulation/live 时必须单独决策。 |
+| 外部接口 / 安全 / 运行授权是否重叠 | 待启动时检查 | Decision Brief / CR | 涉及 broker、凭据、服务启动、provider、lake、publish、simulation/live 时必须单独决策。QMT 路线当前为 deleted-by-user。 |
 | 风险接受项和来源决策是否冲突 | 待启动时检查 | 本台账 / CP8 Decision Brief | 不得用新 CR 隐式覆盖 D-CP8-CR019-02 / D-CP8-CR019-05 的不授权边界。 |
 
-## Track A: QMT Real-run Admission
+## Track A: QMT Real-run Admission（Deleted by User）
 
 来源决策：`D-CP8-CR019-02`
 
-目标：把 CR-019 的 QMT C/S bridge 合同逐步推进到真实 Windows 环境和后续运行准入。每一步必须独立授权，前一步通过不自动授权下一步。
+原目标：把 CR-019 的 QMT C/S bridge 合同逐步推进到真实 Windows 环境和后续运行准入。2026-06-10 用户确认无法获取 MiniQMT 权限，并要求将 QMT 相关 CR 全部标记为删除，不再做。下表保留历史路线和取消原因，不再作为后续启动入口。
 
 | 候选 CR | 名称 | 状态 | 类型 | 优先级 | 影响面 / 冲突键 | 正式 CR 路径 | 当前门控 | 阻塞原因 | 下一步 | 目标 | 启动条件 | 完成条件 | 明确禁止 |
 |---|---|---|---|---:|---|---|---|---|---|---|---|---|---|
-| CR-020 | QMT Windows gateway 实机部署准入 | candidate | CR | 1 | Windows FastAPI gateway；`trading/qmt_gateway_*`；`docs/QMT-GATEWAY-INSTALL.md`；service_start / port / HMAC | N/A | not-started | 等待用户明确启动 CR-020 | 用户选择推进后创建正式 CR-020，并从 CP2 重新进入标准门控 | 在 Windows 机器上验证 gateway 可安装、可启动、可被 C 侧调用，但不做真实交易 | 明确 Windows host、MiniQMT / XtQuant 版本、局域网地址、端口策略、日志目录、回滚方式 | health、endpoint discovery、HMAC pairing、redaction、blocked result 全部通过 | 不发单、不撤单、不查真实账户、不读取真实凭据正文 |
-| CR-021 | QMT simulation 账号接入准入 | candidate | CR | 2 | simulation endpoints；order / cancel / account query；per-run authorization；kill switch；reconciliation | N/A | not-started | CR-020 尚未创建或关闭 | CR-020 closed 后，由用户选择是否创建正式 CR-021 | 在模拟盘验证 order / cancel / account query 的受控转发 | CR-020 PASS；明确 simulation 账号、per-run authorization、交易时段、资金上限、订单范围、kill switch、reconciliation | simulation order / cancel / account query 在授权窗口内可控执行，审计日志脱敏，异常 fail-closed | 不进入 live、不扩大账户范围、不自动连跳 small-live |
-| CR-022 | Live-readonly 准入 | candidate | CR | 3 | live-readonly endpoints；account / position / order status；真实账户只读授权；broker lake no-write | N/A | not-started | CR-021 尚未创建或关闭 | CR-021 closed 后，由用户选择是否创建正式 CR-022 | 只读真实账户、持仓、委托状态，不发单 | CR-021 PASS；单次用户授权；只读接口白名单；回滚方案 | account / position / order status 只读通过，无交易副作用，敏感值不落盘不回显 | 不发单、不撤单、不写 broker lake |
-| CR-023 | Small-live 准入 | candidate | CR | 4 | live order / cancel；pretrade risk；kill switch；reconciliation；incident playbook | N/A | not-started | CR-022 尚未创建或关闭 | CR-022 closed 后，由用户选择是否创建正式 CR-023 | 小资金真实发单试运行 | CR-022 PASS；资金上限、单笔上限、标的范围、交易时间、人工确认、撤单策略、kill switch | 小额订单闭环、reconciliation PASS、incident playbook 可用，失败自动停机 | 不放大资金、不扩大策略集合、不跳过人工确认 |
-| CR-024 | Scale-up 准入 | candidate | CR | 5 | scale_up gate；research maturity；risk limits；资金 / 策略范围扩大；reconciliation evidence | N/A | not-started | CR-023 尚未创建或关闭 | CR-023 多轮稳定并由用户选择后创建正式 CR-024 | 放大资金或扩大策略范围 | CR-023 多轮稳定；研究成熟度 gate；风险限额；人工批准 | 达到稳定性、对账、风控、回撤、成交偏差等量化阈值 | 不把历史 small-live PASS 自动视为 scale-up 授权 |
+| CR-020 | QMT Windows Gateway 服务端登录与只读查询接口准入 | deleted-by-user | CR | 1 | Windows gateway runtime；S 端 `uv run` Typer CLI；C 端 Linux `uv run` Typer CLI 配对 / 验收；Python REST client 运行时调用；QMT server login / session；本地未跟踪 `.env`；HMAC / allowlist / scope；`query_positions`；redaction；no-order safety | `process/changes/CR-020-QMT-WINDOWS-GATEWAY-SERVER-LOGIN-READONLY-QUERY-ADMISSION-2026-06-04.md` | deleted | 用户无法获取 MiniQMT 权限，并要求 QMT 相关 CR 全部删除 | 不再等待权限，不再做 Windows/QMT gateway 实机验证；历史 CP2-CP7 证据保留审计 | 原目标废止 | 若未来恢复 QMT，必须重新发起 CR，不复用当前删除态 | 删除态不是运行授权，也不是 CP8 closed；只是用户决定不再推进 | 不发单、不撤单、不账户写入、不 simulation/live、不 provider/lake/publish、不记录真实账号密码/token/session、不把 fixture/static CP7 通过解释为交易或 simulation 授权 |
+| CR-021 | QMT simulation 账号接入准入 | cancelled-user-deleted | CR | 2 | simulation endpoints；order / cancel / account query；per-run authorization；kill switch；reconciliation | N/A | cancelled | QMT 路线已删除 | 不启动；CR041 API-less Paper Simulation Runner 已关闭，后续真实 broker-neutral / 掘金路线必须从 CR042 / CR043 / CR044 独立启动 | 原目标废止 | 未来恢复必须重新发起 CR | N/A | 不进入 QMT simulation、不自动连跳 live |
+| CR-022 | Live-readonly 准入 | cancelled-user-deleted | CR | 3 | live-readonly endpoints；account / position / order status；真实账户只读授权；broker lake no-write | N/A | cancelled | QMT 路线已删除 | 不启动；未来若选择掘金，只能在 Goldminer adapter Spike 后重新设计只读准入 | 原目标废止 | 未来恢复必须重新发起 CR | N/A | 不查询真实账户、不写 broker lake |
+| CR-023 | Small-live 准入 | cancelled-user-deleted | CR | 4 | live order / cancel；pretrade risk；kill switch；reconciliation；incident playbook | N/A | cancelled | QMT 路线已删除 | 不启动；任何真实下单路线均需未来独立 CR 和逐 run 授权 | 原目标废止 | 未来恢复必须重新发起 CR | N/A | 不发单、不撤单、不放大资金 |
+| CR-024 | Scale-up 准入 | cancelled-user-deleted | CR | 5 | scale_up gate；research maturity；risk limits；资金 / 策略范围扩大；reconciliation evidence | N/A | cancelled | QMT 路线已删除 | 不启动；不从任何历史 small-live 或研究结果自动放大资金 | 原目标废止 | 未来恢复必须重新发起 CR | N/A | 不把任何历史结果自动视为 scale-up 授权 |
+
+## Track C: Paper Simulation / Goldminer Candidate Route
+
+来源决策：`USER-20260610-NO-MINIQMT-GOLDMINER-ROUTE`
+
+目标：删除 QMT 路线后，先完成无 broker 的本地模拟盘，再抽象 broker-neutral adapter，最后在官方文档和账号权限确认后评估掘金量化接口。
+
+### Compact Status Index
+
+| CR | Status |
+|---|---|
+| CR-043 | closed |
+| CR-044 | closed |
+| CR-045 | closed |
+
+| 候选 CR | 名称 | 状态 | 类型 | 优先级 | 影响面 / 冲突键 | 正式 CR 路径 | 当前门控 | 阻塞原因 | 下一步 | 目标 | 启动条件 | 完成条件 | 明确禁止 |
+|---|---|---|---|---:|---|---|---|---|---|---|---|---|---|
+| CR-040 | QMT 路线删除与 Paper Simulation / 掘金候选路线规划 | closed | CR | 1 | qmt_route_deleted；backtrader_semantic_reference；paper_simulation；broker_adapter；goldminer_adapter | `process/changes/CR-040-QMT-ROUTE-DELETION-BACKTRADER-PAPER-SIM-GOLDMINER-ADAPTER-2026-06-10.md` | closed-current-delivery | not-blocked | 路线门禁已关闭；下一步启动 CR041 前先收敛 CR039 或明确接受 CR039 输出作为输入 | 固化路线变更、删除 QMT 候选、规划 CR041..CR044 | 用户已确认无法获取 MiniQMT 并要求转向掘金候选路线；2026-06-10 用户回复“同意” | 文档和一致性检查 PASS；CP2/CP3 approved；CP4 PASS | 不安装 Backtrader / 掘金 SDK，不连接 broker，不读取凭据，不下单 / 撤单 / 查询账户 |
+| CR-041 | API-less Paper Simulation Runner | closed | CR | 2 | order_intent；paper_broker；fill_ledger；position_ledger；equity_curve；reconciliation | `process/changes/CR-041-API-LESS-PAPER-SIMULATION-RUNNER-2026-06-10.md` | closed-current-delivery | not-blocked | 已关闭；后续 CR042 / CR043 / CR044 需独立启动；不授权真实运行 | 在无 broker 环境运行 CR039 research_baseline 策略候选，按日频 realistic paper simulation（L2-minus）输出模拟成交、持仓账本和净值曲线 | 用户已接受 CR039；CR040 已关闭；用户已同意 CR041 真实度基线；CP2 / CP3 approved，CP4 PASS，S01..S05 full-lld、CP5 自动预检和 CP5 人工确认 approved；CP6 PASS；CP7 PASS_WITH_RISK，目标测试 21 passed；用户于 2026-06-11T00:20:00+08:00 回复“同意”，CP8 approved | API-less 模拟盘 artifact 可审计、可复跑、无真实 broker 副作用；CR041 closed-current-delivery | 不连接 QMT / 掘金，不读取账户，不下单 |
+| CR-042 | Broker-Neutral Adapter Contract | closed | CR | 3 | BrokerAdapter；PaperBrokerAdapter；capabilities；cash/position/order/fill contract；error normalization | `process/changes/CR-042-BROKER-NEUTRAL-ADAPTER-CONTRACT-2026-06-11.md` | closed-current-delivery | not-blocked | 已实现并本地验证；后续 CR043 / CR044 需独立启动；不授权真实 broker 运行 | 抽象 broker adapter，使策略不绑定单一接口 | CR041 artifacts 和运行边界稳定 | PaperBrokerAdapter 合同和 fixture PASS；Goldminer 仅保留 fixture / stub；CR041 + CR042 局部回归 28 passed | 不接真实 broker，不读取凭据 |
+| CR-043 | Goldminer / 掘金量化 Adapter Spike | closed | Spike | 4 | official docs；SDK / gmtrade；token；simulation account；query / order boundary；kill switch | `process/changes/CR-043-GOLDMINER-ADAPTER-SPIKE-2026-06-11.md` | closed-spike-complete | not-blocked | 已关闭；结论 `NEEDS_ACCOUNT_PERMISSION`；CR044 不启动 | 验证掘金 adapter 工程可行性、接口边界和 CR044 准入条件 | CR042 closed-current-delivery；用户要求推进 CR043 并达到工程事实可行性；用户于 2026-06-11T08:56:11+08:00 同意 CP8 | Spike 产出官方事实表、SDK 静态核对表、接口契约、风险清单、不可用项和准入建议；最终结论 `NEEDS_ACCOUNT_PERMISSION` | 不做真实下单 / 撤单；不记录凭据；不把搜索摘要当作已验证合同；不登录/连接/查询账户，除非另行授权 |
+| CR-044 | Goldminer Simulation Admission | closed-current-delivery | CR | 5 | simulation account；per-run authorization；submit/cancel；reconciliation；kill switch | `process/changes/CR-044-GOLDMINER-SIMULATION-ADMISSION-2026-06-11.md` | closed | not-blocked | CR044 已于 2026-06-11T21:28:16+08:00 经 CP8 approved 关闭；真实 runtime 继续不授权 | 掘金仿真交易准入离线工程资产关闭为 `offline-admission-design-ready` / `READY_WITH_RISK` | CR043 已关闭为 `NEEDS_ACCOUNT_PERMISSION`；用户明确启动并完成 CR044；当前仅授权离线工程化门禁 | CP6/CP7/CP8 已完成；fixture-only / blocked-first 交付关闭；未来真实验证需另起 CR / 授权门 | 不进入实盘，不读取凭据，不登录 / 连接 / 查询账户，不下单 / 撤单，不扩大账户范围，不自动 scale-up，不自动启动 |
+| CR-045 | Goldminer Windows Bridge Readonly Probe | closed-current-delivery | CR | 5 | Windows broker bridge；WSL / Linux client；token/account_id boundary；readonly probe；kill switch | `process/changes/CR-045-GOLDMINER-WINDOWS-BRIDGE-READONLY-PROBE-2026-06-11.md` | closed | closed；CP2/CP3/CP5 approved；CP4 PASS；CP6 PASS；CP7 PASS_WITH_RISK；CP8 approved；L3/L4/L5 仍未授权 | CR045 已关闭为 `readonly-bridge-skeleton-ready`；真实 runtime / real readonly / submit-cancel-simulation-live 必须另起 CR / authorization gate | 以 Windows bridge 方式为 WSL / 未来 Linux research server 受控接入掘金 API 做工程准备 | CR044 已关闭为 `offline-admission-design-ready`；用户明确启动 CR045；本轮仅授权离线工程化门禁 | L2 skeleton / fixture / static / runbook 已 CP8 approved；未获 L4 不得宣称 real-readonly-verified | 不启动 bridge，不读取 token/account_id，不登录 / 连接 / 查询账户，不下单 / 撤单，不自动 simulation/live |
 
 ## Track B: Deferred Capabilities
 
@@ -136,9 +165,9 @@ cr_index: "process/changes/CR-INDEX.yaml"
 
 | 候选 CR / Spike | capability_id | 状态 | 类型 | 优先级 | 影响面 / 冲突键 | 正式 CR 路径 | 当前门控 | 阻塞原因 | 下一步 | 目标 | 启动条件 | 完成条件 | 明确禁止 |
 |---|---|---|---|---:|---|---|---|---|---|---|---|---|---|
-| CR-025 | `backtrader_w6` / `research_execution_semantic_alignment` | closed | CR | 1 | Backtrader optional semantic reference；execution semantics；dependency isolation；clean feed；target portfolio / order intent；Backtrader module comparison；no broker | `process/changes/CR-025-BACKTRADER-OPTIONAL-EXECUTION-BACKEND-HARDENING-2026-05-31.md` | closed | CP8 自动预检 PASS；用户于 2026-06-02T23:10:16+08:00 回复“好的关闭CR025”；S01/S04/S02/S03/S05/S06 已 verified，S06 首轮 CP7 FAIL 已由 blocker fix 和 CP7 复验关闭 | 已关闭；后续研究闭环按 CR-030，真实 QMT 路线按 CR-020..CR-024 单独启动 | Research execution semantic alignment with Backtrader optional reference | 干净 feed、PIT、复权、benchmark、候选策略稳定性、target portfolio / order intent 字段证据、Backtrader 模块分析证据齐全 | 与轻量引擎的执行语义差异有量化报告，依赖隔离可验证，研究输出可形成可审计 order intent draft，Backtrader 模块处理策略可审查 | 不替代默认轻量主路径，不复制 / 移植 Backtrader 源码实现，不自动接入真实 broker |
-| CR-026 | `qlib_w7` | candidate | CR | 2 | Qlib isolated runner；factor panel；label window；report catalog；provider / dependency boundary | N/A | not-started | factor panel、label window、报告 catalog 和 runner I/O 合同尚未冻结 | 用户选择推进后创建正式 CR-026，并从 CP2 重新进入标准门控 | Qlib isolated runner / factor workflow boundary | factor panel、label window、报告 catalog 和 runner I/O 合同冻结 | isolated runner fixture-only 验证通过，输出不替代当前 lake / engine truth | 不写真实 provider 路径，不直接进入主运行时 |
-| CR-030 | `multifactor_framework_reference` | active | CR | 2 | 多因子研究框架借鉴；FactorSpec / FactorRunSpec；factor panel / label window；IC / RankIC；分层收益；多因子组合；实验追踪；策略准入包；GitHub 项目 license / dependency boundary | `process/changes/CR-030-MULTIFACTOR-RESEARCH-FRAMEWORK-REFERENCE-AND-RESEARCH-LOOP-STANDARDIZATION-2026-06-02.md` | CP2 intake | 等待 CP2 需求 / 场景基线确认；候选 GitHub 项目 license、维护状态和适配边界必须在 CP2/CP3 重验 | 组织 meta-pm 基于正式 CR 文件重整多因子研究场景和需求，并分流 CR-026 | 多因子研究框架借鉴与研究闭环标准化 | CR-025 已关闭；用户要求 CR-030 写入足够上下文以便清除对话上下文 | 输出自有多因子研究闭环 HLD / Story / LLD，可审计地借鉴成熟项目设计，但不复制源码、不引入依赖、不替代当前 lake / engine truth | 不 clone / install / run GitHub 项目，不迁移源码，不读取凭据，不 provider fetch / lake write / publish / QMT / simulation / live |
+| CR-025 | `backtrader_w6` / `research_execution_semantic_alignment` | closed | CR | 1 | Backtrader optional semantic reference；execution semantics；dependency isolation；clean feed；target portfolio / order intent；Backtrader module comparison；no broker | `process/changes/CR-025-BACKTRADER-OPTIONAL-EXECUTION-BACKEND-HARDENING-2026-05-31.md` | closed | CP8 自动预检 PASS；用户于 2026-06-02T23:10:16+08:00 回复“好的关闭CR025”；S01/S04/S02/S03/S05/S06 已 verified，S06 首轮 CP7 FAIL 已由 blocker fix 和 CP7 复验关闭 | 已关闭；作为 CR040 / CR041 的 Backtrader 语义参考输入，仍不复制源码、不引入依赖、不接真实 broker | Research execution semantic alignment with Backtrader optional reference | 干净 feed、PIT、复权、benchmark、候选策略稳定性、target portfolio / order intent 字段证据、Backtrader 模块分析证据齐全 | 与轻量引擎的执行语义差异有量化报告，依赖隔离可验证，研究输出可形成可审计 order intent draft，Backtrader 模块处理策略可审查 | 不替代默认轻量主路径，不复制 / 移植 Backtrader 源码实现，不自动接入真实 broker |
+| CR-026 | `qlib_w7` | candidate | CR | 2 | Qlib isolated runner；provider / dependency boundary；已覆盖部分：factor panel、label window、report catalog、自有多因子研究闭环 | N/A | not-started-narrowed | CR030-039 已覆盖自有多因子研究主框架、FactorSpec / FactorRunSpec、FactorPanelContract、LabelWindowSpec、ResearchReportCatalog、StrategyAdmissionPackage、组合实践和策略准入；未覆盖 Qlib isolated runner runtime / qrun / provider_uri / 依赖隔离运行。 | 若仍需要 Qlib 对照 runner，仅以 narrowed optional Spike 形式创建正式 CR-026，并从 CP2 重新进入标准门控；否则可后续人工决策取消。 | Qlib isolated runner optional Spike，仅验证外部 runner 能否消费已冻结内部合同 | CR030-S02..S07 合同冻结，且用户明确授权 CR026 bounded Spike 的运行范围、命令、输入、输出和回归边界 | isolated runner fixture-only 验证通过，输出不替代当前 lake / engine truth；不得反向改写内部合同 | 不写真实 provider 路径，不直接进入主运行时；不运行 qrun / `qlib.init` / 官方数据下载，除非 CR026 单独授权 |
+| CR-030 | `multifactor_framework_reference` | closed | CR | 2 | 多因子研究框架借鉴；FactorSpec / FactorRunSpec；factor panel / label window；IC / RankIC；分层收益；多因子组合；实验追踪；策略准入包；GitHub 项目 license / dependency boundary | `process/changes/CR-030-MULTIFACTOR-RESEARCH-FRAMEWORK-REFERENCE-AND-RESEARCH-LOOP-STANDARDIZATION-2026-06-02.md` | closed | CP8 自动预检 PASS；用户于 2026-06-04T06:46:13+08:00 确认已验证完成并要求关闭 | 已关闭；可开始受控离线多因子研究、实验和本地 paper simulation 准备；QMT 路线已删除 | 多因子研究框架借鉴与研究闭环标准化 | CR-025 已关闭；用户要求 CR-030 写入足够上下文以便清除对话上下文 | 输出自有多因子研究闭环 HLD / Story / LLD，可审计地借鉴成熟项目设计，但不复制源码、不引入依赖、不替代当前 lake / engine truth | 不 clone / install / run GitHub 项目，不迁移源码，不读取凭据，不 provider fetch / lake write / publish / QMT / broker simulation / live |
 | CR-027 | `minute_spike` | spike_candidate | Spike | 3 | minute source / schema / storage / quality；execution realism；provider / lake no-write | N/A | not-started | 尚无日频执行假设失效证据和 minute source / schema / storage / quality plan | 用户选择推进后创建正式 Spike CR，并从 CP2 / CP3 重新进入标准门控 | Minute data feasibility Spike | 日频证据无法解释关键执行缺口，且有 source / schema / storage / quality plan | bounded experiment 通过，成本、质量和保留策略可审计 | 不做历史分钟数据真实抓取，不写 lake，不升级执行价声明 |
 | CR-028 | `level2_spike` | spike_candidate | Spike | 4 | Level2 data rights；order-book schema；queue / impact-cost model；replay fixture；redaction | N/A | not-started | 尚无 L1 / minute 无法关闭 order-book、queue 或 impact-cost 风险的证据 | 用户选择推进后创建正式 Spike CR，并从 CP2 / CP3 重新进入标准门控 | Level2 rights and microstructure Spike | L1 / minute 仍无法关闭 order-book、queue 或 impact-cost 风险 | 数据权利、order-book schema、replay fixture、质量审计和成本评估齐全 | 不声明付费访问，不接真实 feed，不捕获 live quote |
 
@@ -185,26 +214,34 @@ CR-030 已创建为正式 CR：`process/changes/CR-030-MULTIFACTOR-RESEARCH-FRAM
 
 | 触发条件 | 处理建议 |
 |---|---|
-| CR-025 CP8 关闭后继续研究主线 | 当前条件已满足：CR-030 已创建正式 CR 并进入 `active-cp2-intake`，下一步组织 CP2。 |
+| CR-025 CP8 关闭后继续研究主线 | 当前条件已满足：CR-030 已创建正式 CR，并已于 CP8 approved 后关闭。 |
 | 用户明确要求优先建设多因子研究闭环 | CR-025 已关闭；仍需对 CR-030 与 CR-026 / 研究准入修复候选的影响面做冲突预检。 |
 | 需要 factor panel / label window / report catalog 标准化 | 优先从 CR-030 CP2/CP3 定义整体研究闭环；CR-026 可保留为 Qlib runner 子路线。 |
+
+### CR-026 / CR-027 / CR-028 覆盖标记（2026-06-11）
+
+| 候选项 | 覆盖结论 | 已覆盖部分 | 未覆盖 / 保留部分 | 对应证据 |
+|---|---|---|---|---|
+| CR-026 `qlib_w7` | partial-covered / narrowed | CR030-039 已覆盖多因子研究主框架、自有合同、factor panel / label window / report catalog、组合实践、策略准入和 no-real-operation 边界。 | Qlib isolated runner runtime、qrun / task 执行、`qlib.init`、`provider_uri`、`.bin` 数据格式、依赖隔离运行和 fixture-only runner 对照仍未覆盖。 | CR030、CR035、CR036、CR037、CR038、CR039；`docs/CR030-MULTIFACTOR-REFERENCE-MATRIX.md` |
+| CR-027 `minute_spike` | not-covered | CR030-039 仅证明当前研究 / 日频本地路线尚不需要分钟数据，且继续保持 minute 不授权边界。 | minute source / schema / storage / quality、minute cost model、bounded minute experiment、真实 minute 数据抓取均未覆盖。 | CR038 / CR039 `simulation_candidate=false`；CR019 deferred register |
+| CR-028 `level2_spike` | not-covered | CR030-039 仅证明当前研究 / 日频本地路线尚不需要 Level2，且继续保持 Level2 不授权边界。 | Level2 data rights、order-book schema、queue / impact-cost model、replay fixture、redaction 和 live quote 权限验证均未覆盖。 | CR038 / CR039 `simulation_candidate=false`；CR019 deferred register |
 
 ## 不授权范围
 
 | 项目 ID | 范围 | 原因 | 需要未来授权时的动作 | 来源 |
 |---|---|---|---|---|
-| NA-CR019-01 | 真实 QMT / MiniQMT / XtQuant 操作 | CR-019 CP8 只关闭离线合同 / 文档交付，不是运行许可 | 创建正式 CR-020 或后续准入 CR，并重新通过人工门禁与 per-run authorization | D-CP8-CR019-02 |
-| NA-CR019-02 | 服务启动 / 端口绑定 / Windows gateway 实机运行 | 当前只记录 gateway lifecycle / deployment 合同，未授权真实服务进程 | 创建正式 CR-020，明确 Windows host、端口、回滚和日志边界 | D-CP8-CR019-02 |
+| NA-CR019-01 | 真实 QMT / MiniQMT / XtQuant 操作 | CR-019 CP8 只关闭离线合同 / 文档交付，不是运行许可；2026-06-10 用户已删除 QMT 路线 | 当前不再创建 QMT 准入 CR；未来若恢复 QMT，必须重新发起 CR 并重新通过人工门禁与 per-run authorization | D-CP8-CR019-02 / USER-20260610-NO-MINIQMT-GOLDMINER-ROUTE |
+| NA-CR019-02 | 服务启动 / 端口绑定 / Windows gateway 实机运行 | 当前只记录 gateway lifecycle / deployment 合同，未授权真实服务进程；QMT gateway 路线已删除 | 不再启动 Windows gateway；未来恢复必须新 CR 明确 host、端口、回滚和日志边界 | D-CP8-CR019-02 / USER-20260610-NO-MINIQMT-GOLDMINER-ROUTE |
 | NA-CR019-03 | 凭据读取、真实账号、token、password、cookie、session、private key | 当前台账不得承载敏感值或真实凭据正文 | 后续 CR 只记录脱敏 ref、授权窗口和回滚方案，不落盘凭据正文 | D-CP8-CR019-02 |
 | NA-CR019-04 | provider fetch、lake write、broker lake write、publish | CR-019 未授权真实数据抓取、写湖或发布 | 后续独立 CR 需明确数据源、lake root、publish gate 和回滚 | D-CP8-CR019-02 |
-| NA-CR019-05 | simulation / live / live-readonly / small-live / scale-up | 每个阶段必须逐 run 授权，前一阶段通过不自动授权下一阶段 | 按 CR-021..CR-024 顺序创建正式 CR 并走标准门控 | D-CP8-CR019-02 |
+| NA-CR019-05 | simulation / live / live-readonly / small-live / scale-up | 每个阶段必须逐 run 授权，前一阶段通过不自动授权下一阶段；QMT CR021..CR024 已 cancelled-user-deleted | CR041 API-less Paper Simulation Runner 已关闭；掘金仿真 / 实盘只能在 CR043 Spike 后另起准入 CR，且 CR044 必须独立授权 | D-CP8-CR019-02 / USER-20260610-NO-MINIQMT-GOLDMINER-ROUTE |
 | NA-CR019-06 | Backtrader / Qlib / minute / Level2 当前启用 | 这些能力仍为 deferred / later-gated，不属于 CR-019 当前 P0 | 按 CR-025..CR-028 创建正式 CR / Spike 后再实现或验证 | D-CP8-CR019-05 |
 
 ## 风险接受项
 
 | 项目 ID | 风险 | 接受条件 | 回退 / 切换条件 | 来源 |
 |---|---|---|---|---|
-| RA-CR019-01 | CR-019 关闭后仍存在真实 QMT 运行缺口 | 用户接受当前只关闭离线合同 / fixture / dry-run / 文档交付 | 需要真实运行时，从 CR-020 开始创建正式 CR，不复用 CR-019 CP8 作为授权 | D-CP8-CR019-02 |
+| RA-CR019-01 | CR-019 关闭后仍存在真实 QMT 运行缺口 | 用户接受当前只关闭离线合同 / fixture / dry-run / 文档交付；2026-06-10 已删除 QMT 路线 | 不再从 CR-020 恢复；需要真实 broker 运行时，优先按 CR040 路线进入 paper simulation / BrokerAdapter / Goldminer Spike，或重新发起 QMT CR | D-CP8-CR019-02 / USER-20260610-NO-MINIQMT-GOLDMINER-ROUTE |
 | RA-CR019-02 | Backtrader / Qlib / minute / Level2 不进入 Stage 6 当前 P0 | 用户接受后置能力继续 deferred / later-gated | 触发条件满足时，按 CR-025..CR-028 创建正式 CR / Spike | D-CP8-CR019-05 |
 
 ## 关闭范围
@@ -227,7 +264,7 @@ CR-030 已创建为正式 CR：`process/changes/CR-030-MULTIFACTOR-RESEARCH-FRAM
 
 1. 任何候选 CR / Spike 启动前，必须先创建正式 `process/changes/CR-*.md`，并重新进入 CP2 / CP3 / Story Plan / CP5。
 2. 候选项不得在当前 CR-019 的 CP8 里被视为已实现、已验证或已授权。
-3. 真实 QMT、服务启动、凭据读取、provider fetch、lake / broker lake 写入、publish、simulation 或 live 必须逐 run 授权。
+3. 真实 broker、服务启动、凭据读取、provider fetch、lake / broker lake 写入、publish、simulation 或 live 必须逐 run 授权；QMT 路线当前为 deleted-by-user，不再按 CR020-024 推进。
 4. `docs/CR019-DEFERRED-CAPABILITIES.md` 仍是 Track B 的 capability register；本文件只提供后续排序和 CR 候选入口。
 5. 若后续发现候选项命名、范围或优先级需要调整，应先更新本台账，再创建或修订对应 CR。
 6. 正式 CR 创建后，本台账只保留索引字段；详细需求、影响分析、Story / LLD 边界和文档处理决策必须写入正式 CR 文件。
@@ -240,4 +277,4 @@ CR-030 已创建为正式 CR：`process/changes/CR-030-MULTIFACTOR-RESEARCH-FRAM
 - CR-019 当前离线合同 / 文档交付可按 CP8 `approve` 收敛；
 - `D-CP8-CR019-02` 按 Track A 后续跟踪，不阻塞当前 CP8；
 - `D-CP8-CR019-05` 按 Track B 后续跟踪，不阻塞当前 CP8；
-- 当前 CP8 不授权任何真实 QMT、服务启动、凭据读取、provider fetch、lake / broker lake 写入、publish、simulation 或 live。
+- 当前 CP8 不授权任何真实 QMT / broker、服务启动、凭据读取、provider fetch、lake / broker lake 写入、publish、simulation 或 live；2026-06-10 后 QMT 路线已删除。

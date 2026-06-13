@@ -1,0 +1,582 @@
+{
+  "artifacts": {
+    "factor_panel_path": "reports/chapter3_factor_panel/run-chapter3-empirical-smoke-tstat-20260613/factor_panel.parquet",
+    "manifest_path": "reports/chapter3_factor_panel/run-chapter3-empirical-smoke-tstat-20260613/factor_panel_manifest.json",
+    "metrics_csv_path": "process/research/chapter3_empirical/run-chapter3-empirical-smoke-tstat-20260613/factor_metrics.csv",
+    "output_dir": "process/research/chapter3_empirical/run-chapter3-empirical-smoke-tstat-20260613",
+    "portfolio_plan_path": "process/research/chapter3_empirical/run-chapter3-empirical-smoke-tstat-20260613/MULTIFACTOR-ADMISSION-SUMMARY.json",
+    "preprocessing_summary_path": "reports/chapter3_factor_panel/run-chapter3-empirical-smoke-tstat-20260613/preprocessing_summary.csv",
+    "report_json_path": "process/research/chapter3_empirical/run-chapter3-empirical-smoke-tstat-20260613/EMPIRICAL-RUN-REPORT.json",
+    "report_md_path": "process/research/chapter3_empirical/run-chapter3-empirical-smoke-tstat-20260613/EMPIRICAL-RUN-REPORT.md",
+    "run_id": "run-chapter3-empirical-smoke-tstat-20260613"
+  },
+  "factor_correlation": {
+    "abnormal_turnover_21_252": {
+      "abnormal_turnover_21_252": 1.0,
+      "investment_asset_growth": 0.06998206351031311,
+      "market_beta_252": 0.06635457822335697,
+      "momentum_12_1": 0.07937097773800342,
+      "profitability_roe_ttm": -0.03917373242382939,
+      "size_total_market_cap": 0.005450771403908609,
+      "value_bm": 0.14049985265495124
+    },
+    "investment_asset_growth": {
+      "abnormal_turnover_21_252": 0.06998206351031311,
+      "investment_asset_growth": 1.0,
+      "market_beta_252": 0.31582860003271124,
+      "momentum_12_1": -0.02801846607151488,
+      "profitability_roe_ttm": 0.03710845408339811,
+      "size_total_market_cap": 0.05233805549368983,
+      "value_bm": -0.013785878897045111
+    },
+    "market_beta_252": {
+      "abnormal_turnover_21_252": 0.06635457822335697,
+      "investment_asset_growth": 0.31582860003271124,
+      "market_beta_252": 1.0,
+      "momentum_12_1": -0.1094534065879148,
+      "profitability_roe_ttm": 0.09464012567554755,
+      "size_total_market_cap": 0.1146552447274501,
+      "value_bm": 0.08188420486720817
+    },
+    "momentum_12_1": {
+      "abnormal_turnover_21_252": 0.07937097773800342,
+      "investment_asset_growth": -0.02801846607151488,
+      "market_beta_252": -0.1094534065879148,
+      "momentum_12_1": 1.0,
+      "profitability_roe_ttm": 0.049023943124081606,
+      "size_total_market_cap": -0.009875042986941907,
+      "value_bm": -0.12399837798973433
+    },
+    "profitability_roe_ttm": {
+      "abnormal_turnover_21_252": -0.03917373242382939,
+      "investment_asset_growth": 0.03710845408339811,
+      "market_beta_252": 0.09464012567554755,
+      "momentum_12_1": 0.049023943124081606,
+      "profitability_roe_ttm": 1.0,
+      "size_total_market_cap": 0.021643139884056646,
+      "value_bm": -0.219794815510037
+    },
+    "size_total_market_cap": {
+      "abnormal_turnover_21_252": 0.005450771403908609,
+      "investment_asset_growth": 0.05233805549368983,
+      "market_beta_252": 0.1146552447274501,
+      "momentum_12_1": -0.009875042986941907,
+      "profitability_roe_ttm": 0.021643139884056646,
+      "size_total_market_cap": 1.0,
+      "value_bm": -0.4478875409171242
+    },
+    "value_bm": {
+      "abnormal_turnover_21_252": 0.14049985265495124,
+      "investment_asset_growth": -0.013785878897045111,
+      "market_beta_252": 0.08188420486720817,
+      "momentum_12_1": -0.12399837798973433,
+      "profitability_roe_ttm": -0.219794815510037,
+      "size_total_market_cap": -0.4478875409171242,
+      "value_bm": 1.0
+    }
+  },
+  "factor_ids": [
+    "market_beta_252",
+    "size_total_market_cap",
+    "value_bm",
+    "momentum_12_1",
+    "profitability_roe_ttm",
+    "investment_asset_growth",
+    "abnormal_turnover_21_252"
+  ],
+  "factor_summaries": [
+    {
+      "admission": "research_candidate",
+      "factor_id": "market_beta_252",
+      "ic_mean": 0.01719236773396373,
+      "icir": 0.12595062371818125,
+      "long_short_observations": 15,
+      "long_short_return": 0.0016640123439980216,
+      "long_short_t_stat": 0.32680876552275684,
+      "long_short_t_stat_method": "newey_west",
+      "observations": 12544,
+      "rank_ic_mean": 0.008960044006812802,
+      "status": "pass",
+      "turnover": 0.3332260377853736
+    },
+    {
+      "admission": "research_candidate",
+      "factor_id": "size_total_market_cap",
+      "ic_mean": 0.09670695792414401,
+      "icir": 0.6308260284980214,
+      "long_short_observations": 23,
+      "long_short_return": 0.02974583802311293,
+      "long_short_t_stat": 2.5415007989403517,
+      "long_short_t_stat_method": "newey_west",
+      "observations": 20230,
+      "rank_ic_mean": 0.11558322085903217,
+      "status": "pass",
+      "turnover": 0.24332759905592666
+    },
+    {
+      "admission": "research_candidate",
+      "factor_id": "value_bm",
+      "ic_mean": 0.09606894581999197,
+      "icir": 0.37909793629815386,
+      "long_short_observations": 20,
+      "long_short_return": 0.019737512285037236,
+      "long_short_t_stat": 0.9322249129965399,
+      "long_short_t_stat_method": "newey_west",
+      "observations": 1344,
+      "rank_ic_mean": 0.11512566361092286,
+      "status": "pass",
+      "turnover": 0.2931514392040708
+    },
+    {
+      "admission": "research_candidate",
+      "factor_id": "momentum_12_1",
+      "ic_mean": 0.025329156570398952,
+      "icir": 0.23109191564851786,
+      "long_short_observations": 11,
+      "long_short_return": 0.007251954834166754,
+      "long_short_t_stat": 1.0114587335204563,
+      "long_short_t_stat_method": "newey_west",
+      "observations": 9925,
+      "rank_ic_mean": 0.021135154303714737,
+      "status": "pass",
+      "turnover": 0.4640288624457141
+    },
+    {
+      "admission": "research_candidate",
+      "factor_id": "profitability_roe_ttm",
+      "ic_mean": 0.112046536329173,
+      "icir": 0.46628315579603863,
+      "long_short_observations": 8,
+      "long_short_return": 0.007074198624032187,
+      "long_short_t_stat": 0.3764514181368416,
+      "long_short_t_stat_method": "newey_west",
+      "observations": 304,
+      "rank_ic_mean": 0.015140006536803679,
+      "status": "pass",
+      "turnover": 0.25595238095238093
+    },
+    {
+      "admission": "watch_or_reweight",
+      "factor_id": "investment_asset_growth",
+      "ic_mean": 0.013813022685378679,
+      "icir": 0.07923818037833055,
+      "long_short_observations": 9,
+      "long_short_return": -0.007646320904699954,
+      "long_short_t_stat": -0.8348365667755897,
+      "long_short_t_stat_method": "newey_west",
+      "observations": 499,
+      "rank_ic_mean": 0.05749140109085571,
+      "status": "pass",
+      "turnover": 0.18467261904761906
+    },
+    {
+      "admission": "research_candidate",
+      "factor_id": "abnormal_turnover_21_252",
+      "ic_mean": 0.07223510260012714,
+      "icir": 0.7058455436530842,
+      "long_short_observations": 15,
+      "long_short_return": 0.014527099116545135,
+      "long_short_t_stat": 2.629703693396272,
+      "long_short_t_stat_method": "newey_west",
+      "observations": 13659,
+      "rank_ic_mean": 0.08460253989200735,
+      "status": "pass",
+      "turnover": 0.7249580787854661
+    }
+  ],
+  "label_rows": 22962,
+  "limitations": [],
+  "memory_budget": {
+    "budget_bytes": 17179869184,
+    "max_memory_gb": 16.0,
+    "max_rss_bytes_observed": 952057856,
+    "max_rss_gb_observed": 0.8866729736328125,
+    "status": "pass"
+  },
+  "monthly_panel_rows": 59615,
+  "operation_counts": {
+    "catalog_current_pointer_publish": 0,
+    "credential_read": 0,
+    "lake_write": 0,
+    "provider_fetch": 0,
+    "qmt_operation": 0,
+    "simulation_or_live_run": 0
+  },
+  "portfolio_plan": {
+    "allowed_claims": [
+      {
+        "claim": "multifactor_research_plan",
+        "code": "MF_COMBINER_RESEARCH_PLAN_ALLOWED",
+        "evidence_ref": "combo-run-chapter3-empirical-smoke-tstat-20260613",
+        "limitation": "后续准入、模拟盘或真实交易必须走独立 CR / per-run authorization。",
+        "reason": "仅允许作为项目自有多因子研究和后续 S07 admission 输入，不构成生产、QMT、模拟盘或实盘声明。",
+        "status": "allowed"
+      }
+    ],
+    "benchmark_deviation": {
+      "active_weight_claim": "not_claimed",
+      "benchmark": {
+        "benchmark_id": "A_share_cross_section_equal_weight"
+      },
+      "deviation_cap": null,
+      "status": "pass"
+    },
+    "blocked_claims": [
+      {
+        "claim": "production_valid",
+        "code": "MF_COMBINER_CLAIM_NOT_AUTHORIZED",
+        "evidence_ref": "",
+        "limitation": "真实运行或交易类能力必须由后续独立 CR / per-run authorization 解锁。",
+        "reason": "MultiFactorPortfolioPlan 不构成生产、QMT、模拟盘、实盘或真实可交易证据。",
+        "status": "blocked"
+      },
+      {
+        "claim": "qmt_ready",
+        "code": "MF_COMBINER_CLAIM_NOT_AUTHORIZED",
+        "evidence_ref": "",
+        "limitation": "真实运行或交易类能力必须由后续独立 CR / per-run authorization 解锁。",
+        "reason": "MultiFactorPortfolioPlan 不构成生产、QMT、模拟盘、实盘或真实可交易证据。",
+        "status": "blocked"
+      },
+      {
+        "claim": "simulation_ready",
+        "code": "MF_COMBINER_CLAIM_NOT_AUTHORIZED",
+        "evidence_ref": "",
+        "limitation": "真实运行或交易类能力必须由后续独立 CR / per-run authorization 解锁。",
+        "reason": "MultiFactorPortfolioPlan 不构成生产、QMT、模拟盘、实盘或真实可交易证据。",
+        "status": "blocked"
+      },
+      {
+        "claim": "live_ready",
+        "code": "MF_COMBINER_CLAIM_NOT_AUTHORIZED",
+        "evidence_ref": "",
+        "limitation": "真实运行或交易类能力必须由后续独立 CR / per-run authorization 解锁。",
+        "reason": "MultiFactorPortfolioPlan 不构成生产、QMT、模拟盘、实盘或真实可交易证据。",
+        "status": "blocked"
+      },
+      {
+        "claim": "tradable_evidence",
+        "code": "MF_COMBINER_CLAIM_NOT_AUTHORIZED",
+        "evidence_ref": "",
+        "limitation": "真实运行或交易类能力必须由后续独立 CR / per-run authorization 解锁。",
+        "reason": "MultiFactorPortfolioPlan 不构成生产、QMT、模拟盘、实盘或真实可交易证据。",
+        "status": "blocked"
+      }
+    ],
+    "blocked_reasons": [],
+    "capacity_summary": {
+      "capacity": {
+        "status": "not_evaluated"
+      },
+      "capacity_claim": "bounded",
+      "status": "pass"
+    },
+    "combiner_id": "combo-run-chapter3-empirical-smoke-tstat-20260613",
+    "constraints": {
+      "max_factor_weight": 1.0,
+      "min_factor_weight": 0.0
+    },
+    "cost_summary": {
+      "cost_adjusted_claim": "bounded",
+      "cost_config": {
+        "commission_bps": 3.0,
+        "slippage_bps": 5.0
+      },
+      "status": "pass"
+    },
+    "draft_handoff": {
+      "benchmark_deviation": {
+        "active_weight_claim": "not_claimed",
+        "benchmark": {
+          "benchmark_id": "A_share_cross_section_equal_weight"
+        },
+        "deviation_cap": null,
+        "status": "pass"
+      },
+      "capacity_summary": {
+        "capacity": {
+          "status": "not_evaluated"
+        },
+        "capacity_claim": "bounded",
+        "status": "pass"
+      },
+      "combiner_id": "combo-run-chapter3-empirical-smoke-tstat-20260613",
+      "consumer": "CR030-S07-admission-package-or-research-runner",
+      "cost_summary": {
+        "cost_adjusted_claim": "bounded",
+        "cost_config": {
+          "commission_bps": 3.0,
+          "slippage_bps": 5.0
+        },
+        "status": "pass"
+      },
+      "freeze_policy": {
+        "change_policy": "cp_or_cr_required",
+        "version": "chapter3-real-v1"
+      },
+      "limitations": [
+        "not_qmt_ready",
+        "not_simulation_ready",
+        "not_live_ready",
+        "not_broker_order",
+        "requires_s07_admission_before_execution_route"
+      ],
+      "not_authorization": true,
+      "not_broker_order": true,
+      "plan_id": "combo-run-chapter3-empirical-smoke-tstat-20260613:chapter3-real-v1",
+      "rebalance_frequency": "monthly",
+      "schema_version": "multifactor_portfolio_plan_draft_v1",
+      "status": "pass",
+      "target_count": 7,
+      "target_weights": {
+        "abnormal_turnover_21_252": 0.14285714285714288,
+        "investment_asset_growth": 0.14285714285714288,
+        "market_beta_252": 0.14285714285714288,
+        "momentum_12_1": 0.14285714285714288,
+        "profitability_roe_ttm": 0.14285714285714288,
+        "size_total_market_cap": 0.14285714285714288,
+        "value_bm": 0.14285714285714288
+      }
+    },
+    "factor_weights": [
+      {
+        "factor_id": "market_beta_252",
+        "policy": "rule_weight",
+        "raw_score": 0.14285714285714285,
+        "reason": "规则权重来自 weighting_policy.weights；缺省时使用等权。",
+        "report_id": "run-chapter3-empirical-smoke-tstat-20260613-market_beta_252-2000-01-01-2001-12-31-factor_evaluation_report_v1",
+        "source_metric_refs": [
+          "weighting_policy.weights"
+        ],
+        "weight": 0.14285714285714288
+      },
+      {
+        "factor_id": "size_total_market_cap",
+        "policy": "rule_weight",
+        "raw_score": 0.14285714285714285,
+        "reason": "规则权重来自 weighting_policy.weights；缺省时使用等权。",
+        "report_id": "run-chapter3-empirical-smoke-tstat-20260613-size_total_market_cap-2000-01-01-2001-12-31-factor_evaluation_report_v1",
+        "source_metric_refs": [
+          "weighting_policy.weights"
+        ],
+        "weight": 0.14285714285714288
+      },
+      {
+        "factor_id": "value_bm",
+        "policy": "rule_weight",
+        "raw_score": 0.14285714285714285,
+        "reason": "规则权重来自 weighting_policy.weights；缺省时使用等权。",
+        "report_id": "run-chapter3-empirical-smoke-tstat-20260613-value_bm-2000-01-01-2001-12-31-factor_evaluation_report_v1",
+        "source_metric_refs": [
+          "weighting_policy.weights"
+        ],
+        "weight": 0.14285714285714288
+      },
+      {
+        "factor_id": "momentum_12_1",
+        "policy": "rule_weight",
+        "raw_score": 0.14285714285714285,
+        "reason": "规则权重来自 weighting_policy.weights；缺省时使用等权。",
+        "report_id": "run-chapter3-empirical-smoke-tstat-20260613-momentum_12_1-2000-01-01-2001-12-31-factor_evaluation_report_v1",
+        "source_metric_refs": [
+          "weighting_policy.weights"
+        ],
+        "weight": 0.14285714285714288
+      },
+      {
+        "factor_id": "profitability_roe_ttm",
+        "policy": "rule_weight",
+        "raw_score": 0.14285714285714285,
+        "reason": "规则权重来自 weighting_policy.weights；缺省时使用等权。",
+        "report_id": "run-chapter3-empirical-smoke-tstat-20260613-profitability_roe_ttm-2000-01-01-2001-12-31-factor_evaluation_report_v1",
+        "source_metric_refs": [
+          "weighting_policy.weights"
+        ],
+        "weight": 0.14285714285714288
+      },
+      {
+        "factor_id": "investment_asset_growth",
+        "policy": "rule_weight",
+        "raw_score": 0.14285714285714285,
+        "reason": "规则权重来自 weighting_policy.weights；缺省时使用等权。",
+        "report_id": "run-chapter3-empirical-smoke-tstat-20260613-investment_asset_growth-2000-01-01-2001-12-31-factor_evaluation_report_v1",
+        "source_metric_refs": [
+          "weighting_policy.weights"
+        ],
+        "weight": 0.14285714285714288
+      },
+      {
+        "factor_id": "abnormal_turnover_21_252",
+        "policy": "rule_weight",
+        "raw_score": 0.14285714285714285,
+        "reason": "规则权重来自 weighting_policy.weights；缺省时使用等权。",
+        "report_id": "run-chapter3-empirical-smoke-tstat-20260613-abnormal_turnover_21_252-2000-01-01-2001-12-31-factor_evaluation_report_v1",
+        "source_metric_refs": [
+          "weighting_policy.weights"
+        ],
+        "weight": 0.14285714285714288
+      }
+    ],
+    "freeze_policy": {
+      "change_policy": "cp_or_cr_required",
+      "version": "chapter3-real-v1"
+    },
+    "limitations": [
+      "not_qmt_ready",
+      "not_simulation_ready",
+      "not_live_ready",
+      "not_broker_order",
+      "requires_s07_admission_before_execution_route"
+    ],
+    "lineage": {
+      "combiner_id": "combo-run-chapter3-empirical-smoke-tstat-20260613",
+      "evidence_refs": [
+        "process/research/chapter3_real_data_readiness/READINESS-REPORT.md"
+      ],
+      "freeze_version": "chapter3-real-v1",
+      "source_reports": [
+        {
+          "factor_id": "market_beta_252",
+          "report_id": "run-chapter3-empirical-smoke-tstat-20260613-market_beta_252-2000-01-01-2001-12-31-factor_evaluation_report_v1",
+          "status": "pass"
+        },
+        {
+          "factor_id": "size_total_market_cap",
+          "report_id": "run-chapter3-empirical-smoke-tstat-20260613-size_total_market_cap-2000-01-01-2001-12-31-factor_evaluation_report_v1",
+          "status": "pass"
+        },
+        {
+          "factor_id": "value_bm",
+          "report_id": "run-chapter3-empirical-smoke-tstat-20260613-value_bm-2000-01-01-2001-12-31-factor_evaluation_report_v1",
+          "status": "pass"
+        },
+        {
+          "factor_id": "momentum_12_1",
+          "report_id": "run-chapter3-empirical-smoke-tstat-20260613-momentum_12_1-2000-01-01-2001-12-31-factor_evaluation_report_v1",
+          "status": "pass"
+        },
+        {
+          "factor_id": "profitability_roe_ttm",
+          "report_id": "run-chapter3-empirical-smoke-tstat-20260613-profitability_roe_ttm-2000-01-01-2001-12-31-factor_evaluation_report_v1",
+          "status": "pass"
+        },
+        {
+          "factor_id": "investment_asset_growth",
+          "report_id": "run-chapter3-empirical-smoke-tstat-20260613-investment_asset_growth-2000-01-01-2001-12-31-factor_evaluation_report_v1",
+          "status": "pass"
+        },
+        {
+          "factor_id": "abnormal_turnover_21_252",
+          "report_id": "run-chapter3-empirical-smoke-tstat-20260613-abnormal_turnover_21_252-2000-01-01-2001-12-31-factor_evaluation_report_v1",
+          "status": "pass"
+        }
+      ]
+    },
+    "live_allowed": false,
+    "not_broker_order": true,
+    "permission_counters": {
+      "account_or_order_operation": 0,
+      "catalog_publish": 0,
+      "credential_read": 0,
+      "dependency_change": 0,
+      "external_project_clone": 0,
+      "external_project_install": 0,
+      "external_project_run": 0,
+      "lake_write": 0,
+      "provider_fetch": 0,
+      "qmt_operation": 0,
+      "reports_overwrite": 0,
+      "simulation_or_live": 0,
+      "source_migration_or_vendor": 0
+    },
+    "plan_id": "combo-run-chapter3-empirical-smoke-tstat-20260613:chapter3-real-v1",
+    "qmt_allowed": false,
+    "rebalance_dates": [],
+    "rebalance_frequency": "monthly",
+    "schema_version": "multifactor_portfolio_plan_v1",
+    "simulation_allowed": false,
+    "status": "pass",
+    "target_count": 7,
+    "target_weights": {
+      "abnormal_turnover_21_252": 0.14285714285714288,
+      "investment_asset_growth": 0.14285714285714288,
+      "market_beta_252": 0.14285714285714288,
+      "momentum_12_1": 0.14285714285714288,
+      "profitability_roe_ttm": 0.14285714285714288,
+      "size_total_market_cap": 0.14285714285714288,
+      "value_bm": 0.14285714285714288
+    },
+    "turnover_cap": {
+      "enabled": false
+    },
+    "weight_sources": {
+      "abnormal_turnover_21_252": {
+        "policy": "rule_weight",
+        "raw_score": 0.14285714285714285,
+        "reason": "规则权重来自 weighting_policy.weights；缺省时使用等权。",
+        "report_id": "run-chapter3-empirical-smoke-tstat-20260613-abnormal_turnover_21_252-2000-01-01-2001-12-31-factor_evaluation_report_v1",
+        "source_metric_refs": [
+          "weighting_policy.weights"
+        ]
+      },
+      "investment_asset_growth": {
+        "policy": "rule_weight",
+        "raw_score": 0.14285714285714285,
+        "reason": "规则权重来自 weighting_policy.weights；缺省时使用等权。",
+        "report_id": "run-chapter3-empirical-smoke-tstat-20260613-investment_asset_growth-2000-01-01-2001-12-31-factor_evaluation_report_v1",
+        "source_metric_refs": [
+          "weighting_policy.weights"
+        ]
+      },
+      "market_beta_252": {
+        "policy": "rule_weight",
+        "raw_score": 0.14285714285714285,
+        "reason": "规则权重来自 weighting_policy.weights；缺省时使用等权。",
+        "report_id": "run-chapter3-empirical-smoke-tstat-20260613-market_beta_252-2000-01-01-2001-12-31-factor_evaluation_report_v1",
+        "source_metric_refs": [
+          "weighting_policy.weights"
+        ]
+      },
+      "momentum_12_1": {
+        "policy": "rule_weight",
+        "raw_score": 0.14285714285714285,
+        "reason": "规则权重来自 weighting_policy.weights；缺省时使用等权。",
+        "report_id": "run-chapter3-empirical-smoke-tstat-20260613-momentum_12_1-2000-01-01-2001-12-31-factor_evaluation_report_v1",
+        "source_metric_refs": [
+          "weighting_policy.weights"
+        ]
+      },
+      "profitability_roe_ttm": {
+        "policy": "rule_weight",
+        "raw_score": 0.14285714285714285,
+        "reason": "规则权重来自 weighting_policy.weights；缺省时使用等权。",
+        "report_id": "run-chapter3-empirical-smoke-tstat-20260613-profitability_roe_ttm-2000-01-01-2001-12-31-factor_evaluation_report_v1",
+        "source_metric_refs": [
+          "weighting_policy.weights"
+        ]
+      },
+      "size_total_market_cap": {
+        "policy": "rule_weight",
+        "raw_score": 0.14285714285714285,
+        "reason": "规则权重来自 weighting_policy.weights；缺省时使用等权。",
+        "report_id": "run-chapter3-empirical-smoke-tstat-20260613-size_total_market_cap-2000-01-01-2001-12-31-factor_evaluation_report_v1",
+        "source_metric_refs": [
+          "weighting_policy.weights"
+        ]
+      },
+      "value_bm": {
+        "policy": "rule_weight",
+        "raw_score": 0.14285714285714285,
+        "reason": "规则权重来自 weighting_policy.weights；缺省时使用等权。",
+        "report_id": "run-chapter3-empirical-smoke-tstat-20260613-value_bm-2000-01-01-2001-12-31-factor_evaluation_report_v1",
+        "source_metric_refs": [
+          "weighting_policy.weights"
+        ]
+      }
+    }
+  },
+  "rebalance_count": 23,
+  "run_id": "run-chapter3-empirical-smoke-tstat-20260613",
+  "schema_version": "chapter3_empirical_run_v1",
+  "status": "PASS"
+}

@@ -1,5 +1,37 @@
 # DEV-LOG
 
+## 2026-06-11 - CR045 Bridge Batch A 实现 / CP6 完成
+
+- Story 范围：`CR045-S01`..`CR045-S06`；执行 `process/handoffs/META-DEV-CR045-CP6-IMPLEMENT-2026-06-11.md`，消费 CP5 approved 批次 `process/checkpoints/CP5-CR045-BRIDGE-BATCH-A-LLD-BATCH.md`。
+- 调度证据：handoff `dispatch.mode=spawn_agent`，agent_name=`dev-zhu`，agent_id/thread_id=`019eb748-a3bf-75d3-b37c-ce4ba4924235`，tool_name=`multi_agent_v1.spawn_agent`，spawned_at=`2026-06-11T23:16:11+08:00`。
+- 实现文件清单：`engine/goldminer_bridge_contract.py`、`engine/goldminer_bridge_client.py`、`engine/goldminer_bridge_probe.py`、`tests/test_cr045_goldminer_bridge_contract.py`、`tests/test_cr045_goldminer_bridge_client.py`、`tests/test_cr045_goldminer_readonly_probe.py`、`tests/test_cr045_goldminer_no_operation_static.py`、`docs/goldminer/CR045-BRIDGE-RUNBOOK.md`。
+- 过程文件清单：`process/stories/CR045-BRIDGE-BATCH-A-IMPLEMENTATION.md`、`process/checks/CP6-CR045-BRIDGE-BATCH-A-CODING-DONE.md`、6 个 CR045 Story 卡片状态、`DEV-LOG.md`。
+- 实现摘要：新增 Goldminer Windows Bridge L2 skeleton 合同、WSL/Linux fixture client、readonly probe blocked-first skeleton、redaction/no-operation static tests 和用户 runbook；所有真实能力 flags 保持 false，readonly probe 在 L4 未授权时 blocked-first，operation counters 全 0。
+- 关键决策与偏差：S06 保持 technical-note 范围，仅生成 runbook，不新增自动 manifest/schema/guard script；没有修改 HLD、ADR、Feature 设计、`pyproject.toml` 或 `uv.lock`。
+- 验证命令：`PYTHONDONTWRITEBYTECODE=1 PYTEST_ADDOPTS='-p no:cacheprovider' uv run --python 3.11 pytest -q tests/test_cr045_goldminer_bridge_contract.py tests/test_cr045_goldminer_bridge_client.py tests/test_cr045_goldminer_readonly_probe.py tests/test_cr045_goldminer_no_operation_static.py`，结果 `24 passed in 0.10s`。首次运行发现 `trade_password` 分类优先级问题，已修复后复跑通过。
+- 验证命令：`git diff --check`，结果 PASS，无输出。
+- 安全边界：未读取 `.env` / `.env.*`、token、account_id、账号、密码、session、cookie 或 private key；未启动 Windows bridge runtime；未导入或调用真实 `gm` / `gmtrade`；未登录/连接 Goldminer 或 broker；未查询 account/cash/position/order/fill；未下单、撤单、simulation/live、provider fetch、lake write 或 catalog publish。
+- 状态回写：CR045-S01..S06 已推进到 `ready-for-verification`；CP6 结论 `PASS`，路径为 `process/checks/CP6-CR045-BRIDGE-BATCH-A-CODING-DONE.md`。
+- meta-qa 验证入口：复跑目标 pytest 和 `git diff --check`；重点复核 no SDK/no network/no credential read、false flags、readonly blocked-first、zero counters、runbook 不构成运行授权。
+- BLOCKING：无。等待 meta-po 拉起 meta-qa 执行 CP7；CP7 前不得标记 verified 或授权真实 L3/L4/L5 运行。
+
+## 2026-06-05 - CR020-S03 实现 / CP6 完成
+
+- Story 范围：`CR020-S03-linux-client-rest-transport`；执行用户直接指派的 meta-dev 实现子任务 B，消费已确认 LLD `process/stories/CR020-S03-linux-client-rest-transport-LLD.md` 与 CP5 approved 批次 `checkpoints/CP5-CR020-QMT-GATEWAY-READONLY-LLD-BATCH.md`。
+- 调度证据：LLD 原始子 agent 为 `dev-zhu`，agent_id/thread_id=`019e94f2-7ff0-7293-b9f2-408dba709a5e`；本次实现为当前 Codex 线程按用户直接指令执行，CP6 记录 `dispatch_mode=direct-user-handoff-execution`。
+- 实现文件清单：`trading/qmt_client.py`、`trading/qmt_client_cli.py`、`tests/test_cr020_linux_client_rest_transport.py`；过程文件清单：`process/checks/CP6-CR020-S03-linux-client-rest-transport-CODING-DONE.md`、`process/stories/CR020-S03-linux-client-rest-transport.md`、`DEV-LOG.md`。
+- 实现摘要：`QmtClient` 增加 `QmtClientConfig`、`QmtRetryPolicy`、`QmtRestRequest`、`QmtTransportResult`、`QmtRestTransport` protocol 和 `QmtAuthHeaderProvider` protocol；默认无 `base_url` 或无 transport 时 fail-closed；`query_positions` 进入 CR020 typed REST client path，仍只在 fake/injected transport 下测试。
+- CLI 摘要：新增 `trading/qmt_client_cli.py`，提供 command matrix 与 optional Typer app；Typer 缺失时输出 `typer_dependency_missing` blocked result；CLI 命令只调用 `QmtClient.health/capabilities/diagnostics/query_positions`，不复制 endpoint gate、auth、timeout、retry 或业务判定。
+- 关键决策与偏差：未修改 `trading/qmt_transport.py`、`trading/qmt_gateway_contracts.py`、`trading/qmt_cli.py`；S03 所需新增错误理由采用 client 内 string reason normalization，未扩大 shared enum；`STATE.md` 未在本线程修改，避免与并行主线程调度状态写入冲突。
+- 已知限制：本 Story 不提供真实 HTTP transport，不启动 gateway，不连接 QMT；S04 负责 HMAC / allowlist / scope provider，S05 负责 gateway route 和真实 `query_positions` redacted schema，S06 负责手动安装调试手册与 CP7 实机边界。
+- 验证命令：`PYTHONPYCACHEPREFIX=/tmp/cr020-s03-pytest-pycache PYTHONDONTWRITEBYTECODE=1 PYTEST_ADDOPTS='-p no:cacheprovider' uv run --python 3.11 pytest -q tests/test_cr020_linux_client_rest_transport.py`，结果 `9 passed in 0.08s`。
+- 回归命令：`PYTHONPYCACHEPREFIX=/tmp/cr020-s03-regression-pycache PYTHONDONTWRITEBYTECODE=1 PYTEST_ADDOPTS='-p no:cacheprovider' uv run --python 3.11 pytest -q tests/test_cr019_qmt_cside_client_cli.py tests/test_cr020_linux_client_rest_transport.py`，结果 `16 passed in 0.13s`。
+- 编译命令：`PYTHONPYCACHEPREFIX=/tmp/cr020-s03-pycompile PYTHONDONTWRITEBYTECODE=1 uv run --python 3.11 python -m py_compile trading/qmt_client.py trading/qmt_client_cli.py tests/test_cr020_linux_client_rest_transport.py`，退出码 0。
+- 安全边界：未修改 `pyproject.toml` / `uv.lock`；未读取 `.env` / `.env.*`、账号、密码、token、session、交易密码、私钥；未启动 gateway、未绑定端口、未打开真实 socket、未连接 QMT / MiniQMT / XtQuant；未发单、撤单、账户写入、broker lake、provider、lake 或 publish。
+- 状态回写：Story 已推进到 `ready-for-verification`；CP6 结论 `PASS`，路径为 `process/checks/CP6-CR020-S03-linux-client-rest-transport-CODING-DONE.md`。
+- meta-qa 验证入口：复跑 S03 专项、CR019+CR020 组合回归和 py_compile；重点复核 fake transport/auth provider、Typer missing fail-closed、no-env-read、forbidden import、no socket/gateway/QMT、timeout/retry、redaction、account-like endpoint blocked。
+- BLOCKING：无。等待 meta-po 拉起 meta-qa 执行 CP7；CP7 前不得标记 verified 或授权真实 Windows/QMT 运行。
+
 ## 2026-05-28 - CR017-S04 实现 / CP6 完成
 
 - Story 范围：`CR017-S04-reader-api-and-policy-gates`；执行 `process/handoffs/META-DEV-CR017-S04-IMPLEMENT-2026-05-28.md`，消费 S03 CP7 PASS / verified 结果和 CP5 全量 LLD approved 门禁。
@@ -473,3 +505,108 @@
 - 证据文件：`process/checks/REAL-TUSHARE-CR018-RELEASE-PUBLISH-2026-05-29.md`；lake 证据在 `/mnt/ugreen-data-lake/quality/run-cr018-release-full-history-20150101-20260528-20260529/`。
 - 真实操作计数：`provider_fetch=0`、`credential_read=0`、`qmt_operation=0`；本轮执行了用户授权的 catalog current pointer publish，计数为 `10`。
 - 下一步：使用 published release current truth 重跑阶段三到阶段五核心研究；QMT simulation / live 仍后置，需另行 per-run authorization。
+
+## 2026-06-05 - CR020-S04 HMAC pairing / allowlist / scope / nonce / redaction 实现完成
+
+- Story：`CR020-S04-hmac-pairing-allowlist-scope`，Wave：`CR020-W2-CLIENT-AUTH`。
+- 执行入口：用户在当前 Codex 线程直接指定 meta-dev 实现子任务 C；CP5 全量 LLD 人工稿 `checkpoints/CP5-CR020-QMT-GATEWAY-READONLY-LLD-BATCH.md` 已于 2026-06-05T08:25:46+08:00 approved。本轮未伪造 `spawn_agent` agent_id/thread_id。
+- 实现文件清单：`trading/qmt_auth.py`、`trading/qmt_redaction.py`、`tests/test_cr020_hmac_pairing_allowlist_scope.py`、`process/checks/CP6-CR020-S04-hmac-pairing-allowlist-scope-CODING-DONE.md`、`process/stories/CR020-S04-hmac-pairing-allowlist-scope.md`、`DEV-LOG.md`。
+- 实现摘要：`qmt_auth.py` 追加 CR020 schema、request source context、allowlist decision、scope decision、进程内 TTL nonce replay store、S03-compatible HMAC header provider、auth admission decision、no-auth runtime wrapper 和 zero counters；保留 CR019 `PairingApproval`、`QmtAuthConfig`、`validate_hmac_request` 等接口兼容。`qmt_redaction.py` 追加 response/error/diagnostics redaction decision，redaction failed 时返回 blocked 摘要，不允许 raw fallback。
+- 关键决策与偏差：nonce store 采用 CP5 已接受的进程内 TTL 边界，不引入持久化或依赖；S04 未修改 `trading/qmt_client.py`、`trading/qmt_gateway_service.py`、`trading/qmt_endpoint_matrix.py`、`trading/qmt_gateway_config.py`、`pyproject.toml` 或 `uv.lock`；Story 卡片和 CP6 记录了 CP5/ADR 聚合状态滞后的事实。
+- 已知限制：HMAC pass 只表示调用方识别与 endpoint scope 通过，不授权交易、账户写入、simulation/live、真实 `query_positions`、gateway 启动、QMT 连接或 provider/lake/publish；多进程 / 多实例 nonce 持久防重放仍按 `OPEN-CR020-S04-01` 后续 CR 或 CP5 修订处理。
+- 验证命令：`uv run --python 3.11 pytest -q tests/test_cr020_hmac_pairing_allowlist_scope.py tests/test_cr019_qmt_pairing_hmac_auth.py`，结果 `26 passed in 0.10s`。
+- 验证命令：`uv run --python 3.11 pytest -q tests/test_cr019_qmt_gateway_run_gates.py`，结果 `14 passed in 0.08s`。
+- 静态自检：`uv run --python 3.11 python -m py_compile trading/qmt_auth.py trading/qmt_redaction.py tests/test_cr020_hmac_pairing_allowlist_scope.py` 退出码 0；`git diff --check -- trading/qmt_auth.py trading/qmt_redaction.py tests/test_cr020_hmac_pairing_allowlist_scope.py` 退出码 0，无输出。
+- CP6：`process/checks/CP6-CR020-S04-hmac-pairing-allowlist-scope-CODING-DONE.md`，结论 `PASS`；Story 已推进到 `ready-for-verification`，等待 meta-po 路由 meta-qa 执行 CP7。
+- meta-qa 验证入口：复跑上述两个 pytest 命令；重点检查 allowlist missing/mismatch/public source、HMAC missing/mismatch/expired、secret unavailable、nonce replay、scope insufficient、redaction failed 全部 blocked 且 adapter/QMT/trading/account-write/provider/lake/publish counters 为 0；检查 provider diagnostics 不含 raw secret/signature/nonce。
+- 真实操作计数：`credential_read=0`、`gateway_start=0`、`service_bind=0`、`gateway_socket_open=0`、`qmt_operation=0`、`qmt_api_call=0`、`xtquant_import=0`、`real_order=0`、`account_write=0`、`provider_fetch=0`、`lake_write=0`、`broker_lake_write=0`、`publish=0`、`simulation_or_live_run=0`、`raw_fallback=0`。
+- BLOCKING：无。
+
+## 2026-06-05 - CR020-S01/S02 gateway runtime admission 与 session ready gate 基础合同实现完成
+
+- Story：`CR020-S01-windows-gateway-runtime-admission`、`CR020-S02-server-qmt-login-session`；Wave：`CR020-W1-GATEWAY-RUNTIME-SESSION`。
+- 执行 handoff：`process/handoffs/META-DEV-CR020-S01-S02-IMPLEMENT-2026-06-05.md`；handoff frontmatter `dispatch.mode=spawn_agent`、`tool_name=multi_agent_v1.spawn_agent`、agent_name=`dev-yang`、agent_id/thread_id=`019e952d-1570-7862-a2f0-e8e4ca5f9518`。
+- 实现文件清单：`trading/qmt_gateway_cli.py`、`trading/qmt_gateway_session.py`、`trading/qmt_gateway_config.py`、`trading/qmt_gateway_service.py`、`.env.example`、`tests/test_cr020_windows_gateway_runtime_admission.py`、`tests/test_cr020_server_qmt_login_session.py`、`process/checks/CP6-CR020-S01-windows-gateway-runtime-admission-CODING-DONE.md`、`process/checks/CP6-CR020-S02-server-qmt-login-session-CODING-DONE.md`、`DEV-LOG.md`。
+- 实现摘要：S01 新增 S 端 command matrix、optional Typer adapter、runtime flags、runtime admission decision、runtime action plan、health/diagnostics wrapper 和 zero counters；Typer 缺失时返回 `typer_dependency_missing`，模块 import 不失败。S02 新增 `QmtSessionState`、`QmtSessionBlockedReason`、`QmtCredentialRef`、`QmtSessionConfig`、`QmtSessionSnapshot`、`QmtSessionGateResult`、`QmtLoginAdapter` protocol、login plan、ready gate、diagnostics 和 session safety counters。
+- 关键决策与偏差：按 CP5 DQ-CP5-CR020-03 采用 Typer optional adapter，不修改 `pyproject.toml` / `uv.lock`；`trading/qmt_gateway_config.py` 与 `trading/qmt_gateway_service.py` 只做 additive 扩展，CR019 lifecycle/config 兼容回归通过；并行 S04 已将 `credential_ref` 加入 redaction 敏感 key，本实现兼容该收紧，S02 公开 `credential_ref` 统一输出 `[REDACTED]`。用户给定主写入范围不包含 Story 卡片 / `STATE.md`，因此状态回写留给 meta-po。
+- 已知限制：本轮只交付代码合同和 fixture-only 测试，不读取真实 `.env` / `.env.*`，不启动 gateway，不绑定端口，不打开 socket，不连接 QMT / MiniQMT / XtQuant，不执行真实 `query_positions`，不交易，不账户写入，不执行 provider/lake/publish；Windows 实机 QMT 登录和 ready 信号仍需用户按后续手册手动验证。
+- 验证命令：`uv run --python 3.11 pytest -q tests/test_cr020_windows_gateway_runtime_admission.py tests/test_cr020_server_qmt_login_session.py`，结果 `20 passed in 0.08s`。
+- 兼容回归：`uv run --python 3.11 pytest -q tests/test_cr019_qmt_gateway_lifecycle.py`，结果 `9 passed in 0.06s`。
+- 静态自检：`uv run --python 3.11 python -m py_compile trading/qmt_gateway_cli.py trading/qmt_gateway_session.py trading/qmt_gateway_config.py trading/qmt_gateway_service.py tests/test_cr020_windows_gateway_runtime_admission.py tests/test_cr020_server_qmt_login_session.py` 退出码 0，无输出。
+- CP6：`process/checks/CP6-CR020-S01-windows-gateway-runtime-admission-CODING-DONE.md`、`process/checks/CP6-CR020-S02-server-qmt-login-session-CODING-DONE.md`，结论均为 `PASS`。
+- meta-qa 验证入口：复跑上述两个 CR020 定向 pytest 和 CR019 lifecycle 回归；重点检查 command matrix 六命令、Typer missing fail-closed、start/serve/bind/public bind blocked、session not ready 阻断 `query_positions`、`.env.example` placeholder-only、AST 禁止导入和所有 forbidden counters 为 0。
+- 真实操作计数：`service_start=0`、`service_start_count=0`、`service_bind=0`、`port_bind_count=0`、`credential_read=0`、`qmt_login_call=0`、`qmt_operation=0`、`qmt_api_call=0`、`xtquant_import=0`、`query_positions_adapter_call=0`、`real_order=0`、`account_write=0`、`provider_fetch=0`、`lake_write=0`、`broker_lake_write=0`、`publish=0`、`simulation_or_live_run=0`、`gateway_socket_open=0`、`http_client_call=0`。
+- BLOCKING：无。
+
+## 2026-06-05 - CR020-S05/S06 query_positions runtime 与手工安装调试手册实现完成
+
+- Story：`CR020-S05-query-positions-readonly`、`CR020-S06-docs-runbook-cp7-real-machine-validation`。
+- 执行入口：CP5 全量 LLD 人工稿 `checkpoints/CP5-CR020-QMT-GATEWAY-READONLY-LLD-BATCH.md` 已 approved；S01/S02、S03、S04 由并行 meta-dev 子 agent 完成后，主线程串行集成 S05/S06。
+- 实现文件清单：`trading/qmt_endpoint_matrix.py`、`trading/qmt_gateway_contracts.py`、`trading/qmt_gateway_service.py`、`trading/qmt_client.py`、`trading/qmt_auth.py`、`trading/qmt_runtime.py`、`trading/qmt_runtime_cli.py`、`.env.example`、`docs/QMT-GATEWAY-INSTALL.md`、`docs/QMT-C-S-BRIDGE-RUNBOOK.md`、`tests/test_cr020_query_positions_readonly.py`、`tests/test_cr020_runtime_manual_validation.py`、`tests/test_cr020_docs_runbook_no_authorization.py`、`tests/test_cr019_qmt_gateway_lifecycle.py`、`process/checks/CP6-CR020-S05-query-positions-readonly-CODING-DONE.md`、`process/checks/CP6-CR020-S06-docs-runbook-cp7-real-machine-validation-CODING-DONE.md`。
+- 实现摘要：S05 新增 CR020 readonly endpoint overlay、`query_positions` request / redacted payload / counters / success-blocked result、gateway dispatcher gate chain、C 端 REST body bytes 与 HMAC dataclass request 兼容；新增 runtime 模块和 Typer CLI，支持用户手工在 Windows S 端 `serve`、Linux C 端 `query-positions`。S06 在 gateway install doc 与 C/S runbook 追加 Windows / Linux 手工安装调试手册、CP7 evidence schema、排障表和不授权边界。
+- 关键决策与偏差：为满足用户“手动安装到 Windows 后用 CLI 验证 QMT 接口”的要求，新增实际 runtime 模块；真实运行仍只由用户手动执行。`pyproject.toml` / `uv.lock` 未修改；Typer 通过 `uv run --with typer` 手工注入；XtQuant 只在 runtime CLI serve 时懒加载，不在离线合同模块 import。
+- 已知限制：当前自动验证只覆盖 fixture/static/py_compile；未在本机启动 gateway、未读取真实 `.env`、未连接 QMT、未执行真实 `query_positions`。Windows 实机验证需用户按文档手工执行并提交脱敏 evidence。
+- 验证命令：`uv run --python 3.11 pytest -q tests/test_cr020_query_positions_readonly.py tests/test_cr020_runtime_manual_validation.py`，结果 `9 passed in 0.11s`。
+- 验证命令：`uv run --python 3.11 pytest -q tests/test_cr020_docs_runbook_no_authorization.py tests/test_cr019_docs_runbook_boundary.py tests/test_cr019_qmt_gateway_lifecycle.py`，结果 `22 passed in 0.15s`。
+- 聚合验证：`uv run --python 3.11 pytest -q tests/test_cr020_windows_gateway_runtime_admission.py tests/test_cr020_server_qmt_login_session.py tests/test_cr020_linux_client_rest_transport.py tests/test_cr020_hmac_pairing_allowlist_scope.py tests/test_cr020_query_positions_readonly.py tests/test_cr020_runtime_manual_validation.py tests/test_cr020_docs_runbook_no_authorization.py tests/test_cr019_qmt_gateway_lifecycle.py tests/test_cr019_docs_runbook_boundary.py`，结果 `75 passed in 0.33s`。
+- 静态自检：`uv run --python 3.11 python -m py_compile trading/qmt_gateway_contracts.py trading/qmt_endpoint_matrix.py trading/qmt_gateway_service.py trading/qmt_client.py trading/qmt_auth.py trading/qmt_runtime.py trading/qmt_runtime_cli.py tests/test_cr020_query_positions_readonly.py tests/test_cr020_runtime_manual_validation.py tests/test_cr020_docs_runbook_no_authorization.py` 退出码 0；`git diff --check -- <CR020 target files>` 退出码 0。
+- CP6：`process/checks/CP6-CR020-S05-query-positions-readonly-CODING-DONE.md`、`process/checks/CP6-CR020-S06-docs-runbook-cp7-real-machine-validation-CODING-DONE.md`，结论均为 `PASS`。
+- meta-qa 验证入口：`meta-qa/qa-he` 已调度执行 CR020 fixture/static CP7；禁止读取真实 `.env`、启动 gateway、绑定端口或连接 QMT。
+- 真实操作计数：`credential_read=0`、`service_start=0`、`service_bind=0`、`gateway_socket_open=0`、`qmt_operation=0`、`qmt_api_call=0`、`xtquant_import=0`、`real_order=0`、`real_cancel=0`、`account_write=0`、`provider_fetch=0`、`lake_write=0`、`broker_lake_write=0`、`publish=0`、`simulation_or_live_run=0`、`raw_positions_emit=0`。
+- BLOCKING：无；真实 Windows/QMT 手工验证待用户执行。
+
+## 2026-06-10 - CR038 第7章因子投资实践离线研究切片实现完成
+
+- 任务：CR-038 第7章因子投资实践、风险模型与组合优化；本轮按 meta-po 冲突预检边界执行，仅实现本地离线研究切片。meta-po 已完成 CR020 no-overlap 冲突预检，并将 CR-038 formal tracking 激活为 `active-story-execution`。
+- 实现文件清单：`engine/chapter7_factor_practice.py`、`scripts/run_chapter7_factor_practice.py`、`tests/test_chapter7_factor_practice.py`、`process/checks/CP6-CR038-CHAPTER7-FACTOR-PRACTICE-CODING-DONE.md`、`DEV-LOG.md`。
+- 实现摘要：新增第7章纯 pandas engine，消费本地 factor panel、labels 和 CR-037 `ROBUSTNESS-ADMISSION-SUMMARY`；只允许 `baseline` / `candidate` 进入 alpha score，`watch` 仅记录观察策略，`reject` / `needs-more-data` / `blocked_missing_evidence` 默认排除，缺少可消费资产时 fail-closed。组合层输出 `equal_weight_baseline` 与 `risk_adjusted_constrained`，并生成 portfolio metrics、risk exposure、performance attribution、turnover cost analysis、capacity / liquidity proxy 和 portfolio admission summary。
+- Runner 摘要：`scripts/run_chapter7_factor_practice.py` 默认写入 `reports/chapter7_factor_practice/<run_id>/` 和 `process/research/chapter7_factor_practice/<run_id>/`；产物包括 `alpha_scores.parquet`、`optimized_portfolios.parquet`、`portfolio_metrics.csv`、`risk_exposure.csv`、`performance_attribution.csv`、`turnover_cost_analysis.csv`、`capacity_liquidity_analysis.csv`、`CHAPTER7-RUN-REPORT.json/md` 和 `PORTFOLIO-ADMISSION-SUMMARY.json`。
+- 关键决策与偏差：容量 / 流动性采用本地因子代理 `size_total_market_cap` 与 `abnormal_turnover_21_252`，不读取 broker、分钟线、盘口或外部 provider；`PORTFOLIO-ADMISSION-SUMMARY` 的 `simulation_candidate=false`，只作为 CR-039 研究输入，不构成交易准入。
+- 已知限制：已执行本地 2000-2019 / 2020-2026 YTD runner，但仍只属于研究级组合实践；未触碰 QMT、simulation、live、provider、lake、publish、账户、订单、凭据或依赖变更。
+- 验证命令：`PYTHONPYCACHEPREFIX=/tmp/cr038-chapter7-pycompile uv run --python 3.11 python -m py_compile engine/chapter7_factor_practice.py scripts/run_chapter7_factor_practice.py tests/test_chapter7_factor_practice.py`，无输出，通过。
+- 验证命令：`PYTHONDONTWRITEBYTECODE=1 PYTEST_ADDOPTS='-p no:cacheprovider' uv run --python 3.11 pytest -q tests/test_chapter7_factor_practice.py`，结果 `6 passed in 1.10s`。
+- 章节回归：`PYTHONDONTWRITEBYTECODE=1 PYTEST_ADDOPTS='-p no:cacheprovider' uv run --python 3.11 pytest -q tests/test_chapter4_factor_models.py tests/test_chapter5_anomalies.py tests/test_chapter6_factor_robustness.py tests/test_chapter7_factor_practice.py`，结果 `18 passed in 5.61s`。
+- 本地研究跑批：`PYTHONDONTWRITEBYTECODE=1 uv run --python 3.11 python scripts/run_chapter7_factor_practice.py --run-id run-cr038-chapter7-factor-practice-20260610`，结果 `status=PASS`；核心产物在 `process/research/chapter7_factor_practice/run-cr038-chapter7-factor-practice-20260610/` 与 `reports/chapter7_factor_practice/run-cr038-chapter7-factor-practice-20260610/`。
+- CP6：`process/checks/CP6-CR038-CHAPTER7-FACTOR-PRACTICE-CODING-DONE.md`，结论 `PASS`。
+- meta-qa 验证入口：复跑上述 pytest；重点检查 CR-037 baseline/candidate 消费、watch/reject 隔离、reject-only fail-closed、多档成本敏感性、容量代理字段、报告 / summary 字段和 operation_counts 全 0。
+- 真实操作计数：`external_project_clone=0`、`external_project_install=0`、`external_project_run=0`、`source_migration_or_vendor=0`、`dependency_change=0`、`provider_fetch=0`、`lake_write=0`、`catalog_publish=0`、`reports_overwrite=0`、`qmt_operation=0`、`simulation_or_live=0`、`account_or_order_operation=0`、`credential_read=0`。
+- BLOCKING：无；后续可由 meta-po 根据 QA 复核结论关闭 CR-038 或启动 CR-039 冲突预检。
+
+## 2026-06-11 - CR045 CP5 前全量 LLD 设计证据完成
+
+- 任务：基于 `process/handoffs/META-DEV-CR045-LLD-BATCH-2026-06-11.md`，按 `lld-designer` 工作流生成 CR045 CP5 前全量设计证据；本轮只写 LLD / technical-note / CP5 自动预检，不写实现代码。
+- 批次：`CR045-BRIDGE-BATCH-A`；Wave / 调度范围：S01-S05 full-lld，S06 technical-note。
+- 设计证据文件清单：
+  - `process/stories/CR045-S01-windows-bridge-security-boundary-LLD.md`
+  - `process/stories/CR045-S02-bridge-health-capabilities-skeleton-LLD.md`
+  - `process/stories/CR045-S03-wsl-linux-client-contract-and-network-precheck-LLD.md`
+  - `process/stories/CR045-S04-readonly-probe-allowlist-and-blocked-first-LLD.md`
+  - `process/stories/CR045-S05-redaction-and-no-operation-static-validation-LLD.md`
+  - `process/stories/CR045-S06-user-runbook-and-follow-up-gates.md#技术说明`
+- CP5 自动预检文件清单：
+  - `process/checks/CP5-CR045-S01-windows-bridge-security-boundary-LLD-IMPLEMENTABILITY.md`
+  - `process/checks/CP5-CR045-S02-bridge-health-capabilities-skeleton-LLD-IMPLEMENTABILITY.md`
+  - `process/checks/CP5-CR045-S03-wsl-linux-client-contract-and-network-precheck-LLD-IMPLEMENTABILITY.md`
+  - `process/checks/CP5-CR045-S04-readonly-probe-allowlist-and-blocked-first-LLD-IMPLEMENTABILITY.md`
+  - `process/checks/CP5-CR045-S05-redaction-and-no-operation-static-validation-LLD-IMPLEMENTABILITY.md`
+  - `process/checks/CP5-CR045-S06-user-runbook-and-follow-up-gates-TECHNICAL-NOTE-IMPLEMENTABILITY.md`
+- 设计摘要：S01 冻结 L1-L5 授权、zero secret custody、hard-off 和 no-operation counter baseline；S02 设计 health/capabilities schema 和 false flags；S03 设计 WSL/Linux client、fixture transport 和 network precheck；S04 设计 readonly probe skeleton、L4 未授权 blocked-first 和 negative fixtures；S05 设计 redaction evidence、artifact scan scope 和 forbidden counters；S06 technical-note 收敛 runbook、follow-up gates 和 CP8 wording。
+- Story 状态：S01-S06 均更新为 `lld-ready-for-review`；`lld_gate.status=ready-for-review`；`implementation_allowed=false`、`design_evidence_confirmed=false`、`real_runtime_authorized=false` 均保持不变。
+- clarification queue：未新增 LCQ；本轮无 `blocks_lld=true` item。CP2/CP3 已 approved 的 DQ 作为设计依据；S01-S06 均在设计证据中记录“无新增阻断灰区”或 technical-note 取舍记录。
+- 依赖类型与文件所有权：全部依赖均按 `contract` 处理；future implementation owner 仍为 S02 `engine/goldminer_bridge_contract.py` / shared contract tests、S03 client、S04 readonly probe、S05 static validation tests、S06 runbook。CP5 前未创建任何 future implementation file。
+- CP5 结果：6 份自动预检均为 `PASS`；阻断项 0，豁免项 0。默认 `process/context/CP5-LLD-CONTEXT.yaml` 缺失，按 handoff compact 输入和 CR045 scoped documents 执行，并在每份 CP5 中记录为 N/A。
+- 不授权边界：未读取 `.env`、token、account_id、账号、密码、session、cookie、private key 或 Windows credential files；未启动 Windows bridge runtime；未登录/连接 Goldminer；未查询账户/资金/持仓/委托/成交；未下单/撤单；未 simulation/live；未 provider/lake/publish。
+- 已知限制：CR045 当前只能进入 CP5 全量人工确认；CP5 approved 前不得实现。真实 Windows runtime、Goldminer readonly 字段、账号权限和 SDK 运行语义仍属于 L3/L4/L5 后续 gate，不阻塞 L2 skeleton 设计证据。
+- 下一步：meta-po 收齐并聚合本批次设计证据，生成 `process/checkpoints/CP5-CR045-BRIDGE-BATCH-A-LLD-BATCH.md` 并发起统一人工确认。
+
+## 2026-06-11 - CR045 Bridge Batch A CP7 验证完成
+
+- 任务：按 `process/handoffs/META-QA-CR045-CP7-VERIFY-2026-06-11.md` 对 CR045 Goldminer Windows Bridge Batch A 执行 CP7 验证；范围限定为 L2 skeleton / fixture / static / runbook。
+- 验证对象：`engine/goldminer_bridge_contract.py`、`engine/goldminer_bridge_client.py`、`engine/goldminer_bridge_probe.py`、4 个 `tests/test_cr045_goldminer_*.py`、`docs/goldminer/CR045-BRIDGE-RUNBOOK.md`、CP5/CP6/implementation/handoff/STATE 过程证据。
+- 验证命令：`PYTHONDONTWRITEBYTECODE=1 PYTEST_ADDOPTS='-p no:cacheprovider' uv run --python 3.11 pytest -q tests/test_cr045_goldminer_bridge_contract.py tests/test_cr045_goldminer_bridge_client.py tests/test_cr045_goldminer_readonly_probe.py tests/test_cr045_goldminer_no_operation_static.py`，结果 `24 passed in 0.10s`。
+- 语法检查：`PYTHONDONTWRITEBYTECODE=1 uv run --python 3.11 python -m py_compile engine/goldminer_bridge_contract.py engine/goldminer_bridge_client.py engine/goldminer_bridge_probe.py`，退出码 0，无输出。
+- 静态检查：`git diff --check` 退出码 0，无输出；CR045 code forbidden import/call `rg` review 无实现层 SDK/network/process/runtime 调用，唯一命中为 client docstring 禁止说明。
+- CP7 产物：`docs/quality/VERIFICATION-REPORT-CR045.md`、`docs/quality/TEST-REPORT-CR045.md`、`docs/quality/REVIEW-CR045.md`、`docs/quality/FIXES-CR045.md`、`process/checks/CP7-CR045-BRIDGE-BATCH-A-VERIFICATION-DONE.md`。
+- 结论：`PASS_WITH_RISK`；无 P0/P1 缺陷，无 meta-dev 回修项。
+- 剩余风险：L3 Windows bridge runtime、L4 real readonly、L5 submit/cancel/simulation/live 仍未授权；这些是 CP8 风险接受 / 不授权输入，不是本轮 L2 blocker。
+- 不授权边界：未读取 `.env` / `.env.*`、token、account_id、账号、密码、session、cookie、private key；未启动 Windows bridge runtime；未导入或调用真实 `gm` / `gmtrade` runtime；未登录/连接 Goldminer 或 broker；未查询账户/cash/position/order/fill；未下单、撤单、simulation/live、provider fetch、lake write 或 catalog publish。

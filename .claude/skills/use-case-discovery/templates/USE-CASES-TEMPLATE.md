@@ -51,7 +51,7 @@ total_use_cases: N
 | `review_policy` | <none / light / strict> | 决定评审强度 |
 | `delivery_routing.mode` | <meta-flow-delivery / project-readme-contract / proposed-output> | 交付出口来源；production 不默认写当前仓库 `delivery/` |
 | `delivery_routing.output_root` | <路径或空> | 已确认交付输出根目录；未确认时保持空 |
-| `delivery_routing.source` | <meta-self-dev / README / docs / user-confirmed> | 输出目录决策依据 |
+| `delivery_routing.source` | <meta-self-dev / existing-directory / README / docs / user-confirmed> | 输出目录决策依据 |
 
 > 若 `target_artifact_type = mixed`，需在本节补充拆分建议与原因，不得只写结果。
 
@@ -69,7 +69,7 @@ total_use_cases: N
 | 确认项 | 结论 | 确认来源 |
 |---|---|---|
 | 场景主体 | <已确认 / 待确认> | <用户回复 / README / docs> |
-| 交付出口 | <已确认 / 待确认> | <用户回复 / README / docs> |
+| 交付出口 | <已确认 / 待确认> | <用户回复 / existing-directory / README / docs> |
 | 主选方案 | <OPT-*> | <用户回复> |
 
 ## Scenario Gray Areas
@@ -89,6 +89,14 @@ total_use_cases: N
 | 时间 | 用户选择 | 处理方式 | 确认记录 |
 |---|---|---|---|
 | <YYYY-MM-DD> | <选择的 SGA-*> | <深入讨论 / deferred / N/A> | <用户确认或 freeform 复述确认> |
+
+## 用户可见场景确认证据
+
+> 标准模式下至少 1 条 `SGQ-*` 记录必须为 `confirmed`。该表证明 Agent 没有只通过后台分析静默生成场景。
+
+| Question ID | 问题 | 选项 / 候选理解 | 推荐方案 | 用户回答 | 复述确认 | 影响面 | 来源 | 状态 |
+|---|---|---|---|---|---|---|---|---|
+| SGQ-001 | <需要用户确认的场景主体 / 真实意图 / 交付出口问题> | <2-4 个选项或 freeform> | <推荐项> | <用户原话或摘要> | <复述后的确认理解> | scope / validation / delivery / gate | <REQUEST / README / CR / SGA> | asked / answered / confirmed / n/a |
 
 ## Deferred Ideas
 

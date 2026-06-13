@@ -8,7 +8,7 @@ argument-hint: "REQUIREMENTS.md 路径"
 user-invokable: true
 status: active
 ---
-<!-- myflow-managed: version=1.0.0 canonical-commit=fe24c81 generated=2026-05-28T13:51:34Z -->
+<!-- myflow-managed: version=1.0.0 canonical-commit=67b82d1 generated=2026-06-13T09:11:24Z -->
 
 ## 目标
 
@@ -26,7 +26,7 @@ status: active
 
 ## 必须读取的输入
 
-- `process/REQUIREMENTS.md`
+- `docs/product/REQUIREMENTS.md`
 - 关联 CR（若存在）
 - 已知澄清结论与范围限制
 
@@ -44,7 +44,7 @@ status: active
 
 ## 输出文件 / 输出模板
 
-输出为更新后的 `process/REQUIREMENTS.md`；不直接依赖模板文件路径，只依赖现有文档内容契约。
+输出为更新后的 `docs/product/REQUIREMENTS.md`；不直接依赖模板文件路径，只依赖现有文档内容契约。
 
 ## 约束
 

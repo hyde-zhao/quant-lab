@@ -26,7 +26,9 @@ target:
     - "process/handoffs/META-DOC-CR015-CR016-CR017-DOCUMENTATION-2026-05-28.md"
 manual_checkpoint: "checkpoints/CP8-CR015-CR016-CR017-DELIVERY-READINESS.md"
 auto_final_authorization: false
-manual_review_status: "pending"
+manual_review_status: "approved"
+manual_reviewed_by: "user"
+manual_reviewed_at: "2026-06-05T23:11:48+08:00"
 ---
 
 # CP8 CR015 / CR016 / CR017 交付就绪门自动预检结果
@@ -81,9 +83,9 @@ manual_review_status: "pending"
 | 交付物 | 路径 | 状态 | 说明 |
 |---|---|---|---|
 | CP8 自动预检 | `process/checks/CP8-CR015-CR016-CR017-DELIVERY-READINESS.md` | PASS | 本文件。 |
-| CP8 人工终验稿 | `checkpoints/CP8-CR015-CR016-CR017-DELIVERY-READINESS.md` | pending | 等待用户审查。 |
+| CP8 人工终验稿 | `checkpoints/CP8-CR015-CR016-CR017-DELIVERY-READINESS.md` | approved | 用户已接受推荐方案。 |
 | Story 状态汇总 | `process/STORY-STATUS.md` | PASS | 已更新受控 verified、S05/S06 later-gated 和 CP8 pending。 |
-| 开发计划状态 | `process/DEVELOPMENT-PLAN.yaml` | PASS | 顶部状态已更新为 controlled offline verified pending CP8。 |
+| 开发计划状态 | `process/DEVELOPMENT-PLAN.yaml` | PASS | 顶部状态已更新为 controlled offline verified，并在用户人工终验后关闭。 |
 | 用户文档 | `README.md`、`docs/USER-MANUAL.md` | PASS | 已刷新 QMT / 复权 / staged activation 当前状态。 |
 | QMT / 复权文档 | `docs/QMT-TRADING-RUNBOOK.md`、`docs/QMT-SIMULATION-LIVE-RUNBOOK.md`、`docs/QMT-INCIDENT-PLAYBOOK.md`、`docs/ADJUSTMENT-POLICY-MIGRATION.md` | PASS | 已覆盖 foundation、simulation/live gate、incident 和复权迁移边界。 |
 
@@ -93,4 +95,4 @@ manual_review_status: "pending"
 - 阻断项：0
 - 豁免项：0
 - 自动终验授权：`false`
-- 下一步：请审查 `checkpoints/CP8-CR015-CR016-CR017-DELIVERY-READINESS.md`；用户 approve 后才可关闭 CR015/CR016/CR017 当前受控离线交付批次。CP8 不授权真实 QMT、simulation、live_readonly、small_live、scale_up、真实抓取、真实写湖或 publish。
+- 下一步：用户已在 2026-06-05T23:11:48+08:00 接受推荐方案；关闭 CR015/CR016/CR017 当前受控离线交付批次。CP8 不授权真实 QMT、simulation、live_readonly、small_live、scale_up、真实抓取、真实写湖或 publish。

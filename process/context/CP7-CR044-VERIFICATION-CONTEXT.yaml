@@ -1,0 +1,83 @@
+context_id: CP7-CR044-VERIFICATION-CONTEXT
+cr_id: CR-044
+phase: story-execution
+gate: CP7
+status: ready
+read_profile: compact
+generated_at: '2026-06-11T12:13:24+08:00'
+owner: meta-po
+source_files:
+  - process/context/CP6-CR044-IMPLEMENTATION-CONTEXT.yaml
+  - process/handoffs/META-DEV-CR044-IMPLEMENT-2026-06-11.md
+  - process/checks/CP6-CR044-S01-authorization-and-secret-boundary-CODING-DONE.md
+  - process/checks/CP6-CR044-S02-admission-gate-and-capability-state-CODING-DONE.md
+  - process/checks/CP6-CR044-S03-readonly-query-field-mapping-blocked-first-CODING-DONE.md
+  - process/checks/CP6-CR044-S04-submit-cancel-kill-switch-contract-CODING-DONE.md
+  - process/checks/CP6-CR044-S05-reconciliation-and-redacted-evidence-CODING-DONE.md
+  - process/checks/CP6-CR044-S06-runbook-and-no-real-operation-guardrails-CODING-DONE.md
+verification_scope:
+  validation_mode: mixed
+  story_ids:
+    - CR044-S01
+    - CR044-S02
+    - CR044-S03
+    - CR044-S04
+    - CR044-S05
+    - CR044-S06
+  code_targets:
+    - engine/broker_adapter.py
+    - tests/test_cr044_goldminer_admission_guard.py
+  implementation_evidence:
+    - process/stories/CR044-S01-authorization-and-secret-boundary-IMPLEMENTATION.md
+    - process/stories/CR044-S02-admission-gate-and-capability-state-IMPLEMENTATION.md
+    - process/stories/CR044-S03-readonly-query-field-mapping-blocked-first-IMPLEMENTATION.md
+    - process/stories/CR044-S04-submit-cancel-kill-switch-contract-IMPLEMENTATION.md
+    - process/stories/CR044-S05-reconciliation-and-redacted-evidence-IMPLEMENTATION.md
+    - process/stories/CR044-S06-runbook-and-no-real-operation-guardrails-IMPLEMENTATION.md
+  cp6_checks:
+    - process/checks/CP6-CR044-S01-authorization-and-secret-boundary-CODING-DONE.md
+    - process/checks/CP6-CR044-S02-admission-gate-and-capability-state-CODING-DONE.md
+    - process/checks/CP6-CR044-S03-readonly-query-field-mapping-blocked-first-CODING-DONE.md
+    - process/checks/CP6-CR044-S04-submit-cancel-kill-switch-contract-CODING-DONE.md
+    - process/checks/CP6-CR044-S05-reconciliation-and-redacted-evidence-CODING-DONE.md
+    - process/checks/CP6-CR044-S06-runbook-and-no-real-operation-guardrails-CODING-DONE.md
+  required_outputs:
+    - docs/quality/VERIFICATION-REPORT-CR044.md
+    - docs/quality/TEST-REPORT-CR044.md
+    - docs/quality/REVIEW-CR044.md
+    - docs/quality/FIXES-CR044.md
+    - process/checks/CP7-CR044-FIXTURE-STATIC-VERIFICATION-DONE.md
+    - process/handoffs/META-QA-CR044-CP7-2026-06-11.md
+verification_commands:
+  required:
+    - PYTHONDONTWRITEBYTECODE=1 PYTEST_ADDOPTS='-p no:cacheprovider' uv run --python 3.11 pytest -q tests/test_cr042_broker_adapter_contract.py tests/test_cr044_goldminer_admission_guard.py
+    - uv run --python 3.11 python scripts/check_cr_tracking_consistency.py --project-root .
+    - git diff --check -- engine/broker_adapter.py tests/test_cr044_goldminer_admission_guard.py process/stories/CR044-* process/checks/CP6-CR044-* process/checks/CP7-CR044-* docs/quality/*CR044*
+runtime_boundary:
+  real_runtime_authorized: false
+  forbidden_actions:
+    - credential_read
+    - login
+    - connect
+    - account_query
+    - cash_query
+    - position_query
+    - order_query
+    - fill_query
+    - order_submit
+    - order_cancel
+    - simulation_runtime
+    - live_runtime
+    - provider_fetch
+    - lake_write
+    - catalog_publish
+expected_risk_decision:
+  likely_result: PASS_WITH_RISK
+  reason: CR044 delivers offline blocked-first admission assets only; Goldminer readonly fields remain static candidate / unknown and not real_verified.
+read_expansion_log:
+  - at: '2026-06-11T12:13:24+08:00'
+    actor: meta-po
+    phase: story-execution
+    capsule_path: process/context/CP7-CR044-VERIFICATION-CONTEXT.yaml
+    expanded_to: CP6 context, CP6 checks, meta-dev implementation handoff
+    reason: CP6 passed; verification handoff must include implementation evidence, required validation commands, and runtime authorization boundary.

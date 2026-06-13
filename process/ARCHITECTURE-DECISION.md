@@ -4,12 +4,12 @@ confirmed: false
 confirmed_by: ""
 confirmed_at: ""
 source_hld: "process/HLD.md"
-source_hld_version: "2.9"
-story_plan_status: "cr030-story-plan-cp4-pass-pending-lld"
+source_hld_version: "3.0"
+story_plan_status: "cr020-story-plan-cp4-pass-pending-lld"
 created_at: "2026-05-14"
 created_by: "meta-se"
-active_change: "CR-030"
-secondary_change: "CR-019"
+active_change: "CR-020"
+secondary_change: "CR-030"
 cr004_revision_status: "draft-pending-cp3-cp4"
 cr004_confirmed: false
 cr005_revision_status: "draft-pending-cp3-cp4-rerun"
@@ -58,6 +58,9 @@ cr025_confirmed: false
 cr030_revision_status: "story-plan-cp4-pass-pending-lld"
 cr030_adr_range: "ADR-079..086"
 cr030_confirmed: false
+cr020_revision_status: "story-plan-cp4-pass-pending-lld"
+cr020_adr_range: "ADR-087..093"
+cr020_confirmed: false
 ---
 
 # 架构决策记录
@@ -91,6 +94,7 @@ cr030_confirmed: false
 | 2.0 | 2026-06-01 | meta-se | 按 CR-025 新增 ADR-074 至 ADR-077：冻结 Backtrader optional semantic reference 默认定位、模块级 reference/adapt/exclude 分类、GPLv3 源码级移植治理和 order intent draft / QMT 边界；本增量待 CP3 确认，不授权实现、依赖变更、Backtrader 运行、源码复制 / 移植、真实 broker / QMT / provider / lake / publish / simulation / live 或凭据读取 |
 | 2.0.1 | 2026-06-02 | meta-se | 按 CR-025 CP5 前定位澄清新增 ADR-078，并修订 ADR-074 / ADR-075：确认 Backtrader 只作为 execution semantic reference；多因子研究闭环（FactorSpec、FactorRunSpec、IC / RankIC、分层收益、多因子组合、实验追踪、策略准入包）另起后续 CR，参考 Qlib / Alphalens / vnpy.alpha，不并入 CR-025 |
 | 2.1 | 2026-06-03 | meta-se | 按 CR-030 CP3 approved 口径新增 ADR-079 至 ADR-086：冻结项目自有多因子研究闭环、外部项目 reference / optional Spike / exclude / forbidden migration 矩阵、schema provenance、FactorPanel / LabelWindow fail-closed、P0 可解释组合、manifest/catalog、StrategyAdmissionPackage draft handoff 和 CR-026 后置；本增量用于 CP4 Story Plan，不授权实现、依赖变更、外部项目运行、provider/lake/publish、QMT/simulation/live 或凭据读取 |
+| 2.2 | 2026-06-05 | meta-se | 按 CR-020 CP3 approved 口径新增 ADR-087 至 ADR-093：冻结 Windows gateway runtime 分层、gateway 唯一 QMT 服务端触达点、`.env` redacted credential_ref、QMT login/session ready gate、HMAC / allowlist / scope / nonce fail-closed、`query_positions` 单接口只读准入和 S 端依赖隔离；本增量用于 CP4 Story Plan，不授权 LLD、实现、依赖变更、gateway 启动、QMT 连接、真实 `.env` 读取、交易、账户写入、simulation/live、provider/lake/publish 或凭据输出 |
 
 ## Agent/Skill 组合方案
 
@@ -2030,6 +2034,223 @@ cr030_confirmed: false
 
 **回退点**：合同冻结且自有 runner 性能 / 表达力不足时，由 meta-po 启动 CR-026 冲突预检、CP2/CP3/CP5 和 per-run 授权。
 
+## ADR-087：CR-020 runtime 分层采用 S 端 Typer CLI、C 端 Typer CLI 验收面和 Python REST client 业务面
+
+**状态**：Approved by CR-020 CP3; active for CP4 Story Plan
+
+**决策**：CR-020 采用分层 runtime：Windows S 端使用 `uv run` Typer Python CLI 管理 gateway lifecycle / login / diagnostics / rollback；Linux C 端使用 `uv run` Typer Python CLI 仅执行 pairing / diagnostics / smoke / CP7 validation；业务 runtime 由 `trading/qmt_client.py` 中的 Python REST client 直接调用 gateway REST API。C 端 CLI 不作为业务 runtime，也不得让策略代码经 shell CLI 调用 gateway。
+
+**理由**：落实 HLD §36、DQ-CP3-CR020-01、DQ-CP3-CR020-02 和 CP2 DQ-CP2-CR020-04 的修订。该分层同时满足双端 CLI 框架一致、业务调用可类型化、超时 / 错误处理可控和 CP7 验收命令稳定。
+
+**接受影响**：
+
+- `CR020-S01` 拥有 S 端 lifecycle CLI 与 gateway runtime 准入边界。
+- `CR020-S03` 拥有 C 端 Python REST client 和 C 端 Typer CLI 验收面。
+- `CR020-S06` 必须在文档中区分 S 端命令、C 端验收命令和 Python REST runtime。
+
+**不接受影响**：
+
+- 不把 C 端 CLI 作为业务 runtime。
+- 不通过 PowerShell / CMD 或 shell wrapper 定义正式业务接口。
+- 不在 CP5 前实现、改依赖、启动 gateway 或连接 QMT。
+
+**备选方案**：
+
+| 方案 | 优点 | 缺点 | 结论 |
+|---|---|---|---|
+| CLI 作为业务 runtime | 命令入口统一 | 类型、超时、错误处理和安全边界弱；违背 CP3 | 不采用 |
+| 取消 C 端 CLI | 依赖少 | pairing / diagnostics / CP7 缺少稳定命令面 | 不采用 |
+
+**回写 HLD / Story**：`process/HLD.md` §36.1、§36.3、§36.5、§36.7；`CR020-S01`、`CR020-S03`、`CR020-S06`。
+
+**回退点**：若 Python REST client 不可实现，回退 CP3 重新选择 runtime；若 Typer 与 Windows gateway 或 Linux CLI 不兼容，CP5 前切换 Click / argparse 并重发对应决策。
+
+## ADR-088：Windows gateway 是唯一 QMT 服务端触达点
+
+**状态**：Approved by CR-020 CP3; active for CP4 Story Plan
+
+**决策**：CR-020 中所有 QMT / MiniQMT / XtQuant 触达必须位于 Windows gateway 进程边界内。Linux C 端和业务代码只能通过 Python REST client 调用 gateway REST API，不得导入、调用或直连 XtQuant / QMT SDK。gateway 负责统一承载 session ready、auth middleware、endpoint dispatcher 和 redaction layer。
+
+**理由**：落实 HLD §36.5 至 §36.7、DQ-CP3-CR020-01 和 DQ-CP3-CR020-06。单一服务端触达点可以把 Windows-only / gateway-only 依赖、凭据读取、QMT session 和安全审计隔离在 S 端。
+
+**接受影响**：
+
+- `CR020-S01` 冻结 gateway process boundary、bind / firewall / allowlist / lifecycle。
+- `CR020-S02` 在 gateway 内实现 login/session ready gate。
+- `CR020-S05` 只在 gateway dispatcher 中解锁 `query_positions`。
+
+**不接受影响**：
+
+- 不允许 Linux C 端导入 XtQuant。
+- 不允许策略层绕过 gateway 直连 QMT。
+- 不允许 gateway 缺少 auth / redaction / session gate 时转发真实请求。
+
+**备选方案**：
+
+| 方案 | 优点 | 缺点 | 结论 |
+|---|---|---|---|
+| C 端直连 XtQuant | 链路短 | 污染 Linux runtime，破坏 C/S 边界 | 不采用 |
+| 外部 Windows runtime | 依赖隔离最强 | 可审计性和 CP7 标准化较弱 | 作为 CR20-C 回退 |
+
+**回写 HLD / Story**：`process/HLD.md` §36.4、§36.5、§36.6、§36.7；`CR020-S01`、`CR020-S02`、`CR020-S05`。
+
+**回退点**：若 XtQuant 只能以外部运行环境承载，则切换 CR20-C，并保留 C 端 REST contract 与文档运行边界。
+
+## ADR-089：`.env` 凭据策略采用本地未跟踪真实值和 redacted `credential_ref`
+
+**状态**：Approved by CR-020 CP3; active for CP4 Story Plan
+
+**决策**：真实 QMT 登录值只允许保存在本地未跟踪 `.env`；仓库只允许 `.env.example` 占位变量；日志、文档、检查点、Story、LLD、测试证据和对话只能记录 redacted `credential_ref`、hash/ref 或占位名，不得输出账号、密码、token、session、交易密码、私钥或真实私有路径。
+
+**理由**：落实 DQ-CP3-CR020-03、CP2 DQ-CP2-CR020-03 和 HLD §36.1、§36.7、§36.18。用户要求 `.env` 存放账号密码，但项目必须把真实值排除在 Git、日志和检查点之外。
+
+**接受影响**：
+
+- `CR020-S02` 可规划 `.env.example` 占位和 credential_ref 脱敏合同。
+- `CR020-S06` 必须写清 `.env` 本地未跟踪和凭据不入库边界。
+- CP7 只检查脱敏证据和 forbidden leak 计数，不打印真实值。
+
+**不接受影响**：
+
+- 不读取、打印、解析或校验真实 `.env`。
+- 不把 `.env`、`.env.*`、credential files 或真实 secret 作为交付物。
+- 不把真实账户敏感信息写入 memory、checkpoint 或报告。
+
+**备选方案**：
+
+| 方案 | 优点 | 缺点 | 结论 |
+|---|---|---|---|
+| OS secret store | 安全性更高 | 实现和跨平台运维复杂 | 后续安全升级候选 |
+| 每次交互输入 | 不落盘 | 不利于服务启动和 CP7 复验 | 仅在 `.env` 风险不可接受时切换 |
+
+**回写 HLD / Story**：`process/HLD.md` §36.1、§36.7、§36.9、§36.13、§36.18；`CR020-S02`、`CR020-S06`。
+
+**回退点**：发现任何真实凭据泄露时立即停止推进、轮转凭据、清理日志，并回退 security redesign。
+
+## ADR-090：登录与 session ready gate 阻断所有只读查询前置
+
+**状态**：Approved by CR-020 CP3; active for CP4 Story Plan
+
+**决策**：gateway 启动后必须完成 QMT / MiniQMT / XtQuant login 和 session ready 判定。`session_ready=false`、login fail、session expired、QMT unavailable 或 `.env` 缺字段时，`query_positions` 必须返回 typed blocked / session_not_ready / transport_error，不得触达 QMT 查询。
+
+**理由**：落实 HLD §36.7、§36.9、§36.11、§36.12 和 DQ-CP3-CR020-01。只读查询触达真实 QMT 前必须证明服务端会话可用且失败路径 fail-closed。
+
+**接受影响**：
+
+- `CR020-S02` 是 `CR020-S05` 的 runtime / session 前置。
+- `CR020-S05` 的 endpoint dispatcher 必须消费 session ready gate。
+- CP7 需要覆盖 session not ready、login fail 和 rollback 后查询失败。
+
+**不接受影响**：
+
+- 不采用 lazy login 绕过 gateway ready 状态。
+- 不在 session not ready 时返回 positions payload。
+- 不把 health 可达误写为 QMT session ready。
+
+**备选方案**：
+
+| 方案 | 优点 | 缺点 | 结论 |
+|---|---|---|---|
+| lazy login on first query | 启动更快 | 查询路径承担凭据和登录失败风险 | 不采用 |
+| health-only | 风险最低 | 不满足 CR-020 最小只读闭环 | 回退治理备选 |
+
+**回写 HLD / Story**：`process/HLD.md` §36.9、§36.10、§36.11、§36.12；`CR020-S02`、`CR020-S05`。
+
+**回退点**：若 QMT login/session ready 不稳定且无法 fail-closed，回退 CR20-B health/login only 或转 Spike。
+
+## ADR-091：HMAC / allowlist / scope / nonce / redaction 全部 fail-closed
+
+**状态**：Approved by CR-020 CP3; active for CP4 Story Plan
+
+**决策**：CR-020 真实只读 gateway 默认启用 pairing_hmac，allowlist 必填，scope 按 endpoint 校验，nonce / timestamp 防重放，redaction 同时覆盖响应、错误、日志和 diagnostics。缺 header、签名错误、timestamp 超窗、nonce replay、source 不在 allowlist、scope 不足或 redaction 失败时均 blocked，且不得触达 QMT。
+
+**理由**：落实 DQ-CP3-CR020-04 和 HLD §36.3、§36.7、§36.9、§36.12。CR-020 触达真实只读 QMT API，必须同时具备身份、来源、权限和脱敏控制。
+
+**接受影响**：
+
+- `CR020-S04` 是 `CR020-S05` 的安全前置。
+- `CR020-S03` 必须支持 HMAC header、timeout 和 typed blocked result。
+- `CR020-S06` 必须把 wrong scope / replay / allowlist miss / redaction fail 写入 CP7 验收边界。
+
+**不接受影响**：
+
+- no-auth 只能用于 fixture / local_debug，不得连接真实 QMT readonly。
+- HMAC pass 不等于交易、账户写入、simulation 或 live 授权。
+- redaction 失败不得降级为原文输出。
+
+**备选方案**：
+
+| 方案 | 优点 | 缺点 | 结论 |
+|---|---|---|---|
+| no-auth local only | 简单 | 真实 readonly 风险不可接受 | 不采用 |
+| HMAC only | 调用方身份强 | 缺少网络来源和 scope 边界 | 不采用 |
+
+**回写 HLD / Story**：`process/HLD.md` §36.3、§36.7、§36.9、§36.12、§36.13；`CR020-S03`、`CR020-S04`、`CR020-S05`、`CR020-S06`。
+
+**回退点**：任一安全门无法稳定验证时，CP7 FAIL 并停机回滚；仅 fixture/local_debug 可局部豁免且不得连接 QMT。
+
+## ADR-092：`query_positions` 是 CR-020 唯一真实只读查询接口
+
+**状态**：Approved by CR-020 CP3; active for CP4 Story Plan
+
+**决策**：CR-020 只解锁 `POST /qmt/account/positions` / `query_positions`，scope 固定为 `qmt:positions:read`。除 health / capabilities / diagnostics 外，其他 QMT 查询、account、orders、trades、simulation、live、submit、cancel、account_write、broker_lake_write 均保持 blocked / later-gated，不进入本轮默认白名单。
+
+**理由**：落实 DQ-CP3-CR020-05 和 HLD §36.1、§36.7、§36.10、§36.14。`query_positions` 足以证明真实 QMT 只读连接闭环，同时限制敏感数据面和脱敏范围。
+
+**接受影响**：
+
+- `CR020-S05` 是唯一 endpoint 解锁 Story。
+- `CR020-S04` 的 scope registry 必须能表达 `qmt:positions:read`。
+- `CR020-S06` 必须声明其他 endpoint 后置或另起 CR。
+
+**不接受影响**：
+
+- 不将 `query_account`、orders、trades 或 simulation endpoint 纳入本轮。
+- 不把 account query 或 positions payload 写成交易准入证据。
+- 不允许未脱敏 positions payload 进入日志、报告或检查点。
+
+**备选方案**：
+
+| 方案 | 优点 | 缺点 | 结论 |
+|---|---|---|---|
+| `query_account` | 可替代证明只读连接 | 需重发接口决策，敏感度仍高 | 回退候选 |
+| health-only | 风险低 | 不满足至少一个查询接口目标 | 治理回退 |
+
+**回写 HLD / Story**：`process/HLD.md` §36.1、§36.7、§36.10、§36.14、§36.17；`CR020-S05`、`CR020-S06`。
+
+**回退点**：若 positions API 不稳定或无法脱敏，回退 CP3 改为 `query_account` 或收窄 health-only。
+
+## ADR-093：S 端 gateway / XtQuant 依赖隔离，CP5 前不改依赖
+
+**状态**：Approved by CR-020 CP3; active for CP4 Story Plan
+
+**决策**：CR-020 在 CP4 只冻结依赖隔离策略：S 端 gateway / QMT / XtQuant / server 依赖必须与 Linux C 端主业务 runtime 隔离；C 端只消费 Python REST client 和验收 CLI。CP5 前 `implementation_allowed=false` 且 `dependency_change_allowed=false`；CP5 LLD 再决定 extras / group / external Windows runtime 的具体落地。
+
+**理由**：落实 DQ-CP3-CR020-06、DQ-CP3-CR020-07 和 HLD §36.8、§36.12、§36.13。Windows-only / gateway-only 依赖污染 Linux 主环境会破坏研究主路径和 CI 兼容性。
+
+**接受影响**：
+
+- `CR020-S01`、`CR020-S02`、`CR020-S04` 只能在 CP5 LLD 中细化 S 端依赖隔离方案。
+- `CR020-S03` 的 Linux C 端 runtime 不承载 XtQuant / gateway server 依赖。
+- `CR020-S06` 必须记录分平台安装 / 运行边界和 CP5 前不改锁。
+
+**不接受影响**：
+
+- 本轮不修改 `pyproject.toml` 或 `uv.lock`。
+- 不把 XtQuant / gateway server 依赖加入 Linux C 端主依赖。
+- 不把 CP3 / CP4 通过解释为依赖安装授权或 gateway 启动授权。
+
+**备选方案**：
+
+| 方案 | 优点 | 缺点 | 结论 |
+|---|---|---|---|
+| 主依赖统一安装 | 简单 | 污染 Linux C 端，兼容风险高 | 不采用 |
+| 完全外部 Windows runtime | 依赖最干净 | 审计和 CP7 标准化较弱 | 作为 CR20-C 回退 |
+
+**回写 HLD / Story**：`process/HLD.md` §36.3、§36.8、§36.12、§36.13、§36.17；`CR020-S01`、`CR020-S02`、`CR020-S03`、`CR020-S06`。
+
+**回退点**：隔离不可行时切换外部 Windows runtime；Typer 不兼容时切 Click / argparse；任何依赖变更必须等 CP5 LLD 批次人工确认。
+
 ## 设计确认点（需人工确认）
 
 | ID | 确认点 | 默认规划 | 影响范围 | 状态 |
@@ -2115,6 +2336,11 @@ cr030_confirmed: false
 | AD-Q79 | 是否接受 CR-030 CP5 前 implementation_allowed=false 且真实操作执行计数为 0 | 默认接受；本轮只做 Story Plan / CP4，不做 LLD、不实现、不改依赖、不运行外部项目、不触发 provider/lake/publish/QMT/simulation/live、不读取凭据 | ADR-079..086、REQ-182、CP3 DQ-CP3-CR030-05 | CP4_AUTO_PASS_PENDING_CP5 |
 | AD-Q80 | 是否接受 CR-026 Qlib runner 继续后置，且 optimizer / ML workflow / vectorbt / PyBroker / RQAlpha / vn.py 均不进入 CR-030 P0 | 默认接受；合同冻结后由 meta-po 单独启动 CR-026 或 bounded Spike，重新走冲突预检、CP2/CP3/CP5 和运行授权 | ADR-080、ADR-083、ADR-086、REQ-184 | CP4_AUTO_PASS_PENDING_CP5 |
 | AD-Q81 | 是否接受 StrategyAdmissionPackage 只输出研究准入证据和 `order_intent_draft_v1` 草稿，不构成 QMT / simulation / live 授权 | 默认接受；CR-020..CR-024 仍需独立 CR 和 per-run authorization，`qmt_api_call`、`real_order`、`account_query` 均为 0 | ADR-085、REQ-181、REQ-182、CP3 DQ-CP3-CR030-06 | CP4_AUTO_PASS_PENDING_CP5 |
+| AD-Q82 | 是否接受 CR-020 Story Plan 采用 6 个 Story、4 个 Wave 和 1 个全量 LLD 批次 | 默认接受：S01 Windows gateway runtime / admission，S02 Server QMT login / session，S03 Linux client REST transport，S04 HMAC pairing / allowlist / scope，S05 `query_positions` read-only，S06 docs / runbook / CP7 real-machine validation；LLD 批次为 `CR020-QMT-GATEWAY-READONLY-BATCH-A` | ADR-087..093、HLD §36.17、CP3 DQ-CP3-CR020-01..07 | CP4_AUTO_PASS_PENDING_CP5 |
+| AD-Q83 | 是否接受 CR-020 CP5 前 `implementation_allowed=false` 且不授权 LLD、实现、依赖变更或运行 | 默认接受；本轮只做 Story Plan / CP4，不做 LLD、不实现、不改 `pyproject.toml` / `uv.lock`、不启动 gateway、不绑定端口、不连接 QMT / MiniQMT / XtQuant、不读取真实 `.env`、不输出凭据、不交易、不账户写入、不 simulation/live、不 provider/lake/publish/reports overwrite | ADR-087、ADR-089、ADR-093、CP3 DQ-CP3-CR020-01、DQ-CP3-CR020-07 | CP4_AUTO_PASS_PENDING_CP5 |
+| AD-Q84 | 是否接受 `query_positions` 是 CR-020 唯一真实只读查询接口，scope 固定为 `qmt:positions:read` | 默认接受；health/session/capabilities 仅服务准入，其他 QMT endpoint、订单、撤单、改单、账户写入、simulation/live 和 broker lake 写入均保持 blocked / later-gated | ADR-090、ADR-091、ADR-092、HLD §36.4、§36.9、§36.11、CP3 DQ-CP3-CR020-05 | CP4_AUTO_PASS_PENDING_CP5 |
+| AD-Q85 | 是否接受 `.env` 使用本地未跟踪真实值和 redacted `credential_ref` 策略 | 默认接受；Story、LLD、日志、报告、runbook、CP7 evidence 只允许 placeholder / `credential_ref`，不得读取、打印、解析、校验或泄露账号、密码、token、session、交易密码、私钥或真实私有路径 | ADR-089、ADR-090、ADR-091、HLD §36.9、CP3 DQ-CP3-CR020-03 | CP4_AUTO_PASS_PENDING_CP5 |
+| AD-Q86 | 是否接受 HMAC / allowlist / scope / nonce / redaction 全部 fail-closed，并将 CP7 实机验收限定为只读持仓查询证据 | 默认接受；鉴权失败、allowlist 不匹配、scope 不足、nonce replay、session not ready、日志脱敏失败时 adapter call / query / real operation 均为 0；CP7 只验证 Windows S 端 + Linux C 端的只读持仓查询链路，不构成交易或账户写入授权 | ADR-091、ADR-092、HLD §36.10、§36.11、§36.14、CP3 DQ-CP3-CR020-04、DQ-CP3-CR020-06 | CP4_AUTO_PASS_PENDING_CP5 |
 
 ## 变更记录
 
@@ -2143,3 +2369,4 @@ cr030_confirmed: false
 | 2026-06-01 | 按 CR-025 新增 ADR-074 至 ADR-077，并补齐设计确认点 AD-Q71..AD-Q76 | 用户批准 CR-025 CP2 并要求 meta-se 分析本地 Backtrader GPLv3 项目的模块级借鉴 / 适配 / 移植候选 / 禁止移植边界 | 需要由 meta-po 发起 CR-025 CP3 人工审查；CP3 approve 前不得进入 Story Plan、LLD 或实现；本轮不授权 Backtrader 运行、源码复制 / 移植、依赖变更、真实 broker / QMT / provider / lake / publish / simulation / live 或凭据读取 |
 | 2026-06-02 | 按 CR-025 CP5 前定位澄清新增 ADR-078，并修订 ADR-074 / ADR-075 | 用户确认系统核心定位是多因子策略研究和回测，Backtrader 只作为 lightweight execution engine 的执行语义参考 | 保持 CR025 6 Story / 4 Wave / 1 LLD batch 不变；meta-dev 需刷新受影响 LLD 文案，meta-po 需更新 CP5 Decision Brief / launch message，明确多因子研究闭环另起后续 CR |
 | 2026-06-03 | 按 CR-030 CP3 approved 口径新增 ADR-079 至 ADR-086 与 AD-Q78..AD-Q81 | 用户已同意 CP3 DQ-CP3-CR030-01..07 的全部推荐方案，允许进入 story-planning / CP4 | 允许追加 CR030-S01..S08 Story Plan、DAG、文件所有权和 CP4 自动预检；CP5 全量 LLD 确认前仍不得实现、改依赖、运行外部项目、provider/lake/publish、QMT/simulation/live 或读取凭据 |
+| 2026-06-05 | 按 CR-020 CP3 approved 口径新增 ADR-087 至 ADR-093 与 AD-Q82..AD-Q86 | 用户已同意 CP3 DQ-CP3-CR020-01..07 的全部推荐方案，允许进入 story-planning / CP4 | 允许追加 CR020-S01..S06 Story Plan、DAG、文件所有权和 CP4 自动预检；CP5 全量 LLD 确认前仍不得创建 LLD、实现、改依赖、启动 gateway、绑定端口、连接 QMT / MiniQMT / XtQuant、读取真实 `.env`、输出凭据、交易、账户写入、simulation/live、provider/lake/publish 或覆盖 reports |

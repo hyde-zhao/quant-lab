@@ -1,18 +1,18 @@
 project_id: "local_backtest"
-version: "1.5"
-status: "cr030-story-plan-cp4-pass-pending-lld"
+version: "1.6"
+status: "cr020-fixture-static-verified-pending-manual-windows-qmt-validation"
 confirmed: true
 confirmed_by: "user"
 confirmed_at: "2026-05-14"
 created_at: "2026-05-14"
 created_by: "meta-se"
-last_updated: "2026-06-03T08:30:00+08:00"
+last_updated: "2026-06-14T00:16:26+08:00"
 source_hld: "process/HLD.md"
 companion_hld: "process/HLD-DATA-LAKE.md"
 source_adr: "process/ARCHITECTURE-DECISION.md"
 story_backlog: "process/STORY-BACKLOG.md"
-active_change: "CR-030"
-secondary_change: "CR-019"
+active_change: "CR-046"
+secondary_change: "CR-030"
 cr004_status: "draft-pending-cp4"
 cr004_confirmed: false
 cr005_status: "verified-cp7-pass"
@@ -42,15 +42,15 @@ cr014_confirmed: true
 cr014_lld_batches:
   - "CR014-FULL-HISTORY-LAKE-BATCH-A"
   - "CR014-REAL-RUN-BATCH-B"
-cr015_status: "verified-controlled-offline"
+cr015_status: "closed-cp8-approved-controlled-offline"
 cr015_confirmed: true
 cr015_lld_batches:
   - "CR015-QMT-FOUNDATION-BATCH-A"
-cr016_status: "controlled-offline-verified-with-s05-s06-later-gated"
+cr016_status: "closed-cp8-approved-controlled-offline-with-s05-s06-later-gated"
 cr016_confirmed: true
 cr016_lld_batches:
   - "CR016-QMT-ACTIVATION-BATCH-A"
-cr017_status: "verified-controlled-offline"
+cr017_status: "closed-cp8-approved-controlled-offline"
 cr017_confirmed: true
 cr017_lld_batches:
   - "CR017-ADJUSTMENT-DUAL-VIEW-BATCH-A"
@@ -68,15 +68,244 @@ cr025_confirmed_by: "user"
 cr025_confirmed_at: "2026-06-02T07:19:31+08:00"
 cr025_lld_batches:
   - "CR025-RESEARCH-EXECUTION-SEMANTIC-ALIGNMENT-BATCH-A"
-cr030_status: "story-plan-cp4-pass-pending-lld"
-cr030_confirmed: false
+cr030_status: "closed-cp8-approved"
+cr030_confirmed: true
 cr030_formal_cr: "process/changes/CR-030-MULTIFACTOR-RESEARCH-FRAMEWORK-REFERENCE-AND-RESEARCH-LOOP-STANDARDIZATION-2026-06-02.md"
 cr030_lld_batches:
   - "CR030-MULTIFACTOR-RESEARCH-LOOP-BATCH-A"
-cr030_next_gate: "CP5 all-story LLD batch"
+cr030_next_gate: "closed"
 cr030_implementation_allowed: false
 cr030_external_repo_clone_install_run_authorized: false
 cr030_dependency_change_authorized: false
+cr020_status: "fixture-static-verified-pending-manual-windows-qmt-validation"
+cr046_status: "cp6-pass-ready-for-verification"
+cr046_confirmed: false
+cr046_formal_cr: "process/changes/CR-046-TERMINAL-NATIVE-SIMULATION-STRATEGY-EXPORT-2026-06-13.md"
+cr046_lld_batches:
+  - "CR046-DUAL-TARGET-FRAMEWORK-BATCH-A"
+cr046_implementation_allowed: false
+cr046_qmt_runtime_validation_authorized: false
+cr046_miniqmt_connection_authorized: false
+cr046_submit_cancel_authorized: false
+
+cr046_story_planning:
+  change_id: "CR-046"
+  status: "cp6-pass-ready-for-verification"
+  cp4_check: "process/checks/CP4-CR046-STORY-DAG-PARALLEL-SAFETY.md"
+  feature_design_matrix: "docs/design/FEATURE-DESIGN-MATRIX.md"
+  required_feature_design:
+    feature_id: "FEAT-09"
+    design: "docs/features/qmt-miniqmt-dual-target-framework/DESIGN.md"
+    test_plan: "docs/features/qmt-miniqmt-dual-target-framework/TEST-PLAN.md"
+    tasks: "docs/features/qmt-miniqmt-dual-target-framework/TASKS.md"
+  cp5_batch: "CR046-DUAL-TARGET-FRAMEWORK-BATCH-A"
+  cp5_context: "process/context/CP5-CR046-LLD-CONTEXT.yaml"
+  cp5_manual_review: "process/checkpoints/CP5-CR046-DUAL-TARGET-FRAMEWORK-BATCH-A-LLD-BATCH.md"
+  cp5_manual_status: "approved"
+  cp6_context: "process/context/CP6-CR046-IMPLEMENTATION-CONTEXT.yaml"
+  cp6_implementation: "process/stories/CR046-BATCH-A-IMPLEMENTATION.md"
+  cp6_status: "PASS"
+  cp6_check: "process/checks/CP6-CR046-DUAL-TARGET-FRAMEWORK-BATCH-A-CODING-DONE.md"
+  cp5_auto_status: "PASS"
+  lld_policy_summary:
+    full_lld:
+      - "CR046-S01-dual-target-strategy-architecture"
+      - "CR046-S02-strategy-package-contract-and-schema"
+      - "CR046-S03-qmt-terminal-target-framework"
+      - "CR046-S04-miniqmt-runner-install-and-runtime-boundary"
+      - "CR046-S05-verification-framework-and-evidence-model"
+    technical_note:
+      - "CR046-S06-follow-up-strategy-delivery-gate"
+      - "CR046-S07-research-framework-follow-up-contract"
+    waived: []
+  waves:
+    - wave: "CR046-W1-ARCHITECTURE-CONTRACT"
+      parallel_lld: true
+      parallel_dev: false
+      cp5_batch: "CR046-DUAL-TARGET-FRAMEWORK-BATCH-A"
+      entry_conditions:
+        - "CP3 approved"
+        - "FEAT-09 feature design ready"
+      stories:
+        - story_id: "CR046-S01-dual-target-strategy-architecture"
+          title: "双目标策略交付架构与 FEAT-09 边界"
+          priority: "P0"
+          assignee: "meta-dev"
+          depends_on: []
+          dependency_type: []
+          status: "ready-for-verification"
+          lld_policy: "full-lld"
+          output_files:
+            - "docs/qmt/CR046-DUAL-TARGET-STRATEGY-FRAMEWORK.md"
+          file_ownership:
+            primary:
+              - "docs/qmt/CR046-DUAL-TARGET-STRATEGY-FRAMEWORK.md"
+            shared:
+              - "docs/design/FEATURE-DESIGN-MATRIX.md"
+              - "docs/features/qmt-miniqmt-dual-target-framework/DESIGN.md"
+            merge_owner: "CR046-S01-dual-target-strategy-architecture"
+            forbidden:
+              - "strategy implementation"
+              - "QMT / MiniQMT runtime call"
+              - "submit/cancel"
+              - "credential read"
+        - story_id: "CR046-S02-strategy-package-contract-and-schema"
+          title: "策略包合同、目录结构与 schema"
+          priority: "P0"
+          assignee: "meta-dev"
+          depends_on:
+            - "CR046-S01-dual-target-strategy-architecture"
+          dependency_type:
+            - "contract"
+          status: "ready-for-verification"
+          lld_policy: "full-lld"
+          output_files:
+            - "docs/qmt/CR046-DUAL-TARGET-STRATEGY-FRAMEWORK.md"
+            - "docs/qmt/CR046-VERIFICATION-FRAMEWORK.md"
+    - wave: "CR046-W2-TARGETS-INSTALL"
+      parallel_lld: true
+      parallel_dev: false
+      cp5_batch: "CR046-DUAL-TARGET-FRAMEWORK-BATCH-A"
+      entry_conditions:
+        - "CR046-S02 package contract declared"
+      stories:
+        - story_id: "CR046-S03-qmt-terminal-target-framework"
+          title: "QMT terminal target 框架"
+          priority: "P0"
+          assignee: "meta-dev"
+          depends_on:
+            - "CR046-S02-strategy-package-contract-and-schema"
+          dependency_type:
+            - "contract"
+          status: "ready-for-verification"
+          lld_policy: "full-lld"
+          output_files:
+            - "docs/qmt/CR046-DUAL-TARGET-STRATEGY-FRAMEWORK.md"
+            - "docs/qmt/CR046-VERIFICATION-FRAMEWORK.md"
+          forbidden:
+            - "QMT terminal runtime validation"
+            - "account query"
+            - "submit/cancel"
+        - story_id: "CR046-S04-miniqmt-runner-install-and-runtime-boundary"
+          title: "MiniQMT runner 安装设计与运行边界"
+          priority: "P0"
+          assignee: "meta-dev"
+          depends_on:
+            - "CR046-S02-strategy-package-contract-and-schema"
+          dependency_type:
+            - "contract"
+          status: "ready-for-verification"
+          lld_policy: "full-lld"
+          output_files:
+            - "docs/qmt/CR046-MINIQMT-RUNNER-INSTALL-DESIGN.md"
+          forbidden:
+            - "real MiniQMT install"
+            - "MiniQMT / XtQuant connection"
+            - "credential read"
+            - "market subscription"
+            - "submit/cancel"
+    - wave: "CR046-W3-VALIDATION-GATES"
+      parallel_lld: false
+      parallel_dev: false
+      cp5_batch: "CR046-DUAL-TARGET-FRAMEWORK-BATCH-A"
+      entry_conditions:
+        - "CR046-S01..S04 contracts declared"
+      stories:
+        - story_id: "CR046-S05-verification-framework-and-evidence-model"
+          title: "验证框架与证据模型"
+          priority: "P0"
+          assignee: "meta-dev"
+          depends_on:
+            - "CR046-S01-dual-target-strategy-architecture"
+            - "CR046-S02-strategy-package-contract-and-schema"
+            - "CR046-S03-qmt-terminal-target-framework"
+            - "CR046-S04-miniqmt-runner-install-and-runtime-boundary"
+          dependency_type:
+            - "contract"
+            - "contract"
+            - "contract"
+            - "contract"
+          status: "ready-for-verification"
+          lld_policy: "full-lld"
+          output_files:
+            - "docs/qmt/CR046-VERIFICATION-FRAMEWORK.md"
+    - wave: "CR046-W4-FOLLOW-UP-HANDOFF"
+      parallel_lld: true
+      parallel_dev: false
+      cp5_batch: "CR046-DUAL-TARGET-FRAMEWORK-BATCH-A"
+      entry_conditions:
+        - "CR046-S05 evidence model declared"
+      stories:
+        - story_id: "CR046-S06-follow-up-strategy-delivery-gate"
+          title: "后续具体策略交付门禁"
+          priority: "P1"
+          assignee: "meta-dev"
+          depends_on:
+            - "CR046-S05-verification-framework-and-evidence-model"
+          dependency_type:
+            - "contract"
+          status: "ready-for-verification"
+          lld_policy: "technical-note"
+          output_files:
+            - "process/changes/CR-046-FOLLOW-UP-TRACKING-2026-06-13.md"
+        - story_id: "CR046-S07-research-framework-follow-up-contract"
+          title: "研究框架反向完善合同"
+          priority: "P1"
+          assignee: "meta-dev"
+          depends_on:
+            - "CR046-S01-dual-target-strategy-architecture"
+            - "CR046-S05-verification-framework-and-evidence-model"
+          dependency_type:
+            - "contract"
+            - "contract"
+          status: "ready-for-verification"
+          lld_policy: "technical-note"
+          output_files:
+            - "docs/research/CR046-RESEARCH-FRAMEWORK-FOLLOWUP.md"
+  dependency_graph:
+    nodes:
+      - "CR046-S01-dual-target-strategy-architecture"
+      - "CR046-S02-strategy-package-contract-and-schema"
+      - "CR046-S03-qmt-terminal-target-framework"
+      - "CR046-S04-miniqmt-runner-install-and-runtime-boundary"
+      - "CR046-S05-verification-framework-and-evidence-model"
+      - "CR046-S06-follow-up-strategy-delivery-gate"
+      - "CR046-S07-research-framework-follow-up-contract"
+    edges:
+      - ["CR046-S01-dual-target-strategy-architecture", "CR046-S02-strategy-package-contract-and-schema"]
+      - ["CR046-S02-strategy-package-contract-and-schema", "CR046-S03-qmt-terminal-target-framework"]
+      - ["CR046-S02-strategy-package-contract-and-schema", "CR046-S04-miniqmt-runner-install-and-runtime-boundary"]
+      - ["CR046-S01-dual-target-strategy-architecture", "CR046-S05-verification-framework-and-evidence-model"]
+      - ["CR046-S02-strategy-package-contract-and-schema", "CR046-S05-verification-framework-and-evidence-model"]
+      - ["CR046-S03-qmt-terminal-target-framework", "CR046-S05-verification-framework-and-evidence-model"]
+      - ["CR046-S04-miniqmt-runner-install-and-runtime-boundary", "CR046-S05-verification-framework-and-evidence-model"]
+      - ["CR046-S05-verification-framework-and-evidence-model", "CR046-S06-follow-up-strategy-delivery-gate"]
+      - ["CR046-S01-dual-target-strategy-architecture", "CR046-S07-research-framework-follow-up-contract"]
+      - ["CR046-S05-verification-framework-and-evidence-model", "CR046-S07-research-framework-follow-up-contract"]
+  dag_validation_result:
+    checked_by: "meta-po using dependency-mapper / wave-planner / dag-validator rules"
+    checked_at: "2026-06-13T22:57:34+08:00"
+    cycles: []
+    invalid_references: []
+    parallel_internal_dependencies: 0
+    isolated_nodes: []
+    conclusion: "PASS"
+    note: "CR046 DAG 从 S01/S02 合同流向 QMT target、MiniQMT install、验证框架和 follow-up handoff。LLD 可按 max_parallel_lld=3 分轮起草；开发仍受 CP5 全量确认、文件所有权和运行授权门控约束。"
+cr020_confirmed: true
+cr020_formal_cr: "process/changes/CR-020-QMT-WINDOWS-GATEWAY-SERVER-LOGIN-READONLY-QUERY-ADMISSION-2026-06-04.md"
+cr020_lld_batches:
+  - "CR020-QMT-GATEWAY-READONLY-BATCH-A"
+cr020_next_gate: "manual Windows/QMT readonly validation evidence"
+cr020_implementation_allowed: true
+cr020_fixture_static_cp7_status: "PASS"
+cr020_manual_windows_qmt_validation_status: "pending-miniqmt-permission"
+cr020_lld_generation_allowed_in_this_round: false
+cr020_dependency_change_authorized: false
+cr020_gateway_start_authorized: false
+cr020_port_bind_authorized: false
+cr020_real_env_read_authorized: false
+cr020_qmt_connection_authorized: false
+cr020_order_or_account_write_authorized: false
 state_closure:
   cr005:
     status: "verified-cp7-pass"
@@ -149,7 +378,7 @@ exit_conditions:
   - "CR-004 Story LLD 需按 CP5 批次 A/B/C 滚动确认"
   - "未创建代码实现文件、delivery 文件或安装脚本"
 completion_criteria:
-  story_count: 120
+  story_count: 134
   baseline_story_count: 13
   cr004_story_count: 5
   cr005_story_count: 6
@@ -180,7 +409,9 @@ completion_criteria:
   cr025_story_count: 6
   story_count_after_cr030: 128
   cr030_story_count: 8
-  wave_count: 56
+  story_count_after_cr020: 134
+  cr020_story_count: 6
+  wave_count: 60
   hld_phase_alignment:
     M0: "W0"
     M1: "W1"
@@ -191,6 +422,30 @@ completion_criteria:
     expected_cycles: 0
     invalid_references: 0
     parallel_internal_dependencies: 0
+  cr020_gates:
+    cp3_status: "approved"
+    cp4_status: "PASS"
+    cp5_status: "pending"
+    cp6_status: "not-started"
+    cp7_status: "not-started"
+    cp5_before_implementation_required: true
+    implementation_allowed_before_cp5: false
+    lld_generation_allowed_in_this_round: false
+    dependency_change_allowed: false
+    gateway_start_allowed: false
+    port_bind_allowed: false
+    real_env_read_allowed: false
+    qmt_connection_allowed: false
+    query_positions_scope: "qmt:positions:read"
+    only_real_readonly_endpoint: "query_positions"
+    credential_output_allowed: false
+    order_cancel_modify_allowed: false
+    account_write_allowed: false
+    simulation_or_live_allowed: false
+    provider_fetch_allowed: false
+    lake_write_allowed: false
+    publish_allowed: false
+    reports_overwrite_allowed: false
   cr005_gates:
     tushare_only_writes_lake: true
     pit_asof_join_in_pandas_data_layer: true
@@ -311,7 +566,7 @@ completion_criteria:
       - "CR016-S05-live-readonly-and-small-live-admission"
       - "CR016-S06-scale-up-and-research-maturity-gates"
     documentation_refresh_completed: true
-    cp8_status: "pending-user-review"
+    cp8_status: "approved-closed"
     real_qmt_operation_allowed: false
     real_provider_fetch_allowed: false
     real_lake_write_allowed: false
@@ -416,6 +671,7 @@ parallel_policy:
   cr019_policy: "CR019 采用单一全量 LLD 批次 CR019-STAGE6-QMT-BRIDGE-BATCH-A，覆盖 S01..S10。LLD 可按 max_parallel_lld=3 分轮起草，但 CP5 必须等待 10 张 LLD、LLD clarification queue 和自动预检全部收敛后统一人工确认。开发默认 S01/S02 admission 合同先行，S03/S04 C/S transport 合同并行设计，S05/S06/S07 鉴权、endpoint 和运行门控串行收敛，S08/S09 fallback/deferred 后置，S10 文档 runbook 最后合并。CP5 前不得实现、不得改依赖、不得启动服务、不得读取凭据、不得真实 QMT / MiniQMT / XtQuant 操作、不得 provider fetch、不得写真实 lake 或 broker lake、不得 publish、不得 simulation/live run。完整 endpoint matrix 是目标契约，不代表真实操作授权；pairing/HMAC 只识别调用方，不替代 run mode、stage gate、risk gate、kill-switch 和 per-run authorization。"
   cr025_policy: "CR025 采用单一全量 LLD 批次 CR025-RESEARCH-EXECUTION-SEMANTIC-ALIGNMENT-BATCH-A，覆盖 S01..S06。6 份 LLD 与 6 份 CP5 自动预检已完成且 CP5 人工确认 approved；S01/S04/S02/S03/S05/S06 已 verified；S06 首轮 CP7 因 `QuantConnect LEAN` trace token 缺失失败，已由 blocker fix CP6 和 CP7 复验关闭；CP8 自动预检 PASS，用户于 2026-06-02T23:10:16+08:00 回复“好的关闭CR025”，当前 CR-025 已关闭。开发默认 S01/S04 clean feed 与 no-copy 治理先行，S02 semantic diff 其次，S03 order_intent_draft_v1 与 QMT later-gated handoff 后置，S05/S06 安全验证与文档收敛最后合并。CR-025 关闭只收敛受控离线 / fixture / 静态合同交付；不得改依赖、不得运行 Backtrader、不得复制/裁剪/改写/源码级移植 Backtrader GPLv3 源码、不得触发真实 broker/QMT/MiniQMT/XtQuant/provider/lake/broker lake/publish/simulation/live，不得读取凭据。Backtrader 只作为 lightweight execution engine 的执行语义参考，不作为多因子研究主框架；FactorSpec、FactorRunSpec、IC / RankIC、分层收益、多因子组合、实验追踪和策略准入包已由 CR-030 转为正式 active CR 承接，当前处于 CP2 intake，后续需参考 Qlib / Alphalens / vectorbt / vnpy.alpha 等项目并重验 license / 维护状态 / 适配边界。optional runtime 只能按 optional dependency + lazy import 单独确认；migration_candidate 当前为空。"
   cr030_policy: "CR030 CP3 HLD 已 approved，CP4 Story Plan 自动预检 PASS。CR030 采用单一全量 LLD 批次 CR030-MULTIFACTOR-RESEARCH-LOOP-BATCH-A，覆盖 S01..S08。LLD 可按 max_parallel_lld=3 分轮起草，但 CP5 必须等待 8 张 LLD、LLD clarification queue 和自动预检全部收敛后统一人工确认。开发默认 S01/S02 合同治理先行，S03/S04 面板与评价其次，S05/S06 组合与 manifest/catalog 并行设计，S07 admission / draft handoff 后置，S08 safety/docs 最后合并。CP5 前不得实现、不得改依赖、不得 clone/install/run 外部项目、不得源码迁移、不得 provider fetch、不得写 lake 或 publish、不得触发 QMT / MiniQMT / XtQuant / simulation / live / account / order / cancel，不得读取凭据。CR-026 Qlib runner、optimizer / ML workflow、vectorbt / PyBroker / RQAlpha / vn.py Spike 均保持后置。"
+  cr020_policy: "CR020 CP3 HLD 已 approved，CP4 Story Plan 自动预检 PASS。CR020 采用单一全量 LLD 批次 CR020-QMT-GATEWAY-READONLY-BATCH-A，覆盖 S01..S06。LLD 可按 max_parallel_lld=3 基于 Story/file owner 分轮起草，但 CP5 必须等待 6 张 LLD、LLD clarification queue、CP4 摘要和 CP5 自动预检全部收敛后统一人工确认。开发默认 S01 Windows gateway runtime / admission 先行，S02 session ready gate 消费 S01，S03 Linux REST client 与 S04 auth/scope 可在 S01 合同冻结后分轮设计，S05 query_positions 必须等待 S02/S03/S04 合同，S06 docs/runbook/CP7 evidence 最后合并。CP5 前 implementation_allowed=false；不得生成 LLD、不得实现、不得改 pyproject.toml/uv.lock、不得启动 gateway、不得绑定端口、不得连接 QMT/MiniQMT/XtQuant、不得读取/打印/解析真实 .env、不得输出凭据、不得交易/发单/撤单/改单/账户写入、不得 simulation/live、不得 provider fetch/lake write/publish/reports overwrite。CR020 唯一真实只读 endpoint 是 query_positions，scope=qmt:positions:read。"
 waves:
   - wave: "W0"
     hld_phase: "M0 - 数据准备与缓存可追溯"
@@ -4211,7 +4467,7 @@ cr014_story_plan:
     note: "CR014 增量 DAG 从 S01/S02 合同层单向流向 pipeline、readiness、replay 和 consumer boundary；新增 S09 只从 S01..S08 全部完成后单向进入真实分时段抓取与 raw/manifest 写湖，不存在下游回边；所有节点均有 Story 卡片路径规划和 Wave 归属。"
 
 cr015_cr016_cr017_story_plan:
-  status: "controlled-offline-verified-pending-cp8"
+  status: "closed-cp8-approved-controlled-offline"
   change_ids:
     - "CR-015"
     - "CR-016"
@@ -4236,7 +4492,7 @@ cr015_cr016_cr017_story_plan:
       - "CR016-S05-live-readonly-and-small-live-admission"
       - "CR016-S06-scale-up-and-research-maturity-gates"
     documentation_status: "refreshed"
-    cp8_status: "pending-user-review"
+    cp8_status: "approved-closed"
     real_operation_counts: 0
   cp5_lld_batches:
     - batch_id: "CR017-ADJUSTMENT-DUAL-VIEW-BATCH-A"
@@ -5887,7 +6143,7 @@ cr030_increment:
             cp5_required: true
             lld_confirmed: false
             dependencies_satisfied: false
-            file_conflict_free: false
+            file_conflict_free: true
             implementation_allowed: false
             dependency_change_allowed: false
             provider_fetch_allowed: false
@@ -6055,7 +6311,7 @@ cr030_increment:
             cp5_required: true
             lld_confirmed: false
             dependencies_satisfied: false
-            file_conflict_free: false
+            file_conflict_free: true
             implementation_allowed: false
             dependency_change_allowed: false
             catalog_publish_allowed: false
@@ -6130,7 +6386,7 @@ cr030_increment:
             cp5_required: true
             lld_confirmed: false
             dependencies_satisfied: false
-            file_conflict_free: false
+            file_conflict_free: true
             implementation_allowed: false
             dependency_change_allowed: false
             qmt_operation_allowed: false
@@ -6204,10 +6460,10 @@ cr030_increment:
               - "process/stories/CR030-S08-safety-docs-and-follow-up-boundary.md"
           dev_gate:
             cp5_required: true
-            lld_confirmed: false
-            dependencies_satisfied: false
-            file_conflict_free: false
-            implementation_allowed: false
+            lld_confirmed: true
+            dependencies_satisfied: true
+            file_conflict_free: true
+            implementation_allowed: true
             dependency_change_allowed: false
             external_project_run_allowed: false
             provider_fetch_allowed: false
@@ -6259,3 +6515,469 @@ cr030_increment:
     isolated_nodes: []
     conclusion: "PASS"
     note: "CR030 增量 DAG 从 W1 合同治理单向流向 W2 面板/评价、W3 组合/manifest、W4 admission/safety/docs。LLD 可按 max_parallel_lld=3 分轮起草；开发默认受 CP5、依赖类型和文件所有权串行门控约束。"
+
+cr020_increment:
+  change_id: "CR-020"
+  title: "QMT Windows gateway server login and readonly query admission"
+  status: "fixture-static-verified-pending-manual-windows-qmt-validation"
+  formal_cr: "process/changes/CR-020-QMT-WINDOWS-GATEWAY-SERVER-LOGIN-READONLY-QUERY-ADMISSION-2026-06-04.md"
+  source_hld: "process/HLD.md#36"
+  cp2_baseline: "checkpoints/CP2-CR020-REQUIREMENTS-BASELINE.md"
+  cp3_review: "checkpoints/CP3-CR020-HLD-REVIEW.md"
+  cp3_consistency: "process/checks/CP3-CR020-HLD-CONSISTENCY.md"
+  cp4_precheck: "process/checks/CP4-CR020-STORY-PLAN-PRECHECK.md"
+  story_count: 6
+  wave_count: 4
+  lld_batches:
+    - "CR020-QMT-GATEWAY-READONLY-BATCH-A"
+  lld_policy: "CR020-S01..S06 必须全量进入同一 LLD 批次；可按 max_parallel_lld=3 基于 Story/file owner 分轮起草，但 CP5 必须等待全部 LLD、clarification queue、CP4 摘要和 CP5 自动预检全部收敛后统一人工确认。"
+  no_real_operation_boundary:
+    lld_generation_allowed_in_this_round: false
+    implementation_allowed_before_cp5: false
+    dependency_change_allowed: false
+    real_env_read_allowed: false
+    credential_output_allowed: false
+    gateway_start_allowed: false
+    port_bind_allowed: false
+    qmt_api_call_allowed: false
+    mini_qmt_call_allowed: false
+    xtquant_call_allowed: false
+    query_positions_real_call_allowed_before_cp5: false
+    order_submit_allowed: false
+    order_cancel_allowed: false
+    order_modify_allowed: false
+    account_write_allowed: false
+    simulation_or_live_run_allowed: false
+    provider_fetch_allowed: false
+    lake_write_allowed: false
+    broker_lake_write_allowed: false
+    publish_allowed: false
+    reports_overwrite_allowed: false
+    executed_unauthorized_operation_count: 0
+  gates:
+    cp4_status: "PASS"
+    cp5_status: "approved"
+    cp6_status: "PASS"
+    cp7_status: "PASS-fixture-static"
+    implementation_allowed: true
+    manual_windows_qmt_validation: "pending-miniqmt-permission"
+    only_real_readonly_endpoint: "query_positions"
+    query_positions_scope: "qmt:positions:read"
+  waves:
+    - wave: "CR020-W1-GATEWAY-RUNTIME-SESSION"
+      parallel_lld: true
+      parallel_dev: false
+      cp5_batch: "CR020-QMT-GATEWAY-READONLY-BATCH-A"
+      entry_conditions:
+        - "CR-020 CP3 approved"
+        - "CP4 Story Plan PASS"
+        - "CP5 前 implementation_allowed=false"
+      stories:
+        - story_id: "CR020-S01-windows-gateway-runtime-admission"
+          title: "Windows gateway runtime 与准入合同"
+          priority: "P0"
+          assignee: "meta-dev"
+          depends_on:
+            - "CR019-S04-windows-gateway-lifecycle-deployment"
+          dependency_type:
+            - "prior-gateway-lifecycle-contract"
+          status: "verified-fixture-static-pending-manual-validation"
+          output_files:
+            - "trading/qmt_gateway_cli.py"
+            - "trading/qmt_gateway_service.py"
+            - "trading/qmt_gateway_config.py"
+            - "tests/test_cr020_windows_gateway_runtime_admission.py"
+          file_ownership:
+            primary:
+              - "trading/qmt_gateway_cli.py"
+              - "trading/qmt_gateway_service.py"
+              - "trading/qmt_gateway_config.py"
+              - "tests/test_cr020_windows_gateway_runtime_admission.py"
+            shared:
+              - "docs/QMT-GATEWAY-INSTALL.md"
+              - "trading/qmt_gateway_contracts.py"
+            merge_owner: "CR020-S01-windows-gateway-runtime-admission"
+            forbidden:
+              - "pyproject.toml"
+              - "uv.lock"
+              - ".env"
+              - ".env.*"
+              - "service start before CP5/CP6/CP7 gate"
+              - "port bind before runtime authorization"
+              - "QMT / MiniQMT / XtQuant call during planning"
+          lld_gate:
+            required: true
+            status: "confirmed"
+            cp5_required: true
+            required_inputs:
+              - "process/HLD.md#36.3"
+              - "process/HLD.md#36.8"
+              - "process/ARCHITECTURE-DECISION.md#ADR-087"
+              - "process/ARCHITECTURE-DECISION.md#ADR-088"
+              - "process/ARCHITECTURE-DECISION.md#ADR-093"
+              - "process/stories/CR020-S01-windows-gateway-runtime-admission.md"
+          dev_gate:
+            cp5_required: true
+            lld_confirmed: true
+            dependencies_satisfied: true
+            file_conflict_free: true
+            implementation_allowed: true
+            dependency_change_allowed: false
+            service_start_allowed: false
+            port_bind_allowed: false
+            credential_read_allowed: false
+            qmt_operation_allowed: false
+          completion_criteria:
+            - "gateway lifecycle/config/admission 字段覆盖率为 100%"
+            - "public bind 默认 allowed 次数为 0"
+            - "CP5 前 service_start/port_bind/qmt_call 均为 0"
+        - story_id: "CR020-S02-server-qmt-login-session"
+          title: "Server QMT 登录与 session ready gate"
+          priority: "P0"
+          assignee: "meta-dev"
+          depends_on:
+            - "CR020-S01-windows-gateway-runtime-admission"
+          dependency_type:
+            - "gateway-runtime-contract"
+          status: "verified-fixture-static-pending-manual-validation"
+          output_files:
+            - "trading/qmt_gateway_session.py"
+            - ".env.example"
+            - "tests/test_cr020_server_qmt_login_session.py"
+          file_ownership:
+            primary:
+              - "trading/qmt_gateway_session.py"
+              - ".env.example"
+              - "tests/test_cr020_server_qmt_login_session.py"
+            shared:
+              - "trading/qmt_gateway_service.py"
+              - "trading/qmt_gateway_config.py"
+              - "trading/qmt_redaction.py"
+            merge_owner: "CR020-S02-server-qmt-login-session"
+            forbidden:
+              - ".env"
+              - ".env.*"
+              - "real credential values"
+              - "token/session/password/private key output"
+              - "raw account output"
+              - "QMT login before CP5/CP6/CP7 runtime gate"
+          lld_gate:
+            required: true
+            status: "confirmed"
+            cp5_required: true
+            required_inputs:
+              - "process/HLD.md#36.4"
+              - "process/HLD.md#36.9"
+              - "process/ARCHITECTURE-DECISION.md#ADR-089"
+              - "process/ARCHITECTURE-DECISION.md#ADR-090"
+              - "process/stories/CR020-S02-server-qmt-login-session.md"
+          dev_gate:
+            cp5_required: true
+            lld_confirmed: true
+            dependencies_satisfied: true
+            file_conflict_free: true
+            implementation_allowed: true
+            dependency_change_allowed: false
+            real_env_read_allowed: false
+            credential_output_allowed: false
+            qmt_login_allowed: false
+          completion_criteria:
+            - ".env.example 只包含 placeholder / credential_ref 示例"
+            - "session_not_ready 时 query_positions adapter_call=0"
+            - "凭据、账号、session、token 泄露次数为 0"
+    - wave: "CR020-W2-CLIENT-AUTH"
+      parallel_lld: true
+      parallel_dev: false
+      cp5_batch: "CR020-QMT-GATEWAY-READONLY-BATCH-A"
+      entry_conditions:
+        - "CR020-S01 gateway runtime 合同冻结"
+        - "CP5 前不得实现或读取凭据"
+      stories:
+        - story_id: "CR020-S03-linux-client-rest-transport"
+          title: "Linux C 端 REST transport 与 Python client"
+          priority: "P0"
+          assignee: "meta-dev"
+          depends_on:
+            - "CR020-S01-windows-gateway-runtime-admission"
+          dependency_type:
+            - "gateway-rest-contract"
+          status: "verified-fixture-static-pending-manual-validation"
+          output_files:
+            - "trading/qmt_client.py"
+            - "trading/qmt_client_cli.py"
+            - "tests/test_cr020_linux_client_rest_transport.py"
+          file_ownership:
+            primary:
+              - "trading/qmt_client.py"
+              - "trading/qmt_client_cli.py"
+              - "tests/test_cr020_linux_client_rest_transport.py"
+            shared:
+              - "trading/qmt_cli.py"
+              - "trading/qmt_transport.py"
+              - "trading/qmt_gateway_contracts.py"
+            merge_owner: "CR020-S03-linux-client-rest-transport"
+            forbidden:
+              - "XtQuant import on Linux C side"
+              - "CLI as business runtime"
+              - ".env"
+              - "credential values"
+              - "gateway start"
+              - "real QMT call"
+          lld_gate:
+            required: true
+            status: "confirmed"
+            cp5_required: true
+            required_inputs:
+              - "process/HLD.md#36.3"
+              - "process/HLD.md#36.5"
+              - "process/ARCHITECTURE-DECISION.md#ADR-087"
+              - "process/ARCHITECTURE-DECISION.md#ADR-088"
+              - "process/stories/CR020-S03-linux-client-rest-transport.md"
+          dev_gate:
+            cp5_required: true
+            lld_confirmed: true
+            dependencies_satisfied: true
+            file_conflict_free: true
+            implementation_allowed: true
+            dependency_change_allowed: false
+            xtquant_import_allowed_on_linux: false
+            credential_read_allowed: false
+            qmt_operation_allowed: false
+          completion_criteria:
+            - "业务运行入口为 Python REST client"
+            - "Typer CLI 仅复用 client 作为验收面"
+            - "Linux C 端 XtQuant import 次数为 0"
+        - story_id: "CR020-S04-hmac-pairing-allowlist-scope"
+          title: "HMAC pairing / allowlist / scope / nonce fail-closed"
+          priority: "P0"
+          assignee: "meta-dev"
+          depends_on:
+            - "CR020-S01-windows-gateway-runtime-admission"
+            - "CR020-S03-linux-client-rest-transport"
+          dependency_type:
+            - "gateway-config-contract"
+            - "client-auth-contract"
+          status: "verified-fixture-static-pending-manual-validation"
+          output_files:
+            - "trading/qmt_auth.py"
+            - "trading/qmt_redaction.py"
+            - "tests/test_cr020_hmac_pairing_allowlist_scope.py"
+          file_ownership:
+            primary:
+              - "trading/qmt_auth.py"
+              - "trading/qmt_redaction.py"
+              - "tests/test_cr020_hmac_pairing_allowlist_scope.py"
+            shared:
+              - "trading/qmt_gateway_config.py"
+              - "trading/qmt_client.py"
+              - "trading/qmt_endpoint_matrix.py"
+            merge_owner: "CR020-S04-hmac-pairing-allowlist-scope"
+            forbidden:
+              - "no-auth default"
+              - "real secret values"
+              - "pairing code logs"
+              - "nonce replay accepted"
+              - "scope bypass"
+              - "redaction fallback-to-raw"
+          lld_gate:
+            required: true
+            status: "confirmed"
+            cp5_required: true
+            required_inputs:
+              - "process/HLD.md#36.10"
+              - "process/HLD.md#36.11"
+              - "process/ARCHITECTURE-DECISION.md#ADR-091"
+              - "process/stories/CR020-S04-hmac-pairing-allowlist-scope.md"
+          dev_gate:
+            cp5_required: true
+            lld_confirmed: true
+            dependencies_satisfied: true
+            file_conflict_free: true
+            implementation_allowed: true
+            dependency_change_allowed: false
+            no_auth_default_allowed: false
+            credential_output_allowed: false
+            qmt_operation_allowed: false
+          completion_criteria:
+            - "HMAC missing/mismatch/expired、nonce replay、allowlist mismatch、scope不足均 fail-closed"
+            - "redaction 失败时不得 fallback 到 raw"
+            - "敏感日志泄露次数为 0"
+    - wave: "CR020-W3-READONLY-POSITIONS"
+      parallel_lld: false
+      parallel_dev: false
+      cp5_batch: "CR020-QMT-GATEWAY-READONLY-BATCH-A"
+      entry_conditions:
+        - "CR020-S02 session ready gate 合同冻结"
+        - "CR020-S03 client transport 合同冻结"
+        - "CR020-S04 auth/scope 合同冻结"
+      stories:
+        - story_id: "CR020-S05-query-positions-readonly"
+          title: "`query_positions` 单接口只读准入"
+          priority: "P0"
+          assignee: "meta-dev"
+          depends_on:
+            - "CR020-S02-server-qmt-login-session"
+            - "CR020-S03-linux-client-rest-transport"
+            - "CR020-S04-hmac-pairing-allowlist-scope"
+          dependency_type:
+            - "session-ready-runtime"
+            - "client-transport-contract"
+            - "auth-scope-contract"
+          status: "verified-fixture-static-pending-manual-validation"
+          output_files:
+            - "trading/qmt_endpoint_matrix.py"
+            - "trading/qmt_gateway_contracts.py"
+            - "trading/qmt_gateway_service.py"
+            - "trading/qmt_client.py"
+            - "tests/test_cr020_query_positions_readonly.py"
+          file_ownership:
+            primary:
+              - "trading/qmt_endpoint_matrix.py"
+              - "trading/qmt_gateway_contracts.py"
+              - "trading/qmt_gateway_service.py"
+              - "trading/qmt_client.py"
+              - "tests/test_cr020_query_positions_readonly.py"
+            shared:
+              - "trading/qmt_auth.py"
+              - "trading/qmt_redaction.py"
+              - "trading/qmt_gateway_session.py"
+            merge_owner: "CR020-S05-query-positions-readonly"
+            forbidden:
+              - "real endpoints other than query_positions"
+              - "account/orders/trades/simulation/live"
+              - "order/cancel/account_write/broker_lake_write"
+              - "provider fetch"
+              - "lake write"
+              - "publish"
+              - "unredacted payload"
+          lld_gate:
+            required: true
+            status: "confirmed"
+            cp5_required: true
+            required_inputs:
+              - "process/HLD.md#36.4"
+              - "process/HLD.md#36.11"
+              - "process/ARCHITECTURE-DECISION.md#ADR-090"
+              - "process/ARCHITECTURE-DECISION.md#ADR-091"
+              - "process/ARCHITECTURE-DECISION.md#ADR-092"
+              - "process/stories/CR020-S05-query-positions-readonly.md"
+          dev_gate:
+            cp5_required: true
+            lld_confirmed: true
+            dependencies_satisfied: true
+            file_conflict_free: true
+            implementation_allowed: true
+            dependency_change_allowed: false
+            only_query_positions_allowed: true
+            query_positions_scope: "qmt:positions:read"
+            qmt_real_call_allowed_before_cp5: false
+            account_write_allowed: false
+            order_cancel_modify_allowed: false
+            simulation_or_live_allowed: false
+            broker_lake_write_allowed: false
+          completion_criteria:
+            - "`query_positions` 是 CR-020 唯一真实只读 endpoint"
+            - "scope 固定为 qmt:positions:read"
+            - "order/cancel/account_write/broker_lake/provider/lake/publish 计数均为 0"
+    - wave: "CR020-W4-DOCS-REAL-MACHINE-VALIDATION"
+      parallel_lld: false
+      parallel_dev: false
+      cp5_batch: "CR020-QMT-GATEWAY-READONLY-BATCH-A"
+      entry_conditions:
+        - "CR020-S01..S05 合同冻结"
+        - "CP5 全量 LLD 确认后才能实现文档和验证入口"
+      stories:
+        - story_id: "CR020-S06-docs-runbook-cp7-real-machine-validation"
+          title: "文档、runbook 与 CP7 实机只读验收边界"
+          priority: "P1"
+          assignee: "meta-dev"
+          depends_on:
+            - "CR020-S01-windows-gateway-runtime-admission"
+            - "CR020-S02-server-qmt-login-session"
+            - "CR020-S03-linux-client-rest-transport"
+            - "CR020-S04-hmac-pairing-allowlist-scope"
+            - "CR020-S05-query-positions-readonly"
+          dependency_type:
+            - "documentation-merge"
+            - "cp7-evidence-input"
+            - "readonly-query-contract"
+          status: "verified-fixture-static-pending-manual-validation"
+          output_files:
+            - "docs/QMT-GATEWAY-INSTALL.md"
+            - "docs/QMT-C-S-BRIDGE-RUNBOOK.md"
+            - "tests/test_cr020_docs_runbook_no_authorization.py"
+          file_ownership:
+            primary:
+              - "docs/QMT-GATEWAY-INSTALL.md"
+              - "docs/QMT-C-S-BRIDGE-RUNBOOK.md"
+              - "tests/test_cr020_docs_runbook_no_authorization.py"
+            shared:
+              - "README.md"
+              - "docs/USER-MANUAL.md"
+              - "docs/QMT-INCIDENT-PLAYBOOK.md"
+              - "process/TEST-STRATEGY.md"
+            merge_owner: "CR020-S06-docs-runbook-cp7-real-machine-validation"
+            forbidden:
+              - "real credential examples"
+              - "runbook authorizes real trade"
+              - "CP3/CP4 approval as runtime authorization"
+              - "simulation/live instructions as authorized"
+              - "provider/lake/publish instructions"
+          lld_gate:
+            required: true
+            status: "confirmed"
+            cp5_required: true
+            required_inputs:
+              - "process/HLD.md#36.14"
+              - "process/HLD.md#36.15"
+              - "process/HLD.md#36.17"
+              - "process/ARCHITECTURE-DECISION.md#ADR-087..ADR-093"
+              - "process/stories/CR020-S06-docs-runbook-cp7-real-machine-validation.md"
+          dev_gate:
+            cp5_required: true
+            lld_confirmed: true
+            dependencies_satisfied: true
+            file_conflict_free: true
+            implementation_allowed: true
+            dependency_change_allowed: false
+            credential_output_allowed: false
+            qmt_operation_allowed: false
+            simulation_or_live_allowed: false
+            docs_as_runtime_authorization_allowed: false
+          completion_criteria:
+            - "文档覆盖 7 个 CP3 DQ、6 个 Story 边界和 no-real-operation 表"
+            - "CP7 evidence 仅限只读持仓查询，不构成交易或账户写入授权"
+            - "凭据泄露和真实交易授权声明次数为 0"
+  dependency_graph:
+    nodes:
+      - "CR020-S01-windows-gateway-runtime-admission"
+      - "CR020-S02-server-qmt-login-session"
+      - "CR020-S03-linux-client-rest-transport"
+      - "CR020-S04-hmac-pairing-allowlist-scope"
+      - "CR020-S05-query-positions-readonly"
+      - "CR020-S06-docs-runbook-cp7-real-machine-validation"
+    external_nodes:
+      - "CR019-S04-windows-gateway-lifecycle-deployment"
+    edges:
+      - ["CR019-S04-windows-gateway-lifecycle-deployment", "CR020-S01-windows-gateway-runtime-admission"]
+      - ["CR020-S01-windows-gateway-runtime-admission", "CR020-S02-server-qmt-login-session"]
+      - ["CR020-S01-windows-gateway-runtime-admission", "CR020-S03-linux-client-rest-transport"]
+      - ["CR020-S01-windows-gateway-runtime-admission", "CR020-S04-hmac-pairing-allowlist-scope"]
+      - ["CR020-S03-linux-client-rest-transport", "CR020-S04-hmac-pairing-allowlist-scope"]
+      - ["CR020-S02-server-qmt-login-session", "CR020-S05-query-positions-readonly"]
+      - ["CR020-S03-linux-client-rest-transport", "CR020-S05-query-positions-readonly"]
+      - ["CR020-S04-hmac-pairing-allowlist-scope", "CR020-S05-query-positions-readonly"]
+      - ["CR020-S01-windows-gateway-runtime-admission", "CR020-S06-docs-runbook-cp7-real-machine-validation"]
+      - ["CR020-S02-server-qmt-login-session", "CR020-S06-docs-runbook-cp7-real-machine-validation"]
+      - ["CR020-S03-linux-client-rest-transport", "CR020-S06-docs-runbook-cp7-real-machine-validation"]
+      - ["CR020-S04-hmac-pairing-allowlist-scope", "CR020-S06-docs-runbook-cp7-real-machine-validation"]
+      - ["CR020-S05-query-positions-readonly", "CR020-S06-docs-runbook-cp7-real-machine-validation"]
+  dag_validation_result:
+    checked_by: "meta-se using dependency-mapper / wave-planner / dag-validator rules"
+    checked_at: "2026-06-05T07:03:10+08:00"
+    cycles: []
+    invalid_references: []
+    parallel_internal_dependencies: 0
+    isolated_nodes: []
+    conclusion: "PASS"
+    note: "CR020 增量 DAG 从 W1 gateway runtime/session 单向流向 W2 client/auth、W3 query_positions、W4 docs/CP7 evidence。LLD 可按 max_parallel_lld=3 基于 file owner 分轮起草；开发仍受 CP5、依赖类型、文件所有权和运行授权门控约束。"

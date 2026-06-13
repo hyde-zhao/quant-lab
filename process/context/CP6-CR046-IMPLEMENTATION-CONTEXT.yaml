@@ -1,0 +1,62 @@
+version: 1
+context_id: CP6-CR046-IMPLEMENTATION-CONTEXT
+status: ready
+change_id: CR-046
+phase: story-execution
+created_at: '2026-06-14T00:16:26+08:00'
+owner: host-orchestrator
+read_profile: compact
+source_cp5: process/checkpoints/CP5-CR046-DUAL-TARGET-FRAMEWORK-BATCH-A-LLD-BATCH.md
+cp5_status: approved
+implementation_scope: framework-first documentation / contract implementation only
+allowed_artifacts:
+  - docs/qmt/CR046-DUAL-TARGET-STRATEGY-FRAMEWORK.md
+  - docs/qmt/CR046-MINIQMT-RUNNER-INSTALL-DESIGN.md
+  - docs/qmt/CR046-VERIFICATION-FRAMEWORK.md
+  - docs/research/CR046-RESEARCH-FRAMEWORK-FOLLOWUP.md
+  - process/stories/CR046-BATCH-A-IMPLEMENTATION.md
+  - process/checks/CP6-CR046-DUAL-TARGET-FRAMEWORK-BATCH-A-CODING-DONE.md
+  - process/STATE.md
+  - process/STORY-STATUS.md
+  - process/STORY-BACKLOG.md
+  - process/DEVELOPMENT-PLAN.yaml
+forbidden_artifacts:
+  - strategy implementation files
+  - QMT / MiniQMT runtime scripts
+  - installer scripts that execute installation
+  - credentials
+  - .env
+  - account / cash / position / order / fill data
+validation_commands:
+  - name: CR tracking consistency
+    command: uv run --python 3.11 python scripts/check_cr_tracking_consistency.py --project-root .
+  - name: YAML parse
+    command: uv run --python 3.11 python -c "import yaml; [yaml.safe_load(open(p, encoding='utf-8')) for p in ['process/changes/CR-INDEX.yaml','process/DEVELOPMENT-PLAN.yaml','process/context/CP6-CR046-IMPLEMENTATION-CONTEXT.yaml']] ; print('YAML_OK')"
+  - name: diff whitespace
+    command: git diff --check -- <CR046 scoped files>
+real_operation_authorization:
+  concrete_strategy_delivery_authorized: false
+  real_transfer_authorized: false
+  qmt_import_authorized: false
+  qmt_runtime_validation_authorized: false
+  miniqmt_real_install_authorized: false
+  miniqmt_connection_authorized: false
+  credential_read_authorized: false
+  account_query_authorized: false
+  order_submit_cancel_authorized: false
+  simulation_live_authorized: false
+  provider_lake_publish_authorized: false
+design_evidence:
+  full_lld_confirmed:
+    - process/stories/CR046-S01-dual-target-strategy-architecture-LLD.md
+    - process/stories/CR046-S02-strategy-package-contract-and-schema-LLD.md
+    - process/stories/CR046-S03-qmt-terminal-target-framework-LLD.md
+    - process/stories/CR046-S04-miniqmt-runner-install-and-runtime-boundary-LLD.md
+    - process/stories/CR046-S05-verification-framework-and-evidence-model-LLD.md
+  technical_note_confirmed:
+    - process/stories/CR046-S06-follow-up-strategy-delivery-gate.md#技术说明
+    - process/stories/CR046-S07-research-framework-follow-up-contract.md#技术说明
+read_expansion_log:
+  - at: '2026-06-14T00:16:26+08:00'
+    actor: host-orchestrator
+    full_doc_read_reason: CP6 implementation evidence requires mapping confirmed LLD / technical-note contracts to concrete CR046 framework documentation artifacts.

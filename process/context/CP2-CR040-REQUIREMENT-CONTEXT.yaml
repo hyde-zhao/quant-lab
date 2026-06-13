@@ -1,0 +1,47 @@
+context_id: CP2-CR040-REQUIREMENT-CONTEXT
+cr_id: CR-040
+phase: requirement-clarification
+status: ready
+created_at: "2026-06-10T22:45:00+08:00"
+owner: meta-po
+read_profile: minimal
+source_artifacts:
+  - process/changes/CR-040-QMT-ROUTE-DELETION-BACKTRADER-PAPER-SIM-GOLDMINER-ADAPTER-2026-06-10.md
+  - process/changes/CR-019-FOLLOW-UP-TRACKING-2026-05-31.md
+  - process/changes/CR-INDEX.yaml
+  - process/STATE.md
+decision_basis:
+  user_decision: "用户确认无法获取 MiniQMT 权限，要求删除 QMT 相关 CR，不再推进 QMT/MiniQMT/XtQuant 路线。"
+  route_change: "转向 Backtrader 语义参考下的 API-less Paper Simulation Runner，后续再做 BrokerAdapter 和掘金量化 adapter Spike。"
+scope:
+  in_scope:
+    - "将 CR-020 标记为 deleted-by-user。"
+    - "将 CR-021..CR-024 标记为 cancelled-user-deleted。"
+    - "保留历史 QMT 证据用于审计，不再作为 active route。"
+    - "固化 CR041..CR044 的后续路线候选。"
+  out_of_scope:
+    - "不实现 paper simulation 代码。"
+    - "不创建或授权真实 broker 连接。"
+    - "不安装 Backtrader 或掘金 SDK。"
+    - "不读取 broker 凭据、账户、委托、成交或持仓。"
+    - "不下单、不撤单、不启动 simulation/live。"
+engineering_scenarios:
+  - id: SG-CR040-01
+    title: "删除 QMT 路线"
+    expected_result: "CR020-024 不再出现在 active/candidate 路线中，历史证据保留。"
+  - id: SG-CR040-02
+    title: "启动本地 paper simulation 候选路线"
+    expected_result: "CR041 只在用户后续确认时创建，并限定为 API-less、本地、无 broker 副作用。"
+  - id: SG-CR040-03
+    title: "掘金量化 adapter 作为 Spike 候选"
+    expected_result: "CR043 之前不安装、不登录、不连接、不查询账户、不下单。"
+open_decisions:
+  - id: DQ-CP2-CR040-01
+    type: scope
+    question: "是否接受 CR040 只关闭/删除 QMT 路线并规划新路线，而把代码实现拆到后续 CR041？"
+    recommendation: "接受；CR040 不写业务代码，避免路线变更和实现变更混在同一 CR。"
+  - id: DQ-CP2-CR040-02
+    type: runtime_authorization
+    question: "是否授权任何 broker、Backtrader、掘金量化、QMT 或账号相关运行？"
+    recommendation: "不授权；当前只允许静态文档、状态同步和本地代码阅读。"
+read_expansion_log: []

@@ -1,0 +1,63 @@
+context_id: CP7-CR041-VERIFICATION-CONTEXT
+cr_id: CR-041
+phase: story-execution
+status: pass-with-risk
+created_at: "2026-06-10T23:59:00+08:00"
+owner: meta-po
+read_profile: compact
+source_artifacts:
+  - process/context/CP6-CR041-CODING-CONTEXT.yaml
+  - process/checks/CP7-CR041-PAPER-SIMULATION-VERIFICATION-DONE.md
+  - process/checks/CP6-CR041-CP7-F01-validation-to-dict-CODING-DONE.md
+verification_summary:
+  decision: PASS_WITH_RISK
+  blocker_findings_open: 0
+  closed_findings:
+    - F-CR041-CP7-001
+  commands:
+    - command: "uv run --python 3.11 python -c \"from engine.paper_simulation import PaperSimulationViolation, PaperSimulationValidation; v=PaperSimulationValidation(False,(PaperSimulationViolation('x','msg','blocker','field'),)); print(v.blocked_reasons); print(v.to_dict())\""
+      result: PASS
+    - command: "uv run --python 3.11 python -m py_compile engine/paper_simulation.py scripts/run_paper_simulation.py tests/test_cr041_paper_simulation.py"
+      result: PASS
+    - command: "PYTHONDONTWRITEBYTECODE=1 PYTEST_ADDOPTS='-p no:cacheprovider' uv run --python 3.11 pytest -q tests/test_cr041_paper_simulation.py"
+      result: "PASS: 21 passed in 0.10s"
+    - command: "uv run --python 3.11 python scripts/check_cr_tracking_consistency.py --project-root ."
+      result: PASS
+story_batch:
+  - id: CR041-S01
+    slug: strategy-admission-package-reader
+    status: verified-with-risk
+    cp7: PASS_WITH_RISK
+  - id: CR041-S02
+    slug: target-portfolio-order-intent-builder
+    status: verified-with-risk
+    cp7: PASS_WITH_RISK
+  - id: CR041-S03
+    slug: paper-broker-fill-engine
+    status: verified-with-risk
+    cp7: PASS_WITH_RISK
+  - id: CR041-S04
+    slug: position-cash-equity-ledger
+    status: verified-with-risk
+    cp7: PASS_WITH_RISK
+  - id: CR041-S05
+    slug: cli-report-artifacts
+    status: verified-with-risk
+    cp7: PASS_WITH_RISK
+residual_risks:
+  - id: CR041-RISK-CP7-01
+    severity: LOW
+    status: open-for-cp8
+    description: "CR041 scoped TEST-STRATEGY / TEST-MATRIX / SCENARIOS 缺失；本轮以 CP5/CP6 胶囊、LLD/IMPLEMENTATION 映射和目标测试替代。"
+  - id: CR041-RISK-CP7-02
+    severity: LOW
+    status: open-for-cp8
+    description: "process/VALIDATION-ENV.yaml 不是 CR041 专属胶囊；本轮以 uv run 命令成功执行作为等价环境证据。"
+not_authorized:
+  - "broker / QMT / MiniQMT / XtQuant / Goldminer connection"
+  - "Backtrader default runtime or dependency change"
+  - "account/order/fill live query"
+  - "real or simulated broker order submit/cancel"
+  - "credential read"
+  - "provider fetch / lake write / catalog publish"
+next_gate: CP8 CR041 delivery readiness

@@ -1,12 +1,12 @@
 ---
 cr_id: "CR-016"
-status: "controlled-offline-verified-s05-s06-later-gated-pending-cp8"
+status: "closed"
 impact_level: "high"
 workflow_mode_before: "standard"
 workflow_mode_after_change: "standard"
 fast_lane_upgrade_reason: "QMT 模拟盘 / 实盘激活涉及真实 broker API 发单、撤单、账户查询、对账、监控、kill switch、人工审批、小资金实盘和资金放大，命中高风险权限、外部接口、安全边界和运行治理，必须走 standard。"
 rollback_to: "requirement-clarification"
-approval_result: "controlled-offline-verified-s05-s06-later-gated-pending-cp8"
+approval_result: "closed-cp8-approved"
 created_at: "2026-05-27T22:22:05+08:00"
 created_by: "meta-po"
 approved_by: "user"
@@ -18,9 +18,16 @@ implementation_authorization: false
 real_order_authorization: false
 depends_on: "CR-015"
 updated_at: "2026-05-31T21:43:48+08:00"
+closed_by: "user"
+closed_at: "2026-06-05T23:11:48+08:00"
+cp8_manual_status: "approved"
+cp8_manual_review: "checkpoints/CP8-CR015-CR016-CR017-DELIVERY-READINESS.md"
+cp8_auto_check: "process/checks/CP8-CR015-CR016-CR017-DELIVERY-READINESS.md"
 ---
 
 # CR-016 QMT 模拟盘 / 实盘激活与运行治理
+
+> 2026-06-05T23:11:48+08:00 关闭记录：用户接受 CP8 推荐方案，CR-016 当前受控离线交付范围关闭。关闭范围仅包含 simulation gate、reconciliation、monitoring / kill switch、runbook / approval gate、incident playbook 和 S07 文档；CR016-S05 live_readonly / small_live 与 CR016-S06 scale_up 继续 later-gated、未实现、未验证。关闭不授权真实 QMT / broker、发单、撤单、账户查询、凭据读取、真实抓取、真实写湖、broker lake 写入、publish、simulation、live_readonly、small_live 或 scale_up。
 
 ## 变更描述
 
@@ -190,10 +197,10 @@ updated_at: "2026-05-31T21:43:48+08:00"
 
 ## 处理结论
 
-- 审批结论：`controlled-offline-verified-s05-s06-later-gated-pending-cp8`
+- 审批结论：`closed-cp8-approved`
 - [ ] 自动批准（低风险）
-- [ ] 待人工确认（中风险）
-- [x] 待人工审批（高风险）
+- [x] 用户已于 2026-06-05T23:11:48+08:00 接受 CP8 推荐关闭方案；CR016-S05/S06 仍为 later-gated，未实现、未验证
+- [ ] 待人工审批（高风险）
 
 当前禁止事项：
 

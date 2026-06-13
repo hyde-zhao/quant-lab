@@ -1,7 +1,7 @@
 ---
 cr_id: CR-039
 title: 多因子策略研究闭环与候选策略准入
-status: draft-not-active
+status: closed-current-delivery
 created_at: 2026-06-10
 created_by: codex
 owner: meta-po
@@ -9,7 +9,7 @@ source: user
 change_type: add
 impact_level: high
 workflow_mode_after_change: standard
-activation_policy: "draft only; activate after CR-035/036/037/038 produce sufficient research evidence"
+activation_policy: "activated by user request on 2026-06-10 after CR-035/036/037 closure, CR-038 closure, and CR-020 no-overlap conflict precheck"
 parent_cr: CR-034
 source_decision_id: USER-20260610-BOOK-RESEARCH-PLAN
 related_changes:
@@ -66,6 +66,18 @@ CR-039 仍是研究准入，不授权真实 QMT、simulation、live 或账户 / 
 | 第三章因子面板 | CR-034 | 必需 |
 | 策略配置 | 本 CR | 必需，必须包含因子权重、调仓频率、成本、约束和样本窗口 |
 
+## CR-037 / CR-038 准入门禁
+
+| 门禁 | 规则 | 失败行为 |
+|---|---|---|
+| CR-037 分级消费 | 默认只允许消费 CR-037 `baseline` / `candidate` 的因子、模型或异象。 | 非 `baseline` / `candidate` 不得进入默认候选策略。 |
+| `watch` 项例外 | 使用 CR-037 `watch` 项必须有 CR-038 组合约束证据、权重上限、风险接受说明，并在准入包中标为 `watch` 或 `research_baseline`，不得直接标为 `simulation_candidate`。 | 缺少任一证据则 fail-closed。 |
+| `reject` / 缺证项 | CR-037 `reject`、`needs-more-data`、`blocked_missing_evidence` 和 CR-038 未通过组合约束的对象不得进入策略分数、候选策略或 simulation 准入包。 | 发现后策略准入结论为 `blocked_missing_evidence` 或 `reject`。 |
+| 成本 / 容量证据 | `simulation_candidate` 必须同时具备 CR-038 成本敏感性、换手、容量 / 流动性、风险暴露和归因证据。 | 缺成本 / 容量证据时，最高只能标为 `research_baseline` 或 `watch`。 |
+| 第5章异象代理缺口 | 使用 CR-036 异象必须追溯 CR-036 gap register 和 CR-037 复验结论；CR-037 已判 `reject` 的异象默认不得进入策略。 | 缺失追溯或使用 reject 异象时 fail-closed。 |
+| ML 边界 | CR-039 默认不训练或准入 ML 模型；若使用 ML alpha，必须另起 CR 或提供 CR-037 leakage guardrail、purge / embargo、解释性和调参边界。 | 缺少边界时不得纳入策略准入包。 |
+| 交易授权 | `simulation_candidate` 只表示可发起后续 simulation 准入 CR 的研究输入，不授权 QMT、simulation、live、账户、订单或 broker runtime。 | 任一运行授权声明均视为门禁失败。 |
+
 ## 输出规划
 
 | 输出 | 路径 | 说明 |
@@ -93,6 +105,8 @@ CR-039 仍是研究准入，不授权真实 QMT、simulation、live 或账户 / 
 - [ ] 每个候选策略都有样本内、验证期、2020-2026 YTD 样本外表现。
 - [ ] 每个候选策略都有成本敏感性、换手、容量、风险暴露和归因。
 - [ ] 每个候选策略都能追溯到 CR-035/036/037/038 输入。
+- [ ] 默认只消费 CR-037 `baseline` / `candidate`；使用 `watch` 必须有 CR-038 风险约束和显式风险接受；`reject` 不得进入策略候选。
+- [ ] 缺少 CR-038 成本 / 容量证据时，不得输出 `simulation_candidate`。
 - [ ] 准入包明确 `allowed_claims` 和 `blocked_claims`。
 - [ ] 不声明 QMT-ready、simulation-ready、live-ready，除非后续交易 CR 单独完成。
 - [ ] operation counts 中 QMT、simulation、live、broker lake、provider fetch、publish 均为 0。
@@ -100,4 +114,46 @@ CR-039 仍是研究准入，不授权真实 QMT、simulation、live 或账户 / 
 
 ## 激活条件
 
-本 CR 当前为 `draft-not-active`。必须等 CR-035/037/038 至少完成基础产物后才能启动；如果策略使用第5章异象，还必须等待 CR-036 完成。启动前必须做 CR 冲突预检，确认不会和 CR-020 当前 QMT gateway 验证或后续交易准入链路混淆。
+本 CR 已于 2026-06-10 按用户要求启动为 `active-story-execution`。
+
+- 前置状态：CR-035、CR-036、CR-037、CR-038 均已 `closed-user-approved`；CR-038 输出 `PORTFOLIO-ADMISSION-SUMMARY.json`，且 `simulation_candidate=false`。
+- 冲突预检：CR-020 仍处于 `active-manual-validation-pending`，影响面限定在 Windows/QMT gateway、只读 `query_positions`、HMAC、allowlist、凭据输入和运行手册；CR-039 影响面限定在本地离线策略候选研究 engine / runner / reports / process research 产物。两者文件 owner、外部接口、权限边界、数据写入、账户 / 订单和运行授权无重叠。
+- 并行边界：CR-039 不授权 QMT、simulation、live、账户 / 订单、provider fetch、lake write、catalog publish、dependency change、凭据读取或外部项目运行。
+- 准入边界：由于 CR-038 当前组合摘要不输出 `simulation_candidate`，CR-039 最高只能形成 `research_baseline` / `watch` / `reject` / `blocked_missing_evidence` 等研究准入结论；若未来要进入 simulation，必须另起 CR-021 或后续 simulation 准入 CR 并重新取得运行授权。
+
+## 实施与验证结果
+
+| 项目 | 结果 | 证据 |
+|---|---|---|
+| 实现 | PASS | `engine/multifactor_strategy_candidates.py`, `scripts/run_multifactor_strategy_candidates.py`, `tests/test_multifactor_strategy_candidates.py` |
+| CP6 | PASS | `process/checks/CP6-CR039-MULTIFACTOR-STRATEGY-CANDIDATES-CODING-DONE.md` |
+| CP7 | PASS | `process/checks/CP7-CR039-MULTIFACTOR-STRATEGY-CANDIDATES-VERIFICATION-DONE.md` |
+| QA 复核 | PASS | `process/handoffs/META-QA-CR039-CP7-2026-06-10.md` |
+| 实际 runner | PASS | `run-cr039-multifactor-strategy-candidates-20260610` |
+| 策略报告 | PASS | `process/research/multifactor_strategy_candidates/run-cr039-multifactor-strategy-candidates-20260610/STRATEGY-RESEARCH-REPORT.md` |
+| 准入包 | PASS | `process/research/multifactor_strategy_candidates/run-cr039-multifactor-strategy-candidates-20260610/STRATEGY-ADMISSION-PACKAGE.json` |
+
+最终候选为 `strategy_equal_weight_baseline`，准入等级为 `research_baseline`，`simulation_candidate=false`。`risk_adjusted_constrained` 因 CR-038 observation 样本容量状态非 PASS 被剔除，不进入最终候选、strategy_scores、risk_cost_summary 或准入包。
+
+所有 forbidden operation counters 为 0；本 CR 不构成 QMT-ready、simulation-ready、live-ready、account/order-ready、provider-ready、lake-ready、publish-ready 或 production-valid。
+
+## 关闭记录
+
+用户于 2026-06-10 回复“接受cr039，然后启动cr041”。本 CR 按用户接受关闭为 `closed-current-delivery`。
+
+关闭结论：
+
+- 最终候选：`strategy_equal_weight_baseline`
+- 准入等级：`research_baseline`
+- `simulation_candidate=false`
+- 可作为 CR041 API-less Paper Simulation Runner 的输入边界
+- 不构成 simulation-ready、live-ready、broker-ready 或真实交易授权
+- 覆盖标记：CR039 只覆盖 CR026/027/028 中“研究准入是否需要继续上外部 runner / minute / Level2”的判定输入；它没有覆盖 Qlib isolated runner、minute data Spike 或 Level2 microstructure Spike 的实现 / 数据 / 权限工作。
+
+关闭不授权：
+
+- 不连接 QMT / MiniQMT / XtQuant / 掘金量化 / broker
+- 不读取账户、持仓、委托、成交或凭据
+- 不下单、不撤单
+- 不启动 simulation / live
+- 不 provider fetch、不 lake write、不 catalog publish

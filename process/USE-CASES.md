@@ -1,15 +1,15 @@
 ---
 status: confirmed
-version: "1.14"
+version: "1.15"
 confirmed_by: "user"
-confirmed_at: "2026-06-03T06:51:19+08:00"
+confirmed_at: "2026-06-13T22:03:22+08:00"
 engagement_mode: production
 scenario_subject_type: target-artifact
 scenario_subject_id: "local-backtest-production-data-lake-and-qmt-trading-layer"
 target_artifact_type: tool
 governance_mode: review-gated
 review_policy: strict
-total_use_cases: 27
+total_use_cases: 32
 ---
 
 # 使用场景
@@ -33,6 +33,7 @@ total_use_cases: 27
 | 1.12 | 2026-05-31 | meta-po | 按用户 CP2 修改意见将 CR-025 修订为 production-grade research-to-execution 路线中的研究执行语义对照与接口对齐，补充研究可信度、回测 / 模拟一致性、QMT 生产执行三条主线，明确 Backtrader 仅为 optional semantic reference | CR-025 原文档增量修订；保留 UC-01 至 UC-19 旧基线，不新增场景编号；本增量待 CP2 人工确认 |
 | 1.13 | 2026-06-01 | meta-po | 用户批准 CR-025 CP2，并要求 CP3/HLD 中由 meta-se 充分分析本地 Backtrader 项目 `/home/hyde/download/backtrader`，记录可借鉴、可适配、可移植和禁止移植模块 | CR-025 场景基线确认；保留 UC-19 编号，新增 HLD 输入与验证场景，不授权实现或源码级移植 |
 | 1.14 | 2026-06-03 | meta-po | 用户授权进入 CR-030 HLD，回填 CR-030 多因子研究框架借鉴与研究闭环标准化场景，覆盖外部项目静态借鉴、项目自有多因子契约、因子面板 / 标签窗口、单因子评价、多因子组合、实验追踪和策略准入包边界 | CR-030 原文档增量更新；保留 UC-01 至 UC-19 旧基线，新增 UC-20 至 UC-27；CP2 通过仅授权 HLD，不授权实现、依赖变更、外部项目运行、源码迁移、provider/lake/publish、QMT/simulation/live 或凭据读取 |
+| 1.15 | 2026-06-13 | meta-po | 按 CR-046 增量补齐 QMT / MiniQMT 双目标策略交付框架场景，覆盖策略核心合同、QMT 终端策略包、MiniQMT runner 安装设计、验证框架、后续策略交付门禁和研究框架反向约束 | CR-046 原文档增量更新；保留 UC-01 至 UC-27 旧基线，新增 UC-28 至 UC-32；用户已于 2026-06-13T22:03:22+08:00 通过 CP2；不授权具体策略交付、QMT 运行验证、MiniQMT 连接、submit/cancel、simulation/live、provider/lake/publish 或凭据读取 |
 
 ## 用户画像（Personas）
 
@@ -788,6 +789,139 @@ total_use_cases: 27
 4. 对 QMT simulation/live/account/cancel/query 输出 not-authorized。
 5. 推荐后续是否启动 CR-020 或策略准入修复 CR。
 
+### UC-28：QMT / MiniQMT 双目标策略交付框架
+
+| 字段 | 内容 |
+|---|---|
+| **使用角色** | P-05 QMT 交易接入与运行负责人；P-07 阶段六多因子模拟盘准入负责人 |
+| **触发条件** | 研究策略已经进入准入或候选阶段，需要先冻结可同时面向 QMT 终端策略和 MiniQMT / XtQuant 外部 runner 的交付框架，但当前不交付具体策略。 |
+| **输入** | CR041 paper simulation 的 `order_intents` / fills / reconciliation 输出；CR042 broker-neutral adapter contract；CR046 正式变更单；用户事实：QMT 已在券商开通、当前无 MiniQMT 权限。 |
+| **处理逻辑** | Given 用户要求后续研究策略同时支持 QMT 和 MiniQMT, When CR046 处于 framework-first, Then 系统必须定义统一策略核心合同、目标适配边界、策略包布局、验证证据模型和后续策略交付门禁；不得把框架设计解释为任一具体策略已可运行、可模拟盘或可交易。 |
+| **输出/结果** | 双目标策略交付框架设计输入；策略核心合同；QMT terminal target 与 MiniQMT runner target 的边界；后续 CR047 策略交付入口。 |
+| **前置条件** | CP2 确认 CR046 只做框架；CP3 冻结架构；CP5 冻结 Story 设计证据；真实运行仍需后续授权。 |
+| **排除情况** | 不交付具体交易策略；不执行 QMT shadow / 模拟盘验证；不连接 MiniQMT；不读取账户、资金、持仓、委托或成交；不 submit/cancel；不 simulation/live。 |
+
+**处理流程（文字描述）：**
+1. 从研究输出抽象出策略元数据、信号、目标持仓、order intent、风险假设、成本假设和对账证据字段。
+2. 将可复用策略核心与目标适配层分离，禁止策略核心直接调用 QMT / XtQuant / MiniQMT API。
+3. 为 QMT 终端策略和 MiniQMT runner 定义共同输入输出、配置、日志、报告和失败状态。
+4. 将具体策略实现和真实运行验证登记为后续 CR，当前只冻结合同和验证框架。
+
+---
+
+### UC-29：QMT 终端策略包交付形态
+
+| 字段 | 内容 |
+|---|---|
+| **使用角色** | P-05 QMT 交易接入与运行负责人 |
+| **触发条件** | 用户已具备 QMT 终端权限，需要在后续 CR 中能把研究策略导入 QMT 终端运行，但当前仅设计交付形态。 |
+| **输入** | 双目标策略核心合同；QMT 终端手工导入约束；配置样例；shadow 报告格式；不授权边界。 |
+| **处理逻辑** | Given QMT 终端可由用户在 Windows 上运行, When 交付 QMT terminal target, Then 策略包必须包含终端入口文件、配置样例、导入说明、输入数据格式、shadow 报告、日志规范和人工证据清单；任何 QMT API 调用点必须隔离在 adapter 边界并受后续运行授权控制。 |
+| **输出/结果** | `targets/qmt_terminal/` 设计；QMT 终端导入 runbook；shadow 证据格式；运行授权前 fail-closed 规则。 |
+| **前置条件** | CR046 框架通过 CP8 后，后续 CR047 选择具体策略并生成策略包；真实终端运行需要独立 runtime_authorization。 |
+| **排除情况** | 不在 CR046 内执行终端导入、不运行策略、不读取 QMT 账户、不提交或撤销委托。 |
+
+**处理流程（文字描述）：**
+1. 定义终端策略入口如何加载配置和策略核心导出对象。
+2. 定义 QMT terminal target 的输入、输出、日志、shadow report 和人工证据字段。
+3. 明确终端内策略与策略核心之间的 adapter 边界，禁止业务策略绕过边界直接触达交易 API。
+4. 把真实 shadow / 模拟盘步骤写为计划和门禁，不在 CR046 执行。
+
+---
+
+### UC-30：MiniQMT Runner 安装设计与运行边界
+
+| 字段 | 内容 |
+|---|---|
+| **使用角色** | P-05 QMT 交易接入与运行负责人；P-08 研究执行后端评估者 |
+| **触发条件** | 用户未来可能申请 MiniQMT 权限并自研 runner，需要提前冻结 runner 安装、目录、依赖隔离、配置和运行边界。 |
+| **输入** | MiniQMT / XtQuant 未来权限前置；Windows runner 目录规范；uv 依赖管理约束；kill switch、日志和报告目录要求。 |
+| **处理逻辑** | Given 用户当前没有 MiniQMT 权限, When CR046 设计 runner target, Then 只能定义安装设计和 dry-run 方案，包括 Windows 目录、uv 管理、Python 版本、依赖隔离、配置、启动停止、日志、kill switch、rollback 和 uninstall；不得真实安装 runner、连接 MiniQMT 或调用 xtquant。 |
+| **输出/结果** | `targets/miniqmt_runner/` 安装设计；install dry-run 计划；配置和日志目录；权限前置检查；后续 CR049 实机验证入口。 |
+| **前置条件** | MiniQMT 权限开通、用户逐 run 授权、runner install manifest、敏感信息不入仓规则。 |
+| **排除情况** | 不安装真实 runner；不连接 MiniQMT；不订阅行情；不查询账户；不 submit/cancel；不常驻无人值守运行。 |
+
+**处理流程（文字描述）：**
+1. 设计 Windows runner 目录布局、配置文件、日志和报告输出位置。
+2. 约定 Python 与依赖由 `uv` 管理，真实安装前必须有 dry-run manifest。
+3. 定义 MiniQMT / xtquant 权限、userdata_mini、账户只读和 submit/cancel 的逐层门禁。
+4. 设计启动、停止、健康检查、kill switch、rollback 和 uninstall，但不执行真实安装或连接。
+
+---
+
+### UC-31：双目标验证框架与证据模型
+
+| 字段 | 内容 |
+|---|---|
+| **使用角色** | P-05 QMT 交易接入与运行负责人；P-07 阶段六多因子模拟盘准入负责人；P-03 因子研究数据审计者 |
+| **触发条件** | 需要证明框架、策略包合同和安装设计可被静态验证，并为后续真实运行验证预留证据格式。 |
+| **输入** | 策略包 schema；fixture 输入输出；QMT terminal shadow 计划；MiniQMT runner install dry-run 计划；不授权清单。 |
+| **处理逻辑** | Given CR046 不执行真实终端或 runner, When 验证框架输出, Then 必须覆盖本地 fixture/schema 静态验证、策略包布局校验、QMT shadow 证据模板、MiniQMT install dry-run 证据模板、安全计数和后续 runtime gate；真实 API 调用计数必须为 0。 |
+| **输出/结果** | 验证框架设计；证据模型；测试矩阵增量；静态 fixture 计划；后续只读 / submit / cancel 门禁。 |
+| **前置条件** | CP3 HLD 冻结目标架构和包结构；CP5 冻结 Story 级验证设计。 |
+| **排除情况** | 不运行 QMT；不连接 MiniQMT；不读取凭据或账户；不把 fixture pass 声明为 simulation-ready。 |
+
+**处理流程（文字描述）：**
+1. 定义策略包结构、schema 和 fixture 校验项。
+2. 定义 QMT terminal shadow 手工验证证据模板，但本 CR 不执行。
+3. 定义 MiniQMT runner install dry-run 证据模板，但本 CR 不执行真实安装。
+4. 将只读连接、submit/cancel、tick runner 和无人值守运行拆成后续门禁。
+
+---
+
+### UC-32：交易交付框架反向约束研究框架
+
+| 字段 | 内容 |
+|---|---|
+| **使用角色** | P-03 因子研究数据审计者；P-07 阶段六多因子模拟盘准入负责人；P-08 研究执行后端评估者 |
+| **触发条件** | CR046 框架冻结后，需要让后续研究策略天然产出双目标交付所需的元数据、order intents、风险假设和证据。 |
+| **输入** | CR030 多因子研究闭环；CR041 paper simulation；CR046 策略核心合同和验证框架；后续 CR051-candidate。 |
+| **处理逻辑** | Given 交易交付框架先于具体策略交付冻结, When 研究框架继续完善, Then 后续研究输出必须对齐双目标策略包合同，至少产出策略元数据、数据 lineage、信号日期、目标交易日、目标持仓、order intents、成本 / 风险假设、blocked claims 和验证证据；本 CR 只登记反向约束，不实施研究框架改造。 |
+| **输出/结果** | CR051-candidate；研究框架输出合同输入；后续研究准入与策略交付衔接清单。 |
+| **前置条件** | CR046 CP8 通过；CR051 启动前完成冲突预检和 CP2。 |
+| **排除情况** | 不在 CR046 内改造研究框架代码；不重跑研究；不生成具体策略；不申请模拟盘。 |
+
+**处理流程（文字描述）：**
+1. 从 CR046 策略核心合同提取研究输出必须提供的字段和证据。
+2. 将缺口登记为 CR051-candidate，而不是混入当前框架 CR。
+3. 后续研究框架改造必须继续保留数据湖、PIT、复权、成本、benchmark、admission gate 和不授权边界。
+4. CR051 未启动前，不把当前 CR046 输出解释为研究框架已经完成。
+
+---
+
+## CR-046 Scenario Gray Areas
+
+| 灰区 ID | 问题 | 为什么重要 | 用户选择 / 当前处理 | 状态 |
+|---|---|---|---|---|
+| SGA-046-01 | CR046 是框架 CR 还是具体策略交付 CR？ | 决定是否可以进入实现和运行验证。 | 采用 framework-first：只定双目标框架、验证框架、runner 安装设计和策略包契约。 | decision-item |
+| SGA-046-02 | 是否同时保留 QMT 终端和 MiniQMT runner？ | 决定架构复杂度和后续策略包合同。 | 保留双目标；QMT 当前可用，MiniQMT 为未来路线。 | decision-item |
+| SGA-046-03 | MiniQMT runner 安装是否进入本 CR？ | 会影响安装目录、uv、依赖隔离和配置合同。 | 进入安装设计和 dry-run 方案；不执行真实安装或连接。 | decision-item |
+| SGA-046-04 | 当前是否授权任何真实运行或账户操作？ | 防止 CP2 被误读为运行授权。 | 不授权 QMT 运行验证、MiniQMT 连接、账户查询、submit/cancel、simulation/live。 | decision-item |
+| SGA-046-05 | 首个具体策略何时交付？ | 防止框架和策略交付混杂。 | 作为 CR047-candidate，等待 CR046 CP8 后启动。 | decision-item |
+| SGA-046-06 | 研究框架完善是否并入本 CR？ | 当前 CR 过大会阻塞交易框架定稿。 | 登记为 CR051-candidate，CR046 只定义反向约束。 | decision-item |
+
+## CR-046 Deferred Ideas
+
+| ID | 想法 / 风险 / 扩展场景 | 来源 | 延后原因 | 重启条件 |
+|---|---|---|---|---|
+| DEF-046-01 | 首个研究策略双目标交付 | SGA-046-05 | 需要先冻结框架、schema 和验证证据模型。 | CR046 CP8 通过后启动 CR047。 |
+| DEF-046-02 | QMT 终端真实 shadow / 模拟盘 submit/cancel 验证 | SGA-046-04 | 需要具体策略包、用户逐 run 授权和运行证据模板。 | CR047 完成策略包后启动 CR048 或等价 runtime gate。 |
+| DEF-046-03 | MiniQMT / XtQuant 只读连接与 runner install 实机验证 | SGA-046-03 | 用户当前没有 MiniQMT 权限。 | 权限开通后启动 CR049。 |
+| DEF-046-04 | tick 级 MiniQMT runner / 资源控制 Spike | SGA-046-03 | tick 级复杂度和资源风险高，超出框架 first 范围。 | 日频双目标稳定后启动 CR050 Spike。 |
+| DEF-046-05 | 研究框架完善 | SGA-046-06 | 需要先确定交易交付框架对研究输出的反向约束。 | CR046 CP8 后启动 CR051。 |
+
+## CR-046 验证场景矩阵
+
+| 测试场景 ID | 验证目标 | 输入 / 前置 | 期望结果 | 来源场景 |
+|---|---|---|---|---|
+| TS-046-01 | framework-first 范围不越界 | CR046、CP2 Decision Brief、工作区 diff | 只产生框架 / 需求 / 设计 / 验证计划；具体策略交付、真实运行、连接、submit/cancel 计数均为 0 | UC-28 |
+| TS-046-02 | 策略核心合同双目标可消费 | 策略元数据、目标持仓、order intents、风险假设样例 | QMT terminal target 和 MiniQMT runner target 都能引用同一核心合同；策略核心不导入 QMT / xtquant | UC-28 |
+| TS-046-03 | QMT terminal target 交付形态完整 | 策略包布局、配置样例、runbook、shadow 报告模板 | QMT 终端策略入口、配置、输入输出、日志和人工证据模板均可审查；真实终端运行仍 not-authorized | UC-29 |
+| TS-046-04 | MiniQMT runner 安装设计可审查 | Windows 目录、uv、依赖隔离、配置、日志、kill switch、rollback | 安装设计覆盖 install dry-run / uninstall / upgrade / rollback；真实安装、连接和 xtquant 调用均为 0 | UC-30 |
+| TS-046-05 | 验证框架不伪造真实证据 | fixture、schema、dry-run 计划、QMT shadow 模板、MiniQMT install 模板 | 本地静态验证和证据模板清晰区分于真实运行；fixture pass 不得声明 simulation-ready | UC-31 |
+| TS-046-06 | 后续 CR 分流完整 | CR046 follow-up tracking、CR-INDEX、STATE | CR047..CR051 候选均有状态、阻塞前置、下一步和不授权边界；未提前创建正式 CR 文件 | UC-28, UC-32 |
+| TS-046-07 | 研究框架反向约束可追溯 | CR030 合同、CR041 paper output、CR046 策略核心合同 | 后续 CR051 能消费策略元数据、order intent、风险 / 成本假设和验证证据字段；当前不实施研究框架改造 | UC-32 |
+
 ## CR-030 Scenario Gray Areas
 
 | 灰区 ID | 问题 | 为什么重要 | 用户选择 / 当前处理 | 状态 |
@@ -923,15 +1057,15 @@ total_use_cases: 27
 
 | 维度 ID | 维度名称 | 状态 | 涉及场景 | 备注 |
 |---|---|---|---|---|
-| D1 | 用户维度 | 已补充 | UC-01 至 UC-27 | 覆盖策略研究者、聚宽候选验证者、因子研究数据审计者、生产数据湖负责人、QMT 交易接入 / 运行负责人、研究口径与交易价格审计者、阶段六多因子模拟盘准入负责人、研究执行后端评估者，以及 CR-030 多因子研究闭环负责人 |
-| D2 | 任务维度 | 已补充 | UC-01 至 UC-27 | 覆盖数据读取、回测、扫描、扩展策略、benchmark 消费、数据准备、生产级因子研究、全 A 数据湖、QMT foundation、阶段激活、复权双视图、publish/rollback、研究重跑、阶段六准入、QMT C/S bridge、Backtrader optional backend、外部项目借鉴矩阵、因子契约、评价报告、多因子组合、manifest/catalog 和策略准入包 |
-| D3 | 动机维度 | 已补充 | UC-02 至 UC-27 | 动机是提高本地研究效率、减少平台等待、升级探索性因子结论、建设可发布可回滚的 production truth，并在接入 QMT、申请模拟盘、引入可选执行后端和推进 CR-030 多因子闭环前降低假 alpha、口径混淆、凭据泄露、未授权 simulation、运行失控、schema 漏洞和框架迁移风险 |
-| D4 | 时间维度 | 已补充 | UC-02 至 UC-27 | 明确 2019-2025 回测区间、60 组扫描、rolling/年度分段、since-inception、release `as_of_trade_date`、T 日信号 / T+1 执行、qfq `as_of_trade_date`、QMT 阶段推进、连续 5 个真实交易日 dry-run、后置能力触发时序，以及 CR-025 / CR-030 的 CP2/CP3/CP5 门控顺序 |
-| D5 | 环境维度 | 已补充 | UC-01 至 UC-27 | 本地 parquet、raw、manifest、quality/catalog、断网消费、外置 lake、catalog current pointer、DuckDB 只读候选、Windows QMT / MiniQMT 节点、FastAPI 本地服务桥接、WSL / Windows 部署边界、外置 broker lake、mock adapter、凭据脱敏边界、Backtrader 未安装环境、本地 Qlib 静态分析路径和外部项目不运行边界均已记录 |
-| D6 | 方式维度 | 已补充 | UC-02 至 UC-27 | 命令/脚本/Notebook/API 入口将在 HLD 中细化；CSV、typed result、写湖作业、gate result、factor audit panel、P0 分层、Explicit Publish Gate、research rerun、OMS order intent、shadow / dry-run / mock、Backtrader semantic diff、CR-030 外部借鉴矩阵、因子 schema、评价报告、组合计划、manifest/catalog 和 StrategyAdmissionPackage 方式已记录 |
-| D7 | 异常维度 | 已补充 | UC-01 至 UC-27 | 覆盖 schema 缺失、复权混用、`available_at` 越界、label overlap、lineage 缺失、缺失价格、无成交、数据源失败、quality fail、PIT 不完整、辅助数据缺失、catalog pointer 污染、publish/rollback 失败、DuckDB 越权写入、凭据未授权、QMT 直连绕过、pre-trade fail、unknown 状态、未授权 simulation、Backtrader 未安装、clean feed 不合规、外部项目运行越权和 blocked claims |
-| D8 | 集成维度 | 已补充 | UC-04 至 UC-27 | 与聚宽验证、策略扩展、`market_data` 写湖、只读 resolver、Backtrader optional backend、Qlib isolated runner、CR-008 `research_input_v1`、CR-010/012/013/014/018 数据湖基线、DuckDB 候选查询层、local_backtest C 侧 client、Windows QMT / XtQuant S 侧 gateway、OMS / adapter / broker lake、lightweight engine 对照、外部多因子项目参考、Stage6 admission gate 和 `order_intent_draft_v1` 的边界已记录 |
-| D9 | 数据生命周期维度 | 已补充 | UC-09 至 UC-27 | CR-014/018 覆盖全 A 证券生命周期、代码变更、退市、current pointer、增量刷新、replay、publish release、rollback、权限计数和 claim boundary；CR-015/016/017/019/025/030 覆盖 broker event、order state、qfq as-of、raw/qfq/hfq 派生、admission package、dry-run 记录、bridge request、clean feed、semantic diff、factor panel、label window、ExperimentManifest、ResearchReportCatalog 和 StrategyAdmissionPackage 生命周期 |
+| D1 | 用户维度 | 已补充 | UC-01 至 UC-32 | 覆盖策略研究者、聚宽候选验证者、因子研究数据审计者、生产数据湖负责人、QMT 交易接入 / 运行负责人、研究口径与交易价格审计者、阶段六多因子模拟盘准入负责人、研究执行后端评估者，以及 CR-046 双目标策略交付框架负责人 |
+| D2 | 任务维度 | 已补充 | UC-01 至 UC-32 | 覆盖数据读取、回测、扫描、扩展策略、benchmark 消费、数据准备、生产级因子研究、全 A 数据湖、QMT foundation、阶段激活、复权双视图、publish/rollback、研究重跑、阶段六准入、QMT C/S bridge、Backtrader optional backend、多因子闭环、双目标策略交付框架、QMT terminal target、MiniQMT runner 安装设计、验证框架和研究反向约束 |
+| D3 | 动机维度 | 已补充 | UC-02 至 UC-32 | 动机是提高本地研究效率、减少平台等待、升级探索性因子结论、建设可发布可回滚的 production truth，并在接入 QMT、申请模拟盘、引入可选执行后端、多因子闭环和双目标策略交付前降低假 alpha、口径混淆、凭据泄露、未授权 simulation、运行失控、schema 漏洞和框架不一致风险 |
+| D4 | 时间维度 | 已补充 | UC-02 至 UC-32 | 明确 2019-2025 回测区间、60 组扫描、rolling/年度分段、since-inception、release `as_of_trade_date`、T 日信号 / T+1 执行、qfq `as_of_trade_date`、QMT 阶段推进、连续 5 个真实交易日 dry-run、后置能力触发时序，以及 CR-046 framework-first、CR047 策略交付和 CR049 MiniQMT 权限后置顺序 |
+| D5 | 环境维度 | 已补充 | UC-01 至 UC-32 | 本地 parquet、raw、manifest、quality/catalog、断网消费、外置 lake、catalog current pointer、DuckDB 只读候选、Windows QMT / MiniQMT 节点、FastAPI 本地服务桥接、WSL / Windows 部署边界、外置 broker lake、mock adapter、凭据脱敏边界、Backtrader 未安装环境、本地 Qlib 静态分析路径、QMT terminal package 和 MiniQMT runner 安装边界均已记录 |
+| D6 | 方式维度 | 已补充 | UC-02 至 UC-32 | 命令/脚本/Notebook/API 入口将在 HLD 中细化；CSV、typed result、写湖作业、gate result、factor audit panel、P0 分层、Explicit Publish Gate、research rerun、OMS order intent、shadow / dry-run / mock、Backtrader semantic diff、多因子 schema、策略包 schema、install dry-run 和双目标验证证据方式已记录 |
+| D7 | 异常维度 | 已补充 | UC-01 至 UC-32 | 覆盖 schema 缺失、复权混用、`available_at` 越界、label overlap、lineage 缺失、缺失价格、无成交、数据源失败、quality fail、PIT 不完整、辅助数据缺失、catalog pointer 污染、publish/rollback 失败、DuckDB 越权写入、凭据未授权、QMT 直连绕过、pre-trade fail、unknown 状态、未授权 simulation、Backtrader 未安装、MiniQMT 权限缺失和 fixture pass 被误读为真实运行证据 |
+| D8 | 集成维度 | 已补充 | UC-04 至 UC-32 | 与聚宽验证、策略扩展、`market_data` 写湖、只读 resolver、Backtrader optional backend、Qlib isolated runner、CR-008 `research_input_v1`、CR-010/012/013/014/018 数据湖基线、DuckDB 候选查询层、local_backtest C 侧 client、Windows QMT / XtQuant S 侧 gateway、OMS / adapter / broker lake、lightweight engine、Stage6 admission、QMT terminal target 和 MiniQMT runner target 的边界已记录 |
+| D9 | 数据生命周期维度 | 已补充 | UC-09 至 UC-32 | CR-014/018 覆盖全 A 证券生命周期、代码变更、退市、current pointer、增量刷新、replay、publish release、rollback、权限计数和 claim boundary；CR-015/016/017/019/025/030/046 覆盖 broker event、order state、qfq as-of、admission package、dry-run 记录、bridge request、clean feed、semantic diff、factor panel、label window、StrategyAdmissionPackage、策略包合同和验证证据生命周期 |
 <!-- coverage-checklist: end -->
 
 ## 附录：治理变更记录（可选）

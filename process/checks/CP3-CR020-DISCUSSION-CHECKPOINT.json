@@ -1,0 +1,121 @@
+{
+  "checkpoint_id": "CP3-CR020-DISCUSSION-CHECKPOINT",
+  "change_id": "CR-020",
+  "status": "ready-for-cp3-human-gate",
+  "created_at": "2026-06-04T23:32:09+08:00",
+  "owner": "meta-se",
+  "discussion_log": "process/discussions/CP3-CR020-HLD-DISCUSSION-LOG.md",
+  "source_hld": "process/HLD.md#36-cr-020-qmt-windows-gateway-服务端登录与只读查询接口准入-hld-增量",
+  "architecture_gray_areas": [
+    {
+      "id": "AGA-CR020-01",
+      "title": "S / C CLI 与业务 runtime 边界",
+      "selected_option": "CR20-A: S 端 Windows uv run Typer CLI；C 端 Linux uv run Typer CLI 仅 pairing / diagnostics / smoke / CP7 validation；业务 runtime 为 Python REST client direct REST calls",
+      "classification": "decision-item",
+      "canonical_refs": [
+        "checkpoints/CP2-CR020-REQUIREMENTS-BASELINE.md#DQ-CP2-CR020-04",
+        "process/HLD.md#36.3"
+      ],
+      "when_to_switch": "Typer 与 Windows / XtQuant runtime 或 Linux client CLI 不兼容时，回退 CP3 / CP5 切 Click 或 argparse；Python REST client 不可实现时重新选择 C 端 runtime。"
+    },
+    {
+      "id": "AGA-CR020-02",
+      "title": "服务端登录、.env 凭据读取与 session ready",
+      "selected_option": "gateway 启动时读取本地未跟踪 .env，登录 QMT 并形成 session ready；所有输出只记录 redacted credential_ref",
+      "classification": "decision-item",
+      "canonical_refs": [
+        "checkpoints/CP2-CR020-REQUIREMENTS-BASELINE.md#DQ-CP2-CR020-03",
+        "process/HLD.md#36.7"
+      ],
+      "when_to_switch": "发现凭据泄露风险或用户提高安全要求时，切换 OS secret store；登录无法 fail-closed 时回退 health/login-only 或 Spike。"
+    },
+    {
+      "id": "AGA-CR020-03",
+      "title": "HMAC / allowlist / scope / redaction 的 fail-closed 边界",
+      "selected_option": "pairing_hmac 默认启用，allowlist 必填，scope 逐 endpoint 校验，redaction 作为响应和日志门",
+      "classification": "decision-item",
+      "canonical_refs": [
+        "trading/qmt_auth.py",
+        "trading/qmt_gateway_config.py",
+        "process/HLD.md#36.12"
+      ],
+      "when_to_switch": "真实 readonly 环境不得切 no-auth；仅 fixture/local_debug/explicit temporary 可局部豁免并不得连接 QMT。"
+    },
+    {
+      "id": "AGA-CR020-04",
+      "title": "query_positions 解锁、依赖隔离与回滚",
+      "selected_option": "只解锁 endpoint matrix 中 query_positions；S 端 gateway / XtQuant 依赖隔离，C 端主 runtime 只消费 Python REST client",
+      "classification": "decision-item",
+      "canonical_refs": [
+        "trading/qmt_endpoint_matrix.py",
+        "trading/qmt_client.py",
+        "process/HLD.md#36.15"
+      ],
+      "when_to_switch": "XtQuant 只能外部安装时切 CR20-C 外部 Windows runtime；positions API 不稳定时回退 CP3 选择 query_account 或 health-only。"
+    }
+  ],
+  "recommended_architecture": "CR20-A layered Windows gateway + dual Typer CLI + C-side Python REST client",
+  "alternatives": [
+    "CR20-B health/login only without query_positions",
+    "CR20-C external Windows runtime with repository-level REST client and docs only"
+  ],
+  "decision_items": [
+    "DQ-CP3-CR020-01",
+    "DQ-CP3-CR020-02",
+    "DQ-CP3-CR020-03",
+    "DQ-CP3-CR020-04",
+    "DQ-CP3-CR020-05",
+    "DQ-CP3-CR020-06",
+    "DQ-CP3-CR020-07"
+  ],
+  "resolved_by_user_from_cp2": [
+    "server-qmt-login-required",
+    "credentials-use-local-untracked-dotenv-form",
+    "server-side-windows-uv-run-typer-cli",
+    "client-side-linux-uv-run-typer-cli-for-pairing-diagnostics-validation",
+    "client-side-business-runtime-python-rest-client",
+    "first-query-interface-query_positions",
+    "readonly-risk-accepted-no-order-no-account-write"
+  ],
+  "non_blocking_open_items": [
+    {
+      "id": "O-CR020-CP3-01",
+      "item": "Windows host、authorized port、MiniQMT / XtQuant version、log directory、allowlist source 和真实 .env 字段值尚未填写。",
+      "handling": "作为 CP5 / CP6 / CP7 环境输入；CP3 不读取或输出真实值。"
+    },
+    {
+      "id": "O-CR020-CP3-02",
+      "item": "XtQuant 依赖是否可通过 uv group / extras 隔离仍需 LLD 细化。",
+      "handling": "CP3 推荐依赖隔离策略；CP5 LLD 决定 extras/group/external runtime。"
+    }
+  ],
+  "blocking_open_items": [],
+  "deferred_options": [
+    "query_account",
+    "query_orders",
+    "query_trades",
+    "simulation",
+    "live-readonly",
+    "small-live",
+    "scale-up",
+    "OS secret store as fallback"
+  ],
+  "formal_story_plan_files_written": false,
+  "formal_story_plan_files_deferred_reason": "AGENTS.md / meta-se state machine forbids ARCHITECTURE-DECISION.md, STORY-BACKLOG.md and DEVELOPMENT-PLAN.yaml before CP3 HLD approval; HLD contains ADR candidates and Story / Wave candidates only.",
+  "forbidden_authorizations": [
+    "order",
+    "cancel",
+    "amend",
+    "account_write",
+    "simulation",
+    "live",
+    "provider_fetch",
+    "lake_write",
+    "catalog_publish",
+    "current_pointer_publish",
+    "broker_lake_write",
+    "secret_in_repo_or_logs",
+    "dependency_lock_change_before_cp3",
+    "c_cli_as_business_runtime"
+  ]
+}

@@ -1,0 +1,154 @@
+{
+  "checkpoint_id": "CP3-CR045-DISCUSSION-CHECKPOINT",
+  "change_id": "CR-045",
+  "phase": "solution-design",
+  "agent_role": "meta-se",
+  "status": "ready-for-meta-po-cp3",
+  "created_at": "2026-06-11T21:54:14+08:00",
+  "cp3_approved": false,
+  "runtime_authorization": {
+    "authorized": [
+      "L1 formal CR orchestration",
+      "L2 Windows bridge design / skeleton / fixture-only / static validation"
+    ],
+    "not_authorized": [
+      "credential_read",
+      "token_or_account_id_collection",
+      "windows_bridge_runtime_start",
+      "goldminer_login_or_connect",
+      "account_query",
+      "cash_query",
+      "position_query",
+      "order_query",
+      "fill_query",
+      "order_submit",
+      "order_cancel",
+      "simulation_runtime",
+      "live_runtime",
+      "provider_fetch",
+      "lake_write",
+      "catalog_publish"
+    ],
+    "sensitive_values_policy": "placeholders_only"
+  },
+  "artifacts": {
+    "hld": "docs/design/HLD-CR045-GOLDMINER-WINDOWS-BRIDGE.md",
+    "adr": "docs/design/ARCHITECTURE-DECISION-CR045.md",
+    "discussion_log": "process/discussions/CP3-CR045-HLD-DISCUSSION-LOG.md",
+    "checkpoint": "process/checks/CP3-CR045-DISCUSSION-CHECKPOINT.json"
+  },
+  "inputs_consumed": [
+    "process/handoffs/META-SE-CR045-CP3-HLD-2026-06-11.md",
+    "process/context/CP2-CR045-REQUIREMENT-CONTEXT.yaml",
+    "process/changes/CR-045-GOLDMINER-WINDOWS-BRIDGE-READONLY-PROBE-2026-06-11.md",
+    "process/checkpoints/CP2-CR045-REQUIREMENTS-BASELINE.md",
+    "process/research/cr043_goldminer_adapter_spike/ENGINEERING-FEASIBILITY.md",
+    "process/research/cr043_goldminer_adapter_spike/INTERFACE-MAPPING-MATRIX.md",
+    "process/research/cr043_goldminer_adapter_spike/SPIKE-CONCLUSION.md",
+    "process/changes/CR-044-GOLDMINER-SIMULATION-ADMISSION-2026-06-11.md",
+    "engine/broker_adapter.py"
+  ],
+  "architecture_gray_areas": [
+    {
+      "id": "AGA-CR045-01",
+      "topic": "WSL access topology",
+      "recommendation": "Windows-side bridge skeleton plus WSL allowlist client",
+      "selected_for_hld": true,
+      "status": "recommendation-selected-for-cp3",
+      "when_to_switch": "Switch only if official terminal endpoint is verified with L3/L4 authorization, or if user explicitly re-approves WSL credential custody through CP3 security decision."
+    },
+    {
+      "id": "AGA-CR045-02",
+      "topic": "Bridge API allowlist",
+      "recommendation": "Limit L2 API to health, capabilities, and readonly probe request/response skeleton",
+      "selected_for_hld": true,
+      "status": "recommendation-selected-for-cp3",
+      "when_to_switch": "Downgrade to health-only if CP3 rejects readonly skeleton; add real readonly endpoints only after L4 run authorization."
+    },
+    {
+      "id": "AGA-CR045-03",
+      "topic": "Token/account_id residency and redaction",
+      "recommendation": "Zero sensitive value retention; future values stay in user-owned Windows local config and are never read by Agent or stored in repo/dialog/logs",
+      "selected_for_hld": true,
+      "status": "recommendation-selected-for-cp3",
+      "when_to_switch": "Pause and request L3 security/runtime authorization if any real sensitive value is needed."
+    },
+    {
+      "id": "AGA-CR045-04",
+      "topic": "L3/L4/L5 transition model",
+      "recommendation": "Keep all real runtime behind separate per-run gates",
+      "selected_for_hld": true,
+      "status": "recommendation-selected-for-cp3",
+      "when_to_switch": "Open only the specifically authorized action after meta-po launches and records per-run authorization."
+    }
+  ],
+  "advisor_summary": {
+    "lane_product": "Proceed with skeleton-ready expectations; do not promise real-readonly-verified.",
+    "lane_architecture": "Use Windows bridge as the credential/runtime boundary; WSL does not import SDK or hold credentials.",
+    "lane_quality": "Fail closed by default; redaction and zero operation counts are mandatory.",
+    "lane_docs_check": "CP3 approval and runtime authorization must remain visibly separate."
+  },
+  "decision_items_for_cp3": [
+    "DQ-CP3-CR045-01",
+    "DQ-CP3-CR045-02",
+    "DQ-CP3-CR045-03",
+    "DQ-CP3-CR045-04",
+    "DQ-CP3-CR045-05",
+    "DQ-CP3-CR045-06"
+  ],
+  "recommended_hld": {
+    "option": "windows_bridge_l2_skeleton_fixture_only",
+    "summary": "Windows bridge service owns future Goldminer SDK interaction; WSL calls explicit allowlist API. Current CR045 only produces skeleton, fixture, static validation, redaction, kill switch, and runbook design.",
+    "not_claimed": [
+      "CP3 approved",
+      "real readonly verified",
+      "bridge runtime started",
+      "Goldminer connected",
+      "account data queried"
+    ]
+  },
+  "story_lld_policy_recommendation": [
+    {
+      "story_id": "CR045-S01",
+      "title": "Windows bridge security boundary and authorization model",
+      "lld_policy": "full-lld"
+    },
+    {
+      "story_id": "CR045-S02",
+      "title": "Bridge health and capabilities skeleton",
+      "lld_policy": "full-lld"
+    },
+    {
+      "story_id": "CR045-S03",
+      "title": "WSL client contract and network precheck",
+      "lld_policy": "full-lld"
+    },
+    {
+      "story_id": "CR045-S04",
+      "title": "Readonly probe allowlist and blocked-first response",
+      "lld_policy": "full-lld"
+    },
+    {
+      "story_id": "CR045-S05",
+      "title": "Redaction evidence and no-operation static validation",
+      "lld_policy": "full-lld"
+    },
+    {
+      "story_id": "CR045-S06",
+      "title": "User runbook and L3/L4/L5 follow-up gate",
+      "lld_policy": "technical-note; upgrade to full-lld if automatic manifest/schema/guard script is introduced"
+    }
+  ],
+  "resume_point": {
+    "next_agent": "meta-po",
+    "next_action": "Generate CP3 HLD consistency precheck and CP3 human Decision Brief from HLD/ADR/discussion inputs.",
+    "must_not_do_before_cp3": [
+      "story_planning",
+      "feature_design_matrix",
+      "implementation",
+      "runtime_start",
+      "credential_read",
+      "goldminer_connection"
+    ]
+  }
+}

@@ -1,12 +1,12 @@
 ---
 status: confirmed
-version: "1.15"
+version: "1.16"
 confirmed: true
 confirmed_by: "user"
-confirmed_at: "2026-06-03T06:51:19+08:00"
+confirmed_at: "2026-06-13T22:03:22+08:00"
 ready_for_design: true
-source_use_cases: [UC-01, UC-02, UC-03, UC-04, UC-05, UC-06, UC-07, UC-08, UC-09, UC-10, UC-11, UC-12, UC-13, UC-14, UC-15, UC-16, UC-17, UC-18, UC-19, UC-20, UC-21, UC-22, UC-23, UC-24, UC-25, UC-26, UC-27]
-review_round: 10
+source_use_cases: [UC-01, UC-02, UC-03, UC-04, UC-05, UC-06, UC-07, UC-08, UC-09, UC-10, UC-11, UC-12, UC-13, UC-14, UC-15, UC-16, UC-17, UC-18, UC-19, UC-20, UC-21, UC-22, UC-23, UC-24, UC-25, UC-26, UC-27, UC-28, UC-29, UC-30, UC-31, UC-32]
+review_round: 11
 ---
 
 # 结构化需求
@@ -31,6 +31,7 @@ review_round: 10
 | 1.13 | 2026-05-31 | meta-po | 按用户 CP2 修改意见将 CR-025 目标从框架级 Backtrader/lightweight 讨论修订为 production-grade research-to-execution 路线：研究可信度、回测 / 模拟一致性、QMT 生产执行三条主线；Backtrader 仅作为 optional execution realism / semantic reference，新增 research output 到 target portfolio / order intent 的衔接要求 | CR-025 原文档增量修订；保留 REQ-001 至 REQ-168 旧基线，修订 REQ-161 说明并新增 REQ-169 至 REQ-172；本增量待 CP2 人工确认 |
 | 1.14 | 2026-06-01 | meta-po | 用户批准 CR-025 CP2，并追加 CP3/HLD 约束：meta-se 必须分析本地 Backtrader 项目 `/home/hyde/download/backtrader`，形成模块级借鉴 / 适配 / 移植候选 / 禁止移植对比；任何源码级移植只能作为 HLD 决策项，不构成 CP2 或 CP3 默认实现授权 | CR-025 需求基线确认；保留 REQ-001 至 REQ-172，修订 REQ-172 并新增 REQ-173；进入 CP3/HLD |
 | 1.15 | 2026-06-03 | meta-po | 用户授权进入 CR-030 HLD，回填多因子研究框架借鉴与研究闭环标准化需求，覆盖外部项目借鉴矩阵、项目自有 schema、FactorSpec / FactorRunSpec、FactorPanel / LabelWindow、评价报告、多因子组合、ExperimentManifest / ReportCatalog、StrategyAdmissionPackage、CR-026 分流和不授权边界 | CR-030 需求基线确认；保留 REQ-001 至 REQ-173，新增 REQ-174 至 REQ-185；进入 CP3/HLD，不授权实现、依赖变更、外部项目运行、源码迁移、provider/lake/publish、QMT/simulation/live 或凭据读取 |
+| 1.16 | 2026-06-13 | meta-po | 按 CR-046 增量补齐 QMT / MiniQMT 双目标策略交付框架需求，覆盖 framework-first 范围、策略核心合同、QMT terminal target、MiniQMT runner 安装设计、验证框架、后续 CR 分流和研究框架反向约束 | CR-046 原文档增量更新；保留 REQ-001 至 REQ-185，新增 REQ-186 至 REQ-200；用户已于 2026-06-13T22:03:22+08:00 通过 CP2；不授权具体策略交付、QMT 运行验证、MiniQMT 连接、submit/cancel、simulation/live、provider/lake/publish 或凭据读取 |
 
 ## 需求上下文
 
@@ -541,6 +542,21 @@ review_round: 10
 | REQ-183 | 复用 | CR-030 必须复用并标准化现有 `research_dataset.py`、实验 17-21、CR-011 factor panel audit、label window gate 和 Stage6 admission gate，不得重建平行框架。 | P0 | Given HLD/Story 设计多因子闭环, When 识别文件和模块影响面, Then 必须列出现有基线的复用方式、缺口、兼容策略和迁移风险；若推荐新对象或新目录, Then 必须说明为什么现有对象不足、如何避免双 truth，以及回滚 / 兼容策略。 | UC-20, UC-22, UC-23, CR-030 |
 | REQ-184 | 分流 | CR-026 Qlib isolated runner 必须保持后续 Spike candidate，直到 CR-030 合同冻结后再单独启动。 | P1 | Given 用户或 HLD 提到 Qlib qrun、provider_uri、model workflow、recorder 或 enhanced indexing, When 当前 CR-030 还未冻结 FactorSpec/Panel/Label/Report/Manifest 合同, Then CR-026 不得并行启动或并入 P0；HLD 必须给出重启条件、输入输出合同、依赖隔离和运行授权前置。 | UC-20, UC-21, CR-030 |
 | REQ-185 | 文档与验证 | CR-030 的 HLD、后续 LLD 和测试策略必须解释 schema 来源、校验策略、外部项目边界、准入声明边界和不授权项。 | P0 | Given 生成 HLD/LLD/TEST-STRATEGY/README/USER-MANUAL, When 描述 CR-030, Then 必须包含 schema provenance、external project matrix、field dictionary、validation rules、failure policy、blocked claims、QMT not-authorized boundary、CR-026 disposition 和 fixture/test matrix；不得只写“参考 Qlib / Alphalens”而无可验证合同。 | UC-20 至 UC-27, CR-030 |
+| REQ-186 | 范围 | CR-046 必须采用 framework-first 范围，只交付 QMT / MiniQMT 双目标策略交付框架、验证框架设计、MiniQMT runner 安装设计和策略包契约。 | P0 | Given CR-046 处于 CP2/CP3/CP5/CP6/CP7/CP8 任一阶段, When 检查正式产物和工作区 diff, Then 不得出现具体策略交付、真实 QMT 运行验证、MiniQMT 连接、submit/cancel、simulation/live 或凭据读取；若出现必须阻断并要求新 CR / runtime authorization。 | UC-28, CR-046 |
+| REQ-187 | 策略核心合同 | 双目标框架必须定义可被 QMT terminal target 与 MiniQMT runner target 共同消费的策略核心合同。 | P0 | Given HLD/LLD 定义策略核心, When 审查字段, Then 至少包含 strategy_id、run_id、signal_date、target_trade_date、symbol、target_weight/target_qty、order_intent、risk_assumption、cost_assumption、data_lineage_ref、blocked_claims 和 evidence_ref；策略核心不得导入或直接调用 QMT / XtQuant / MiniQMT API。 | UC-28, UC-32, CR-046 |
+| REQ-188 | QMT target | CR-046 必须定义 QMT 终端策略包形态，包括入口、配置、输入输出、日志、shadow 报告和人工导入说明。 | P0 | Given 后续 CR047 选择具体策略, When 生成 QMT terminal target, Then 必须能按 CR046 合同生成可审查的 `targets/qmt_terminal/` 结构、配置样例、导入步骤、shadow evidence 模板和 not-authorized 边界；当前 CR 不执行终端导入或运行。 | UC-29, CR-046 |
+| REQ-189 | MiniQMT target | CR-046 必须定义 MiniQMT runner target 的安装设计和运行边界，但不得实现或执行真实 runner runtime。 | P0 | Given 用户当前没有 MiniQMT 权限, When 设计 MiniQMT target, Then 必须包含 Windows 目录规范、uv 管理、Python 版本、依赖隔离、配置、日志、启动/停止、kill switch、install dry-run、uninstall、upgrade 和 rollback；真实安装、连接、订阅行情、账户查询和 submit/cancel 均为 0。 | UC-30, CR-046 |
+| REQ-190 | 验证框架 | CR-046 必须定义双目标验证框架，区分静态 fixture / schema 校验、QMT shadow 计划和 MiniQMT install dry-run 计划。 | P0 | Given 生成验证框架, When 审查测试矩阵, Then 必须包含策略包布局校验、核心合同 schema 校验、fixture 输入输出、QMT terminal shadow 证据模板、MiniQMT install dry-run 证据模板、安全计数和后续 runtime gate；不得把 fixture pass 声明为 simulation-ready。 | UC-31, CR-046 |
+| REQ-191 | 后续分流 | CR-046 必须把首个具体策略交付、QMT 真实模拟盘验证、MiniQMT 实机验证、tick runner Spike 和研究框架完善拆为后续候选项。 | P0 | Given CP2/CP8 决策或 CR tracking 查询, When 列出 CR046 后续事项, Then CR047-candidate、CR048-candidate、CR049-candidate、CR050-candidate 和 CR051-candidate 必须有状态、阻塞前置、下一步和不授权边界，且不得提前创建正式 CR 文件。 | UC-28, UC-32, CR-046 |
+| REQ-192 | 安全不授权 | CR-046 的任何 approval 都不得授权真实账户、凭据、连接、查询、下单、撤单、simulation/live、provider fetch、lake write 或 catalog publish。 | P0 | Given 用户回复 `approve` 或后续进入 CP3/CP5/CP8, When 解读授权范围, Then 只能解释为框架和验证设计通过；`credential_read`、`account_id_read`、`account_query`、`qmt_api_call`、`miniqmt_connection`、`order_submit`、`order_cancel`、`simulation_live`、`provider_fetch`、`lake_write`、`catalog_publish` 均必须保持 0。 | UC-28 至 UC-31, CR-046 |
+| REQ-193 | QMT 权限事实 | HLD 必须区分当前 QMT 终端已可用与 MiniQMT 权限缺失两个事实，不得将二者混同。 | P0 | Given 架构设计或验证计划描述运行环境, When 提到 QMT / MiniQMT, Then 必须写明 QMT 终端可作为未来人工运行目标，MiniQMT 当前为未授权/未开通未来路线；任何 MiniQMT 实机验证必须等待 CR049 或等价授权。 | UC-29, UC-30, CR-046 |
+| REQ-194 | 研究反向约束 | CR-046 必须输出研究框架后续需要满足的交付字段和证据要求，并登记为 CR051-candidate。 | P1 | Given CR046 框架冻结, When 准备后续研究框架完善, Then 必须能从 CR046 合同追溯到策略元数据、target portfolio、order intents、风险/成本假设、数据 lineage、blocked claims 和验证证据字段；当前 CR 不改造研究代码。 | UC-32, CR-046 |
+| REQ-195 | 包结构 | CR-046 HLD/LLD 必须定义策略交付包顶层结构和目标目录职责。 | P0 | Given 设计策略包, When 检查结构, Then 必须至少包含 `strategy_core/`、`targets/qmt_terminal/`、`targets/miniqmt_runner/`、`validation/` 和 `docs/` 的职责、输入输出和 owner；任何目录不得含真实凭据或账户敏感信息。 | UC-28 至 UC-31, CR-046 |
+| REQ-196 | 安装治理 | MiniQMT runner 安装设计必须遵循本项目 Python 依赖管理约束，优先使用 `uv` 并隔离 Windows runner 环境。 | P0 | Given 设计 install / upgrade / rollback, When 描述 Python 和依赖, Then 必须使用 `uv` 命令作为默认管理方式，禁止手工维护 `.venv` 或裸 `pip install` 作为默认路径；真实安装前必须先产出 dry-run manifest。 | UC-30, CR-046 |
+| REQ-197 | 失败路径 | 双目标框架必须定义 QMT target、MiniQMT target 和验证框架的 fail-closed 行为。 | P0 | Given 缺配置、缺 schema 字段、MiniQMT 权限缺失、QMT 运行未授权或安全计数非 0, When 运行验证或审查, Then 必须输出 blocked / unavailable / not-authorized 状态和解除条件，不得降级为 silent pass。 | UC-28 至 UC-31, CR-046 |
+| REQ-198 | 文档路径 | CR-046 本轮产品基线沿用当前仓库 `process/USE-CASES.md` / `process/REQUIREMENTS.md`；新增框架文档路径在 CP3/HLD 冻结。 | P1 | Given CR046 正文引用 `docs/product/*`, When CP2 产物生成, Then 必须说明当前仓库现有产品基线为 legacy `process/*`，不在 CP2 静默另建 `docs/product/` 双真相源；后续若迁移目录必须单独决策。 | UC-28, CR-046 |
+| REQ-199 | 不替代 broker adapter | CR-046 双目标框架不得绕过 CR042 broker-neutral adapter 与 CR041 paper simulation 的既有合同。 | P0 | Given HLD/LLD 设计 adapter, When 处理 order intents、fills、positions、reconciliation, Then 必须说明如何复用或兼容 CR041/CR042 语义；不得让策略包直接成为真实 broker order 入口。 | UC-28, UC-31, CR-046 |
+| REQ-200 | 门禁解释 | CR-046 CP2 approve 只表示需求 / 场景基线和六项推荐决策通过，不表示 CP3/CP5/CP6/CP7/CP8 自动通过。 | P0 | Given 用户在 CP2 回复 approve, When 更新状态或继续推进, Then 只能进入 CP3 HLD 准备；不得跳过架构、Story、LLD、实现、验证或终验门禁。 | UC-28 至 UC-32, CR-046 |
 
 ## 需求级变更记录
 
@@ -565,6 +581,7 @@ review_round: 10
 | 1.13 | 修订 / 新增 | REQ-161, REQ-169 - REQ-172 | CR-025 CP2 用户修改意见：生产级 research-to-execution platform route | 修订 CR-025 范围为研究执行语义对照与接口对齐；新增 target portfolio / order intent 衔接、三条主线 tracking、推进优先级和禁止框架级源码移植 / 完整交易框架自研；旧 REQ 编号不重排，待 CP2 人工确认 |
 | 1.14 | 修订 / 新增 | REQ-172, REQ-173 | CR-025 CP2 用户批准与 Backtrader 本地项目分析要求 | CP2 approved；新增 CP3/HLD 必须分析 `/home/hyde/download/backtrader` 的模块级借鉴 / 适配 / 移植候选 / 禁止移植对比；源码级移植仍需 CP3 决策与 CP5 授权 |
 | 1.15 | 新增 | REQ-174 - REQ-185 | CR-030 CP2 用户授权进入 HLD：多因子研究框架借鉴与研究闭环标准化 | 新增项目自有多因子闭环、外部项目借鉴矩阵、FactorSpec / FactorRunSpec、FactorPanelContract / LabelWindowSpec、FactorEvaluationReport、MultiFactorCombiner、ExperimentManifest / ResearchReportCatalog、StrategyAdmissionPackage、CR-026 分流、安全不授权、现有能力复用和文档 / 验证要求；旧 REQ 编号不重排，进入 CP3/HLD |
+| 1.16 | 新增 | REQ-186 - REQ-200 | CR-046 QMT / MiniQMT 双目标策略交付框架 | 新增 framework-first 范围、策略核心合同、QMT terminal target、MiniQMT runner 安装设计、验证框架、后续分流、安全不授权、研究反向约束、包结构、安装治理、失败路径和门禁解释；旧 REQ 编号不重排，待 CP2 人工确认 |
 
 ## 风险与假设
 
@@ -736,6 +753,11 @@ review_round: 10
 | A-068 | CR-030 研究结果最多进入 `StrategyAdmissionPackage` 和 `order_intent_draft_v1` 草稿边界；任何 QMT gateway、simulation、live、account query、order submit 或 cancel 仍需 CR-020..CR-024 独立授权。 | 运行授权、QMT 边界 | REQ-181, REQ-182 |
 | A-069 | 外部项目矩阵中的源码级迁移候选默认视为禁止，除非 CP3 单独列为决策项并在 CP5 前取得实现授权、许可证影响评估和回归范围确认。 | 许可证、源码迁移 | REQ-175, REQ-182, REQ-185 |
 | A-070 | CP3 HLD 通过只表示架构方向和决策项通过，不表示允许实现、多因子框架落地、依赖变更、真实数据写入、catalog publish、外部项目运行或交易相关操作。 | CP3 人工门禁、授权边界 | REQ-182, REQ-185 |
+| A-071 | CR-046 已由用户收窄为 framework-first：先冻结 QMT / MiniQMT 双目标策略交付框架、验证框架、MiniQMT runner 安装设计和策略包契约。 | 范围控制、CP2 决策 | REQ-186, REQ-200 |
+| A-072 | 用户当前已有 QMT 终端权限，可在 QMT 终端内运行策略；当前没有 MiniQMT 权限，MiniQMT runner 属未来路线。 | 平台事实、环境边界 | REQ-188, REQ-189, REQ-193 |
+| A-073 | CR-046 不交付具体策略，不执行 QMT 终端运行验证，不连接 MiniQMT，不读取账户、资金、持仓、委托或成交，不 submit/cancel，不 simulation/live。 | 安全不授权、运行门禁 | REQ-186, REQ-192, REQ-200 |
+| A-074 | 首个具体策略双目标交付应作为 CR047-candidate，研究框架完善应作为 CR051-candidate；CR046 只输出后续入口和阻塞前置。 | follow-up tracking、分流 | REQ-191, REQ-194 |
+| A-075 | 当前产品基线仍在 legacy `process/USE-CASES.md` / `process/REQUIREMENTS.md`，CP2 不静默迁移到 `docs/product/` 双真相源。 | 文档路由、交付隔离 | REQ-198 |
 
 ## 明确排除项（Out of Scope）
 
@@ -802,6 +824,11 @@ review_round: 10
 - CR-030 不授权 provider fetch、真实联网补数、真实 lake write、catalog publish、broker lake write、报告覆盖、凭据读取、QMT / MiniQMT / XtQuant、gateway 启动、simulation、live_readonly、small_live、scale_up、发单、撤单或账户查询。
 - CR-030 不把因子评价、多因子组合、回测报告、`StrategyAdmissionPackage` 或 `order_intent_draft_v1` 草稿声明为 QMT-ready、simulation-ready、live-ready、production truth 或真实可交易证据。
 - CR-030 不从零发明 schema；若 HLD 需要新增字段或对象，必须说明其相对 `research_input_v1`、实验 17-21、CR-011 factor panel audit、label window gate 和 Stage6 admission gate 的增量理由、兼容策略和 fail-closed 校验。
+- CR-046 不交付具体交易策略、不生成可交易策略包、不执行 QMT 终端 shadow / 模拟盘运行验证、不启动 QMT 运行环境、不连接 MiniQMT / XtQuant、不订阅行情、不读取账户 / 资金 / 持仓 / 委托 / 成交、不 submit/cancel、不 simulation/live。
+- CR-046 不真实安装 MiniQMT runner、不创建 Windows bridge runtime、不读取或输出 `.env`、token、account_id、账号、密码、session、cookie、private key 或真实私有路径。
+- CR-046 不触发 provider fetch、真实 lake write、broker lake write、catalog publish、报告覆盖、真实数据写入或依赖变更；MiniQMT runner 安装只定义设计和 dry-run 计划。
+- CR-046 不把 fixture/schema/static validation pass 声明为 QMT-ready、MiniQMT-ready、simulation-ready、live-ready 或真实可交易证据。
+- CR-046 不在当前 CR 内改造研究框架代码；研究框架完善只登记为 CR051-candidate，启动时重新做冲突预检和 CP2。
 
 ## 目标平台
 

@@ -1,0 +1,71 @@
+version: 1
+status: ready
+change_id: CR-046
+phase: solution-design
+created_at: '2026-06-13T22:03:22+08:00'
+owner: meta-po
+read_profile: compact
+context_policy:
+  require_capsule_first: true
+  must_read:
+  - process/checkpoints/CP2-CR046-REQUIREMENTS-BASELINE.md
+  - docs/design/HLD-CR046-QMT-MINIQMT-DUAL-TARGET-FRAMEWORK.md
+  - docs/design/ARCHITECTURE-DECISION-CR046.md
+  - docs/design/BLUEPRINT.md
+  - docs/design/DOMAIN-MAP.md
+  - docs/design/DEPENDENCY-MAP.md
+  read_if_needed:
+  - process/USE-CASES.md
+  - process/REQUIREMENTS.md
+  - process/discussions/CP3-CR046-HLD-DISCUSSION-LOG.md
+  - process/checks/CP3-CR046-DISCUSSION-CHECKPOINT.json
+  do_not_read_by_default:
+  - full git diff
+  - credentials
+  - .env
+  - QMT / MiniQMT runtime files
+summary:
+  cp2_result: approved
+  cp2_approved_by: user
+  cp2_approved_at: '2026-06-13T22:03:22+08:00'
+  hld_status: draft-for-cp3-review
+  adr_status: draft-for-cp3-review
+  recommended_architecture: FEAT-09 dual-target strategy delivery framework
+  target_modes:
+  - qmt_terminal
+  - miniqmt_runner
+  design_scope:
+  - StrategyCoreContract
+  - StrategyPackageContract
+  - QMTTerminalTargetContract
+  - MiniQMTRunnerTargetContract
+  - StrategyValidationEvidence
+  - RunnerInstallPlan
+  out_of_scope:
+  - concrete_strategy_delivery
+  - qmt_terminal_runtime_validation
+  - miniqmt_real_install
+  - miniqmt_connection
+  - order_submit_cancel
+  - simulation_live
+  - credential_or_account_read
+pending_cp3_decisions:
+  - DQ-CP3-CR046-01
+  - DQ-CP3-CR046-02
+  - DQ-CP3-CR046-03
+  - DQ-CP3-CR046-04
+  - DQ-CP3-CR046-05
+  - DQ-CP3-CR046-06
+evidence:
+  cp2_checkpoint: process/checkpoints/CP2-CR046-REQUIREMENTS-BASELINE.md
+  hld: docs/design/HLD-CR046-QMT-MINIQMT-DUAL-TARGET-FRAMEWORK.md
+  adr: docs/design/ARCHITECTURE-DECISION-CR046.md
+  blueprint: docs/design/BLUEPRINT.md
+  domain_map: docs/design/DOMAIN-MAP.md
+  dependency_map: docs/design/DEPENDENCY-MAP.md
+  discussion_log: process/discussions/CP3-CR046-HLD-DISCUSSION-LOG.md
+  discussion_checkpoint: process/checks/CP3-CR046-DISCUSSION-CHECKPOINT.json
+read_expansion_log:
+  - at: '2026-06-13T22:03:22+08:00'
+    actor: meta-po
+    full_doc_read_reason: user explicitly asked whether blueprint/design files need refresh, then approved continuing to CP3; HLD/ADR/index files needed direct update.

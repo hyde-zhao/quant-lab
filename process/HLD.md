@@ -1,6 +1,6 @@
 ---
-status: "confirmed-cp3-cr030"
-version: "2.9"
+status: "draft-pending-cp3-cr020"
+version: "3.0"
 complexity: "standard"
 selected_option: "A - 分层轻量本地日频回测层 + 独立数据准备管道；CR-004 增量采用独立 market_data 可迁移数据组件"
 confirmed: true
@@ -15,8 +15,8 @@ created_by: "meta-se"
 companion_hld:
   - "process/HLD-DATA-LAKE.md"
   - "process/HLD-QMT-TRADING.md"
-active_change: "CR-030"
-secondary_change: "CR-019"
+active_change: "CR-020"
+secondary_change: "CR-030"
 cr004_revision_status: "draft-pending-cp3-cp4"
 cr004_confirmed: false
 cr005_revision_status: "draft-pending-cp3-cp4-rerun"
@@ -69,6 +69,11 @@ cr030_confirmed: true
 cr030_confirmed_by: "user"
 cr030_confirmed_at: "2026-06-03T07:45:10+08:00"
 cr030_change_file: "process/changes/CR-030-MULTIFACTOR-RESEARCH-FRAMEWORK-REFERENCE-AND-RESEARCH-LOOP-STANDARDIZATION-2026-06-02.md"
+cr020_revision_status: "draft-pending-cp3"
+cr020_confirmed: false
+cr020_change_file: "process/changes/CR-020-QMT-WINDOWS-GATEWAY-SERVER-LOGIN-READONLY-QUERY-ADMISSION-2026-06-04.md"
+cr020_cp2_manual_checkpoint: "checkpoints/CP2-CR020-REQUIREMENTS-BASELINE.md"
+cr020_cp3_manual_checkpoint: "checkpoints/CP3-CR020-HLD-REVIEW.md"
 ---
 
 # 高层设计（HLD）：本地日频组合回测层
@@ -104,6 +109,7 @@ cr030_change_file: "process/changes/CR-030-MULTIFACTOR-RESEARCH-FRAMEWORK-REFERE
 | 2.8 | 2026-06-01 | meta-se | 按 CR-025 追加 §34：冻结 production-grade research-to-execution 三条主线中的回测 / 模拟一致性设计；Backtrader 默认定位为 optional semantic reference / design reference，不替代 lightweight 主路径；补充 clean feed gate、semantic diff schema、target portfolio / order intent draft、Backtrader 本地 GPLv3 项目模块级矩阵、源码级移植治理和 CP3 决策项；本增量不授权实现、依赖变更、Backtrader 运行、源码复制 / 移植、真实 broker / QMT / provider / lake / publish / simulation / live 或凭据读取 |
 | 2.8.1 | 2026-06-02 | meta-se | 按 CR-025 CP5 前定位澄清修订 §34：确认本系统核心定位是多因子策略研究和回测；Backtrader 不作为多因子研究主框架，只作为 lightweight execution engine 的执行语义参考；FactorSpec、FactorRunSpec、IC / RankIC、分层收益、多因子组合、实验追踪和策略准入包另起后续 CR，参考 Qlib / Alphalens / vnpy.alpha，不并入 CR-025；保持 6 Story / 4 Wave / 1 LLD batch 不变 |
 | 2.9 | 2026-06-03 | meta-se | 按 CR-030 追加 §35：冻结项目自有多因子研究闭环 HLD；外部项目仅作为 reference matrix / optional Spike / exclude / forbidden migration；以 `research_input_v1`、实验 17-21 `FactorDefinition`、CR-011 factor panel audit、label window gate 和 Stage6 admission gate 为 schema 基线，并用 Qlib / Alphalens / Zipline / LEAN cross-check；定义 FactorSpec、FactorRunSpec、FactorPanelContract、LabelWindowSpec、FactorEvaluationReport、MultiFactorCombiner、ExperimentManifest、ResearchReportCatalog、StrategyAdmissionPackage 与 `order_intent_draft_v1` handoff；本增量不授权实现、依赖变更、外部项目运行、源码迁移、provider/lake/publish、QMT/simulation/live 或凭据读取 |
+| 3.0 | 2026-06-04 | meta-se | 按 CR-020 追加 §36：冻结 Windows QMT Gateway 服务端登录与 `query_positions` 只读查询接口准入 HLD；推荐 S 端 Windows `uv run` Typer CLI 负责 gateway lifecycle / login / diagnostics，C 端 Linux `uv run` Typer CLI 只负责 pairing / diagnostics / smoke / CP7 validation，业务 runtime 由 Python REST client 直接调用 gateway REST API；定义 `.env` 本地未跟踪凭据读取与脱敏、QMT login/session ready、HMAC / allowlist / scope / redaction、`qmt:positions:read`、依赖隔离、失败回退和不授权边界；本增量仅准备 CP3，不写正式 ADR / Story Plan / Development Plan，不实现、不改依赖、不启动 gateway、不连接 QMT、不读取真实凭据 |
 
 ## HLD 拆分判定
 
@@ -3627,3 +3633,303 @@ graph TD
 | NFR、风险、ADR、阶段建议完整 | PASS | §35.13 至 §35.17 |
 | 不授权边界明确 | PASS | 本节导语、§35.1、§35.14、§35.16 |
 | HLD 拆分判断 | PASS | CR-030 属于主 HLD 的多因子研究闭环增量；QMT companion 只消费 draft boundary；Qlib runner 独立为 CR-026 Spike，不拆出本轮 HLD。 |
+
+## 36. CR-020 QMT Windows Gateway 服务端登录与只读查询接口准入 HLD 增量
+
+> 本节基于 `process/changes/CR-020-QMT-WINDOWS-GATEWAY-SERVER-LOGIN-READONLY-QUERY-ADMISSION-2026-06-04.md`、`checkpoints/CP2-CR020-REQUIREMENTS-BASELINE.md`、`process/checks/CP2-CR020-REQUIREMENTS-BASELINE.md`、`process/discussions/CP2-CR020-SCENARIO-DISCUSSION-LOG.md` 和现有 `trading/qmt_*` 离线合同形成。CP3 通过前，本节不授权实现、不修改 `pyproject.toml` / `uv.lock`、不启动 gateway、不绑定端口、不连接 QMT / MiniQMT / XtQuant、不读取真实 `.env`、不执行 `provider/lake/publish`、不发单、不撤单、不账户写入、不进入 simulation/live。
+
+### 36.1 问题定义、目标、约束与非目标
+
+| 项 | 内容 |
+|---|---|
+| 问题陈述 | CR-019 已冻结 QMT C/S bridge 的离线合同，但当前 `qmt_gateway_service` 仍阻断 start/bind，`qmt_client.query_positions` 仍返回 later-gated blocked result，无法证明 `local_backtest` 到 Windows QMT 节点的只读连接闭环。CR-020 需要在不越过交易和凭据边界的前提下，设计服务端登录、session ready、HMAC / allowlist / scope、Python REST client runtime 和首个 `query_positions` 只读接口。 |
+| 价值 | 让后续 CR-021..CR-024 的 simulation/live 路线拥有最小 QMT-ready 前置证据：gateway 可按授权启动，服务端可登录并 ready，C 端可通过 REST client 调用只读接口，所有写操作仍 fail-closed。 |
+| 目标 | 1. Windows S 端通过 `uv run` Typer Python CLI 管理 gateway start / stop / health / diagnostics / rollback；2. gateway 读取本地未跟踪 `.env` 并只输出脱敏 `credential_ref`；3. 登录 QMT / MiniQMT / XtQuant 后形成 session ready；4. Linux C 端通过 `uv run` Typer CLI 完成 pairing / diagnostics / smoke / CP7 validation；5. 业务 runtime 由 Python REST client 直接调用 gateway REST API；6. 首个只读接口为 `POST /qmt/account/positions`，scope=`qmt:positions:read`，返回脱敏结果。 |
+| 成功标准 | `query_positions` 以外真实 QMT endpoint 白名单数量为 0；真实 order / cancel / account_write / broker_lake_write / provider_fetch / lake_write / publish 计数均为 0；日志、检查点和文档中真实账号 / 密码 / token / session 原文出现次数为 0；S / C 两端 CLI 框架均为 Typer；C 端业务调用路径中 CLI 作为 runtime 的次数为 0；HMAC 缺 header、签名错误、nonce replay、scope 不足、allowlist 未命中、session not ready 均返回 blocked。 |
+| 约束 | 全程使用 `uv run` 管理 Python 命令；CP3 前不改依赖文件、不实现代码、不启动服务、不连接 QMT、不读取真实 `.env`；真实凭据只在本地未跟踪 `.env`；入库只允许 `.env.example` 占位变量和 redacted `credential_ref`；PowerShell / CMD 仅是 S 端执行 `uv run` 的宿主 shell，不是正式 CLI 合同。 |
+| 非目标 | 不设计下单、撤单、改单、账户写入、simulation order、live-readonly 以外的扩大接口、small-live、scale-up、provider fetch、真实 lake write、catalog publish、broker lake write、reports overwrite、自动终验、凭据轮转工具或 OS secret store 主路径实现。 |
+| 关键假设 | Windows 节点存在 QMT / MiniQMT / XtQuant 可用运行环境；后续 LLD 可在不污染 Linux 主依赖的条件下隔离 Typer / gateway / XtQuant 相关依赖；`query_positions` 能被 QMT API 表达为只读查询；现有 endpoint matrix 的 `qmt:positions:read` 可作为 scope 基线。 |
+| 缺失信息 | Windows host、授权 port、MiniQMT / XtQuant 版本、日志目录、allowlist 来源、真实 `.env` 字段值、实际 QMT API 调用细节尚未填写；这些是 CP5 / CP6 / CP7 环境输入，不阻塞 CP3 HLD。 |
+
+### 36.2 HLD 拆分判断
+
+| 判定项 | 结论 | 理由 |
+|---|---|---|
+| 核心产物数量 | 1 个 | CR-020 只围绕 QMT Windows Gateway readonly admission，虽然覆盖 S / C 两端，但都是同一 gateway 只读连接闭环。 |
+| 职责跨层 | 未跨 meta-flow 治理层 | 本节不修改 meta-po 编排机制，只定义目标系统架构和门控输入。 |
+| ADR 分簇 | 单簇 | gateway runtime、登录、auth、REST client、`query_positions`、依赖隔离共同服务同一 readonly admission。 |
+| Story 数量信号 | 6 个候选 Story | 超过 5 个但不可独立拆成多个产物；S01..S06 均强耦合到同一 QMT gateway 准入目标。 |
+| 结论 | 不拆新 HLD | 保持在主 HLD §36；正式 Story Plan 需等待 CP3 approved 后再写入 `STORY-BACKLOG.md` 和 `DEVELOPMENT-PLAN.yaml`。 |
+
+### 36.3 Architecture Gray Areas 与 Advisor Table
+
+讨论证据写入 `process/discussions/CP3-CR020-HLD-DISCUSSION-LOG.md`，恢复点写入 `process/checks/CP3-CR020-DISCUSSION-CHECKPOINT.json`。由于本轮由 meta-se 按 CP2 已批准决策形成 CP3 草案，未伪造 reviewer 子 agent 意见；advisor table 是方案形成输入，不是事后评审。
+
+#### AGA-CR020-01：S / C CLI 与业务 runtime 边界
+
+| Option | Pros | Cons | Impact Surface | Recommendation | Assumptions / When to switch |
+|---|---|---|---|---|---|
+| A. S 端 Windows `uv run` Typer CLI，C 端 Linux `uv run` Typer CLI 仅 pairing / diagnostics / CP7，业务 runtime 为 Python REST client | 满足 CP2 修订；两端 CLI 框架一致；业务 runtime 不经 CLI，便于策略代码直接调用 REST client | 需要同时维护两个 CLI contract 和一个 REST client contract | `trading/qmt_gateway_cli.py`、`trading/qmt_client_cli.py`、`trading/qmt_client.py`、docs、CP7 | 推荐 | Typer 可在 S/C 依赖隔离中使用；若 Typer 不兼容 Windows / XtQuant 或 Linux CLI，切换 Click / argparse。 |
+| B. S / C CLI 都作为业务 runtime wrapper | 命令行可统一操作 | 业务调用经 shell，错误处理、超时、类型和安全边界弱；违背 CP2 业务 runtime 决策 | client runtime、策略调用、测试、运维 | 不推荐 | 仅在 REST client 不可实现且用户重新确认 runtime 形态时切换。 |
+| C. C 端取消 CLI，只保留 REST client | 依赖更少 | pairing / smoke / CP7 验收缺少稳定命令面；违背用户对 C 端 Typer 一致性的要求 | CP7、docs、运维 | 不推荐 | 仅当 C 端 CLI 依赖隔离不可接受且用户修改 CP2 决策。 |
+
+#### AGA-CR020-02：服务端登录、`.env` 凭据读取与 session ready
+
+| Option | Pros | Cons | Impact Surface | Recommendation | Assumptions / When to switch |
+|---|---|---|---|---|---|
+| A. gateway 进程启动时读取本地未跟踪 `.env`，登录 QMT 并进入 session ready，日志只输出 `credential_ref` | 符合用户要求；可支持服务化 health/session；凭据不入库 | 依赖 `.gitignore`、redaction 和本地运维纪律 | `.env.example`、gateway config、login/session manager、日志、CP7 | 推荐 | `.env` 不进入 Git；若发现泄露或需要更强安全，切换 OS secret store。 |
+| B. 每次启动交互式输入账号密码 | 不落盘 | 不利于服务启动和 CP7 复验；仍有 shell 历史误泄露风险 | S 端 CLI、运行手册 | 备选 | 当 `.env` 风险不可接受且用户愿意牺牲自动化时切换。 |
+| C. 只做 health，不登录 QMT | 风险最低 | 无法满足 CR-020 最小闭环 | scope、验收、QMT route | 治理备选 | 若 QMT API 或登录无法 fail-closed，回退到 health-only CR。 |
+
+#### AGA-CR020-03：HMAC / allowlist / scope / redaction 的 fail-closed 边界
+
+| Option | Pros | Cons | Impact Surface | Recommendation | Assumptions / When to switch |
+|---|---|---|---|---|---|
+| A. pairing_hmac 默认启用，allowlist 必填，scope 逐 endpoint 校验，redaction 作为响应和日志门 | 与 CR-019 HMAC 合同衔接；安全边界可测试；错误路径清晰 | 实现复杂度较高，需管理 nonce store 和 scope registry | `qmt_auth.py`、gateway middleware、endpoint matrix、client headers、logs | 推荐 | scope registry 能从 endpoint matrix 消费；若 nonce 存储不可持久，先用进程内 TTL 并在 CP5 暴露风险。 |
+| B. 局域网 allowlist + no-auth | 简单，低依赖 | 不符合 CR-019 修订和 CP2 高风险边界；被误用时缺身份审计 | 安全、CP7、运维 | 不推荐 | 仅限 fixture / local_debug / 显式临时，并不得用于真实 QMT readonly。 |
+| C. 只做 HMAC，不做 allowlist | 调用方身份强 | host 暴露风险仍在；不满足 gateway config fail-closed 合同 | 网络边界、安全 | 不推荐 | 仅在网络完全本机 loopback 且用户显式接受风险时局部豁免。 |
+
+#### AGA-CR020-04：`query_positions` 解锁、依赖隔离与回滚
+
+| Option | Pros | Cons | Impact Surface | Recommendation | Assumptions / When to switch |
+|---|---|---|---|---|---|
+| A. 只解锁 endpoint matrix 中 `query_positions`，gateway / XtQuant / server 依赖按 S 端隔离，C 端主 runtime 只消费 Python REST client | 最小闭环；不污染 Linux 主依赖；不扩大白名单 | 需要文档明确跨平台安装和 CP7 命令 | endpoint matrix、client、gateway route、dependency docs、Story DAG | 推荐 | 若 XtQuant 只能外部安装，则 S 端外部 runtime 方案；若 positions API 不稳定，回退 CP3 改 `query_account`。 |
+| B. 同时解锁 account / orders / trades 只读接口 | 覆盖更完整 | 风险和脱敏面扩大；违背 CP2 首个接口限制 | endpoint matrix、安全、测试 | 不推荐 | CR-020 关闭后另起 CR 或新增决策。 |
+| C. 全部依赖加入主 `pyproject` | 安装简单 | 污染 Linux C 端主环境；CP3 前禁止改依赖 | dependency、CI、Linux runtime | 不推荐 | 仅在 CP3/CP5 证明隔离不可行且用户接受依赖风险。 |
+
+### 36.4 候选架构方案对比
+
+| 方案 | 核心思路 | 优点 | 缺点 | 复杂度 / 成本 | 扩展性 | 主要风险 | 适用前提 |
+|---|---|---|---|---|---|---|---|
+| CR20-A 推荐：分层 Windows gateway + 双端 Typer CLI + C 端 Python REST client | S 端 Typer CLI 管 gateway lifecycle / login / diagnostics；gateway 暴露 REST API；C 端 Typer CLI 只做 pairing / diagnostics / CP7；业务 runtime 用 Python REST client；只解锁 `query_positions` | 完整满足 CP2；CLI 一致；runtime typed；安全门清晰；依赖可隔离 | 需要维护 CLI、REST client、auth、redaction 和 docs 多合同 | 中高 | 可逐步追加只读 endpoint，但需逐项授权 | 凭据泄露、登录不稳定、scope 配错 | Typer 可隔离安装，QMT positions 可只读调用，HMAC/allowlist 可落地。 |
+| CR20-B 收窄：gateway health + login/session only | 先证明 S 端启动和 QMT 登录，不解锁账户查询 | 风险较低；可先固化登录 | 不满足“至少一个查询接口”；无法证明 REST client 转发数据 | 中 | 后续再加 query | 交付目标不完整 | 若 `query_positions` API 不可控或用户要求回退。 |
+| CR20-C 外部 Windows runtime：仓库仅保留 client / docs，gateway 作为外部脚本 | 将 gateway / XtQuant 依赖完全留在 Windows 外部环境，仓库只写 REST contract 和 runbook | Linux 依赖最干净；XtQuant 兼容风险低 | 可测试性弱；交付物和文件所有权分散；CP7 证据难标准化 | 中 | 可作为外部运维方案 | 外部脚本不可审计，CLI 一致性弱 | XtQuant 依赖无法纳入仓库隔离环境时切换。 |
+
+推荐采用 CR20-A。适用条件是：CP3 approve 后，CP5 LLD 能证明 S 端 gateway 依赖隔离、`.env` redaction、HMAC / allowlist / scope 校验、`query_positions` 只读和 C 端 Python REST client 可实现；任一条件失败则回退到 CR20-B 或 CR20-C。
+
+### 36.5 推荐方案总览
+
+推荐架构采用五层边界：
+
+1. User / Operator：Windows QMT operator 使用 S 端 Typer CLI 管理 gateway；Linux reviewer 使用 C 端 Typer CLI 做 pairing、diagnostics、smoke test 和 CP7 validation。
+2. Application：S 端 Typer CLI、C 端 Typer CLI、C 端业务 Python REST client 三个入口明确分工。
+3. Service：Windows gateway 进程、login/session manager、auth middleware、endpoint dispatcher、redaction layer。
+4. Data：本地未跟踪 `.env`、redacted credential ref、endpoint matrix、session state、diagnostics evidence。
+5. Infrastructure：Windows QMT / MiniQMT / XtQuant、loopback / approved WSL source、firewall / allowlist、Linux C 端 runtime。
+
+### 36.6 系统架构图
+
+```mermaid
+graph TD
+  subgraph User["User / Operator"]
+    OP[Windows QMT Operator]
+    RV[Linux Reviewer / QA]
+    APPU[local_backtest Business Code]
+  end
+
+  subgraph App["Application Entrypoints"]
+    SCLI[S-side uv run Typer CLI: start stop health diagnostics rollback]
+    CCLI[C-side uv run Typer CLI: pairing diagnostics smoke CP7]
+    RESTC[Python REST Client Runtime]
+  end
+
+  subgraph Service["Windows Gateway Service"]
+    PROC[Gateway Process Boundary]
+    LOGIN[QMT Login / Session Ready Manager]
+    AUTH[HMAC + Allowlist + Scope Middleware]
+    DISP[Endpoint Dispatcher]
+    REDACT[Redaction Layer]
+  end
+
+  subgraph Data["Runtime State / Contracts"]
+    ENV[Local untracked .env]
+    CREF[redacted credential_ref]
+    MATRIX[QMT Endpoint Matrix]
+    SESSION[Session Ready State]
+    EVID[Diagnostics / CP7 Evidence]
+  end
+
+  subgraph Infra["Infrastructure / External Boundary"]
+    WIN[Windows QMT Node]
+    QMT[QMT / MiniQMT / XtQuant]
+    NET[Firewall + Approved Source Allowlist]
+    LINUX[Linux local_backtest Node]
+  end
+
+  OP --> SCLI
+  RV --> CCLI
+  APPU --> RESTC
+  SCLI --> PROC
+  PROC --> LOGIN
+  ENV --> LOGIN
+  LOGIN --> CREF
+  LOGIN --> SESSION
+  CCLI --> AUTH
+  RESTC --> AUTH
+  AUTH --> DISP
+  MATRIX --> DISP
+  DISP --> REDACT
+  REDACT --> EVID
+  WIN --> PROC
+  LOGIN --> QMT
+  NET --> AUTH
+  LINUX --> CCLI
+  LINUX --> RESTC
+  DISP -- only query_positions / qmt:positions:read --> QMT
+```
+
+### 36.7 高层模块与职责划分
+
+| 模块 | 职责 | 输入 | 输出 | 不做什么 |
+|---|---|---|---|---|
+| S 端 Typer CLI | `uv run` 下执行 gateway start / stop / health / diagnostics / rollback；打印脱敏状态 | CLI 参数、配置路径、`.env` 引用 | lifecycle plan / command result / redacted diagnostics | 不保存真实凭据；不直接下单；不作为 C 端 runtime。 |
+| Gateway Process Boundary | Windows 进程和端口边界，统一承载 REST route、auth、login、redaction | bind config、firewall、allowlist | running / stopped / unhealthy 状态 | 不公网暴露；不绕过 auth；不写 lake。 |
+| QMT Login / Session Manager | 读取本地未跟踪 `.env`，调用 QMT 登录，维护 session ready | `QMT_LOGIN_*` 占位变量、QMT runtime | `session_ready=true/false`、redacted `credential_ref` | 不输出账号 / 密码 / token / session 原文。 |
+| Auth Middleware | 校验 allowlist、HMAC header、timestamp、nonce、scope | request headers、nonce store、pairing approval、endpoint scope | allowed / blocked auth result | 不替代 run gate、risk gate 或交易授权。 |
+| Endpoint Dispatcher | 仅将 `query_positions` 转发到 QMT 只读 API | endpoint matrix、session ready、auth result | positions payload 或 blocked result | 不解锁 account/orders/trades/simulation/live。 |
+| Redaction Layer | 对日志、错误、positions payload 和 diagnostics 做脱敏 | response payload、error context | redacted response / audit evidence | 不保留原始敏感值。 |
+| C 端 Typer CLI | pairing、diagnostics、smoke test、CP7 validation | gateway base URL、client id、pairing code 引用 | redacted diagnostics / validation report | 不作为业务 runtime；不写账户；不写 lake。 |
+| Python REST Client Runtime | `local_backtest` 业务代码直接调用 health / capabilities / query_positions | typed request、HMAC secret ref、timeout | typed `QmtResponse` | 不经 shell CLI；不触发未授权 endpoint。 |
+
+### 36.8 技术选型与理由
+
+| 选型 | 推荐 | 理由 | 备选 / 切换条件 |
+|---|---|---|---|
+| CLI 框架 | Typer | 用户已确认 S / C 一致使用 Typer；类型提示和命令分组适合 `uv run` | Typer 兼容性失败时切 Click；依赖隔离失败且只需极简 CLI 时切 argparse。 |
+| Gateway runtime | Python REST gateway，LLD 决定 FastAPI / uvicorn 细节 | 现有 CR-019 已按 FastAPI gateway 概念冻结 lifecycle；Python 与 XtQuant 集成成本低 | 若 XtQuant 只能外部运行，采用 CR20-C 外部 Windows runtime。 |
+| Auth | pairing_hmac + allowlist + scope + nonce | 与 `qmt_auth.py` 现有合同一致；可 fail-closed | no-auth 仅 fixture / local_debug，不用于真实 readonly。 |
+| 凭据 | 本地未跟踪 `.env` + `.env.example` 占位 + `credential_ref` | 符合用户 CP2 决策；避免真实值入库 | 泄露或安全要求提高时切 OS secret store。 |
+| C 端 runtime | Python REST client direct call | 满足业务代码类型化调用、超时、错误处理和测试 | 若 REST client 不可实现，回退 CP3 重选 runtime，不用 CLI 替代。 |
+
+### 36.9 关键流程
+
+| 流程 | 步骤 | 成功条件 | 失败 / 回退 |
+|---|---|---|---|
+| S 端启动 | `uv run` Typer CLI 读取配置引用 -> 校验 bind/firewall/allowlist/redaction/auth -> 读取本地 `.env` -> 登录 QMT -> session ready -> gateway 进入 running | config accepted；credential 原文不输出；session ready；port 仅绑定授权 host；health 返回 redacted | config fail、`.env` 缺字段、登录失败、redaction 缺失、auth no-auth、public bind、QMT unavailable 均 fail-closed；stop / rollback 关闭进程并清理 session 引用。 |
+| Pairing | C 端 Typer CLI 发起 pairing request -> S 端 operator 审批 -> C 端 complete pairing -> 后续请求携带 HMAC headers | client_id_hash 可审计；secret 只以 secret_ref / runtime secret 存在；scope 包含 `qmt:positions:read` | pairing expired、code mismatch、scope 缺失、secret unavailable 均 blocked。 |
+| 业务查询 | Python REST client 构造 `query_positions` typed request -> HMAC + allowlist + scope -> session ready gate -> endpoint dispatcher 调用 QMT positions -> redaction -> typed response | status=ok；payload redacted；operation_kind=account_query readonly；real_order=0、account_write=0 | gateway unavailable、auth fail、nonce replay、scope denied、session not ready、QMT API error、redaction fail 均返回 typed blocked / transport_error。 |
+| C 端 CP7 验收 | C 端 Typer CLI 执行 diagnostics / smoke / validation -> 读取 redacted evidence -> 校验 forbidden counters | health、capabilities、pairing、wrong scope blocked、query_positions redacted PASS | 任一安全项 FAIL 则 CP7 FAIL；不得以手工查询绕过 client / auth。 |
+| 回滚 | S 端 Typer CLI stop / rollback -> gateway 停止监听 -> session 引用失效 -> C 端 health blocked | 后续请求返回 transport unavailable 或 session not ready | rollback 后仍可查询视为 blocker，回退到 LLD / implementation 修复。 |
+
+### 36.10 Use Case -> Architecture Traceability
+
+| Use Case / 场景 | 架构承载 | 关键流程 | 异常 / 失败路径 | 验证方式 |
+|---|---|---|---|---|
+| Windows S 端 gateway 启停与 health | S 端 Typer CLI、Gateway Process Boundary、Gateway Config | 启动 / health / stop / rollback | public bind、firewall missing、redaction missing、service unhealthy | CP7 S 端命令 evidence，日志脱敏扫描。 |
+| QMT 服务端登录和 session ready | Login / Session Manager、`.env` policy | 读取本地未跟踪 `.env`，登录，ready check | `.env` 缺字段、登录失败、session expired | redacted `credential_ref`，session status，不输出真实凭据。 |
+| Linux C 端 pairing / diagnostics / validation | C 端 Typer CLI、Auth Middleware | pairing request / approve / complete，diagnostics | pairing expired、wrong code、wrong source | CP7 CLI smoke，wrong-scope blocked case。 |
+| C 端业务调用 | Python REST Client Runtime | typed REST call health / capabilities / query_positions | gateway unavailable、auth fail、timeout | Python client response schema / timeout / error code。 |
+| `query_positions` 只读接口 | Endpoint Matrix、Dispatcher、Redaction | `POST /qmt/account/positions`，scope=`qmt:positions:read` | no scope、session not ready、redaction fail | redacted positions payload；order/cancel/account_write counters=0。 |
+| 不授权边界 | No-order safety、Risk Matrix、blocked endpoint list | account/orders/trades/simulation/live 均 blocked | 任何扩大白名单或写操作尝试 | forbidden counters 和 endpoint whitelist 检查。 |
+
+### 36.11 关键场景模拟
+
+| 模拟 ID | 场景 | 输入 / 前置条件 | 推荐架构执行路径 | 预期输出 | 失败 / 回退路径 | 结果 |
+|---|---|---|---|---|---|---|
+| SIM-CR020-01 | S 端正常启动并 session ready | Windows host、授权 port、本地 `.env`、QMT runtime 可用 | S Typer CLI -> config gate -> `.env` redacted read -> QMT login -> health | health=ready，session_ready=true，credential_ref redacted | `.env` 缺字段或 login fail -> gateway unhealthy，不允许 query | PASS |
+| SIM-CR020-02 | C 端业务查询持仓 | pairing approved，scope 包含 `qmt:positions:read`，session ready | Python REST client -> HMAC / allowlist / scope -> dispatcher -> positions -> redaction | typed ok response，payload redacted，real_order=0，account_write=0 | auth fail / scope denied / redaction fail -> blocked result | PASS |
+| SIM-CR020-03 | C 端 CLI 不作为业务 runtime | QA 执行 CP7 validation | C Typer CLI 只调用 diagnostics / smoke，业务代码仍走 REST client | CP7 evidence 显示 CLI 用途为 validation，runtime client path 明确 | 如果 Story / docs 把 CLI 写成 runtime，CP3 / CP5 FAIL | PASS |
+| SIM-CR020-04 | 未授权 endpoint 被调用 | client 请求 `query_orders` 或 simulation submit | endpoint matrix / scope gate / run gate | blocked，required authorization missing | 若真实转发发生，立即回退 security redesign | PASS |
+| SIM-CR020-05 | 回滚后再次查询 | gateway stop / rollback 后 C 端仍请求 | health/session gate fail | transport_error 或 session_not_ready blocked | 若仍返回 positions，CP7 FAIL 并停止推进 | PASS |
+
+### 36.12 非功能需求设计
+
+| NFR | 设计承载 | 量化 / 可检验目标 |
+|---|---|---|
+| 安全 | HMAC、allowlist、scope、nonce、防重放、redaction、no-order safety | 缺 header、签名错误、timestamp 超窗、nonce replay、source 不在 allowlist、scope 不足全部 blocked；真实凭据原文入库 / 日志 / checkpoint 次数为 0；未授权 endpoint 转发次数为 0。 |
+| 可靠性 | session ready gate、health、heartbeat、rollback | session not ready 时 `query_positions` 成功次数为 0；rollback 后 gateway health 非 ready；stop 后查询不可继续。 |
+| 可维护性 | S CLI / C CLI / REST client 分层、endpoint matrix 单一入口 | `query_positions` route、client method 和 scope 只从 endpoint matrix 对齐；C CLI 文档不得作为 runtime contract。 |
+| 平台兼容 | Windows S 端依赖隔离、Linux C 端轻 runtime | Windows-only / XtQuant 依赖不得进入 Linux C 端主 runtime；CP3 前 `pyproject.toml` / `uv.lock` 修改次数为 0。 |
+| 可观测性 | redacted diagnostics、credential_ref、blocked reasons | health、auth、session、endpoint、redaction、forbidden counters 均有 redacted evidence；敏感字段显示 `[REDACTED]` 或 hash/ref。 |
+| 可测试性 | typed blocked result、CP7 validation CLI、fixture wrong-scope cases | 每个 fail-closed 条件至少一个 CP5 后测试或 CP7 检查入口；HLD 阶段不执行验证。 |
+| 性能 | timeout、session ready、single endpoint | Python REST client 必须支持 per-request timeout；query 超时返回 typed transport_error，不重试写操作。 |
+
+### 36.13 主要风险与应对
+
+| 风险 ID | 风险 | 等级 | 触发条件 | 应对 | 回退 / 切换条件 |
+|---|---|---|---|---|---|
+| R-CR020-01 | 凭据泄露 | 高 | `.env`、日志、checkpoint、memory、docs 出现真实账号 / 密码 / token / session | `.env` 未跟踪、`.env.example` 占位、redaction 强制、credential_ref | 停止推进，轮转凭据，回退 security redesign。 |
+| R-CR020-02 | C 端 CLI 被误当业务 runtime | 高 | Story / docs 要求业务代码执行 CLI | HLD 明确业务 runtime 为 Python REST client；CLI 只 pairing / diagnostics / CP7 | CP3 / CP5 修改，重写 runtime contract。 |
+| R-CR020-03 | 只读接口扩大 | 高 | account / orders / trades / simulation / live 被加入默认白名单 | endpoint whitelist 仅 `query_positions`；DQ 明确不授权 | 启动后续 CR 或回退 CP3。 |
+| R-CR020-04 | HMAC 或 allowlist 失效 | 高 | no-auth、public bind、scope 缺失、nonce replay 未阻断 | pairing_hmac 默认、allowlist 必填、scope per endpoint、nonce TTL | CP7 FAIL，停机回滚。 |
+| R-CR020-05 | QMT 登录 / session 不稳定 | 中高 | QMT API、MiniQMT、XtQuant 版本差异导致 ready 不可判定 | session ready gate 和 blocked result；版本写入 diagnostics | 回退 CR20-B health/login only 或转 Spike。 |
+| R-CR020-06 | 依赖污染 Linux 主环境 | 中高 | Windows gateway / XtQuant 依赖进入主依赖 | S 端隔离依赖，CP3 前不改依赖；CP5 再决定 extras/group/external runtime | 切 CR20-C 外部 Windows runtime。 |
+| R-CR020-07 | redaction 破坏业务可用性 | 中 | positions payload 脱敏后无法判断结果有效 | 只脱敏敏感账户 / 资金 / identity 字段，保留可验证结构和计数 | CP5 细化 redaction schema。 |
+
+### 36.14 ADR 候选决策点
+
+| ADR ID | 决策 | 推荐结论 | 备选 | 影响范围 |
+|---|---|---|---|---|
+| ADR-087 | CR-020 runtime 分层 | S 端 Typer CLI，C 端 Typer CLI 只验收，业务 runtime 为 Python REST client | CLI 作为 runtime；取消 C CLI | `qmt_gateway_cli.py`、`qmt_client_cli.py`、`qmt_client.py`、docs |
+| ADR-088 | Windows gateway 进程边界 | gateway 作为唯一 QMT 服务端触达点，策略 / C 端不得直连 XtQuant | C 端直连；外部脚本 runtime | safety、auth、session、ops |
+| ADR-089 | `.env` 凭据策略 | 本地未跟踪 `.env` + `.env.example` 占位 + redacted `credential_ref` | OS secret store；交互式输入 | security、docs、CP7 |
+| ADR-090 | 登录与 session ready gate | gateway 启动后必须 login/session ready，not ready 阻断查询 | lazy login on first query；health-only | reliability、query flow |
+| ADR-091 | HMAC / allowlist / scope / nonce | pairing_hmac 默认启用，allowlist 必填，scope=`qmt:positions:read` | no-auth；HMAC only | security、auth middleware |
+| ADR-092 | `query_positions` 首个只读接口 | 只解锁 `POST /qmt/account/positions`，其他 later-gated | `query_account`；health-only | endpoint matrix、client、gateway |
+| ADR-093 | 依赖隔离 | S 端 gateway / XtQuant 依赖隔离，C 端主 runtime 保持轻依赖；CP3 前不改锁 | 主依赖统一安装；外部 runtime only | pyproject/uv.lock、Windows/Linux compat |
+
+### 36.15 HLD 级 Story 候选与工作量一致性
+
+> 本节仅作为 CP3 HLD 和 Decision Brief 输入。由于 CP3 人工确认尚未通过，正式 `process/STORY-BACKLOG.md`、`process/DEVELOPMENT-PLAN.yaml` 和 Story 卡片不得在本轮写入。
+
+| Story | 标题 | 目标 | 主要文件 / 产物 | 估算 | 依赖 | CP3 后建议 Wave |
+|---|---|---|---|---|---|---|
+| CR020-S01 | Windows gateway runtime 与部署准入 | S 端 `uv run` Typer CLI 启停 / health / rollback 与 gateway lifecycle 从离线阻断升级为授权后可运行 | `trading/qmt_gateway_cli.py`、`trading/qmt_gateway_service.py`、`trading/qmt_gateway_config.py`、docs | 中高 | CP3 approved | W1 |
+| CR020-S02 | 服务端 QMT 登录 / 会话管理 | `.env` redacted read、QMT login、session ready、fail-closed | gateway login/session 模块、`.env.example`、tests | 高 | S01 contract | W1 |
+| CR020-S03 | C 侧 Python REST transport 与 Typer CLI | Python REST client runtime + C 端 Typer pairing / diagnostics / CP7 命令 | `trading/qmt_client.py`、`trading/qmt_client_cli.py`、transport tests | 中高 | S01 auth endpoint contract | W2 |
+| CR020-S04 | HMAC / pairing / allowlist / scope 实机准入 | pairing_hmac、allowlist、scope、nonce、防重放、wrong-scope blocked | `trading/qmt_auth.py`、gateway middleware、tests | 高 | S01、S03 | W2 |
+| CR020-S05 | `query_positions` 只读查询接口 | 解锁 `query_positions` 单接口，结果脱敏，所有写操作 blocked | `trading/qmt_endpoint_matrix.py`、gateway route、client method、tests | 高 | S02、S03、S04 | W3 |
+| CR020-S06 | 文档、运行手册与 CP7 实机验收 | S/C 命令、Python REST runtime、回滚、redaction、不授权边界和 CP7 evidence | `docs/QMT-GATEWAY-INSTALL.md`、README / USER-MANUAL、TEST-STRATEGY inputs | 中 | S01..S05 | W4 |
+
+一致性检查：候选 Story 数为 6，建议 Wave 数为 4，且 §36.15 与 §36.16 一一对应；正式 CP4 时不得改变 Story 数 / Wave 数而不更新本 HLD。
+
+### 36.16 分阶段落地建议
+
+| 阶段 | 目标 | 输出 | 前置 | Gate |
+|---|---|---|---|---|
+| W1：S 端 runtime + login | 让 Windows gateway 具备授权启动、health、stop、rollback、QMT login/session ready 的 LLD 和实现路径 | CR020-S01/S02 | CP3 approved | CP5 全量 LLD approved 后 dev |
+| W2：C 端 runtime + auth | Python REST client、C 端 Typer CLI、HMAC / allowlist / scope | CR020-S03/S04 | W1 合同稳定 | CP5 全量 LLD approved 后 dev |
+| W3：只读接口 | 单点解锁 `query_positions`，所有其他接口 later-gated | CR020-S05 | W1/W2 | CP6/CP7 |
+| W4：文档与 CP7 | 运行手册、S/C 命令、Python REST runtime、回滚和不授权声明 | CR020-S06 | W1..W3 | CP7 / CP8 |
+
+### 36.17 CP3 待决策项草案
+
+| 决策 ID | 决策类型 | 待确认问题 | 推荐方案 | 备选方案 | 优劣分析 | 影响 / 风险 | 回退 / 切换条件 |
+|---|---|---|---|---|---|---|---|
+| DQ-CP3-CR020-01 | architecture | 是否接受 CR20-A 分层 Windows gateway + 双端 Typer CLI + C 端 Python REST client 作为推荐架构？ | 接受 CR20-A。 | A. health/login only；B. 外部 Windows runtime。 | 推荐方案满足最小闭环；health/login 风险低但不满足查询；外部 runtime 依赖干净但可审计性弱。 | 影响 S01..S06、CP5、CP7。 | `query_positions` 或依赖隔离失败时切换。 |
+| DQ-CP3-CR020-02 | implementation | 是否确认 S/C CLI 一致使用 Typer，但 C 端 CLI 不作为业务 runtime？ | 确认：S CLI 管 lifecycle，C CLI 管 pairing/diagnostics/validation，业务 runtime 为 Python REST client。 | A. CLI 作为 runtime；B. C 端无 CLI。 | 推荐方案与 CP2 一致；CLI runtime 类型和安全弱；无 C CLI 验收差。 | 影响 client contract、docs、QA。 | REST client 不可实现时回退 CP3。 |
+| DQ-CP3-CR020-03 | security | 是否接受 `.env` 本地未跟踪 + redacted credential_ref 作为凭据策略？ | 接受，不读取真实值，不输出真实值。 | A. OS secret store；B. 交互输入。 | 推荐方案符合用户要求；OS store 更安全但复杂；交互输入影响服务启动。 | 凭据泄露为最高风险。 | 发现泄露立即停止并轮转。 |
+| DQ-CP3-CR020-04 | security | 是否接受 pairing_hmac + allowlist + scope + redaction 全部 fail-closed？ | 接受，缺任一门即 blocked。 | A. no-auth local only；B. HMAC only。 | 推荐方案安全最完整；no-auth 风险高；HMAC only 网络边界不足。 | 影响 auth middleware、CP7。 | 兼容性失败时只允许 fixture/local_debug 豁免。 |
+| DQ-CP3-CR020-05 | implementation | 是否确认只解锁 `query_positions`，scope=`qmt:positions:read`？ | 确认，其他 endpoint later-gated。 | A. `query_account`；B. health-only。 | positions 能证明真实只读连接；account 可替代但需重决策；health-only 不满足目标。 | 触达持仓敏感信息，需要脱敏。 | positions 不稳定时回退 CP3 改接口。 |
+| DQ-CP3-CR020-06 | architecture | 是否接受 S 端 gateway / XtQuant 依赖隔离，CP3 前不改 `pyproject.toml` / `uv.lock`？ | 接受；CP5 再确定 extras / group / external runtime。 | A. 主依赖统一安装；B. 完全外部 runtime。 | 推荐方案兼顾隔离和可交付；主依赖污染；外部 runtime 可审计性弱。 | 影响 Windows / Linux 兼容和 CI。 | 隔离不可行时切外部 runtime。 |
+| DQ-CP3-CR020-07 | runtime_authorization | 是否确认 CP3 通过不授权实现、启动、QMT 连接、交易、写入、simulation/live、provider/lake/publish 或凭据输出？ | 确认；CP3 只允许进入 Story Planning / CP4。 | A. 授权 bounded smoke；B. 授权依赖准备。 | 推荐方案权限最小；smoke/依赖准备需后续 CP5/CP6/CP7 或独立运行授权。 | 防止把 HLD approval 误读为运行许可。 | 用户明确运行授权时由 meta-po 单独发起。 |
+
+### 36.18 不授权边界
+
+CP3 approve 仅表示接受架构和后续 Story 拆解输入，不表示授权以下操作：
+
+- 发单、撤单、改单、账户写入或任何 broker 写操作。
+- simulation、live-readonly、small-live、scale-up 或任何真实交易准入。
+- provider fetch、真实联网补数、真实 lake write、catalog publish / current pointer publish、broker lake write 或 reports overwrite。
+- 把 `query_positions` 以外的真实 QMT 查询接口纳入本轮默认白名单。
+- 把账号、密码、token、session、交易密码、私钥写入 Git、对话、日志、检查点、memory 或任何入库文件。
+- 在 CP3 前修改 `pyproject.toml` / `uv.lock`，或把 Windows gateway / XtQuant 依赖加入 Linux C 端主依赖。
+- 把 C 端 Typer CLI 配对 / 验收命令误当成实际业务 runtime，或绕过 Python REST client 合同。
+- 启动 CR-021..CR-024 或扩大到 simulation / live 路线。
+
+### 36.19 HLD 自审记录
+
+| 检查项 | 结论 | 证据 |
+|---|---|---|
+| 问题定义、目标、约束、非目标、假设完整 | PASS | §36.1 |
+| Architecture Gray Areas 前置且 table-first | PASS | §36.3；`process/discussions/CP3-CR020-HLD-DISCUSSION-LOG.md` |
+| 至少 2 个候选方案比较 | PASS | §36.4 覆盖 CR20-A/B/C |
+| 推荐方案明确且有切换条件 | PASS | §36.4、§36.5、§36.13 |
+| Windows gateway 进程边界、S/C CLI、Python REST runtime 区分清晰 | PASS | §36.5、§36.7、§36.9 |
+| `.env`、session ready、HMAC/allowlist/scope/redaction、`query_positions` 均显式设计 | PASS | §36.7 至 §36.12 |
+| UC / 架构追溯与场景模拟完整 | PASS | §36.10、§36.11 |
+| Mermaid 图覆盖 User / Application / Service / Data / Infrastructure | PASS | §36.6 |
+| NFR、风险矩阵、ADR 候选、CP3 决策项完整 | PASS | §36.12 至 §36.17 |
+| Story 拆解与工作量一致性 | PASS | §36.15、§36.16；6 Story / 4 Wave 一致 |
+| 不授权边界明确 | PASS | §36.18 |
+| 正式 Story / Development Plan 门控 | PASS | §36.15 明确 CP3 前不写正式 Story Plan / Development Plan |

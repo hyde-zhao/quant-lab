@@ -1,0 +1,444 @@
+{
+  "anomaly_admission_summary": {
+    "blocked_claims": [
+      {
+        "claim": "production_valid",
+        "evidence_ref": "run-cr036-chapter5-anomalies-20260610",
+        "reason": "CR-036 仅生成离线研究证据。",
+        "status": "blocked"
+      },
+      {
+        "claim": "qmt_ready",
+        "evidence_ref": "run-cr036-chapter5-anomalies-20260610",
+        "reason": "CR-036 不授权 QMT、账户、订单或 broker runtime。",
+        "status": "blocked"
+      },
+      {
+        "claim": "simulation_ready",
+        "evidence_ref": "run-cr036-chapter5-anomalies-20260610",
+        "reason": "CR-036 不授权 simulation 或 live。",
+        "status": "blocked"
+      },
+      {
+        "claim": "live_ready",
+        "evidence_ref": "run-cr036-chapter5-anomalies-20260610",
+        "reason": "CR-036 不授权 simulation 或 live。",
+        "status": "blocked"
+      }
+    ],
+    "handoff": "CR-037 必须先复验稳健性和 strict gaps；CR-038/CR-039 只能在复验后消费 alpha feature candidate。",
+    "not_authorization": true,
+    "operation_counts": {
+      "account_or_order_operation": 0,
+      "catalog_publish": 0,
+      "credential_read": 0,
+      "dependency_change": 0,
+      "external_project_clone": 0,
+      "external_project_install": 0,
+      "external_project_run": 0,
+      "lake_write": 0,
+      "provider_fetch": 0,
+      "qmt_operation": 0,
+      "reports_overwrite": 0,
+      "simulation_or_live": 0,
+      "source_migration_or_vendor": 0
+    },
+    "samples": [
+      {
+        "anomaly_admission_summary": [
+          {
+            "admission": "watch_needs_robustness_review",
+            "anomaly_id": "fundamental_anchor_reversal",
+            "handoff": "CR-037 robustness review required before CR-038/CR-039 strategy admission",
+            "max_abs_alpha_t_stat": 2.415404209989202,
+            "mean_long_short_return": 0.0029477275497941094,
+            "observation_count": 227,
+            "t_stat": 1.0984603711152416
+          },
+          {
+            "admission": "reject_or_reweight",
+            "anomaly_id": "idiosyncratic_volatility_proxy",
+            "handoff": "CR-037 robustness review required before CR-038/CR-039 strategy admission",
+            "max_abs_alpha_t_stat": 5.936463945812018,
+            "mean_long_short_return": -0.014754770344456493,
+            "observation_count": 170,
+            "t_stat": -4.70371579830108
+          },
+          {
+            "admission": "reject_or_reweight",
+            "anomaly_id": "valuation_extreme_spread",
+            "handoff": "CR-037 robustness review required before CR-038/CR-039 strategy admission",
+            "max_abs_alpha_t_stat": 1.7232855350625584,
+            "mean_long_short_return": -0.0019668180910053655,
+            "observation_count": 236,
+            "t_stat": -1.531937104970037
+          }
+        ],
+        "gap_register": [
+          {
+            "description": "本仓库未找到第5章书籍 Markdown 原文；当前按 CR-036 已列出的 5.1/5.2/5.3 主题实现项目内可执行定义。",
+            "gap_id": "CR036-GAP-BOOK-CHAPTER5-SOURCE",
+            "impact": "报告不得宣称逐字严格复刻第5章，只能宣称项目内可执行复刻。",
+            "severity": "medium",
+            "status": "open-with-proxy-implemented"
+          },
+          {
+            "description": "缺少第5章原文与更细分估值变量时，当前只做项目内可执行极端估值代理。",
+            "gap_id": "CR036-GAP-valuation_extreme_spread",
+            "impact": "进入 CR-037/CR-038 前必须复验或补齐字段。",
+            "severity": "medium",
+            "status": "open-with-proxy-implemented"
+          },
+          {
+            "description": "缺少书中更精确的基本面锚定字段时，当前使用第三章已审计基本面因子形成代理。",
+            "gap_id": "CR036-GAP-fundamental_anchor_reversal",
+            "impact": "进入 CR-037/CR-038 前必须复验或补齐字段。",
+            "severity": "medium",
+            "status": "open-with-proxy-implemented"
+          },
+          {
+            "description": "缺少日收益残差和书中精确定价模型残差时，当前输出月度残差波动率代理，并保留 strict gap。",
+            "gap_id": "CR036-GAP-idiosyncratic_volatility_proxy",
+            "impact": "进入 CR-037/CR-038 前必须复验或补齐字段。",
+            "severity": "medium",
+            "status": "open-with-proxy-implemented"
+          }
+        ],
+        "sample_id": "in_sample_2000_2019",
+        "status": "PASS"
+      },
+      {
+        "anomaly_admission_summary": [
+          {
+            "admission": "watch",
+            "anomaly_id": "fundamental_anchor_reversal",
+            "handoff": "CR-037 robustness review required before CR-038/CR-039 strategy admission",
+            "max_abs_alpha_t_stat": 2.835861551745245,
+            "mean_long_short_return": 0.002251190564043268,
+            "observation_count": 64,
+            "t_stat": 0.4579229044287951
+          },
+          {
+            "admission": "reject_or_reweight",
+            "anomaly_id": "idiosyncratic_volatility_proxy",
+            "handoff": "CR-037 robustness review required before CR-038/CR-039 strategy admission",
+            "max_abs_alpha_t_stat": 4.241410615709633,
+            "mean_long_short_return": -0.02668449676060639,
+            "observation_count": 57,
+            "t_stat": -3.525218401537295
+          },
+          {
+            "admission": "reject_or_reweight",
+            "anomaly_id": "valuation_extreme_spread",
+            "handoff": "CR-037 robustness review required before CR-038/CR-039 strategy admission",
+            "max_abs_alpha_t_stat": 3.645934105488118,
+            "mean_long_short_return": -0.006537027531723821,
+            "observation_count": 74,
+            "t_stat": -2.813428594412637
+          }
+        ],
+        "gap_register": [
+          {
+            "description": "本仓库未找到第5章书籍 Markdown 原文；当前按 CR-036 已列出的 5.1/5.2/5.3 主题实现项目内可执行定义。",
+            "gap_id": "CR036-GAP-BOOK-CHAPTER5-SOURCE",
+            "impact": "报告不得宣称逐字严格复刻第5章，只能宣称项目内可执行复刻。",
+            "severity": "medium",
+            "status": "open-with-proxy-implemented"
+          },
+          {
+            "description": "缺少第5章原文与更细分估值变量时，当前只做项目内可执行极端估值代理。",
+            "gap_id": "CR036-GAP-valuation_extreme_spread",
+            "impact": "进入 CR-037/CR-038 前必须复验或补齐字段。",
+            "severity": "medium",
+            "status": "open-with-proxy-implemented"
+          },
+          {
+            "description": "缺少书中更精确的基本面锚定字段时，当前使用第三章已审计基本面因子形成代理。",
+            "gap_id": "CR036-GAP-fundamental_anchor_reversal",
+            "impact": "进入 CR-037/CR-038 前必须复验或补齐字段。",
+            "severity": "medium",
+            "status": "open-with-proxy-implemented"
+          },
+          {
+            "description": "缺少日收益残差和书中精确定价模型残差时，当前输出月度残差波动率代理，并保留 strict gap。",
+            "gap_id": "CR036-GAP-idiosyncratic_volatility_proxy",
+            "impact": "进入 CR-037/CR-038 前必须复验或补齐字段。",
+            "severity": "medium",
+            "status": "open-with-proxy-implemented"
+          }
+        ],
+        "sample_id": "observation_2020_2026_ytd",
+        "status": "PASS"
+      }
+    ],
+    "schema_version": "chapter5_anomaly_admission_summary_v1"
+  },
+  "artifacts": {
+    "alpha_tests_path": "reports/chapter5_anomalies/run-cr036-chapter5-anomalies-20260610/alpha_tests.csv",
+    "anomaly_admission_summary_path": "process/research/chapter5_anomalies/run-cr036-chapter5-anomalies-20260610/ANOMALY-ADMISSION-SUMMARY.json",
+    "anomaly_correlation_path": "reports/chapter5_anomalies/run-cr036-chapter5-anomalies-20260610/anomaly_correlation.csv",
+    "anomaly_panel_path": "reports/chapter5_anomalies/run-cr036-chapter5-anomalies-20260610/anomaly_panel.parquet",
+    "anomaly_returns_path": "reports/chapter5_anomalies/run-cr036-chapter5-anomalies-20260610/anomaly_returns.csv",
+    "gap_register_path": "reports/chapter5_anomalies/run-cr036-chapter5-anomalies-20260610/gap_register.csv",
+    "manifest_path": "reports/chapter5_anomalies/run-cr036-chapter5-anomalies-20260610/anomaly_manifest.json",
+    "process_dir": "process/research/chapter5_anomalies/run-cr036-chapter5-anomalies-20260610",
+    "report_dir": "reports/chapter5_anomalies/run-cr036-chapter5-anomalies-20260610",
+    "report_json_path": "process/research/chapter5_anomalies/run-cr036-chapter5-anomalies-20260610/CHAPTER5-RUN-REPORT.json",
+    "report_md_path": "process/research/chapter5_anomalies/run-cr036-chapter5-anomalies-20260610/CHAPTER5-RUN-REPORT.md",
+    "run_id": "run-cr036-chapter5-anomalies-20260610"
+  },
+  "operation_counts": {
+    "account_or_order_operation": 0,
+    "catalog_publish": 0,
+    "credential_read": 0,
+    "dependency_change": 0,
+    "external_project_clone": 0,
+    "external_project_install": 0,
+    "external_project_run": 0,
+    "lake_write": 0,
+    "provider_fetch": 0,
+    "qmt_operation": 0,
+    "reports_overwrite": 0,
+    "simulation_or_live": 0,
+    "source_migration_or_vendor": 0
+  },
+  "run_id": "run-cr036-chapter5-anomalies-20260610",
+  "sample_results": [
+    {
+      "alpha_test_rows": 9,
+      "anomaly_admission_summary": [
+        {
+          "admission": "watch_needs_robustness_review",
+          "anomaly_id": "fundamental_anchor_reversal",
+          "handoff": "CR-037 robustness review required before CR-038/CR-039 strategy admission",
+          "max_abs_alpha_t_stat": 2.415404209989202,
+          "mean_long_short_return": 0.0029477275497941094,
+          "observation_count": 227,
+          "t_stat": 1.0984603711152416
+        },
+        {
+          "admission": "reject_or_reweight",
+          "anomaly_id": "idiosyncratic_volatility_proxy",
+          "handoff": "CR-037 robustness review required before CR-038/CR-039 strategy admission",
+          "max_abs_alpha_t_stat": 5.936463945812018,
+          "mean_long_short_return": -0.014754770344456493,
+          "observation_count": 170,
+          "t_stat": -4.70371579830108
+        },
+        {
+          "admission": "reject_or_reweight",
+          "anomaly_id": "valuation_extreme_spread",
+          "handoff": "CR-037 robustness review required before CR-038/CR-039 strategy admission",
+          "max_abs_alpha_t_stat": 1.7232855350625584,
+          "mean_long_short_return": -0.0019668180910053655,
+          "observation_count": 236,
+          "t_stat": -1.531937104970037
+        }
+      ],
+      "anomaly_ids": [
+        "valuation_extreme_spread",
+        "fundamental_anchor_reversal",
+        "idiosyncratic_volatility_proxy"
+      ],
+      "anomaly_panel_rows": 969286,
+      "anomaly_return_rows": 633,
+      "blocked_claims": [
+        {
+          "claim": "production_valid",
+          "evidence_ref": "run-cr036-chapter5-anomalies-20260610",
+          "reason": "CR-036 仅生成离线研究证据。",
+          "status": "blocked"
+        },
+        {
+          "claim": "qmt_ready",
+          "evidence_ref": "run-cr036-chapter5-anomalies-20260610",
+          "reason": "CR-036 不授权 QMT、账户、订单或 broker runtime。",
+          "status": "blocked"
+        },
+        {
+          "claim": "simulation_ready",
+          "evidence_ref": "run-cr036-chapter5-anomalies-20260610",
+          "reason": "CR-036 不授权 simulation 或 live。",
+          "status": "blocked"
+        },
+        {
+          "claim": "live_ready",
+          "evidence_ref": "run-cr036-chapter5-anomalies-20260610",
+          "reason": "CR-036 不授权 simulation 或 live。",
+          "status": "blocked"
+        }
+      ],
+      "gap_register": [
+        {
+          "description": "本仓库未找到第5章书籍 Markdown 原文；当前按 CR-036 已列出的 5.1/5.2/5.3 主题实现项目内可执行定义。",
+          "gap_id": "CR036-GAP-BOOK-CHAPTER5-SOURCE",
+          "impact": "报告不得宣称逐字严格复刻第5章，只能宣称项目内可执行复刻。",
+          "severity": "medium",
+          "status": "open-with-proxy-implemented"
+        },
+        {
+          "description": "缺少第5章原文与更细分估值变量时，当前只做项目内可执行极端估值代理。",
+          "gap_id": "CR036-GAP-valuation_extreme_spread",
+          "impact": "进入 CR-037/CR-038 前必须复验或补齐字段。",
+          "severity": "medium",
+          "status": "open-with-proxy-implemented"
+        },
+        {
+          "description": "缺少书中更精确的基本面锚定字段时，当前使用第三章已审计基本面因子形成代理。",
+          "gap_id": "CR036-GAP-fundamental_anchor_reversal",
+          "impact": "进入 CR-037/CR-038 前必须复验或补齐字段。",
+          "severity": "medium",
+          "status": "open-with-proxy-implemented"
+        },
+        {
+          "description": "缺少日收益残差和书中精确定价模型残差时，当前输出月度残差波动率代理，并保留 strict gap。",
+          "gap_id": "CR036-GAP-idiosyncratic_volatility_proxy",
+          "impact": "进入 CR-037/CR-038 前必须复验或补齐字段。",
+          "severity": "medium",
+          "status": "open-with-proxy-implemented"
+        }
+      ],
+      "label_rows": 447186,
+      "operation_counts": {
+        "account_or_order_operation": 0,
+        "catalog_publish": 0,
+        "credential_read": 0,
+        "dependency_change": 0,
+        "external_project_clone": 0,
+        "external_project_install": 0,
+        "external_project_run": 0,
+        "lake_write": 0,
+        "provider_fetch": 0,
+        "qmt_operation": 0,
+        "reports_overwrite": 0,
+        "simulation_or_live": 0,
+        "source_migration_or_vendor": 0
+      },
+      "panel_rows": 2550289,
+      "rebalance_count": 239,
+      "run_id": "run-cr036-chapter5-anomalies-20260610",
+      "sample_id": "in_sample_2000_2019",
+      "schema_version": "chapter5_anomalies_v1",
+      "status": "PASS"
+    },
+    {
+      "alpha_test_rows": 9,
+      "anomaly_admission_summary": [
+        {
+          "admission": "watch",
+          "anomaly_id": "fundamental_anchor_reversal",
+          "handoff": "CR-037 robustness review required before CR-038/CR-039 strategy admission",
+          "max_abs_alpha_t_stat": 2.835861551745245,
+          "mean_long_short_return": 0.002251190564043268,
+          "observation_count": 64,
+          "t_stat": 0.4579229044287951
+        },
+        {
+          "admission": "reject_or_reweight",
+          "anomaly_id": "idiosyncratic_volatility_proxy",
+          "handoff": "CR-037 robustness review required before CR-038/CR-039 strategy admission",
+          "max_abs_alpha_t_stat": 4.241410615709633,
+          "mean_long_short_return": -0.02668449676060639,
+          "observation_count": 57,
+          "t_stat": -3.525218401537295
+        },
+        {
+          "admission": "reject_or_reweight",
+          "anomaly_id": "valuation_extreme_spread",
+          "handoff": "CR-037 robustness review required before CR-038/CR-039 strategy admission",
+          "max_abs_alpha_t_stat": 3.645934105488118,
+          "mean_long_short_return": -0.006537027531723821,
+          "observation_count": 74,
+          "t_stat": -2.813428594412637
+        }
+      ],
+      "anomaly_ids": [
+        "valuation_extreme_spread",
+        "fundamental_anchor_reversal",
+        "idiosyncratic_volatility_proxy"
+      ],
+      "anomaly_panel_rows": 777587,
+      "anomaly_return_rows": 195,
+      "blocked_claims": [
+        {
+          "claim": "production_valid",
+          "evidence_ref": "run-cr036-chapter5-anomalies-20260610",
+          "reason": "CR-036 仅生成离线研究证据。",
+          "status": "blocked"
+        },
+        {
+          "claim": "qmt_ready",
+          "evidence_ref": "run-cr036-chapter5-anomalies-20260610",
+          "reason": "CR-036 不授权 QMT、账户、订单或 broker runtime。",
+          "status": "blocked"
+        },
+        {
+          "claim": "simulation_ready",
+          "evidence_ref": "run-cr036-chapter5-anomalies-20260610",
+          "reason": "CR-036 不授权 simulation 或 live。",
+          "status": "blocked"
+        },
+        {
+          "claim": "live_ready",
+          "evidence_ref": "run-cr036-chapter5-anomalies-20260610",
+          "reason": "CR-036 不授权 simulation 或 live。",
+          "status": "blocked"
+        }
+      ],
+      "gap_register": [
+        {
+          "description": "本仓库未找到第5章书籍 Markdown 原文；当前按 CR-036 已列出的 5.1/5.2/5.3 主题实现项目内可执行定义。",
+          "gap_id": "CR036-GAP-BOOK-CHAPTER5-SOURCE",
+          "impact": "报告不得宣称逐字严格复刻第5章，只能宣称项目内可执行复刻。",
+          "severity": "medium",
+          "status": "open-with-proxy-implemented"
+        },
+        {
+          "description": "缺少第5章原文与更细分估值变量时，当前只做项目内可执行极端估值代理。",
+          "gap_id": "CR036-GAP-valuation_extreme_spread",
+          "impact": "进入 CR-037/CR-038 前必须复验或补齐字段。",
+          "severity": "medium",
+          "status": "open-with-proxy-implemented"
+        },
+        {
+          "description": "缺少书中更精确的基本面锚定字段时，当前使用第三章已审计基本面因子形成代理。",
+          "gap_id": "CR036-GAP-fundamental_anchor_reversal",
+          "impact": "进入 CR-037/CR-038 前必须复验或补齐字段。",
+          "severity": "medium",
+          "status": "open-with-proxy-implemented"
+        },
+        {
+          "description": "缺少日收益残差和书中精确定价模型残差时，当前输出月度残差波动率代理，并保留 strict gap。",
+          "gap_id": "CR036-GAP-idiosyncratic_volatility_proxy",
+          "impact": "进入 CR-037/CR-038 前必须复验或补齐字段。",
+          "severity": "medium",
+          "status": "open-with-proxy-implemented"
+        }
+      ],
+      "label_rows": 371877,
+      "operation_counts": {
+        "account_or_order_operation": 0,
+        "catalog_publish": 0,
+        "credential_read": 0,
+        "dependency_change": 0,
+        "external_project_clone": 0,
+        "external_project_install": 0,
+        "external_project_run": 0,
+        "lake_write": 0,
+        "provider_fetch": 0,
+        "qmt_operation": 0,
+        "reports_overwrite": 0,
+        "simulation_or_live": 0,
+        "source_migration_or_vendor": 0
+      },
+      "panel_rows": 1957024,
+      "rebalance_count": 76,
+      "run_id": "run-cr036-chapter5-anomalies-20260610",
+      "sample_id": "observation_2020_2026_ytd",
+      "schema_version": "chapter5_anomalies_v1",
+      "status": "PASS"
+    }
+  ],
+  "schema_version": "chapter5_anomalies_run_v1",
+  "status": "PASS"
+}

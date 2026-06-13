@@ -1,0 +1,74 @@
+context_id: CP3-CR045-DESIGN-CONTEXT
+change_id: CR-045
+phase: solution-design
+status: ready
+created_at: '2026-06-11T22:04:17+08:00'
+owner: meta-po
+read_profile: compact
+source_gate:
+  cp2_checkpoint: process/checkpoints/CP2-CR045-REQUIREMENTS-BASELINE.md
+  cp2_status: approved
+  cp2_approved_at: '2026-06-11T21:49:16+08:00'
+design_artifacts:
+  hld: docs/design/HLD-CR045-GOLDMINER-WINDOWS-BRIDGE.md
+  adr: docs/design/ARCHITECTURE-DECISION-CR045.md
+  discussion_log: process/discussions/CP3-CR045-HLD-DISCUSSION-LOG.md
+  discussion_checkpoint: process/checks/CP3-CR045-DISCUSSION-CHECKPOINT.json
+  handoff: process/handoffs/META-SE-CR045-CP3-HLD-2026-06-11.md
+recommended_architecture:
+  topology: Windows-side bridge skeleton plus WSL / Linux allowlist client
+  windows_boundary: future Goldminer SDK / terminal context only; current CR does not start runtime
+  wsl_linux_boundary: client contract, fixture transport, network precheck, no SDK import, no credential storage
+  future_linux_research_server_boundary: research, backtest, portfolio generation, order intent production, and bridge client only; no Goldminer SDK runtime and no direct trading
+  api_allowlist:
+    - health
+    - capabilities
+    - readonly_probe_skeleton
+  default_runtime_state: hard-off
+  real_readonly_verified: false
+story_lld_policy:
+  batch_id: CR045-BRIDGE-BATCH-A
+  stories:
+    - id: CR045-S01
+      title: Windows bridge security boundary and authorization model
+      lld_policy: full-lld
+    - id: CR045-S02
+      title: Bridge health and capabilities skeleton
+      lld_policy: full-lld
+    - id: CR045-S03
+      title: WSL client contract and network precheck
+      lld_policy: full-lld
+    - id: CR045-S04
+      title: Readonly probe allowlist and blocked-first response
+      lld_policy: full-lld
+    - id: CR045-S05
+      title: Redaction evidence and no-operation static validation
+      lld_policy: full-lld
+    - id: CR045-S06
+      title: User runbook and L3/L4/L5 follow-up gate
+      lld_policy: technical-note
+      upgrade_condition: auto manifest/schema generation or runtime guard code requires full-lld
+pending_human_decisions:
+  - DQ-CP3-CR045-01
+  - DQ-CP3-CR045-02
+  - DQ-CP3-CR045-03
+  - DQ-CP3-CR045-04
+  - DQ-CP3-CR045-05
+  - DQ-CP3-CR045-06
+non_authorized_items:
+  - credential/token/account_id read or capture
+  - Windows bridge runtime start
+  - Goldminer login/connect
+  - account/cash/position/order/fill query
+  - order submit / cancel
+  - simulation / live runtime
+  - provider fetch / lake write / catalog publish
+read_expansion_log:
+  - at: '2026-06-11T22:04:17+08:00'
+    actor: meta-po
+    reason: CP3 human gate assembly required reading HLD, ADR, discussion log, discussion checkpoint and handoff to collect decisions and verify consistency.
+    full_doc_read_reason: CP3 gate creation and automatic precheck require source design evidence, not only capsule.
+  - at: '2026-06-11T22:28:46+08:00'
+    actor: meta-po
+    reason: User approved CP3 and confirmed future high-performance Linux research server placement; updated context to make Linux research server a client/research boundary, not a Goldminer runtime boundary.
+    full_doc_read_reason: CP3 approval backfill required HLD/ADR/checkpoint consistency update.

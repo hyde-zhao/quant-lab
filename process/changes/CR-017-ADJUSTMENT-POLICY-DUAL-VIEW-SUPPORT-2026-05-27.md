@@ -1,12 +1,12 @@
 ---
 cr_id: "CR-017"
-status: "controlled-offline-verified-pending-cp8"
+status: "closed"
 impact_level: "high"
 workflow_mode_before: "standard"
 workflow_mode_after_change: "standard"
 fast_lane_upgrade_reason: "同时支持前复权和后复权会修改数据湖价格事实源、派生视图、reader API、quality gate、研究默认口径和 QMT 执行价格边界，命中架构、数据契约、外部数据口径和多 Story 依赖，必须走 standard。"
 rollback_to: "requirement-clarification"
-approval_result: "controlled-offline-verified-pending-cp8"
+approval_result: "closed-cp8-approved"
 created_at: "2026-05-27T22:33:51+08:00"
 created_by: "meta-po"
 approved_by: "user"
@@ -22,9 +22,16 @@ related_crs:
   - "CR-015"
   - "CR-016"
 updated_at: "2026-05-31T21:43:48+08:00"
+closed_by: "user"
+closed_at: "2026-06-05T23:11:48+08:00"
+cp8_manual_status: "approved"
+cp8_manual_review: "checkpoints/CP8-CR015-CR016-CR017-DELIVERY-READINESS.md"
+cp8_auto_check: "process/checks/CP8-CR015-CR016-CR017-DELIVERY-READINESS.md"
 ---
 
 # CR-017 复权双视图支持：前复权 / 后复权 / 原始交易价隔离
+
+> 2026-06-05T23:11:48+08:00 关闭记录：用户接受 CP8 推荐方案，CR-017 当前受控离线交付范围关闭。关闭范围包含 raw prices + adj_factor 事实源合同、qfq / hfq 派生视图、reader policy gate、质量与泄漏验证、consumer 文档和 QMT raw-only 边界；不等于 production adjustment governance / scale-up 解禁，不授权真实抓取、真实写湖、publish、QMT、simulation 或 live。
 
 ## 变更描述
 
@@ -195,10 +202,10 @@ updated_at: "2026-05-31T21:43:48+08:00"
 
 ## 处理结论
 
-- 审批结论：`controlled-offline-verified-pending-cp8`
+- 审批结论：`closed-cp8-approved`
 - [ ] 自动批准（低风险）
-- [ ] 待人工确认（中风险）
-- [x] 待人工审批（高风险）
+- [x] 用户已于 2026-06-05T23:11:48+08:00 接受 CP8 推荐关闭方案
+- [ ] 待人工审批（高风险）
 
 当前禁止事项：
 

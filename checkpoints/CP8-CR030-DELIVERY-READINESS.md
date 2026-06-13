@@ -2,11 +2,11 @@
 checkpoint_id: "CP8"
 checkpoint_name: "CR-030 多因子研究闭环交付就绪人工终验"
 type: "auto_then_manual"
-status: "pending"
+status: "approved"
 owner: "meta-po"
 created_at: "2026-06-03T12:01:20+08:00"
-reviewed_by: ""
-reviewed_at: ""
+reviewed_by: "user"
+reviewed_at: "2026-06-04T06:46:13+08:00"
 auto_check_result: "process/checks/CP8-CR030-DELIVERY-READINESS.md"
 auto_final_authorization: false
 target:
@@ -65,10 +65,10 @@ target:
 
 | 分流类别 | 项目 ID | 状态 | 处理方式 | 台账 / CR 路径 | 说明 |
 |---|---|---|---|---|---|
-| 关闭范围 | CLOSE-CR030-01 | pending-close | CP8 approve 后关闭 | `checkpoints/CP8-CR030-DELIVERY-READINESS.md` | CR-030 当前多因子研究闭环、文档、安全测试和策略准备证据包。 |
+| 关闭范围 | CLOSE-CR030-01 | closed | CP8 approved 后关闭 | `checkpoints/CP8-CR030-DELIVERY-READINESS.md` | CR-030 当前多因子研究闭环、文档、安全测试和策略准备证据包。 |
 | 不授权范围 | NA-CR030-01 | not-authorized | 不进入本轮执行授权 | 本文件 | 依赖变更、外部项目 clone/install/run/source copy、provider/lake/publish、QMT/simulation/live、账户/订单或凭据读取。 |
 | 不授权范围 | NA-CR030-02 | not-authorized | 不进入本轮 runtime 授权 | 本文件 | Qlib / Alphalens / vectorbt / PyBroker / RQAlpha / vn.py / Backtrader / optimizer / ML runtime 集成。 |
-| 风险接受项 | RA-CR030-01 | pending-risk-acceptance | 用户接受后放行 CP8 | 本文件 | “模拟盘入口”只表示策略侧研究与实验闭环已形成后续模拟盘审查输入；不是 simulation-ready 或 QMT-ready，QMT 接口和运行授权仍需后续 CR。 |
+| 风险接受项 | RA-CR030-01 | accepted-risk | 用户已接受后放行 CP8 | 本文件 | “模拟盘入口”只表示策略侧研究与实验闭环已形成后续模拟盘审查输入；不是 simulation-ready 或 QMT-ready，QMT 接口和运行授权仍需后续 CR。 |
 | 后续 CR 候选项 | CR-020 | candidate | 后续单独启动正式 CR | `process/changes/CR-019-FOLLOW-UP-TRACKING-2026-05-31.md` | QMT Windows gateway 实机部署准入。 |
 | 后续 CR 候选项 | CR-021 | candidate | 后续单独启动正式 CR | `process/changes/CR-019-FOLLOW-UP-TRACKING-2026-05-31.md` | QMT simulation 账号接入准入。 |
 | 后续 CR 候选项 | CR-022 | candidate | 后续单独启动正式 CR | `process/changes/CR-019-FOLLOW-UP-TRACKING-2026-05-31.md` | Live-readonly 准入。 |
@@ -98,50 +98,50 @@ target:
 
 | 条目 | 状态 | 证据 | 审查意见 |
 |---|---|---|---|
-| CR-030 已完成 CP2 / CP3 / CP4 / CP5 | 待审查 | CP2 / CP3 / CP4 / CP5 检查点 |  |
-| CR030-S01..S08 均为 verified | 待审查 | Story 卡、CP6 / CP7 文件、STATE |  |
-| 文档与安全测试就绪 | 待审查 | `docs/CR030-MULTIFACTOR-RESEARCH-LOOP.md`、`tests/test_cr030_no_real_operation_safety.py` |  |
-| 自动预检通过 | 待审查 | `process/checks/CP8-CR030-DELIVERY-READINESS.md` |  |
+| CR-030 已完成 CP2 / CP3 / CP4 / CP5 | 通过 | CP2 / CP3 / CP4 / CP5 检查点 | 用户确认已验证完成，同意关闭 CR-030。 |
+| CR030-S01..S08 均为 verified | 通过 | Story 卡、CP6 / CP7 文件、STATE | 用户确认已验证完成，同意关闭 CR-030。 |
+| 文档与安全测试就绪 | 通过 | `docs/CR030-MULTIFACTOR-RESEARCH-LOOP.md`、`tests/test_cr030_no_real_operation_safety.py` | 用户确认已验证完成，同意关闭 CR-030。 |
+| 自动预检通过 | 通过 | `process/checks/CP8-CR030-DELIVERY-READINESS.md` | 自动预检 PASS，用户已完成终验。 |
 
 ## Checklist
 
 | # | 检查项 | 审查结果 | 证据 | 审查意见 |
 |---|---|---|---|---|
-| 1 | 是否接受 CR030-S01 外部参考矩阵与 license/runtime 边界已 verified | 待审查 | S01 CP6 / CP7 |  |
-| 2 | 是否接受 CR030-S02 FactorSpec / FactorRunSpec 合同已 verified | 待审查 | S02 CP6 / CP7 |  |
-| 3 | 是否接受 CR030-S03 factor panel / label window fail-closed 已 verified | 待审查 | S03 CP6 / CP7 |  |
-| 4 | 是否接受 CR030-S04 因子评价报告已 verified | 待审查 | S04 CP6 / CP7 |  |
-| 5 | 是否接受 CR030-S05 多因子组合与 portfolio plan 已 verified | 待审查 | S05 CP6 / CP7 |  |
-| 6 | 是否接受 CR030-S06 experiment manifest / report catalog 已 verified | 待审查 | S06 CP6 / CP7 |  |
-| 7 | 是否接受 CR030-S07 StrategyAdmissionPackage 和 research-to-execution handoff 已 verified | 待审查 | S07 CP6 / CP7 |  |
-| 8 | 是否接受 CR030-S08 安全文档、No-Real-Operation 表和后续边界已 verified | 待审查 | S08 CP6 / CP7 |  |
-| 9 | 是否确认 CP8 不授权真实运行、依赖变更、外部项目 runtime、provider/lake/publish、QMT/simulation/live、账号/订单或凭据读取 | 待审查 | 本文件“不授权范围”、CP8 自动预检 |  |
-| 10 | 是否接受后续 CR / Spike 分流 | 待审查 | CP8 后续跟踪分流表、CR-INDEX |  |
+| 1 | 是否接受 CR030-S01 外部参考矩阵与 license/runtime 边界已 verified | 通过 | S01 CP6 / CP7 | 用户确认已验证完成。 |
+| 2 | 是否接受 CR030-S02 FactorSpec / FactorRunSpec 合同已 verified | 通过 | S02 CP6 / CP7 | 用户确认已验证完成。 |
+| 3 | 是否接受 CR030-S03 factor panel / label window fail-closed 已 verified | 通过 | S03 CP6 / CP7 | 用户确认已验证完成。 |
+| 4 | 是否接受 CR030-S04 因子评价报告已 verified | 通过 | S04 CP6 / CP7 | 用户确认已验证完成。 |
+| 5 | 是否接受 CR030-S05 多因子组合与 portfolio plan 已 verified | 通过 | S05 CP6 / CP7 | 用户确认已验证完成。 |
+| 6 | 是否接受 CR030-S06 experiment manifest / report catalog 已 verified | 通过 | S06 CP6 / CP7 | 用户确认已验证完成。 |
+| 7 | 是否接受 CR030-S07 StrategyAdmissionPackage 和 research-to-execution handoff 已 verified | 通过 | S07 CP6 / CP7 | 用户确认已验证完成。 |
+| 8 | 是否接受 CR030-S08 安全文档、No-Real-Operation 表和后续边界已 verified | 通过 | S08 CP6 / CP7 | 用户确认已验证完成。 |
+| 9 | 是否确认 CP8 不授权真实运行、依赖变更、外部项目 runtime、provider/lake/publish、QMT/simulation/live、账号/订单或凭据读取 | 通过 | 本文件“不授权范围”、CP8 自动预检 | 用户接受不授权边界。 |
+| 10 | 是否接受后续 CR / Spike 分流 | 通过 | CP8 后续跟踪分流表、CR-INDEX | 用户接受后续候选项保持独立门控。 |
 
 ## Exit Criteria
 
 | 条目 | 审查结果 | 证据 | 审查意见 |
 |---|---|---|---|
-| 用户明确 approve / 修改 / reject | 待审查 | 用户回复 |  |
-| 若 approve：CR-030 当前交付范围可关闭 | 待审查 | CP8 自动预检 PASS + 本人工确认 |  |
-| 若修改或 reject：回退目标明确 | 待审查 | 用户修改意见 |  |
+| 用户明确 approve / 修改 / reject | 通过 | 用户回复“我验证完了，你可以关闭CR-030了” | 等价接受 CP8 approve 语义，允许关闭 CR-030。 |
+| 若 approve：CR-030 当前交付范围可关闭 | 通过 | CP8 自动预检 PASS + 本人工确认 | CR-030 当前交付范围关闭。 |
+| 若修改或 reject：回退目标明确 | N/A | 用户未要求修改或 reject | 无需回退。 |
 
 ## Deliverables
 
 | 交付物 | 路径 | 审查结果 | 审查意见 |
 |---|---|---|---|
-| CP8 自动预检 | `process/checks/CP8-CR030-DELIVERY-READINESS.md` | 待审查 |  |
-| CR-030 快速开始手册 | `docs/CR030-FACTOR-RESEARCH-QUICKSTART.md` | 待审查 |  |
-| CR-030 主文档 | `docs/CR030-MULTIFACTOR-RESEARCH-LOOP.md` | 待审查 |  |
-| 外部参考矩阵 | `docs/CR030-MULTIFACTOR-REFERENCE-MATRIX.md` | 待审查 |  |
-| 核心模块 | `engine/multifactor_contracts.py`、`engine/factor_panel_contracts.py`、`engine/factor_evaluation.py`、`engine/multifactor_combiner.py`、`engine/research_manifest.py`、`engine/strategy_admission_package.py` | 待审查 |  |
-| CR030 tests | `tests/test_cr030_*.py` | 待审查 |  |
-| CR tracking index | `process/changes/CR-INDEX.yaml` | 待审查 |  |
+| CP8 自动预检 | `process/checks/CP8-CR030-DELIVERY-READINESS.md` | 通过 | 自动预检 PASS。 |
+| CR-030 快速开始手册 | `docs/CR030-FACTOR-RESEARCH-QUICKSTART.md` | 通过 | 用户确认已验证完成。 |
+| CR-030 主文档 | `docs/CR030-MULTIFACTOR-RESEARCH-LOOP.md` | 通过 | 用户确认已验证完成。 |
+| 外部参考矩阵 | `docs/CR030-MULTIFACTOR-REFERENCE-MATRIX.md` | 通过 | 用户确认已验证完成。 |
+| 核心模块 | `engine/multifactor_contracts.py`、`engine/factor_panel_contracts.py`、`engine/factor_evaluation.py`、`engine/multifactor_combiner.py`、`engine/research_manifest.py`、`engine/strategy_admission_package.py` | 通过 | 用户确认已验证完成。 |
+| CR030 tests | `tests/test_cr030_*.py` | 通过 | 聚合回归已通过，用户确认已验证完成。 |
+| CR tracking index | `process/changes/CR-INDEX.yaml` | 通过 | 关闭回写后重新校验。 |
 
 ## 人工审查结果
 
-- 结论：`pending`
-- 审查人：
-- 审查时间：
-- 修改意见：
-- 风险接受项：
+- 结论：`approved`
+- 审查人：user
+- 审查时间：2026-06-04T06:46:13+08:00
+- 修改意见：无。用户回复“我验证完了，你可以关闭CR-030了”，接受 CP8 推荐方案并允许关闭当前交付范围。
+- 风险接受项：接受 `RA-CR030-01`。即“模拟盘入口”仅表示策略侧研究与实验闭环已形成后续模拟盘审查输入；不是 QMT-ready、simulation-ready、live-ready 或真实可交易授权。

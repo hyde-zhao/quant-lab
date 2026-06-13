@@ -1,15 +1,15 @@
 ---
-version: "2.4"
-last_updated: "2026-06-03T08:30:00+08:00"
-status: "cr030-story-plan-cp4-pass-pending-lld"
+version: "2.6"
+last_updated: "2026-06-13T23:06:37+08:00"
+status: "cr046-story-plan-cp4-pass-pending-lld"
 confirmed: true
 confirmed_by: "user"
 confirmed_at: "2026-05-14"
 source_hld: "process/HLD.md"
 companion_hld: "process/HLD-DATA-LAKE.md"
 source_adr: "process/ARCHITECTURE-DECISION.md"
-story_count: 128
-wave_count: 56
+story_count: 141
+wave_count: 64
 baseline_story_count: 13
 cr004_story_count: 5
 cr005_story_count: 6
@@ -27,8 +27,10 @@ cr018_story_count: 9
 cr019_story_count: 10
 cr025_story_count: 6
 cr030_story_count: 8
-active_change: "CR-030"
-secondary_change: "CR-019"
+cr020_story_count: 6
+cr046_story_count: 7
+active_change: "CR-046"
+secondary_change: "CR-020/CR-030 legacy"
 cr004_status: "draft-pending-cp4"
 cr004_confirmed: false
 cr005_status: "verified-cp7-pass"
@@ -67,6 +69,9 @@ cr018_status: "story-plan-cp4-pending-cp3"
 cr019_status: "story-plan-cp4-pass-pending-lld"
 cr025_status: "story-plan-cp4-pass-pending-lld"
 cr030_status: "story-plan-cp4-pass-pending-lld"
+cr046_status: "story-plan-cp4-pass-pending-lld"
+cr046_lld_batch: "CR046-DUAL-TARGET-FRAMEWORK-BATCH-A"
+cr020_status: "fixture-static-verified-pending-manual-windows-qmt-validation"
 cr015_lld_batches:
   - "CR015-QMT-FOUNDATION-BATCH-A"
 cr016_lld_batches:
@@ -81,6 +86,8 @@ cr025_lld_batches:
   - "CR025-RESEARCH-EXECUTION-SEMANTIC-ALIGNMENT-BATCH-A"
 cr030_lld_batches:
   - "CR030-MULTIFACTOR-RESEARCH-LOOP-BATCH-A"
+cr020_lld_batches:
+  - "CR020-QMT-GATEWAY-READONLY-BATCH-A"
 created_by: "meta-se"
 ---
 
@@ -117,6 +124,8 @@ created_by: "meta-se"
 | 2.3 | 2026-06-01 | meta-se | 按 CR-025 CP3 approved 口径追加 CR025-S01..S06 与 4 个增量 Wave：clean feed gate / backend selector、semantic diff schema / artifact、`order_intent_draft_v1`、Backtrader module reference/no-copy guardrail、optional runtime boundary、no-real-operation safety、QMT 后续路线衔接和验证策略；CP4 自动预检 PASS；本轮只做 Story Plan / CP4，不生成 LLD、不实现、不改依赖、不运行 Backtrader、不复制 / 裁剪 / 改写 GPLv3 源码、不触发真实 broker / QMT / provider / lake / publish / simulation / live、不读取凭据 |
 | 2.3.1 | 2026-06-02 | meta-se | 按 CR-025 CP5 前定位澄清修订 S02 / S04 / S06：Backtrader 只作为 lightweight execution engine 执行语义参考，多因子研究闭环（FactorSpec、FactorRunSpec、IC / RankIC、分层收益、多因子组合、实验追踪、策略准入包）另起后续 CR，参考 Qlib / Alphalens / vnpy.alpha；CR025 仍保持 6 Story / 4 Wave / 1 LLD batch |
 | 2.4 | 2026-06-03 | meta-se | 按 CR-030 CP3 approved 口径追加 CR030-S01..S08 与 4 个增量 Wave：外部项目矩阵与总合同、FactorSpec / FactorRunSpec、FactorPanel / LabelWindow、单因子评价、多因子组合、ExperimentManifest / ResearchReportCatalog、StrategyAdmissionPackage / `order_intent_draft_v1` handoff、安全验证与文档边界；CP4 自动预检 PASS；本轮只做 Story Plan / CP4，不生成 LLD、不实现、不改依赖、不运行外部项目、不触发 provider/lake/publish/QMT/simulation/live、不读取凭据 |
+| 2.5 | 2026-06-05 | meta-se | 按 CR-020 CP3 approved 口径追加 CR020-S01..S06 与 4 个增量 Wave：Windows gateway runtime admission、S 端 QMT login / session ready gate、Linux C 端 REST transport、HMAC pairing / allowlist / scope / nonce fail-closed、`query_positions` 单接口只读准入、docs/runbook 与 CP7 实机只读验收边界；CP4 自动预检 PASS；本轮只做 Story Plan / CP4，不生成 LLD、不实现、不改依赖、不启动 gateway、不绑定端口、不连接 QMT / MiniQMT / XtQuant、不读取真实 `.env`、不输出凭据、不交易、不账户写入、不 simulation/live、不 provider/lake/publish/reports overwrite |
+| 2.6 | 2026-06-05 | meta-po | CR020-S01..S06 已完成 CP5 approved、代码 / 文档实现、CP6 PASS 与 CP7 fixture/static PASS；`75 passed`、`py_compile` PASS、`git diff --check` PASS，真实 `.env` 读取、gateway 启动、端口绑定、QMT 连接和真实 `query_positions` 均为 0。当前等待用户按 Windows S 端和 Linux C 端手工安装调试手册执行真实只读验证，CR-020 不关闭、不授权交易 / 账户写入 / simulation/live / provider/lake/publish / 凭据输出 |
 
 ## Story 列表
 
@@ -251,6 +260,12 @@ created_by: "meta-se"
 | CR030-S06-experiment-manifest-report-catalog | ExperimentManifest / ResearchReportCatalog 追踪 | 定义 run manifest、config hash、data release、factor versions、label window、benchmark、cost、code_version、artifact refs、allowed/blocked claims 和 catalog 查询入口 | `engine/research_manifest.py`、`reports/research_catalog/**`、`tests/test_cr030_experiment_manifest_catalog.py` | 不采用 MLflow / pickle recorder 默认 truth；不 publish current pointer；不覆盖旧 reports | P0 | CR030-S04-factor-evaluation-report | CR030-W3-COMBINATION-MANIFEST | manifest/catalog P0 字段覆盖率 100%；缺 P0 字段进入 admission 次数为 0；旧报告 overwrite 次数为 0 | REQ-180, REQ-182, REQ-185 | `process/HLD.md` §35.6, §35.8, §35.13 | ADR-084 |
 | CR030-S07-strategy-admission-package-handoff | StrategyAdmissionPackage 与研究到执行 handoff | 汇总数据、因子、组合、回测、成本、benchmark、稳健性、消融、冻结、pre-sim、5 日 dry-run 前置状态、blocked reasons、解除条件和 `order_intent_draft_v1` 草稿边界 | `engine/strategy_admission_package.py`、`tests/test_cr030_strategy_admission_package.py` | 不生成真实 order；不调用 QMT / MiniQMT / XtQuant；不启动 gateway；不查账户；不写 broker lake | P0 | CR030-S05-multifactor-combiner-portfolio-plan, CR030-S06-experiment-manifest-report-catalog, CR019-S01-stage6-admission-gate-package, CR025-S03-order-intent-draft-qmt-boundary | CR030-W4-ADMISSION-SAFETY-DOCS | 任一 Stage6 P0 gate fail 或无独立 QMT CR 时 `admission_status=blocked`；`qmt_api_call`、`real_order`、`account_query` 均为 0 | REQ-181, REQ-182, REQ-185 | `process/HLD.md` §35.6, §35.8, §35.12 | ADR-085 |
 | CR030-S08-safety-docs-and-follow-up-boundary | 安全验证、文档与后续 Spike 边界 | 建立 CR-030 no-real-operation safety、external source-copy / runtime forbidden scan、CR-026 / optimizer / ML / vectorbt / PyBroker / RQAlpha / vn.py 后续 Spike 条件和用户文档边界 | `docs/CR030-MULTIFACTOR-RESEARCH-LOOP.md`、`README.md`、`docs/USER-MANUAL.md`、`tests/test_cr030_no_real_operation_safety.py` | 文档不授权外部项目运行、依赖安装、provider/lake/publish、QMT/simulation/live、凭据读取或真实交易；不启动 CR-026 | P1 | CR030-S01-external-reference-matrix-and-loop-contract, CR030-S02-factor-spec-run-spec-contract, CR030-S03-factor-panel-label-window-fail-closed, CR030-S04-factor-evaluation-report, CR030-S05-multifactor-combiner-portfolio-plan, CR030-S06-experiment-manifest-report-catalog, CR030-S07-strategy-admission-package-handoff | CR030-W4-ADMISSION-SAFETY-DOCS | 文档覆盖 7 个 CP3 DQ、8 个 Story 边界、CR-026 后置条件和 no-real-operation 表；“CR-030 verified 授权真实操作 / QMT-ready / simulation-ready / live-ready”语义匹配次数为 0 | REQ-175, REQ-182, REQ-184, REQ-185 | `process/HLD.md` §35.14, §35.15, §35.17 | ADR-079..086 |
+| CR020-S01-windows-gateway-runtime-admission | Windows gateway runtime 与准入合同 | 冻结 Windows S 端 gateway Typer CLI、配置读取、bind / lifecycle / heartbeat、read-only admission 状态和 CP5 前运行禁止边界 | `trading/qmt_gateway_cli.py`、`trading/qmt_gateway_service.py`、`trading/qmt_gateway_config.py`、`tests/test_cr020_windows_gateway_runtime_admission.py` | 不新增依赖；不启动 gateway；不绑定端口；不连接 QMT / MiniQMT / XtQuant；不读取真实 `.env` | P0 | CR019-S04-windows-gateway-lifecycle-deployment | CR020-W1-GATEWAY-RUNTIME-SESSION | gateway lifecycle/config/admission 字段覆盖率 100%；public bind 默认 allowed 次数为 0；CP5 前 service_start/port_bind/qmt_call 均为 0 | CP2-CR020 D1, D7 | `process/HLD.md` §36.3, §36.8, §36.12, §36.17 | ADR-087, ADR-088, ADR-093 |
+| CR020-S02-server-qmt-login-session | Server QMT 登录与 session ready gate | 定义 S 端 QMT login、session state、credential_ref、session ready gate、fail-closed 错误和只读查询前置阻断 | `trading/qmt_gateway_session.py`、`.env.example`、`tests/test_cr020_server_qmt_login_session.py` | 不读取真实 `.env`；不输出账号/密码/token/session；不真实登录 QMT；不查账户；不写账户 | P0 | CR020-S01-windows-gateway-runtime-admission | CR020-W1-GATEWAY-RUNTIME-SESSION | `.env.example` 仅含 placeholder；credential leak 次数为 0；session_not_ready 时 query_positions adapter_call=0 | CP2-CR020 D2, D3 | `process/HLD.md` §36.4, §36.9, §36.10, §36.17 | ADR-088, ADR-089, ADR-090 |
+| CR020-S03-linux-client-rest-transport | Linux C 端 REST transport 与 Python client | 冻结 Linux C 端 typed Python REST client、Typer CLI 验收面、request/response/error contract、timeout/retry 和 CLI 不承载业务运行边界 | `trading/qmt_client.py`、`trading/qmt_client_cli.py`、`tests/test_cr020_linux_client_rest_transport.py` | 不在 Linux C 侧导入 XtQuant；不把 CLI 当业务运行时；不启动 gateway；不读取凭据；不调用真实 QMT | P0 | CR020-S01-windows-gateway-runtime-admission | CR020-W2-CLIENT-AUTH | Python REST client 是业务唯一入口；CLI 100% 复用 client；Linux C 侧 XtQuant import 次数为 0 | CP2-CR020 D1, D2 | `process/HLD.md` §36.3, §36.5, §36.8, §36.17 | ADR-087, ADR-088, ADR-093 |
+| CR020-S04-hmac-pairing-allowlist-scope | HMAC pairing / allowlist / scope / nonce fail-closed | 定义 S/C pairing、client id、HMAC headers、timestamp、nonce replay、allowlist、scope matrix、redaction 和 no-auth 禁止边界 | `trading/qmt_auth.py`、`trading/qmt_redaction.py`、`tests/test_cr020_hmac_pairing_allowlist_scope.py` | 不生成或记录真实 secret；不允许 no-auth 默认；不绕过 scope；不输出 pairing code、token、session、私钥或账号 | P0 | CR020-S01-windows-gateway-runtime-admission, CR020-S03-linux-client-rest-transport | CR020-W2-CLIENT-AUTH | HMAC 缺失/错误/过期、nonce replay、allowlist 不匹配、scope 不足时 adapter_call=0；敏感日志泄露次数为 0 | CP2-CR020 D4 | `process/HLD.md` §36.10, §36.11, §36.14, §36.17 | ADR-091 |
+| CR020-S05-query-positions-readonly | `query_positions` 单接口只读准入 | 定义 CR-020 唯一真实只读查询接口、scope=`qmt:positions:read`、session/auth gate、response redaction、blocked endpoint matrix 和 failure reason | `trading/qmt_endpoint_matrix.py`、`trading/qmt_gateway_contracts.py`、`trading/qmt_gateway_service.py`、`trading/qmt_client.py`、`tests/test_cr020_query_positions_readonly.py` | 不启用其他 QMT endpoint；不执行订单/撤单/改单/账户写入；不 simulation/live；不写 broker lake；不输出未脱敏持仓敏感值 | P0 | CR020-S02-server-qmt-login-session, CR020-S03-linux-client-rest-transport, CR020-S04-hmac-pairing-allowlist-scope | CR020-W3-READONLY-POSITIONS | `query_positions` scope 固定为 `qmt:positions:read`；其他 endpoint blocked；order/cancel/account_write/broker_lake/provider/lake/publish 计数均为 0 | CP2-CR020 D5 | `process/HLD.md` §36.4, §36.9, §36.11, §36.17 | ADR-090, ADR-091, ADR-092 |
+| CR020-S06-docs-runbook-cp7-real-machine-validation | 文档、runbook 与 CP7 实机只读验收边界 | 汇总 Windows S 端安装 / 启动前置、Linux C 端调用、pairing/HMAC、credential redaction、rollback、incident、CP7 实机只读验收证据和不授权声明 | `docs/QMT-GATEWAY-INSTALL.md`、`docs/QMT-C-S-BRIDGE-RUNBOOK.md`、`tests/test_cr020_docs_runbook_no_authorization.py` | 文档不写真实凭据；不把 CP3/CP4/CP5 设计确认写成运行授权；不授权交易、账户写入、simulation/live、provider/lake/publish | P1 | CR020-S01-windows-gateway-runtime-admission, CR020-S02-server-qmt-login-session, CR020-S03-linux-client-rest-transport, CR020-S04-hmac-pairing-allowlist-scope, CR020-S05-query-positions-readonly | CR020-W4-DOCS-REAL-MACHINE-VALIDATION | 文档覆盖 7 个 CP3 DQ、6 个 Story 边界和 no-real-operation 表；CP7 evidence 仅允许只读持仓查询；凭据泄露和真实交易授权声明次数为 0 | CP2-CR020 D6, D7 | `process/HLD.md` §36.14, §36.15, §36.17 | ADR-087..093 |
 
 ## Wave 分组
 
@@ -312,6 +327,10 @@ created_by: "meta-se"
 | CR030-W2-PANEL-EVALUATION | CR-030 面板 / 标签与单因子评价 | CR030-S03-factor-panel-label-window-fail-closed, CR030-S04-factor-evaluation-report | S03 是 S04 的 contract 前置；LLD 可在 S02 合同冻结后分轮起草，开发默认 S03 -> S04，因共享 factor panel / evaluation 输入语义 | CR030-S02 合同冻结；CR011 factor panel audit 可只读引用；CP5 前不得实现或改报告 | FactorPanelContract、LabelWindowSpec、leakage gate、FactorEvaluationReport 和 blocked claims 稳定 | 前视 / label overlap / lineage / 复权混用 fail-closed；报告字段覆盖 REQ-178；生产有效声明误用为 0 |
 | CR030-W3-COMBINATION-MANIFEST | CR-030 多因子组合与研究追踪 | CR030-S05-multifactor-combiner-portfolio-plan, CR030-S06-experiment-manifest-report-catalog | LLD 可并行起草；S05 依赖 S04 报告，S06 依赖 S04 报告并为 S07 提供 manifest/catalog；开发需按文件 owner 避免 `reports/**` 合并冲突 | CR030-S04 评价合同冻结；optimizer / ML workflow 后置 | MultiFactorCombiner、MultiFactorPortfolioPlan、ExperimentManifest 和 ResearchReportCatalog 合同稳定 | P0 组合不引入 optimizer；manifest/catalog P0 字段覆盖率 100%；旧报告覆盖和 publish 次数为 0 |
 | CR030-W4-ADMISSION-SAFETY-DOCS | CR-030 准入包、安全验证与文档 | CR030-S07-strategy-admission-package-handoff, CR030-S08-safety-docs-and-follow-up-boundary | S07 依赖 S05/S06 以及 CR019/CR025 只读合同；S08 聚合 S01..S07。LLD 可在全量批次中分轮起草，开发默认 S07 -> S08 串行合并 docs / README / USER-MANUAL | CR030-S05/S06 合同冻结；CR019 admission 与 CR025 order intent draft 可引用；CP5 前不得实现或授权真实操作 | StrategyAdmissionPackage、`order_intent_draft_v1` draft handoff、no-real-operation safety、CR-026/optimizer 后续 Spike 和文档边界稳定 | admission blocked reason 完整；QMT/API/order/account/provider/lake/publish/credential 计数均为 0；文档声称 CR-030 授权真实操作次数为 0 |
+| CR020-W1-GATEWAY-RUNTIME-SESSION | CR-020 Windows gateway runtime 与 session | CR020-S01-windows-gateway-runtime-admission, CR020-S02-server-qmt-login-session | LLD 可并行起草，但 S02 必须消费 S01 的 gateway lifecycle / config / admission 合同；开发默认 S01 -> S02，避免 gateway runtime 与 session ready gate 冲突 | CR-020 CP3 approved；CP4 只做规划；CP5 前 implementation_allowed=false，且不启动服务、不绑定端口、不连接 QMT、不读真实 `.env` | Windows S 端 Typer CLI、gateway lifecycle/config、QMT login/session ready gate 和 redacted credential_ref 合同稳定 | gateway lifecycle/config 字段覆盖率 100%；session_not_ready 阻断 query；service_start/port_bind/qmt_call/credential_read 均为 0 |
+| CR020-W2-CLIENT-AUTH | CR-020 Linux client transport 与鉴权 | CR020-S03-linux-client-rest-transport, CR020-S04-hmac-pairing-allowlist-scope | LLD 可按 Story/file owner 并行起草；开发默认 S03 client contract 先行，S04 在 client headers / auth contract 稳定后收敛，避免 request schema 与 HMAC header 漂移 | CR020-S01 runtime 合同冻结；CP5 前不得实现、不得改依赖、不得读取凭据或执行真实请求 | Linux C 端 Python REST client、Typer CLI 验收面、pairing/HMAC、allowlist、scope、nonce 和 redaction 合同稳定 | Linux C 端 XtQuant import 次数为 0；HMAC / scope / nonce / allowlist fail-closed；敏感值泄露次数为 0 |
+| CR020-W3-READONLY-POSITIONS | CR-020 持仓只读查询准入 | CR020-S05-query-positions-readonly | 单 Story；LLD 必须消费 S02 session ready、S03 REST client 和 S04 auth/scope 合同；开发需在三个上游合同冻结且 CP5 confirmed 后才可实现 | CR020-S02/S03/S04 合同冻结；CP5 前不得执行 query、不得连接 QMT、不得输出真实持仓或账户敏感值 | `query_positions` 单接口、scope=`qmt:positions:read`、blocked endpoint matrix、response redaction 和 failure reason 合同稳定 | 除 `query_positions` 外真实 endpoint allowed 次数为 0；order/cancel/account_write/broker_lake/provider/lake/publish/simulation/live 计数均为 0 |
+| CR020-W4-DOCS-REAL-MACHINE-VALIDATION | CR-020 文档、runbook 与 CP7 实机只读验收 | CR020-S06-docs-runbook-cp7-real-machine-validation | 单 Story；需等待 S01..S05 合同冻结后起草 LLD；开发需与既有 README / USER-MANUAL / QMT runbook 文件所有权串行合并；CP7 真实机器验证必须另由 meta-po / meta-qa 按授权门控发起 | CR020-S01..S05 Story 合同冻结；CP5 全量 LLD 确认后才能实现；CP7 前不得把文档当作运行授权 | QMT gateway install/runbook、C/S bridge runbook、credential redaction、rollback/incident、CP7 read-only evidence 和不授权声明稳定 | 文档覆盖 7 个 CP3 DQ、6 个 Story 边界和 no-real-operation 表；凭据泄露、交易授权声明、simulation/live 授权声明匹配次数为 0 |
 
 ## 依赖 DAG 摘要
 
@@ -590,6 +609,19 @@ graph TD
   CR030-S05-multifactor-combiner-portfolio-plan --> CR030-S08-safety-docs-and-follow-up-boundary
   CR030-S06-experiment-manifest-report-catalog --> CR030-S08-safety-docs-and-follow-up-boundary
   CR030-S07-strategy-admission-package-handoff --> CR030-S08-safety-docs-and-follow-up-boundary
+  CR019-S04-windows-gateway-lifecycle-deployment --> CR020-S01-windows-gateway-runtime-admission
+  CR020-S01-windows-gateway-runtime-admission --> CR020-S02-server-qmt-login-session
+  CR020-S01-windows-gateway-runtime-admission --> CR020-S03-linux-client-rest-transport
+  CR020-S01-windows-gateway-runtime-admission --> CR020-S04-hmac-pairing-allowlist-scope
+  CR020-S03-linux-client-rest-transport --> CR020-S04-hmac-pairing-allowlist-scope
+  CR020-S02-server-qmt-login-session --> CR020-S05-query-positions-readonly
+  CR020-S03-linux-client-rest-transport --> CR020-S05-query-positions-readonly
+  CR020-S04-hmac-pairing-allowlist-scope --> CR020-S05-query-positions-readonly
+  CR020-S01-windows-gateway-runtime-admission --> CR020-S06-docs-runbook-cp7-real-machine-validation
+  CR020-S02-server-qmt-login-session --> CR020-S06-docs-runbook-cp7-real-machine-validation
+  CR020-S03-linux-client-rest-transport --> CR020-S06-docs-runbook-cp7-real-machine-validation
+  CR020-S04-hmac-pairing-allowlist-scope --> CR020-S06-docs-runbook-cp7-real-machine-validation
+  CR020-S05-query-positions-readonly --> CR020-S06-docs-runbook-cp7-real-machine-validation
 ```
 
 ## 阻塞项
@@ -642,6 +674,9 @@ graph TD
 | CR30-BLK-002 | 本轮未授权 LLD、代码实现、依赖变更、外部项目 clone/install/run、源码迁移、provider fetch、lake write、catalog publish、QMT/simulation/live/account/order/cancel 或凭据读取 | OPEN | 不阻塞 Story Plan / CP4；阻塞任何 runtime、dependency、source migration、真实数据写入或真实交易相关操作 | user |
 | CR30-BLK-003 | CR-026 Qlib isolated runner、optimizer / ML workflow、vectorbt / PyBroker / RQAlpha / vn.py Spike 均保持后置 | OPEN | 不阻塞 CR-030 自有闭环 Story；阻塞将外部 runner / optimizer 并入 CR-030 P0 或并行启动 CR-026 | meta-po / user |
 | CR30-BLK-004 | StrategyAdmissionPackage 不构成 QMT / simulation / live 授权 | OPEN | 不阻塞准入包合同设计；阻塞任何 QMT gateway、simulation、live_readonly、small_live、scale_up、账户查询、下单、撤单或 broker lake 写入 | user / meta-po |
+| CR20-BLK-001 | CR020-QMT-GATEWAY-READONLY-BATCH-A 尚未进入全量 LLD 与 CP5 批次人工确认 | OPEN | 6 个 CR020 Story 只能进入 LLD 队列；CP5 全量确认前不得创建 LLD、不得实现、不得标记 dev-ready | meta-po / meta-dev / user |
+| CR20-BLK-002 | 本轮未授权代码实现、依赖变更、gateway 启动、端口绑定、QMT / MiniQMT / XtQuant 连接、真实 `.env` 读取、凭据输出或任何真实操作 | OPEN | 不阻塞 Story Plan / CP4；阻塞服务启动、真实登录、持仓查询、交易、账户写入、simulation/live、provider/lake/publish/reports overwrite | user |
+| CR20-BLK-003 | `query_positions` 单接口只读准入不等于交易、账户写入或后续 endpoint 授权 | OPEN | 不阻塞只读持仓查询合同设计；阻塞 order/cancel/modify/account_write/simulation/live/broker_lake_write 以及任何未列入 CR-020 的真实 endpoint | user / meta-po / meta-qa |
 
 ## 待确认问题
 
@@ -715,3 +750,45 @@ graph TD
 | CR30-SP-Q3 | 是否确认 CR-026 Qlib runner 与 optimizer / ML workflow 后置 | 默认确认；外部 runner / optimizer / ML 只有在内部合同冻结、依赖隔离和运行授权明确后另起 CR / Spike | CP4_AUTO_PASS_PENDING_CP5 |
 | CR30-SP-Q4 | 是否确认 CP5 前 implementation_allowed=false 且真实操作执行计数为 0 | 默认确认；本轮只做 Story Plan / CP4，不做 LLD、代码、依赖、外部运行、源码迁移、provider/lake/publish、QMT/simulation/live 或凭据读取 | CP4_AUTO_PASS_PENDING_CP5 |
 | CR30-SP-Q5 | 是否确认 StrategyAdmissionPackage 只输出研究准入证据和 `order_intent_draft_v1` 草稿 | 默认确认；真实 QMT / simulation / live 仍由 CR-020..CR-024 独立授权，CR-030 不产生可提交订单 | CP4_AUTO_PASS_PENDING_CP5 |
+| CR20-SP-Q1 | 是否确认 CR020-S01..S06 六个 Story 的拆解粒度 | 默认确认：S01 Windows gateway runtime / admission，S02 Server QMT login / session，S03 Linux client REST transport，S04 HMAC / allowlist / scope，S05 `query_positions` read-only，S06 docs / runbook / CP7 real-machine validation | CP4_AUTO_PASS_PENDING_CP5 |
+| CR20-SP-Q2 | 是否确认 CR020 采用 4 个 Wave 和单一全量 LLD 批次 `CR020-QMT-GATEWAY-READONLY-BATCH-A` | 默认确认；LLD 可按 `max_parallel_lld=3` 基于 Story/file owner 分轮起草，但 CP5 必须等待 6 张 LLD、clarification queue、CP4 摘要和 CP5 自动预检全部完成后统一人工确认 | CP4_AUTO_PASS_PENDING_CP5 |
+| CR20-SP-Q3 | 是否确认 CP5 前 `implementation_allowed=false` 且真实操作执行计数为 0 | 默认确认；本轮只做 Story Plan / CP4，不做 LLD、代码、依赖、gateway 启动、端口绑定、真实 `.env` 读取、QMT/MiniQMT/XtQuant 连接、交易、账户写入、simulation/live、provider/lake/publish/reports overwrite 或凭据输出 | CP4_AUTO_PASS_PENDING_CP5 |
+| CR20-SP-Q4 | 是否确认 `query_positions` 是唯一真实只读查询接口，scope 固定为 `qmt:positions:read` | 默认确认；其他 endpoint、订单、撤单、改单、账户写入、broker lake、simulation/live 均保持 blocked / later-gated，必须后续独立 CR / CP / 授权 | CP4_AUTO_PASS_PENDING_CP5 |
+| CR20-SP-Q5 | 是否确认 `.env` / credential_ref / HMAC / allowlist / redaction 采用 fail-closed 边界 | 默认确认；真实凭据只留本地未跟踪文件，过程产物仅保留 redacted `credential_ref`；auth、scope、nonce、allowlist、redaction 任一失败时 query 和 adapter call 均为 0 | CP4_AUTO_PASS_PENDING_CP5 |
+| CR46-SP-Q1 | 是否确认 CR046-S01..S07 七个 Story 的拆解粒度 | 默认确认：S01 架构、S02 策略包、S03 QMT terminal target、S04 MiniQMT runner install design、S05 验证框架、S06 后续策略交付 gate、S07 研究框架 follow-up contract | CP4_AUTO_PASS_PENDING_CP5 |
+| CR46-SP-Q2 | 是否确认 CR046 采用单一全量 LLD 批次 `CR046-DUAL-TARGET-FRAMEWORK-BATCH-A` | 默认确认；S01..S05 full-lld，S06..S07 technical-note；CP5 必须等待全部设计证据、clarification queue 和自动预检完成后统一人工确认 | CP4_AUTO_PASS_PENDING_CP5 |
+| CR46-SP-Q3 | 是否确认 CP5 前 implementation_allowed=false 且真实操作执行计数为 0 | 默认确认；本轮只做 Story Plan / CP4，不做 LLD、代码、策略交付、QMT 运行验证、MiniQMT 连接 / 真实安装、submit/cancel、simulation/live、provider/lake/publish 或凭据读取 | CP4_AUTO_PASS_PENDING_CP5 |
+| CR46-SP-Q4 | 是否确认具体策略交付、MiniQMT 实机 install / readonly 和研究框架完善均后置 | 默认确认；CR047 / CR049 / CR051 分别承接，CR046 只交付 framework-first 合同和验证框架 | CP4_AUTO_PASS_PENDING_CP5 |
+
+## CR-046：QMT / MiniQMT 双目标策略交付框架
+
+| 对象 | 状态 | 证据 | 下一步 |
+|---|---|---|---|
+| CP2 需求 / 场景基线 | approved | `process/checkpoints/CP2-CR046-REQUIREMENTS-BASELINE.md` | 已进入 CP3 / CP4 |
+| CP3 HLD / ADR | approved | `process/checkpoints/CP3-CR046-HLD-REVIEW.md`、`docs/design/HLD-CR046-QMT-MINIQMT-DUAL-TARGET-FRAMEWORK.md`、`docs/design/ARCHITECTURE-DECISION-CR046.md` | 已批准 FEAT-09、平台无关 core、runner install dry-run 和证据分级 |
+| Feature design | ready-for-cp5-review | `docs/design/FEATURE-DESIGN-MATRIX.md`、`docs/features/qmt-miniqmt-dual-target-framework/*` | 已作为 S01..S07 的 CP5 输入 |
+| Story Plan / CP4 | PASS | `process/checks/CP4-CR046-STORY-DAG-PARALLEL-SAFETY.md` | 进入全量设计证据批次，CP5 前不得实现 |
+| LLD batch / CP5 auto | approved | `process/checks/CP5-CR046-*`、`process/checkpoints/CP5-CR046-DUAL-TARGET-FRAMEWORK-BATCH-A-LLD-BATCH.md` | S01..S05 full-lld、S06..S07 technical-note 已 confirmed；CP5 人工确认 approved |
+| CP6 implementation | PASS | `process/context/CP6-CR046-IMPLEMENTATION-CONTEXT.yaml`、`process/stories/CR046-BATCH-A-IMPLEMENTATION.md`、`process/checks/CP6-CR046-DUAL-TARGET-FRAMEWORK-BATCH-A-CODING-DONE.md` | framework-first 文档 / 契约实现完成；进入 CP7 |
+| 安全边界 | not-authorized | CP2 / CP3 / CP4 不授权项 | 不授权具体策略交付、QMT 运行验证、MiniQMT 连接 / 真实安装、submit/cancel、simulation/live、provider/lake/publish 或凭据读取 |
+
+### CR046 Story Plan 队列
+
+| Story ID | 标题 | Wave | 状态 | LLD 策略 | Dev Gate | 阻塞 |
+|---|---|---|---|---|---|---|
+| CR046-S01-dual-target-strategy-architecture | 双目标策略交付架构与 FEAT-09 边界 | CR046-W1-ARCHITECTURE-CONTRACT | ready-for-verification | full-lld | runtime blocked | 无上游 Story；不得运行 |
+| CR046-S02-strategy-package-contract-and-schema | 策略包合同、目录结构与 schema | CR046-W1-ARCHITECTURE-CONTRACT | ready-for-verification | full-lld | runtime blocked | 依赖 S01 contract |
+| CR046-S03-qmt-terminal-target-framework | QMT terminal target 框架 | CR046-W2-TARGETS-INSTALL | ready-for-verification | full-lld | runtime blocked | 依赖 S02；QMT runtime not-authorized |
+| CR046-S04-miniqmt-runner-install-and-runtime-boundary | MiniQMT runner 安装设计与运行边界 | CR046-W2-TARGETS-INSTALL | ready-for-verification | full-lld | runtime blocked | 依赖 S02；MiniQMT install / connection not-authorized |
+| CR046-S05-verification-framework-and-evidence-model | 验证框架与证据模型 | CR046-W3-VALIDATION-GATES | ready-for-verification | full-lld | runtime blocked | 依赖 S01..S04 contract |
+| CR046-S06-follow-up-strategy-delivery-gate | 后续具体策略交付门禁 | CR046-W4-FOLLOW-UP-HANDOFF | ready-for-verification | technical-note | runtime blocked | 依赖 S05；不启动 CR047 / CR049 |
+| CR046-S07-research-framework-follow-up-contract | 研究框架反向完善合同 | CR046-W4-FOLLOW-UP-HANDOFF | ready-for-verification | technical-note | runtime blocked | 依赖 S01 / S05；不实施 CR051 |
+
+### CR046 Wave 进度
+
+| Wave | 总数 | lld-ready | lld-review | dev-ready | in-dev | verified | blocked |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| CR046-W1-ARCHITECTURE-CONTRACT | 2 | 2 | 0 | 0 | 0 | 0 | 0 |
+| CR046-W2-TARGETS-INSTALL | 2 | 2 | 0 | 0 | 0 | 0 | 0 |
+| CR046-W3-VALIDATION-GATES | 1 | 1 | 0 | 0 | 0 | 0 | 0 |
+| CR046-W4-FOLLOW-UP-HANDOFF | 2 | 2 | 0 | 0 | 0 | 0 | 0 |

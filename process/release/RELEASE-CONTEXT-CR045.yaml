@@ -1,0 +1,91 @@
+context_id: RELEASE-CONTEXT-CR045
+change_id: CR-045
+release_artifact_profile: compact
+release_decision: READY_WITH_RISK
+created_at: '2026-06-11T23:46:53+08:00'
+owner: meta-po
+release_scope:
+  version_label: cr045-l2-skeleton
+  in_scope:
+    - Goldminer Windows bridge L2 skeleton contract
+    - WSL/Linux fixture client contract
+    - readonly probe blocked-first skeleton
+    - redaction and no-operation static validation
+    - CR045 runbook and scoped quality reports
+  out_of_scope:
+    - Windows bridge runtime start
+    - Goldminer login/connect
+    - account/cash/position/order/fill query
+    - submit/cancel
+    - simulation/live
+    - provider fetch/lake write/catalog publish
+  user_visible_change: Provides local audited skeleton and runbook for a future Windows-side Goldminer bridge, without real runtime authorization.
+  internal_change: Adds engine/goldminer_bridge_* modules, CR045 tests, scoped release and quality evidence.
+version_decision:
+  current_version: N/A
+  target_version: cr045-l2-skeleton
+  semver_class: prerelease/internal
+  reason: Scoped production workflow asset, not a packaged library release.
+quality_summary:
+  cp6_status: PASS
+  cp7_status: PASS_WITH_RISK
+  tests: '24 passed'
+  py_compile: PASS
+  diff_check: PASS
+  blocker_count: 0
+  high_residual_risks:
+    - CR045-R1
+    - CR045-R2
+    - CR045-R3
+  medium_residual_risks:
+    - CR045-R4
+affected_surface:
+  platforms:
+    - WSL/Linux local repository
+    - future Windows trading PC boundary documented only
+  components:
+    - engine/goldminer_bridge_contract.py
+    - engine/goldminer_bridge_client.py
+    - engine/goldminer_bridge_probe.py
+    - CR045 tests and docs
+  install_scope: no installer/package change
+  config_changes: none
+  migration_required: false
+  external_interface_runtime_authorized: false
+install_validation_summary:
+  install_required: false
+  commands:
+    - command: PYTHONDONTWRITEBYTECODE=1 PYTEST_ADDOPTS='-p no:cacheprovider' uv run --python 3.11 pytest -q tests/test_cr045_goldminer_bridge_contract.py tests/test_cr045_goldminer_bridge_client.py tests/test_cr045_goldminer_readonly_probe.py tests/test_cr045_goldminer_no_operation_static.py
+      result: PASS 24 passed
+    - command: PYTHONDONTWRITEBYTECODE=1 uv run --python 3.11 python -m py_compile engine/goldminer_bridge_contract.py engine/goldminer_bridge_client.py engine/goldminer_bridge_probe.py
+      result: PASS
+    - command: git diff --check
+      result: PASS
+release_documents:
+  release_notes: docs/release/RELEASE-NOTES-CR045.md
+  deploy_checklist: docs/release/DEPLOY-CHECKLIST-CR045.md
+  rollback: docs/release/ROLLBACK-CR045.md
+  migration: docs/release/MIGRATION-CR045.md
+  feedback: docs/release/FEEDBACK-CR045.md
+non_authorized_items:
+  - credential/token/account_id read or capture
+  - Windows bridge runtime start
+  - Goldminer login/connect
+  - account/cash/position/order/fill query
+  - order submit/cancel
+  - simulation/live runtime
+  - provider fetch/lake write/catalog publish
+follow_up_summary:
+  risks_for_cp8:
+    - id: CR045-R1
+      summary: L3 Windows bridge runtime未授权，不能证明真实health、端口、进程或SDK可用性。
+    - id: CR045-R2
+      summary: L4 real readonly未授权，不能证明cash/position/order/fill/account state字段。
+    - id: CR045-R3
+      summary: L5 submit/cancel/simulation/live未授权，不能宣称simulation/live ready。
+    - id: CR045-R4
+      summary: 全局TEST-MATRIX/TEST-STRATEGY缺失，本轮以CR045 scoped evidence替代。
+  candidate_next_steps:
+    - future L3 runtime_authorization gate
+    - future L4 readonly probe gate
+    - future L5 submit/cancel/simulation/live CR

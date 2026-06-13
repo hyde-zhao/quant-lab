@@ -6,9 +6,9 @@ description: >-
   适用场景：工作流计划设计阶段，Phase 划分之后。
 argument-hint: "DEVELOPMENT-PLAN.yaml、Story 依赖图、文件影响范围"
 user-invokable: true
-status: draft
+status: active
 ---
-<!-- myflow-managed: version=1.0.0 canonical-commit=fe24c81 generated=2026-05-28T13:51:34Z -->
+<!-- myflow-managed: version=1.0.0 canonical-commit=67b82d1 generated=2026-06-13T09:11:24Z -->
 
 ## 目标
 

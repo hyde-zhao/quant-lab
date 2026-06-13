@@ -1,0 +1,36 @@
+context_id: CP3-CR041-DESIGN-CONTEXT
+cr_id: CR-041
+phase: solution-design
+status: ready
+created_at: "2026-06-10T23:05:00+08:00"
+owner: meta-po
+read_profile: compact
+source_artifacts:
+  - process/context/CP2-CR041-REQUIREMENT-CONTEXT.yaml
+  - process/changes/CR-041-API-LESS-PAPER-SIMULATION-RUNNER-2026-06-10.md
+  - docs/design/DOMAIN-MAP.md
+  - docs/design/DEPENDENCY-MAP.md
+  - engine/order_intent_draft.py
+architecture_decision:
+  primary: "实现本地日频 realistic paper simulation runner：StrategyAdmissionPackageReader -> TargetPortfolio/OrderIntentBuilder -> PaperBroker fill engine -> Ledger/Equity/Reconciliation -> CLI artifacts。"
+  execution_clock: "T close signal; T+1 open execution; daily close mark-to-market."
+  price_policy: "raw open for execution, raw close for valuation; qfq/hfq forbidden for execution price."
+  cost_policy: "Configurable commission/min_commission/stamp_duty_sell/transfer_fee plus fixed_bps slippage."
+  constraint_policy: "trade_calendar/trade_status/prices_limit/raw OHLCV required; missing critical data fail-closed."
+  account_policy: "100-share lot, cash insufficient reject/scale, holdings insufficient reject/scale, T+1 sellable quantity."
+not_authorized:
+  - "broker / QMT / MiniQMT / XtQuant / Goldminer connection"
+  - "Backtrader default runtime or dependency change"
+  - "account/order/fill live query"
+  - "real or simulated broker order submit/cancel"
+  - "credential read"
+read_expansion_log:
+  - at: "2026-06-10T23:05:00+08:00"
+    actor: meta-po
+    phase: solution-design
+    capsule_path: process/context/CP3-CR041-DESIGN-CONTEXT.yaml
+    expanded_to:
+      - docs/design/DOMAIN-MAP.md
+      - docs/design/DEPENDENCY-MAP.md
+      - engine/order_intent_draft.py
+    reason: "确认 raw execution price、order_intent_draft 和复权价不得用于成交的既有边界。"

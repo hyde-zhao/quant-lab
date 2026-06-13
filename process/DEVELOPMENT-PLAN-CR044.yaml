@@ -1,0 +1,417 @@
+project_id: local_backtest
+cr_id: CR-044
+version: "1.0"
+created_at: "2026-06-11T11:35:00+08:00"
+owner: meta-se
+status: draft-for-cp4
+phase: story-planning
+source_context: process/context/CP3-CR044-DESIGN-CONTEXT.yaml
+feature_design_matrix: docs/design/FEATURE-DESIGN-MATRIX-CR044.md
+cp5_batch:
+  batch_id: CR044-LLD-BATCH-A-ADMISSION-GUARD
+  checkpoint_path: process/checkpoints/CP5-CR044-ALL-STORIES-LLD-BATCH.md
+  scope:
+    - CR044-S01
+    - CR044-S02
+    - CR044-S03
+    - CR044-S04
+    - CR044-S05
+    - CR044-S06
+  implementation_allowed: false
+  implementation_allowed_until: "CP5 approved"
+authorization_boundary:
+  authorized:
+    - L1 formal CR orchestration
+    - L2 offline engineering design
+    - fixture-only planning and future fixture-only implementation after CP5
+  not_authorized:
+    - credential_read
+    - login
+    - connect
+    - account_query
+    - cash_query
+    - position_query
+    - order_query
+    - fill_query
+    - order_submit
+    - order_cancel
+    - simulation_runtime
+    - live_runtime
+    - provider_fetch
+    - lake_write
+    - catalog_publish
+  fail_closed_rule: "Any L3+ runtime behavior must return blocked / fail-closed unless a later per-run authorization is explicitly approved."
+parallel_policy:
+  max_parallel_lld: 3
+  max_parallel_dev: 1
+  max_parallel_qa: 2
+  rationale: "LLD may be batched with limited parallelism after CP4; development is conservative because S02-S05 may share engine/broker_adapter.py and CR044 guard tests."
+global_file_ownership:
+  merge_owners:
+    engine/broker_adapter.py: CR044-S02
+    tests/test_cr044_goldminer_admission_guard.py: CR044-S02
+    process/stories/CR044-S06-runbook-and-no-real-operation-guardrails.md: CR044-S06
+  forbidden_paths:
+    - .env
+    - .env.*
+    - data/market_data
+    - reports/live
+    - reports/simulation_runtime
+    - catalog
+  forbidden_runtime_import_roots:
+    - gm
+    - gmtrade
+    - requests
+    - httpx
+    - socket
+    - subprocess
+    - broker
+    - trading
+completion_criteria:
+  cp4:
+    - "Feature Design Matrix covers S01-S06 with required Feature status and lld_policy."
+    - "Story cards contain story_id, feature_design_refs, lld_policy, dev_gate, validation_context, acceptance_criteria and implementation_allowed=false until CP5 approved."
+    - "Development Plan DAG has no invalid references or cycles."
+    - "Files have primary/shared owners and no unresolved write conflict."
+    - "CP5 batch scope is explicit and includes all CR044 target Story design evidence."
+  cp5_entry:
+    - "S01-S05 full LLD and S06 technical-note or upgraded full LLD are generated."
+    - "No unanswered blocks_lld=true clarification item exists."
+    - "No L3+ runtime authorization is implied by design evidence."
+waves:
+  - wave: W1
+    name: authorization-foundation
+    phase_order: 1
+    parallel_lld: false
+    parallel_dev: false
+    entry_gate:
+      - "CP3 approved"
+      - "No L3+ runtime authorization required"
+    exit_gate:
+      - "S01 design evidence ready for CP5 batch"
+    stories:
+      - story_id: CR044-S01
+        title: Authorization and Secret Boundary
+        priority: P0
+        assignee: meta-dev
+        depends_on: []
+        dependency_type: []
+        status: lld-pending
+        output_files:
+          - process/stories/CR044-S01-authorization-and-secret-boundary.md
+          - process/stories/CR044-S01-authorization-and-secret-boundary-LLD.md
+        file_ownership:
+          primary:
+            - process/stories/CR044-S01-authorization-and-secret-boundary.md
+            - process/stories/CR044-S01-authorization-and-secret-boundary-LLD.md
+          shared:
+            - docs/design/FEATURE-DESIGN-MATRIX-CR044.md
+          merge_owner: CR044-S01
+          forbidden:
+            - .env
+            - engine/broker_adapter.py
+            - tests/test_cr042_broker_adapter_contract.py
+        feature_design_refs:
+          - docs/design/FEATURE-DESIGN-MATRIX-CR044.md#feat-cr044-auth
+        lld_policy:
+          required_level: full-lld
+          trigger_reasons:
+            - security
+            - permission
+            - runtime_authorization
+            - shared-story-boundary
+          rationale: "授权边界和敏感字段合同是所有后续 Story 的前置条件。"
+        lld_gate:
+          required_inputs:
+            - CP2 approved
+            - CP3 approved
+            - docs/design/FEATURE-DESIGN-MATRIX-CR044.md
+            - process/stories/CR044-S01-authorization-and-secret-boundary.md
+          status: not-started
+        dev_gate:
+          implementation_allowed: false
+          allowed_after: CP5 approved
+          design_evidence_confirmed: false
+          dependencies_satisfied: true
+          file_conflict_free: true
+          real_runtime_authorized: false
+  - wave: W2
+    name: gate-contract
+    phase_order: 2
+    parallel_lld: false
+    parallel_dev: false
+    entry_gate:
+      - "S01 authorization contract declared"
+    exit_gate:
+      - "S02 gate and capability state design evidence ready for CP5 batch"
+    stories:
+      - story_id: CR044-S02
+        title: Admission Gate and Capability State
+        priority: P0
+        assignee: meta-dev
+        depends_on:
+          - CR044-S01
+        dependency_type:
+          - contract
+        status: lld-pending
+        output_files:
+          - process/stories/CR044-S02-admission-gate-and-capability-state.md
+          - process/stories/CR044-S02-admission-gate-and-capability-state-LLD.md
+          - engine/broker_adapter.py
+          - tests/test_cr044_goldminer_admission_guard.py
+        file_ownership:
+          primary:
+            - process/stories/CR044-S02-admission-gate-and-capability-state.md
+            - process/stories/CR044-S02-admission-gate-and-capability-state-LLD.md
+          shared:
+            - engine/broker_adapter.py
+            - tests/test_cr044_goldminer_admission_guard.py
+          merge_owner: CR044-S02
+          forbidden:
+            - .env
+            - tests/test_cr042_broker_adapter_contract.py
+        feature_design_refs:
+          - docs/design/FEATURE-DESIGN-MATRIX-CR044.md#feat-cr044-gate
+        lld_policy:
+          required_level: full-lld
+          trigger_reasons:
+            - cross-module-contract
+            - data-model
+            - rollback
+            - shared-story-boundary
+          rationale: "需要冻结 blocked-first gate、capability state 和 simulation/live false 语义。"
+        lld_gate:
+          required_inputs:
+            - CR044-S01 design evidence
+          status: not-started
+        dev_gate:
+          implementation_allowed: false
+          allowed_after: CP5 approved
+          design_evidence_confirmed: false
+          dependencies_satisfied: false
+          file_conflict_free: false
+          real_runtime_authorized: false
+  - wave: W3
+    name: readonly-and-kill-contracts
+    phase_order: 3
+    parallel_lld: true
+    parallel_dev: false
+    entry_gate:
+      - "S01/S02 contracts declared"
+    exit_gate:
+      - "S03 and S04 design evidence ready for CP5 batch"
+    stories:
+      - story_id: CR044-S03
+        title: Readonly Query Field Mapping Blocked-First
+        priority: P0
+        assignee: meta-dev
+        depends_on:
+          - CR044-S01
+          - CR044-S02
+        dependency_type:
+          - contract
+        status: lld-pending
+        output_files:
+          - process/stories/CR044-S03-readonly-query-field-mapping-blocked-first.md
+          - process/stories/CR044-S03-readonly-query-field-mapping-blocked-first-LLD.md
+          - engine/broker_adapter.py
+          - tests/test_cr044_goldminer_admission_guard.py
+        file_ownership:
+          primary:
+            - process/stories/CR044-S03-readonly-query-field-mapping-blocked-first.md
+            - process/stories/CR044-S03-readonly-query-field-mapping-blocked-first-LLD.md
+          shared:
+            - engine/broker_adapter.py
+            - tests/test_cr044_goldminer_admission_guard.py
+          merge_owner: CR044-S02
+          forbidden:
+            - .env
+            - tests/test_cr042_broker_adapter_contract.py
+        feature_design_refs:
+          - docs/design/FEATURE-DESIGN-MATRIX-CR044.md#feat-cr044-readonly
+        lld_policy:
+          required_level: full-lld
+          trigger_reasons:
+            - external-interface
+            - data-model
+            - security
+            - permission
+          rationale: "只读字段映射涉及账户查询边界和敏感字段处理，即便当前 blocked-first 也需完整 LLD。"
+        lld_gate:
+          required_inputs:
+            - CR044-S01 design evidence
+            - CR044-S02 design evidence
+          status: not-started
+        dev_gate:
+          implementation_allowed: false
+          allowed_after: CP5 approved
+          design_evidence_confirmed: false
+          dependencies_satisfied: false
+          file_conflict_free: false
+          real_runtime_authorized: false
+      - story_id: CR044-S04
+        title: Submit Cancel Kill Switch Contract
+        priority: P0
+        assignee: meta-dev
+        depends_on:
+          - CR044-S01
+          - CR044-S02
+        dependency_type:
+          - contract
+        status: lld-pending
+        output_files:
+          - process/stories/CR044-S04-submit-cancel-kill-switch-contract.md
+          - process/stories/CR044-S04-submit-cancel-kill-switch-contract-LLD.md
+          - engine/broker_adapter.py
+          - tests/test_cr044_goldminer_admission_guard.py
+        file_ownership:
+          primary:
+            - process/stories/CR044-S04-submit-cancel-kill-switch-contract.md
+            - process/stories/CR044-S04-submit-cancel-kill-switch-contract-LLD.md
+          shared:
+            - engine/broker_adapter.py
+            - tests/test_cr044_goldminer_admission_guard.py
+          merge_owner: CR044-S02
+          forbidden:
+            - .env
+            - tests/test_cr042_broker_adapter_contract.py
+        feature_design_refs:
+          - docs/design/FEATURE-DESIGN-MATRIX-CR044.md#feat-cr044-kill
+        lld_policy:
+          required_level: full-lld
+          trigger_reasons:
+            - security
+            - external-interface
+            - rollback
+            - runtime_authorization
+          rationale: "submit/cancel 和 kill switch 是高风险运行授权合同，必须完整 LLD。"
+        lld_gate:
+          required_inputs:
+            - CR044-S01 design evidence
+            - CR044-S02 design evidence
+          status: not-started
+        dev_gate:
+          implementation_allowed: false
+          allowed_after: CP5 approved
+          design_evidence_confirmed: false
+          dependencies_satisfied: false
+          file_conflict_free: false
+          real_runtime_authorized: false
+  - wave: W4
+    name: reconciliation-evidence
+    phase_order: 4
+    parallel_lld: false
+    parallel_dev: false
+    entry_gate:
+      - "S03/S04 contracts declared"
+    exit_gate:
+      - "S05 design evidence ready for CP5 batch"
+    stories:
+      - story_id: CR044-S05
+        title: Reconciliation and Redacted Evidence
+        priority: P0
+        assignee: meta-dev
+        depends_on:
+          - CR044-S03
+          - CR044-S04
+        dependency_type:
+          - contract
+        status: lld-pending
+        output_files:
+          - process/stories/CR044-S05-reconciliation-and-redacted-evidence.md
+          - process/stories/CR044-S05-reconciliation-and-redacted-evidence-LLD.md
+          - engine/broker_adapter.py
+          - tests/test_cr044_goldminer_admission_guard.py
+        file_ownership:
+          primary:
+            - process/stories/CR044-S05-reconciliation-and-redacted-evidence.md
+            - process/stories/CR044-S05-reconciliation-and-redacted-evidence-LLD.md
+          shared:
+            - engine/broker_adapter.py
+            - tests/test_cr044_goldminer_admission_guard.py
+          merge_owner: CR044-S02
+          forbidden:
+            - .env
+            - tests/test_cr042_broker_adapter_contract.py
+        feature_design_refs:
+          - docs/design/FEATURE-DESIGN-MATRIX-CR044.md#feat-cr044-recon
+        lld_policy:
+          required_level: full-lld
+          trigger_reasons:
+            - data-model
+            - external-interface
+            - security
+            - audit
+            - rollback
+          rationale: "对账证据和 redaction 决定 CP7/CP8 可证明性，且禁止自动补单/撤单。"
+        lld_gate:
+          required_inputs:
+            - CR044-S03 design evidence
+            - CR044-S04 design evidence
+          status: not-started
+        dev_gate:
+          implementation_allowed: false
+          allowed_after: CP5 approved
+          design_evidence_confirmed: false
+          dependencies_satisfied: false
+          file_conflict_free: false
+          real_runtime_authorized: false
+  - wave: W5
+    name: runbook-and-guardrail-closeout
+    phase_order: 5
+    parallel_lld: false
+    parallel_dev: false
+    entry_gate:
+      - "S01-S05 design evidence declared"
+    exit_gate:
+      - "CR044 CP5 batch scope ready"
+    stories:
+      - story_id: CR044-S06
+        title: Runbook and No Real Operation Guardrails
+        priority: P1
+        assignee: meta-dev
+        depends_on:
+          - CR044-S01
+          - CR044-S02
+          - CR044-S03
+          - CR044-S04
+          - CR044-S05
+        dependency_type:
+          - contract
+        status: technical-note-pending
+        output_files:
+          - process/stories/CR044-S06-runbook-and-no-real-operation-guardrails.md
+        file_ownership:
+          primary:
+            - process/stories/CR044-S06-runbook-and-no-real-operation-guardrails.md
+          shared:
+            - tests/test_cr044_goldminer_admission_guard.py
+          merge_owner: CR044-S06
+          forbidden:
+            - .env
+            - engine/broker_adapter.py
+        feature_design_refs:
+          - docs/design/FEATURE-DESIGN-MATRIX-CR044.md#feat-cr044-runbook
+        lld_policy:
+          required_level: technical-note
+          trigger_reasons:
+            - validation
+            - runtime_authorization
+            - docs-handoff
+          rationale: "当前只要求 runbook 与 guardrail 操作说明；若自动 guard/script/schema 被纳入实现，则升为 full-lld。"
+          upgrade_condition: "Runbook drives executable guard, new schema, script, or state transition."
+        lld_gate:
+          required_inputs:
+            - CR044-S01 design evidence
+            - CR044-S02 design evidence
+            - CR044-S03 design evidence
+            - CR044-S04 design evidence
+            - CR044-S05 design evidence
+          status: not-started
+        dev_gate:
+          implementation_allowed: false
+          allowed_after: CP5 approved
+          design_evidence_confirmed: false
+          dependencies_satisfied: false
+          file_conflict_free: true
+          real_runtime_authorized: false

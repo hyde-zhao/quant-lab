@@ -8,7 +8,7 @@ argument-hint: "执行反馈的自然语言描述或结构化数据"
 user-invokable: true
 status: active
 ---
-<!-- myflow-managed: version=1.0.0 canonical-commit=fe24c81 generated=2026-05-28T13:51:34Z -->
+<!-- myflow-managed: version=1.0.0 canonical-commit=67b82d1 generated=2026-06-13T09:11:24Z -->
 
 ## 目标
 

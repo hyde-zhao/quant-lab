@@ -1,0 +1,81 @@
+schema_version: "1.0"
+context_id: "CP2-CR045-REQUIREMENT-CONTEXT"
+change_id: "CR-045"
+status: ready
+phase: requirement-clarification
+read_profile: compact
+created_at: "2026-06-11T21:40:09+08:00"
+updated_at: "2026-06-11T21:40:09+08:00"
+owner: meta-po
+
+source_request:
+  user_summary: "Windows 电脑已登录掘金量化；用户要求开始分析并实施 CR045，使 WSL 项目通过受控方式接入 API。"
+  interpretation: "启动 Goldminer Windows Bridge Readonly Probe，但当前仅授权 L1/L2 离线工程资产，不授权真实连接或查询。"
+
+upstream_evidence:
+  parent_cr: "process/changes/CR-044-GOLDMINER-SIMULATION-ADMISSION-2026-06-11.md"
+  parent_checkpoint: "process/checkpoints/CP8-CR044-DELIVERY-READINESS.md"
+  parent_conclusion: "closed-current-delivery / offline-admission-design-ready / READY_WITH_RISK"
+  spike_cr: "process/changes/CR-043-GOLDMINER-ADAPTER-SPIKE-2026-06-11.md"
+  broker_contract: "process/changes/CR-042-BROKER-NEUTRAL-ADAPTER-CONTRACT-2026-06-11.md"
+
+scope:
+  included:
+    - "Windows-side bridge architecture and skeleton"
+    - "WSL client contract and network precheck design"
+    - "health/capabilities endpoints"
+    - "readonly probe allowlist contract"
+    - "blocked-first kill switch"
+    - "redaction and no-operation evidence"
+    - "manual runbook for user-owned Windows credential setup"
+  excluded:
+    - "credential read or token/account_id collection"
+    - "Windows bridge runtime start by agent"
+    - "Goldminer login/connect"
+    - "account/cash/position/order/fill real query"
+    - "order submit/cancel"
+    - "simulation/live runtime"
+    - "provider fetch / lake write / catalog publish"
+
+authorization_layers:
+  L1_formal_cr_orchestration: authorized_to_start
+  L2_bridge_skeleton_fixture_only: pending_cp2_approval
+  L3_windows_credential_local_setup: not_authorized
+  L4_readonly_probe: not_authorized
+  L5_submit_cancel_simulation_runtime: not_authorized
+
+recommended_architecture:
+  primary: "Windows bridge service owns Goldminer SDK interaction; WSL calls bridge over explicit local network endpoint."
+  alternatives:
+    - "WSL direct gm/gmtrade SDK with token in WSL"
+    - "WSL direct Windows terminal endpoint if official local endpoint is verified"
+  recommendation_reason: "Keeps token/account_id on Windows, avoids leaking credentials into WSL/repo/dialog, and gives us an allowlist/kill-switch boundary."
+
+decision_items:
+  - id: DQ-CP2-CR045-01
+    type: scope
+    summary: "Confirm CR045 scope as Windows bridge skeleton and readonly probe preparation only."
+  - id: DQ-CP2-CR045-02
+    type: architecture
+    summary: "Choose Windows bridge as primary route over WSL direct SDK."
+  - id: DQ-CP2-CR045-03
+    type: security
+    summary: "Keep token/account_id only in user-owned Windows local config; never in repo, dialog, STATE, tests or logs."
+  - id: DQ-CP2-CR045-04
+    type: runtime_authorization
+    summary: "Confirm current approval does not authorize L3/L4/L5 runtime."
+  - id: DQ-CP2-CR045-05
+    type: risk_acceptance
+    summary: "Accept that CR045 may close as skeleton-ready without real-readonly verification."
+  - id: DQ-CP2-CR045-06
+    type: follow_up_tracking
+    summary: "Track L4 readonly probe and L5 submit/cancel as separate future authorization gates."
+
+next_gate:
+  checkpoint: "process/checkpoints/CP2-CR045-REQUIREMENTS-BASELINE.md"
+  auto_check: "process/checks/CP2-CR045-REQUIREMENTS-BASELINE.md"
+  launch_message: "process/checks/CP2-CR045-HUMAN-GATE-LAUNCH-MESSAGE.md"
+  expected_user_replies:
+    - approve
+    - "修改: <具体修改点>"
+    - reject

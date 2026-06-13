@@ -8,7 +8,7 @@ argument-hint: "可选：指定要澄清的需求条目 ID 或关键词"
 user-invokable: true
 status: active
 ---
-<!-- myflow-managed: version=1.0.0 canonical-commit=fe24c81 generated=2026-05-28T13:51:34Z -->
+<!-- myflow-managed: version=1.0.0 canonical-commit=67b82d1 generated=2026-06-13T09:11:24Z -->
 
 ## 目标
 
@@ -27,7 +27,7 @@ status: active
 ## 必须读取的输入
 
 - `process/REQUEST.md`
-- `process/REQUIREMENTS.md`（若存在）
+- `docs/product/REQUIREMENTS.md`（若存在）
 - `process/CLARIFICATION-LOG.md`（若存在）
 - 用户本轮新增回复
 

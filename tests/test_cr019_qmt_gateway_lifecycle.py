@@ -241,10 +241,24 @@ def test_install_doc_uses_placeholders_and_contains_no_sensitive_literals() -> N
 
     for placeholder in ("<windows-host>", "<port>", "<config-path>"):
         assert placeholder in content
-    for forbidden in ("secret", "token", "account", "password", ".env"):
-        assert forbidden not in lowered
+    for placeholder in (
+        "<manual-client-id>",
+        "<manual-long-random-secret>",
+        "<qmt-account-ref>",
+        "<qmt-miniqmt-userdata-path>",
+    ):
+        assert placeholder in content
+    for forbidden_literal in (
+        "qmt_client_secret=abc",
+        "qmt_login_password=123",
+        "account_id=123",
+        "-----begin private key-----",
+    ):
+        assert forbidden_literal not in lowered
     assert "不得启动真实服务" in content
     assert "不得写入真实凭据" in content
+    assert "CR020 Windows S 端手工安装调试手册" in content
+    assert "client_secret_ref` | `[REDACTED]`" in content
 
 
 def test_gateway_sources_do_not_import_service_network_or_qmt_runtime_modules() -> None:

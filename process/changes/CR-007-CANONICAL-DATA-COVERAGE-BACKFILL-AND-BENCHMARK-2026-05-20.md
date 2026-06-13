@@ -1,9 +1,9 @@
 ---
 cr_id: "CR-007"
-status: "story-execution-batch-a-verified-pending-cp8"
+status: "closed"
 impact_level: "high"
 rollback_to: "solution-design"
-approval_result: "story-execution-batch-a-verified-pending-cp8"
+approval_result: "closed-cp8-approved"
 created_at: "2026-05-20T07:07:33+08:00"
 updated_at: "2026-05-31T21:43:48+08:00"
 created_by: "codex"
@@ -103,9 +103,16 @@ batch_a_verified_at: "2026-05-22T06:16:28+08:00"
 source: "user"
 linked_issue: ""
 linked_change: "CR-006"
+closed_by: "user"
+closed_at: "2026-06-05T23:11:48+08:00"
+cp8_manual_status: "approved"
+cp8_manual_review: "checkpoints/CP8-CR007-CR008-DELIVERY-READINESS.md"
+cp8_auto_check: "process/checks/CP8-CR007-CR008-DELIVERY-READINESS.md"
 ---
 
 # CR-007：Canonical 数据湖历史覆盖补齐与真实 Benchmark 能力完善
+
+> 2026-06-05T23:11:48+08:00 关闭记录：用户接受 CP8 推荐方案，CR-007 当前 verified 范围关闭。关闭范围包含 CR007-S01..S05 的离线数据覆盖、benchmark/calendar、index members / stock basic、实验 benchmark 消费和数据质量文档 guardrail；不授权真实 Tushare 抓取、真实 lake 写入、旧 `data/**` 操作、凭据读取、publish、QMT、simulation 或 live。
 
 > 2026-05-22T06:16:28+08:00 状态更新：`CR007-S05` 已完成 CP7 验证并收敛为 `verified`，CP7=`process/checks/CP7-CR007-S05-data-quality-report-and-doc-guardrail-VERIFICATION-DONE.md`。S05 专项测试 `7 passed`、CR006/CR008 回归 `31 passed`、CR008 auxiliary/proxy 回归 `18 passed`、py_compile 通过，无阻断项。至此 `CR007-BATCH-A` 五个 Story 均已 verified；`CR008-BATCH-A` 六个 Story 也已 verified。
 
@@ -306,13 +313,14 @@ linked_change: "CR-006"
 
 ## 处理结论
 
-- 审批结论：`story-execution-batch-a-verified-pending-cp8`
+- 审批结论：`closed-cp8-approved`
 - [ ] 自动批准（低风险）
 - [ ] 待人工确认（中风险）
 - [x] 已由用户人工放行 CP3/CP4（高风险变更，原始审批文本：`同意`）
 - [x] 已由用户人工放行 CP5 批次（原始审批文本：`同意`）
+- [x] 用户已于 2026-06-05T23:11:48+08:00 接受 CP8 推荐关闭方案
 
-本 CR 已登记为高影响结构性变更。用户原始审批文本 `同意` 已先后放行 CP3/CP4 与 CP5 批次人工确认；CP5 `同意` 仅批准进入 story-execution 的离线代码实现调度，不授权立即执行真实 Tushare 全量抓取、真实 lake 大规模写入或 `.env` / token / NAS 凭据读取打印。当前 `CR007-S01-prices-long-horizon-backfill-planner`、`CR007-S02-benchmark-calendar-backfill`、`CR007-S03-index-members-stock-basic-datasets`、`CR007-S04-experiment-real-benchmark-consumption`、`CR007-S05-data-quality-report-and-doc-guardrail` 均已完成 CP6/CP7 且收敛为 `verified`。下一步是生成 / 审查 CR-007 CP8 终验，不因 verified 自动关闭本 CR。
+本 CR 已登记为高影响结构性变更。用户原始审批文本 `同意` 已先后放行 CP3/CP4 与 CP5 批次人工确认；CP5 `同意` 仅批准进入 story-execution 的离线代码实现调度，不授权立即执行真实 Tushare 全量抓取、真实 lake 大规模写入或 `.env` / token / NAS 凭据读取打印。当前 `CR007-S01-prices-long-horizon-backfill-planner`、`CR007-S02-benchmark-calendar-backfill`、`CR007-S03-index-members-stock-basic-datasets`、`CR007-S04-experiment-real-benchmark-consumption`、`CR007-S05-data-quality-report-and-doc-guardrail` 均已完成 CP6/CP7 且收敛为 `verified`。用户已接受 CP8 关闭方案，CR-007 当前范围关闭；关闭不授权真实 Tushare 全量抓取、真实 lake 大规模写入、publish 或凭据读取。
 
 ## 编排路由记录
 

@@ -33,7 +33,7 @@ target:
     - "tests/test_cr030_no_real_operation_safety.py"
 manual_checkpoint: "checkpoints/CP8-CR030-DELIVERY-READINESS.md"
 auto_final_authorization: false
-manual_review_status: "pending"
+manual_review_status: "approved"
 ---
 
 # CP8 CR-030 交付就绪门自动预检结果
@@ -100,8 +100,8 @@ manual_review_status: "pending"
 | 交付物 | 路径 | 状态 | 说明 |
 |---|---|---|---|
 | CP8 自动预检 | `process/checks/CP8-CR030-DELIVERY-READINESS.md` | PASS | 本文件。 |
-| CP8 人工终验稿 | `checkpoints/CP8-CR030-DELIVERY-READINESS.md` | pending | 等待用户人工确认。 |
-| Human Gate launch message | `process/checks/CP8-CR030-HUMAN-GATE-LAUNCH-MESSAGE.md` | pending | 将通过 `scripts/check_human_gate_decision_brief.py` 校验后发起人工确认。 |
+| CP8 人工终验稿 | `checkpoints/CP8-CR030-DELIVERY-READINESS.md` | approved | 用户于 2026-06-04T06:46:13+08:00 确认已验证完成并要求关闭 CR-030。 |
+| Human Gate launch message | `process/checks/CP8-CR030-HUMAN-GATE-LAUNCH-MESSAGE.md` | completed | 已通过 Human Gate 发起并由用户确认关闭。 |
 | CR-030 快速开始手册 | `docs/CR030-FACTOR-RESEARCH-QUICKSTART.md` | PASS | 用户可据此从 `FactorSpec` 开始启动多因子策略研究、实验与本地回测准备。 |
 | CR-030 研究闭环文档 | `docs/CR030-MULTIFACTOR-RESEARCH-LOOP.md` | PASS | 用户可据此复核边界、证据链和后续分流；策略侧已达到模拟盘入口审查输入，但不授权真实模拟盘 / QMT。 |
 | CR-030 tests | `tests/test_cr030_*.py` | PASS | 8 个测试文件聚合 `50 passed`。 |
@@ -112,5 +112,5 @@ manual_review_status: "pending"
 - 阻断项：0
 - REQUIRED：0
 - 自动终验授权：`false`
-- 人工终验：`pending`
-- 下一步：发起 CP8 人工确认。用户回复 `approve` 才可关闭 CR-030 当前交付范围；CP8 不授权依赖变更、外部项目运行、provider/lake/publish、QMT / simulation / live、账号 / 订单或凭据读取。
+- 人工终验：`approved`
+- 下一步：关闭 CR-030 当前交付范围；CP8 不授权依赖变更、外部项目运行、provider/lake/publish、QMT / simulation / live、账号 / 订单或凭据读取。

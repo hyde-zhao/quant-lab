@@ -1,0 +1,26 @@
+{
+  "checkpoint_id": "CP2-CR046-DISCUSSION",
+  "change_id": "CR-046",
+  "status": "pending-cp2-review",
+  "created_at": "2026-06-13T21:46:39+08:00",
+  "owner": "meta-po",
+  "discussion_log": "process/discussions/CP2-CR046-SCENARIO-DISCUSSION-LOG.md",
+  "scenario_gray_areas": [
+    "SGQ-CR046-01",
+    "SGQ-CR046-02",
+    "SGQ-CR046-03",
+    "SGQ-CR046-04",
+    "SGQ-CR046-05",
+    "SGQ-CR046-06"
+  ],
+  "decision_items": [
+    "DQ-CR046-01",
+    "DQ-CR046-02",
+    "DQ-CR046-03",
+    "DQ-CR046-04",
+    "DQ-CR046-05",
+    "DQ-CR046-06"
+  ],
+  "current_user_input_summary": "继续推进 CR046；当前 CR046 是 framework-first：先定 QMT / MiniQMT 双目标策略交付框架、验证框架、MiniQMT runner 安装设计和策略包契约；不做具体策略交付、不做 QMT 运行验证、不连接 MiniQMT、不 submit/cancel。",
+  "next_gate": "process/checkpoints/CP2-CR046-REQUIREMENTS-BASELINE.md"
+}

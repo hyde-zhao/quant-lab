@@ -1,19 +1,26 @@
 ---
 cr_id: "CR-004"
-status: "batch-d-g1-verified-pending-total-close-decision"
+status: "closed"
 impact_level: "high"
 rollback_to: "solution-design"
-approval_result: "batch-d-g1-verified-pending-total-close-decision"
+approval_result: "closed-cp8-approved"
 created_at: "2026-05-17T12:01:04+08:00"
 created_by: "meta-po"
 approved_by: "user"
 approved_at: "2026-05-17T12:01:04+08:00"
 source: "user"
 linked_issue: ""
-updated_at: "2026-05-31T21:43:48+08:00"
+updated_at: "2026-06-05T23:11:48+08:00"
+closed_by: "user"
+closed_at: "2026-06-05T23:11:48+08:00"
+cp8_manual_status: "approved"
+cp8_manual_review: "checkpoints/CP8-CR004-DELIVERY-READINESS.md"
+cp8_auto_check: "process/checks/CP8-CR004-DELIVERY-READINESS.md"
 ---
 
 # CR-004：可移植市场数据获取组件
+
+> 2026-06-05T23:11:48+08:00 关闭记录：用户确认 CR004 相关问题应已解决并接受推荐关闭方案，CR-004 总 CR 关闭。关闭范围包含已验证的 market_data 阶段性交付、STORY-004 Data Loader first / no real fetch、STORY-018 实验十/十二只读 benchmark 接入和 Batch D / G1 聚合回归；不声明真实沪深 300 全面 available、production current truth 已补齐或任何真实 provider fetch、lake write、publish、credential read、QMT 操作已授权。
 
 ## 变更描述
 
@@ -157,7 +164,7 @@ updated_at: "2026-05-31T21:43:48+08:00"
 | STORY-018 实验十/十二只读接入 | `process/checks/CP6-STORY-018-cr004-experiment-readonly-benchmark-CODING-DONE.md` | `process/checks/CP7-STORY-018-cr004-experiment-readonly-benchmark-VERIFICATION-DONE.md` | PASS | `--market-data-root` alias、`--benchmark-path` 本地只读、缺 benchmark 结构化 `unavailable/required_missing`、不静默 proxy 成 `hs300_index`、CR007 proxy_baseline 兼容均通过。 |
 | G1 聚合回归 | 不适用 | `process/checks/CP7-CR004-BATCH-D-VERIFICATION-SUMMARY-2026-05-30.md` | PASS | 聚合命令 `48 passed in 3.28s`，py_compile、diff check、forbidden import / no network、no real side effect 均通过。 |
 
-本批次未授权且未执行真实 provider fetch、真实 lake 写入、current pointer publish、凭据读取、真实 QMT / MiniQMT / XtQuant 操作、真实发单 / 撤单 / 账户查询、真实 broker lake 写入或 simulation run。CR-004 总体仍保持 `open`，本次只收敛 Batch D / G1 缺口，不代表真实沪深 300 全面 available 或 production current truth 已补齐。
+本批次未授权且未执行真实 provider fetch、真实 lake 写入、current pointer publish、凭据读取、真实 QMT / MiniQMT / XtQuant 操作、真实发单 / 撤单 / 账户查询、真实 broker lake 写入或 simulation run。用户已于 2026-06-05T23:11:48+08:00 接受总关闭方案，CR-004 总体关闭；关闭不代表真实沪深 300 全面 available、production current truth 已补齐或任何真实补抓 / publish 已获授权。
 
 ## 执行链路
 
@@ -196,11 +203,11 @@ updated_at: "2026-05-31T21:43:48+08:00"
 
 ## 处理结论
 
-- 审批结论：`batch-d-g1-verified-pending-total-close-decision`
+- 审批结论：`closed-cp8-approved`
 - [ ] 自动批准（低风险）
 - [ ] 待人工确认（中风险）
 - [x] CP5 Batch D 已人工通过，允许后续按 LLD 限定范围进入实现；仍不得真实联网抓数或写真实数据/报告/交付目录
-- [x] CP6 / CP7 Batch D 已通过，STORY-004 与 STORY-018 的 G1 范围 verified；CR-004 总 CR 等待后续关闭决策，仍不得把缺失真实沪深 300 口径视为已授权补抓或 publish
+- [x] CP6 / CP7 Batch D 已通过，STORY-004 与 STORY-018 的 G1 范围 verified；CR-004 总 CR 已经用户确认关闭，仍不得把缺失真实沪深 300 口径视为已授权补抓或 publish
 
 ## 关联对象
 

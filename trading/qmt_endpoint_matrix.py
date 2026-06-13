@@ -10,10 +10,18 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Iterable
 
-from trading.qmt_gateway_contracts import QmtBlockedReason
+from trading.qmt_gateway_contracts import (
+    CR020_QUERY_POSITIONS_ENDPOINT_ID,
+    CR020_QUERY_POSITIONS_PATH,
+    CR020_QUERY_POSITIONS_SCOPE,
+    QmtBlockedReason,
+)
 
 
 QMT_ENDPOINT_MATRIX_SCHEMA_VERSION = "cr019-s06-qmt-endpoint-matrix-v1"
+CR020_READONLY_ENDPOINT_MATRIX_SCHEMA_VERSION = (
+    "cr020-s05-query-positions-readonly-matrix-v1"
+)
 
 HLD_ENDPOINT_CATEGORIES: tuple[str, ...] = (
     "health / heartbeat",
@@ -552,6 +560,62 @@ def build_capabilities_payload(
         "fixture_only": True,
         "real_operation": False,
     }
+
+
+def get_cr020_query_positions_spec() -> QmtEndpointSpec:
+    """返回 CR020 唯一只读查询 endpoint 的 spec。"""
+
+    spec = get_endpoint_spec(CR020_QUERY_POSITIONS_ENDPOINT_ID)
+    if (
+        spec.path != CR020_QUERY_POSITIONS_PATH
+        or spec.required_scope != CR020_QUERY_POSITIONS_SCOPE
+    ):
+        raise ValueError("CR020 query_positions endpoint matrix is inconsistent")
+    return spec
+
+
+def is_cr020_readonly_endpoint_allowed(
+    endpoint_id: str,
+    required_scope: str,
+) -> bool:
+    """CR020 只允许 `query_positions` 与 exact scope 组合。"""
+
+    return (
+        str(endpoint_id) == CR020_QUERY_POSITIONS_ENDPOINT_ID
+        and str(required_scope) == CR020_QUERY_POSITIONS_SCOPE
+    )
+
+
+def build_cr020_blocked_endpoint_matrix(
+    specs: Iterable[QmtEndpointSpec] | None = None,
+) -> dict[str, dict[str, object]]:
+    """构造 CR020 只读白名单视图；非 query_positions 全部 blocked。"""
+
+    result: dict[str, dict[str, object]] = {}
+    for spec in tuple(specs or QMT_ENDPOINT_SPECS):
+        allowed = is_cr020_readonly_endpoint_allowed(
+            spec.endpoint_id,
+            spec.required_scope,
+        )
+        result[spec.endpoint_id] = {
+            "schema_version": CR020_READONLY_ENDPOINT_MATRIX_SCHEMA_VERSION,
+            "endpoint_id": spec.endpoint_id,
+            "method": spec.method,
+            "path": spec.path,
+            "required_scope": spec.required_scope,
+            "cr020_readonly_allowed": allowed,
+            "blocked": not allowed,
+            "blocked_reason": (
+                ""
+                if allowed
+                else (
+                    QmtBlockedReason.ENDPOINT_NOT_SUPPORTED.value
+                    if spec.endpoint_id != CR020_QUERY_POSITIONS_ENDPOINT_ID
+                    else spec.blocked_reason.value
+                )
+            ),
+        }
+    return result
 
 
 def _coerce_category(value: QmtEndpointCategory | str) -> QmtEndpointCategory | None:

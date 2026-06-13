@@ -1,0 +1,152 @@
+{
+  "allowed_claims": [
+    {
+      "claim": "research_baseline_candidate",
+      "evidence_ref": "run-cr039-multifactor-strategy-candidates-20260610",
+      "reason": "仅允许作为本地离线研究候选和后续人工决策输入。",
+      "status": "allowed"
+    }
+  ],
+  "blocked_claims": [
+    {
+      "claim": "qmt_ready",
+      "evidence_ref": "run-cr039-multifactor-strategy-candidates-20260610",
+      "reason": "CR-039 不连接 QMT，不查询账户，不发单或撤单。",
+      "status": "blocked"
+    },
+    {
+      "claim": "simulation_ready",
+      "evidence_ref": "run-cr039-multifactor-strategy-candidates-20260610",
+      "reason": "CR-039 只形成研究输入；simulation 必须另起 CR 并取得运行授权。",
+      "status": "blocked"
+    },
+    {
+      "claim": "live_ready",
+      "evidence_ref": "run-cr039-multifactor-strategy-candidates-20260610",
+      "reason": "CR-039 不构成 live 或 small-live 准入。",
+      "status": "blocked"
+    },
+    {
+      "claim": "production_valid",
+      "evidence_ref": "run-cr039-multifactor-strategy-candidates-20260610",
+      "reason": "CR-039 输出不等于 production-valid 或实盘可用证据。",
+      "status": "blocked"
+    },
+    {
+      "claim": "account_or_order_ready",
+      "evidence_ref": "run-cr039-multifactor-strategy-candidates-20260610",
+      "reason": "CR-039 不授权账户、订单、撤单或 broker runtime。",
+      "status": "blocked"
+    },
+    {
+      "claim": "provider_or_lake_publish_ready",
+      "evidence_ref": "run-cr039-multifactor-strategy-candidates-20260610",
+      "reason": "CR-039 不触发 provider fetch、lake write 或 catalog publish。",
+      "status": "blocked"
+    }
+  ],
+  "cr037_cr038_gate_summary": {
+    "allowed_assets": [
+      "abnormal_turnover_21_252",
+      "profitability_roe_ttm",
+      "size_total_market_cap",
+      "value_bm"
+    ],
+    "policy": "只消费 CR-037 baseline/candidate；watch 只能观察；reject/缺证 fail-closed。",
+    "rejected_assets_excluded": [
+      "idiosyncratic_volatility_proxy",
+      "investment_asset_growth",
+      "market_beta_252",
+      "momentum_12_1",
+      "profitability_roe_ttm",
+      "valuation_extreme_spread"
+    ],
+    "upstream_simulation_candidate": false,
+    "watch_assets_policy": [
+      "fundamental_anchor_reversal",
+      "investment_asset_growth",
+      "market_beta_252",
+      "momentum_12_1"
+    ]
+  },
+  "input_refs": {
+    "cr035_model_admission_summary": "process/research/chapter4_factor_models/run-cr035-chapter4-factor-models-20260610/MODEL-ADMISSION-SUMMARY.json",
+    "cr036_anomaly_admission_summary": "process/research/chapter5_anomalies/run-cr036-chapter5-anomalies-20260610/ANOMALY-ADMISSION-SUMMARY.json",
+    "cr037_robustness_admission_summary": "process/research/chapter6_factor_robustness/run-cr037-chapter6-robustness-20260610/ROBUSTNESS-ADMISSION-SUMMARY.json",
+    "cr038_alpha_scores": "reports/chapter7_factor_practice/run-cr038-chapter7-factor-practice-20260610/alpha_scores.parquet",
+    "cr038_capacity_liquidity_analysis": "reports/chapter7_factor_practice/run-cr038-chapter7-factor-practice-20260610/capacity_liquidity_analysis.csv",
+    "cr038_performance_attribution": "reports/chapter7_factor_practice/run-cr038-chapter7-factor-practice-20260610/performance_attribution.csv",
+    "cr038_portfolio_admission_summary": "process/research/chapter7_factor_practice/run-cr038-chapter7-factor-practice-20260610/PORTFOLIO-ADMISSION-SUMMARY.json",
+    "cr038_portfolio_metrics": "reports/chapter7_factor_practice/run-cr038-chapter7-factor-practice-20260610/portfolio_metrics.csv",
+    "cr038_risk_exposure": "reports/chapter7_factor_practice/run-cr038-chapter7-factor-practice-20260610/risk_exposure.csv",
+    "cr038_turnover_cost_analysis": "reports/chapter7_factor_practice/run-cr038-chapter7-factor-practice-20260610/turnover_cost_analysis.csv"
+  },
+  "not_authorization": true,
+  "not_broker_order": true,
+  "not_live_authorization": true,
+  "not_qmt_authorization": true,
+  "not_simulation_authorization": true,
+  "operation_counts": {
+    "account_or_order_operation": 0,
+    "catalog_publish": 0,
+    "credential_read": 0,
+    "dependency_change": 0,
+    "external_project_clone": 0,
+    "external_project_install": 0,
+    "external_project_run": 0,
+    "lake_write": 0,
+    "provider_fetch": 0,
+    "qmt_operation": 0,
+    "reports_overwrite": 0,
+    "simulation_or_live": 0,
+    "source_migration_or_vendor": 0
+  },
+  "overall_admission": "research_baseline",
+  "run_id": "run-cr039-multifactor-strategy-candidates-20260610",
+  "sample_windows": [
+    "in_sample_2000_2014",
+    "out_of_sample_2020_2026_ytd",
+    "validation_2015_2019"
+  ],
+  "schema_version": "multifactor_strategy_admission_package_v1",
+  "status": "PASS",
+  "strategy_candidates": [
+    {
+      "admission": "research_baseline",
+      "capacity_evidence": "proxy_available",
+      "evidence_status": "complete",
+      "max_drawdown_proxy": -0.6003038176485391,
+      "mean_net_return_25bps": 0.021705136828350395,
+      "mean_turnover": 0.4999844013800192,
+      "reason": "CR-038 未给出 simulation_candidate，只能作为研究基线。",
+      "simulation_candidate": false,
+      "source_portfolio_id": "equal_weight_baseline",
+      "strategy_id": "strategy_equal_weight_baseline"
+    }
+  ],
+  "unlock_conditions": [
+    "如需 simulation，另起 CR-021 或后续 simulation 准入 CR。",
+    "后续 CR 必须重新取得账户、订单、资金、标的范围、时间窗口和回滚策略授权。",
+    "后续 CR 必须复核 QMT gateway / simulation runtime 和 broker lake 边界。"
+  ],
+  "upstream_summary_checks": {
+    "cr035_model_admission": {
+      "not_authorization": true,
+      "operation_counts_zero": true,
+      "sample_count": 2,
+      "schema_version": "chapter4_model_admission_summary_v1"
+    },
+    "cr036_anomaly_admission": {
+      "not_authorization": true,
+      "operation_counts_zero": true,
+      "sample_count": 2,
+      "schema_version": "chapter5_anomaly_admission_summary_v1"
+    },
+    "cr037_robustness_admission": {
+      "not_authorization": true,
+      "operation_counts_zero": true,
+      "sample_count": 2,
+      "schema_version": "chapter6_robustness_admission_summary_v1"
+    }
+  }
+}
