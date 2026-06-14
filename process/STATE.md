@@ -1,25 +1,25 @@
 ---
 project_id: local_backtest
 workflow_mode: production
-current_phase: story-execution
+current_phase: documentation
 current_agent: host-orchestrator
 active_change: "CR-046"
 active_story: ''
 iteration: 465
 blocked: false
 blocked_reason: ''
-last_action: CR053 CP6 静态实现已由 meta-dev/dev-shi 完成并通过主线程回填；S01-S05 已 ready-for-verification，CP6 结论 PASS。
-next_action: "进入 CR053 CP7 静态验证：调度 meta-qa 验证 release 报告、guardrail evidence、禁止操作边界和 CR058 输入门禁；不授权真实迁移、NAS、lake、git push、Windows full mount、runtime 或凭据读取。"
+last_action: CR053 CP7 静态验证已由 meta-qa/qa-cao 完成并通过主线程回填；S01-S05 已 verified，CP7 结论 PASS。
+next_action: "进入 CR053 CP8 release-readiness / close gate：生成发布就绪、回滚、迁移说明和人工终验；CP8 不授权真实迁移、NAS、lake、git push、Windows full mount、runtime 或凭据读取。"
 canonical_project_name: quant-lab
 legacy_project_alias: local_backtest
 cr_tracking:
   status: "active-formal-cr"
   index_path: process/changes/CR-INDEX.yaml
-  last_consistency_check: 'PASS at 2026-06-14T12:23:31+08:00 via uv run --python 3.11 python scripts/check_cr_tracking_consistency.py --project-root .'
+  last_consistency_check: 'PASS at 2026-06-14T12:42:13+08:00 via uv run --python 3.11 python scripts/check_cr_tracking_consistency.py --project-root .'
   active_crs:
   - id: CR-046
     title: QMT and MiniQMT Dual-Target Strategy Delivery Framework
-    status: active-cp6-pass-ready-for-verification
+    status: active-cp7-pass-ready-for-cp8
     source_tracking: USER-20260613-TERMINAL-NATIVE-STRATEGY-EXPORT
     formal_cr_path: process/changes/CR-046-TERMINAL-NATIVE-SIMULATION-STRATEGY-EXPORT-2026-06-13.md
     follow_up_tracking: process/changes/CR-046-FOLLOW-UP-TRACKING-2026-06-13.md
@@ -58,7 +58,7 @@ cr_tracking:
     source_tracking: USER-20260614-START-CR053-MIGRATION-INVENTORY
     formal_cr_path: process/changes/CR-053-QUANT-LAB-MIGRATION-INVENTORY-AND-DRY-RUN-2026-06-14.md
     priority: 1
-    blocked_by: 'cp6-pass-ready-for-verification: meta-dev/dev-shi 完成 CR053 CP6 静态实现并生成 docs/release 五份报告、implementation evidence、CP6 context 和 CP6 check；S01-S05 已 ready-for-verification。CR046 remains paused at CP6 PASS / ready-for-verification. CR053 下一步仅允许 CP7 静态验证，不授权运行 inventory、真实目录重命名、文件移动、NAS 操作、external archive migration、provider/lake/publish、QMT/MiniQMT runtime、凭据读取、git push/tag 或重写历史。'
+    blocked_by: 'cp7-pass-ready-for-cp8: meta-qa/qa-cao 完成 CR053 CP7 静态验证并生成 verification/test/review/fixes 质量产物、CP7 context 和 CP7 check；S01-S05 已 verified。CR046 remains paused at CP6 PASS / ready-for-verification. CR053 下一步仅允许 CP8 release-readiness / close gate，不授权运行 inventory、真实目录重命名、文件移动、NAS 操作、external archive migration、provider/lake/publish、QMT/MiniQMT runtime、凭据读取、git push/tag 或重写历史。'
     impact_surface:
     - project migration inventory
     - quant-lab canonical identity
@@ -78,9 +78,9 @@ cr_tracking:
     - forbidden_content_boundary
     - CR053
     - CR051_follow_up
-    next_gate: CR053 CP7 static verification
-    next_action: 调度 meta-qa 执行 CR053 CP7 静态验证；验证对象包括五份 docs/release 报告、CP6 implementation evidence、CP6 context、CP6 check、Story 状态和不授权边界。
-    last_checked_at: '2026-06-14T12:19:53+08:00'
+    next_gate: CR053 CP8 release readiness
+    next_action: 进入 CR053 CP8 release-readiness / close gate；生成 release context、release notes、deploy checklist、rollback、migration、feedback、CP8 自动预检和人工终验稿。
+    last_checked_at: '2026-06-14T12:39:42+08:00'
   closed_crs:
   - id: CR-051
     title: Strategy Research Lifecycle Framework and Strategy Taxonomy
@@ -9593,7 +9593,7 @@ orchestrator_session:
   thread_id: ''
   workflow_id: local_backtest-cr053
   active_change: "CR-053"
-  status: cp6-pass-ready-for-verification
+  status: cp7-pass-ready-for-cp8
   pending_gate: ''
   pending_checklist_path: ''
   pending_user_decision: ''
@@ -9665,7 +9665,7 @@ orchestrator_session:
   - QMT / MiniQMT runtime、连接、查询账户或交易动作
   - git push、tag、远端仓库改名或历史重写
   - 启动 CR058 / CR060+ 或执行真实迁移
-  resume_instruction: "CR053 CP6 静态实现已由 meta-dev/dev-shi 完成，CP6 check=process/checks/CP6-CR053-MIGRATION-INVENTORY-BATCH-A-CODING-DONE.md，implementation evidence=process/stories/CR053-BATCH-A-IMPLEMENTATION.md，context=process/context/CP6-CR053-IMPLEMENTATION-CONTEXT.yaml。S01-S05 均 ready-for-verification。下一步进入 CR053 CP7 static verification；仅允许 meta-qa 静态验证 docs/release reports / guardrail evidence，不授权真实迁移、NAS mount/scan/mkdir/copy/delete、MARKET_DATA_LAKE_ROOT 替换、Windows full mount、凭据读取、provider/lake/publish、QMT/MiniQMT runtime、git push/tag/远端改名或启动 CR058/CR060+。"
+  resume_instruction: "CR053 CP7 静态验证已由 meta-qa/qa-cao 完成，CP7 check=process/checks/CP7-CR053-MIGRATION-INVENTORY-BATCH-A-VERIFICATION-DONE.md，verification report=docs/quality/VERIFICATION-REPORT-CR053.md，context=process/context/CP7-CR053-VERIFICATION-CONTEXT.yaml。S01-S05 均 verified。下一步进入 CR053 CP8 release-readiness / close gate；CP8 只允许交付就绪和人工终验，不授权真实迁移、NAS mount/scan/mkdir/copy/delete、MARKET_DATA_LAKE_ROOT 替换、Windows full mount、凭据读取、provider/lake/publish、QMT/MiniQMT runtime、git push/tag/远端改名或启动 CR058/CR060+。"
   cr051_cp4_story_planning_dispatch:
     mode: inline-host-orchestrator
     agent_id: ''
@@ -9704,6 +9704,25 @@ agent_lifecycle:
       checked_at: '2026-05-17T20:53:58+08:00'
       note: CR005-S02 blocker fix meta-dev/dev-zhu 已完成 CP6；meta-qa/qa-he the 2nd 已完成 S02 CP7 重验并 PASS；CR-005 Batch A 已 verified。
   active_agents:
+  - role: meta-qa
+    agent_id: 019ec462-3e52-7af2-9688-a90841f3baa3
+    agent_name: qa-cao
+    thread_id: 019ec462-3e52-7af2-9688-a90841f3baa3
+    workflow_id: local_backtest-cr053
+    change_id: CR-053
+    story_id: CR053-S01;CR053-S02;CR053-S03;CR053-S04;CR053-S05
+    wave_id: CR053-MIGRATION-INVENTORY-BATCH-A-CP7
+    handoff_path: process/handoffs/META-QA-CR053-CP7-STATIC-VERIFY-2026-06-14.md
+    status: completed
+    evidence: main thread spawn_agent returned agent_id=019ec462-3e52-7af2-9688-a90841f3baa3 nickname=qa-cao for CR053 CP7 static verification; wait_agent returned completed with CP7 PASS and S01-S05 verified.
+    tool_name: multi_agent_v1.spawn_agent
+    reusable: false
+    spawned_at: '2026-06-14T12:27:19+08:00'
+    resumed_at: ''
+    last_seen_at: '2026-06-14T12:39:42+08:00'
+    completed_at: '2026-06-14T12:39:42+08:00'
+    closed_at: '2026-06-14T12:40:25+08:00'
+    fallback_reason: ''
   - role: meta-dev
     agent_id: 019ec451-578a-7ad1-82e2-8ef9a62efd9d
     agent_name: dev-shi
@@ -14708,6 +14727,28 @@ agent_lifecycle:
     completed_at: '2026-05-16T19:33:15+08:00'
     closed_at: '2026-05-16T19:33:15+08:00'
 history:
+- at: '2026-06-14T12:39:42+08:00'
+  actor: host-orchestrator
+  action: cr053-cp7-pass-ready-for-cp8
+  reason: 用户明确授权使用 meta-qa 子 Agent 执行 CR053 CP7；meta-qa/qa-cao 完成静态验证并返回 PASS，主线程回填 dispatch completed_at，S01-S05 均 verified。
+  artifacts:
+  - docs/quality/VERIFICATION-REPORT-CR053.md
+  - docs/quality/TEST-REPORT-CR053.md
+  - docs/quality/REVIEW-CR053.md
+  - docs/quality/FIXES-CR053.md
+  - process/context/CP7-CR053-VERIFICATION-CONTEXT.yaml
+  - process/checks/CP7-CR053-MIGRATION-INVENTORY-BATCH-A-VERIFICATION-DONE.md
+  - process/handoffs/META-QA-CR053-CP7-STATIC-VERIFY-2026-06-14.md
+  next_gate: CR053 CP8 release readiness
+  not_authorized:
+  - true migration
+  - NAS mount / scan / mkdir / copy / delete
+  - MARKET_DATA_LAKE_ROOT replacement or real lake move
+  - Windows full archive / cold backup / full lake mount
+  - credential read
+  - provider/lake/publish
+  - QMT/MiniQMT runtime
+  - git push/tag/remote rename/history rewrite
 - at: '2026-06-14T12:19:53+08:00'
   actor: host-orchestrator
   action: cr053-cp6-pass-ready-for-verification

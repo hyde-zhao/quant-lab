@@ -2,7 +2,7 @@
 story_id: "CR053-S02-repo-inventory-and-path-classification"
 title: "Git 内 inventory 与路径分类器"
 story_slug: "repo-inventory-and-path-classification"
-status: "ready-for-verification"
+status: "verified"
 priority: "P0"
 implementation_allowed: true
 implementation_allowed_until: "CP5 approved at 2026-06-14T11:52:15+08:00; static Markdown reports / guardrail evidence only"
@@ -55,6 +55,12 @@ implementation_evidence:
   cp6_check: "process/checks/CP6-CR053-MIGRATION-INVENTORY-BATCH-A-CODING-DONE.md"
   output: "docs/release/MIGRATION-INVENTORY-CR053.md"
   status: "implemented-cp6-static"
+cp7_verification_evidence:
+  path: "docs/quality/VERIFICATION-REPORT-CR053.md"
+  cp7_check: "process/checks/CP7-CR053-MIGRATION-INVENTORY-BATCH-A-VERIFICATION-DONE.md"
+  context: "process/context/CP7-CR053-VERIFICATION-CONTEXT.yaml"
+  result: "PASS"
+  verified_at: "2026-06-14T12:30:26+08:00"
 ---
 
 # CR053-S02：Git 内 inventory 与路径分类器
