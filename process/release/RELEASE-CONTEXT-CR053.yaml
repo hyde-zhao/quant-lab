@@ -1,0 +1,225 @@
+schema_version: "1.0"
+status: "final"
+release_artifact_profile: "full"
+release_artifact_profile_reason: "CR053 涉及迁移 inventory、NAS / 数据湖 / 凭据 / 交易运行授权边界、rollback_ref 和后续 CR 门禁；按 release-readiness 规则命中迁移、权限和安全边界，因此使用 full profile。"
+release_decision: "READY_WITH_RISK"
+release_decision_scope: "静态 migration inventory / dry-run 交付就绪；不表示真实迁移、NAS 操作、数据湖迁移、凭据读取、交易运行或 git remote 操作已授权。"
+created_at: "2026-06-14T13:05:00+08:00"
+updated_at: "2026-06-14T13:05:00+08:00"
+source_gate: "CP8"
+change_id: "CR-053"
+context_id: "RELEASE-CONTEXT-CR053"
+
+release_scope:
+  current_version: "N/A"
+  target_version: "CR053-static-close"
+  included_features:
+    - "FEAT-10-CR053"
+  included_stories:
+    - "CR053-S01-root-map-and-host-mapping-contract"
+    - "CR053-S02-repo-inventory-and-path-classification"
+    - "CR053-S03-path-reference-and-legacy-alias-dry-run"
+    - "CR053-S04-manifest-transfer-and-backup-plan"
+    - "CR053-S05-cr058-migration-input-and-close-gate"
+  included_artifacts:
+    - "docs/release/NAS-MAPPING-CR053.md"
+    - "docs/release/MIGRATION-INVENTORY-CR053.md"
+    - "docs/release/PATH-REFERENCES-CR053.md"
+    - "docs/release/BACKUP-PLAN-CR053.md"
+    - "docs/release/MIGRATION-PLAN-CR053.md"
+  excluded_scope:
+    - "真实 NAS mount / scan / mkdir / copy / delete / migration"
+    - "真实目录 move / rename / delete 或 repo-local mechanical move"
+    - "MARKET_DATA_LAKE_ROOT replacement 或真实数据湖迁移"
+    - "Windows full archive / cold / full lake mount"
+    - "凭据、.env、token、password、cookie、session、private key 读取"
+    - "provider fetch / lake write / catalog publish"
+    - "QMT / MiniQMT runtime、账户查询或交易动作"
+    - "git push / tag / remote rename / history rewrite"
+    - "自动启动 CR058 / CR060+ 或真实迁移"
+  user_visible_changes:
+    - "形成 CR053 scoped migration inventory / dry-run 静态交付包。"
+    - "明确 CR058 repo-local mechanical migration 的输入门禁和 rollback_ref 前置要求。"
+    - "明确 CR060+ NAS / archive 实迁、数据湖迁移和交易运行必须独立授权。"
+  internal_changes:
+    - "新增 CR053 release-readiness capsule、release docs、follow-up tracking、CP8 自动预检和人工门禁草稿。"
+    - "不更新全局 release 文档，不更新 process/STATE.md、CR-INDEX.yaml 或 CR053 正式变更单。"
+  breaking_changes:
+    - "N/A；本轮只生成静态文档和 CP8 gate 证据，不修改代码、配置、路径或数据。"
+  known_risks:
+    - "R-CR053-01"
+    - "R-CR053-02"
+    - "R-CR053-03"
+
+version_decision:
+  current_version: "N/A"
+  target_version: "CR053-static-close"
+  change_type: "rc"
+  compatibility: "compatible"
+  reason: "本轮是 CR scoped 静态交付关闭门禁，不发布软件版本、不改运行时行为；使用 CR053-static-close 标识 release readiness 证据批次。"
+
+quality_summary:
+  cp7_results:
+    - id: "CP7-CR053"
+      path: "process/checks/CP7-CR053-MIGRATION-INVENTORY-BATCH-A-VERIFICATION-DONE.md"
+      result: "PASS"
+  verification_report_path: "docs/quality/VERIFICATION-REPORT-CR053.md"
+  test_report_path: "docs/quality/TEST-REPORT-CR053.md"
+  review_path: "docs/quality/REVIEW-CR053.md"
+  fixes_path: "docs/quality/FIXES-CR053.md"
+  blocker_count: 0
+  high_count: 0
+  medium_count: 0
+  low_count: 0
+  info_count: 1
+  accepted_risk_ids:
+    - "R-CR053-01"
+    - "R-CR053-02"
+    - "R-CR053-03"
+  unresolved_findings: []
+  cp8_risk_acceptance_required: true
+  summary: "CP7 static-only PASS；REVIEW approve；无 BLOCKER / HIGH / MEDIUM findings。剩余风险均进入 CP8 risk_acceptance / follow_up_tracking，不阻断静态交付 close。"
+
+affected_surface:
+  platforms:
+    - "Linux research PC logical view"
+    - "Windows trading PC package-exchange boundary"
+    - "NAS logical root map"
+    - "market data lake compatibility boundary"
+  components:
+    - "release docs"
+    - "migration inventory"
+    - "path references dry-run"
+    - "backup / rollback plan"
+    - "CR058 input gate"
+  install_scopes: []
+  config_changes:
+    - "No config change; MARKET_DATA_LAKE_ROOT remains unchanged."
+  permission_changes:
+    - "No permission grant in CR053; runtime authorization remains false."
+  migration_required: false
+  migration_scope_note: "CR053 只交付 migration inventory / dry-run，不执行迁移。"
+  external_interfaces:
+    - "N/A; no external call, no provider fetch, no publish."
+  state_schema_changes: []
+  command_parameter_changes: []
+
+install_validation_summary:
+  commands:
+    - "git diff --check"
+    - "uv run --python 3.11 python scripts/check_cr_tracking_consistency.py --project-root ."
+    - "YAML parse for process/release/RELEASE-CONTEXT-CR053.yaml"
+    - "uv run --python 3.11 meta-flow check human-gate --checkpoint process/checkpoints/CP8-CR053-DELIVERY-READINESS.md --launch-message-file process/checks/CP8-CR053-HUMAN-GATE-LAUNCH-MESSAGE.md"
+  results:
+    - "PASS: git diff --check exited 0."
+    - "PASS: CR tracking consistency check passed."
+    - "PASS: RELEASE-CONTEXT-CR053.yaml parsed and required fields matched."
+    - "PASS: human-gate check returned OK."
+  log_paths:
+    - "process/checks/CP8-CR053-DELIVERY-READINESS.md"
+  skipped_with_reason:
+    - "安装 / 升级 / 幂等 dry-run: N/A；CR053 不包含安装器、Agent、Skill 或 runtime package。"
+    - "真实迁移 dry-run: N/A；用户只授权静态 inventory / dry-run 文档，不授权 NAS / lake / repo-local move。"
+
+release_documents:
+  release_notes:
+    path: "docs/release/RELEASE-NOTES-CR053.md"
+    status: "generated"
+    profile: "full"
+    na_reason: ""
+  deploy_checklist:
+    path: "docs/release/DEPLOY-CHECKLIST-CR053.md"
+    status: "generated"
+    profile: "full"
+    na_reason: ""
+  rollback:
+    path: "docs/release/ROLLBACK-CR053.md"
+    status: "generated"
+    profile: "full"
+    na_reason: ""
+  migration:
+    path: "docs/release/MIGRATION-CR053.md"
+    status: "generated"
+    profile: "full"
+    na_reason: ""
+  feedback:
+    path: "docs/release/FEEDBACK-CR053.md"
+    status: "generated"
+    profile: "full"
+    na_reason: ""
+
+non_authorized_items:
+  - id: "NA-CR053-01"
+    operation: "NAS mount / scan / mkdir / copy / delete / migration"
+    reason: "CR053 是静态 migration inventory / dry-run，不具备真实 NAS 授权和执行证据。"
+    required_authorization: "独立 NAS runtime_authorization / CR060+，包含路径白名单、窗口、回滚和脱敏要求。"
+  - id: "NA-CR053-02"
+    operation: "真实目录 move / rename / delete 或 repo-local mechanical move"
+    reason: "CR053 只列候选与 dry-run 分类；CR058 尚未启动且 rollback_ref 未关闭。"
+    required_authorization: "CR058 CP5/CP6/CP8 通过，且用户显式授权具体 repo-local 操作。"
+  - id: "NA-CR053-03"
+    operation: "MARKET_DATA_LAKE_ROOT replacement 或真实数据湖迁移"
+    reason: "ADR-CR053-006 保持现有数据湖入口；数据湖迁移不在 CR053 范围。"
+    required_authorization: "独立数据湖迁移 CR、backup / restore drill、publish gate。"
+  - id: "NA-CR053-04"
+    operation: "Windows full archive / cold / full lake mount"
+    reason: "Windows 交易机只允许 package exchange read-only 逻辑边界。"
+    required_authorization: "独立交易主机安全设计和 runtime_authorization。"
+  - id: "NA-CR053-05"
+    operation: "凭据、.env、token、password、cookie、session、private key 读取"
+    reason: "CR053 不需要也不允许消费敏感凭据。"
+    required_authorization: "独立 security / credential handling 决策；默认不授权。"
+  - id: "NA-CR053-06"
+    operation: "provider fetch / lake write / catalog publish"
+    reason: "CR053 不触发外部 provider、数据湖写入或 catalog 发布。"
+    required_authorization: "独立 runtime_authorization 和数据发布门禁。"
+  - id: "NA-CR053-07"
+    operation: "QMT / MiniQMT runtime、账户查询或交易动作"
+    reason: "交易运行不属于 migration inventory close gate。"
+    required_authorization: "独立交易 runtime CR 和人工授权。"
+  - id: "NA-CR053-08"
+    operation: "git push / tag / remote rename / history rewrite"
+    reason: "CP8 close 只确认本地静态交付就绪，不授权远端或历史操作。"
+    required_authorization: "独立 git remote / release execution 授权。"
+  - id: "NA-CR053-09"
+    operation: "自动启动 CR058 / CR060+ 或真实迁移"
+    reason: "后续项只进入 follow-up tracking 候选，不自动推进。"
+    required_authorization: "host-orchestrator 后续单独发起 CR / checkpoint 并获用户确认。"
+
+follow_up_summary:
+  observation_items:
+    - "观察是否有人将 CR053 READY_WITH_RISK 误读为真实迁移授权。"
+    - "观察后续 CR058 是否在 rollback_ref / manual_review 未关闭前尝试机械替换。"
+  feedback_items:
+    - "用户或 reviewer 对 NAS root map、inventory 分类、legacy alias 分流提出修订时，进入 follow-up tracking。"
+  follow_up_candidates:
+    - "CR058 repo-local mechanical migration"
+    - "CR060+ NAS / archive real migration"
+    - "independent data lake migration CR"
+    - "trading runtime authorization CR"
+  risk_acceptance_items:
+    - "R-CR053-01"
+    - "R-CR053-02"
+    - "R-CR053-03"
+  follow_up_tracking_path: "process/changes/CR-053-FOLLOW-UP-TRACKING-2026-06-14.md"
+
+decision_items:
+  - id: "DQ-CP8-CR053-01"
+    type: "risk_acceptance"
+    recommendation: "接受 CR053 静态 dry-run 交付 READY_WITH_RISK，并关闭当前 CR053。"
+  - id: "DQ-CP8-CR053-02"
+    type: "runtime_authorization"
+    recommendation: "确认 CP8 approve 不授权真实迁移、NAS、数据湖、交易、凭据或 git push。"
+  - id: "DQ-CP8-CR053-03"
+    type: "follow_up_tracking"
+    recommendation: "接受 CR058 / CR060+ / 数据湖迁移 / 交易运行授权作为后续候选，不自动启动。"
+
+token_control:
+  default_read_mode: "capsule-first"
+  copied_long_text: false
+  allowed_payload: "summary, count, risk id, decision id, evidence path"
+  full_doc_read_triggers:
+    - "missing_capsule_field"
+    - "unreadable_evidence_path"
+    - "conflicting_conclusion"
+    - "user_requested_deep_review"
