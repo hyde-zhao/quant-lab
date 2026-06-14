@@ -1,10 +1,10 @@
 version: 1
 status: "active-formal-cr"
-updated_at: '2026-06-14T13:05:00+08:00'
+updated_at: '2026-06-14T13:42:40+08:00'
 owner: meta-po
 source: CR-046 started by user target change to terminal-native simulation strategy export, then upgraded by user to QMT + MiniQMT dual-target strategy delivery and verification framework; current CR first freezes QMT/MiniQMT framework, verification framework design, strategy package contract, and MiniQMT runner install design; concrete strategy delivery and runtime validation are deferred until permissions / strategy selection are ready. CR051 design draft was created by explicit USER-20260614-START-CR051-DESIGN for Strategy Research Lifecycle Framework; user approved CR051 active-lock handling, CP2, CP3 and CP8 on 2026-06-14, so CR051 is closed-current-delivery while CR046 remains paused at CP6 recovery point. CR053 was started by user reply `cr053` as quant-lab migration inventory / dry-run and user approved CP2 on 2026-06-14T09:51:11+08:00, resolving the old CR051 follow-up numbering conflict by renumbering event-strategy research flow to CR057-candidate. CR051 CP3 approved hardware-aware storage tiering for NAS 512G SSD / 4T RAID / 14T HDD, research PC 2T SSD and trading PC 512G SSD, plus project identity rename from local_backtest to quant-lab with local_backtest retained as legacy alias. CR-045 closed-current-delivery as Goldminer Windows Bridge Readonly Probe; CR-044 closed-current-delivery as offline-admission-design-ready; CR-043 closed-spike-complete with NEEDS_ACCOUNT_PERMISSION; CR-042 closed-current-delivery for Broker-Neutral Adapter Contract; CR-041 closed-current-delivery for API-less Paper Simulation Runner; CR-039 and CR-040 closed-current-delivery; CR-020
   is deleted-by-user; CR-021..CR-024 are cancelled-user-deleted
-last_consistency_check: 'PASS at 2026-06-14T13:04:51+08:00 via uv run --python 3.11 python scripts/check_cr_tracking_consistency.py --project-root .'
+last_consistency_check: 'PASS at 2026-06-14T13:45:17+08:00 via uv run --python 3.11 python scripts/check_cr_tracking_consistency.py --project-root .'
 index_schema:
 - id
 - title
@@ -54,13 +54,15 @@ active_crs:
   next_gate: User Paused before CP7 Verification
   next_action: 等待用户明确恢复 CR046 后再进入 CP7 verification-execution；挂起期间不调度 CP7、不启动 CR047/CR048/CR049、不执行真实运行 / 交易 / 凭据 / 传输导入。CR051 已关闭当前 Git 内交付，但不授权真实迁移、后续 CR 自动启动或 runtime。
   last_checked_at: '2026-06-14T00:29:41+08:00'
+closed_crs:
 - id: CR-053
   title: quant-lab Migration Inventory and Dry-run
-  status: active-cp8-ready-for-human-review
+  status: closed-current-delivery
   source_tracking: USER-20260614-START-CR053-MIGRATION-INVENTORY
   formal_cr_path: process/changes/CR-053-QUANT-LAB-MIGRATION-INVENTORY-AND-DRY-RUN-2026-06-14.md
+  follow_up_tracking: process/changes/CR-053-FOLLOW-UP-TRACKING-2026-06-14.md
   priority: 1
-  blocked_by: 'cp8-ready-for-human-review: meta-qa/qa-jin 完成 CR053 CP8 release-readiness，生成 release context、release notes、deploy checklist、rollback、migration、feedback、follow-up tracking、CP8 自动预检和人工检查点；自动预检 READY_WITH_RISK。CR046 remains paused at CP6 PASS / ready-for-verification. CR053 当前等待用户 approve / 修改 / reject；不授权运行 inventory、真实目录重命名、文件移动、NAS 操作、external archive migration、provider/lake/publish、QMT/MiniQMT runtime、凭据读取、git push/tag 或重写历史。'
+  blocked_by: 'closed: 用户于 2026-06-14T13:42:40+08:00 回复“同意”，接受 CP8 READY_WITH_RISK；CR053 当前静态 migration inventory / dry-run 交付关闭为 closed-current-delivery。真实 repo-local mechanical move、NAS / archive real migration、data lake migration、trading runtime、凭据读取、git push/tag/remote rename/history rewrite 或自动启动 CR058/CR060+ 均不授权，后续必须另起独立 CR / runtime_authorization gate。CR046 remains paused at CP6 PASS / ready-for-verification.'
   impact_surface:
   - project migration inventory
   - quant-lab canonical identity
@@ -80,10 +82,9 @@ active_crs:
   - forbidden_content_boundary
   - CR053
   - CR051_follow_up
-  next_gate: CR053 CP8 human review
-  next_action: "等待用户审查 process/checkpoints/CP8-CR053-DELIVERY-READINESS.md；可回复 approve / 修改: <具体修改点> / reject。approve 表示接受 3 项推荐方案并关闭 CR053 静态交付，不授权 9 项禁止操作。"
-  last_checked_at: '2026-06-14T13:05:00+08:00'
-closed_crs:
+  next_gate: closed
+  next_action: CR053 已关闭为 READY_WITH_RISK；CR058 / CR060+ / data lake migration / trading runtime 仅为后续候选，不自动启动，真实迁移需用户另行授权。
+  last_checked_at: '2026-06-14T13:42:40+08:00'
 - id: CR-051
   title: Strategy Research Lifecycle Framework and Strategy Taxonomy
   status: closed-current-delivery

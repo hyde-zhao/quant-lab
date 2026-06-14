@@ -2,9 +2,11 @@
 checkpoint_id: "CP8"
 checkpoint_name: "CR053 Delivery Readiness Human Gate"
 type: "manual"
-status: "pending-human-review"
+status: "approved"
 owner: "host-orchestrator"
 created_at: "2026-06-14T13:05:00+08:00"
+reviewed_by: "user"
+reviewed_at: "2026-06-14T13:42:40+08:00"
 auto_check: "process/checks/CP8-CR053-DELIVERY-READINESS.md"
 release_context: "process/release/RELEASE-CONTEXT-CR053.yaml"
 launch_message: "process/checks/CP8-CR053-HUMAN-GATE-LAUNCH-MESSAGE.md"
@@ -26,23 +28,23 @@ launch_message: "process/checks/CP8-CR053-HUMAN-GATE-LAUNCH-MESSAGE.md"
 
 | # | 检查项 | 推荐结果 | 用户审查 |
 |---|---|---|---|
-| 1 | 是否接受 CR053 静态 migration inventory / dry-run 交付为 `READY_WITH_RISK` | accept | 待填写 |
-| 2 | 是否确认 CP8 approve 只关闭静态交付，不授权真实迁移 | accept | 待填写 |
-| 3 | 是否接受 `R-CR053-01` 真实 NAS path / capacity / permission 未验证作为风险接受项 | accept | 待填写 |
-| 4 | 是否接受 `R-CR053-02` backup / restore rehearsal 和 rollback_ref planned-only 作为风险接受项 | accept | 待填写 |
-| 5 | 是否接受 `R-CR053-03` CR058 manual review / rollback gates 为未来前置 | accept | 待填写 |
-| 6 | 是否确认 CR058 / CR060+ / 数据湖迁移 / 交易 runtime 只作为后续候选，不自动启动 | accept | 待填写 |
-| 7 | 是否确认不授权 NAS、lake、trading、credential、git remote 等真实操作 | accept | 待填写 |
-| 8 | 是否允许 host-orchestrator 后续只更新状态 / CR tracking，不由 meta-qa 直接修改 `STATE.md` 或 `CR-INDEX.yaml` | accept | 待填写 |
+| 1 | 是否接受 CR053 静态 migration inventory / dry-run 交付为 `READY_WITH_RISK` | accept | 通过 |
+| 2 | 是否确认 CP8 approve 只关闭静态交付，不授权真实迁移 | accept | 通过 |
+| 3 | 是否接受 `R-CR053-01` 真实 NAS path / capacity / permission 未验证作为风险接受项 | accept | 通过 |
+| 4 | 是否接受 `R-CR053-02` backup / restore rehearsal 和 rollback_ref planned-only 作为风险接受项 | accept | 通过 |
+| 5 | 是否接受 `R-CR053-03` CR058 manual review / rollback gates 为未来前置 | accept | 通过 |
+| 6 | 是否确认 CR058 / CR060+ / 数据湖迁移 / 交易 runtime 只作为后续候选，不自动启动 | accept | 通过 |
+| 7 | 是否确认不授权 NAS、lake、trading、credential、git remote 等真实操作 | accept | 通过 |
+| 8 | 是否允许 host-orchestrator 后续只更新状态 / CR tracking，不由 meta-qa 直接修改 `STATE.md` 或 `CR-INDEX.yaml` | accept | 通过 |
 
 ## Exit Criteria
 
 | 条目 | 通过条件 | 状态 |
 |---|---|---|
-| 用户回复 `approve` | 接受 Decision Brief 内全部推荐方案，且不授权列明的禁止操作。 | pending |
+| 用户回复 `approve` | 接受 Decision Brief 内全部推荐方案，且不授权列明的禁止操作。 | PASS |
 | 用户回复 `修改: <具体修改点>` | host-orchestrator 按修改点更新相关 DQ / 文档并重新发起门禁。 | pending |
 | 用户回复 `reject` | CR053 CP8 close 不通过，回到 NOT_READY / 返工路由。 | pending |
-| 人工审查结果回填 | 本文件“人工审查结果”填入用户选择、时间和处理结论。 | pending |
+| 人工审查结果回填 | 本文件“人工审查结果”填入用户选择、时间和处理结论。 | PASS |
 
 ## Deliverables
 
@@ -179,10 +181,10 @@ launch_message: "process/checks/CP8-CR053-HUMAN-GATE-LAUNCH-MESSAGE.md"
 
 | 字段 | 值 |
 |---|---|
-| 用户回复 | 待填写：`approve` / `修改: <具体修改点>` / `reject` |
-| 审查人 | 待填写 |
-| 审查时间 | 待填写 |
-| 决策结果 | 待填写 |
-| 风险接受项 | 待填写 |
-| 不授权项确认 | 待填写 |
-| 后续处理 | 待填写 |
+| 用户回复 | 同意（按 `approve` 处理） |
+| 审查人 | user |
+| 审查时间 | 2026-06-14T13:42:40+08:00 |
+| 决策结果 | approved；接受 `DQ-CP8-CR053-01`、`DQ-CP8-CR053-02`、`DQ-CP8-CR053-03` 推荐方案；CR053 当前静态 migration inventory / dry-run 交付关闭为 `closed-current-delivery`。 |
+| 风险接受项 | 接受 `R-CR053-01`、`R-CR053-02`、`R-CR053-03` 作为 CR053 静态 close 的剩余风险；后续真实迁移前必须单独重访。 |
+| 不授权项确认 | 确认 `NA-CR053-01..09` 均保持 not_authorized；CP8 approve 不授权真实迁移、NAS、数据湖、交易、凭据、git remote 或自动启动 CR058 / CR060+。 |
+| 后续处理 | host-orchestrator 回填 `STATE.md`、`CR-INDEX.yaml`、CR053 正式变更单、Story backlog 和 development plan；CR058 / CR060+ / data lake migration / trading runtime 仅保留为候选。 |

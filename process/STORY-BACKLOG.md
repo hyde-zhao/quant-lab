@@ -1,7 +1,7 @@
 ---
-version: "3.2"
-last_updated: "2026-06-14T13:05:00+08:00"
-status: "cr053-cp8-ready-for-human-review"
+version: "3.3"
+last_updated: "2026-06-14T13:42:40+08:00"
+status: "cr053-closed-current-delivery"
 confirmed: true
 confirmed_by: "user"
 confirmed_at: "2026-05-14"
@@ -74,7 +74,7 @@ cr030_status: "story-plan-cp4-pass-pending-lld"
 cr046_status: "story-plan-cp4-pass-pending-lld"
 cr046_lld_batch: "CR046-DUAL-TARGET-FRAMEWORK-BATCH-A"
 cr051_status: "closed-current-delivery"
-cr053_status: "cp8-ready-for-human-review"
+cr053_status: "closed-current-delivery"
 cr051_lld_batch: "CR051-STRATEGY-RESEARCH-LIFECYCLE-BATCH-A"
 cr020_status: "fixture-static-verified-pending-manual-windows-qmt-validation"
 cr015_lld_batches:
@@ -141,6 +141,7 @@ created_by: "meta-se"
 | 3.0 | 2026-06-14 | meta-dev / host-orchestrator | 用户明确授权使用 meta-dev 子 Agent 推进 CR053 CP6；dev-shi 生成五份 `docs/release/*CR053.md` 静态报告、CP6 implementation evidence、CP6 context 和 CP6 自动检查，S01-S05 均进入 `ready-for-verification`；下一步仅允许 CP7 静态验证，不授权真实迁移、NAS、lake、git push、runtime 或凭据读取 |
 | 3.1 | 2026-06-14 | meta-qa / host-orchestrator | 用户明确授权使用 meta-qa 子 Agent 推进 CR053 CP7；qa-cao 完成静态验证，生成 verification / test / review / fixes 质量产物、CP7 context 和 CP7 自动检查，S01-S05 均收敛为 `verified`；下一步进入 CP8 release-readiness / close gate，仍不授权真实迁移、NAS、lake、git push、runtime 或凭据读取 |
 | 3.2 | 2026-06-14 | meta-qa / host-orchestrator | 用户明确授权使用 meta-qa 子 Agent 推进 CR053 CP8；qa-jin 完成 release-readiness，生成 CR053 专属 release context / release docs / follow-up tracking / CP8 自动预检 / 人工检查点 / human gate message；当前等待用户 approve / 修改 / reject，approve 只关闭静态 dry-run 交付，不授权真实迁移、NAS、lake、git push、runtime、凭据读取或自动启动 CR058/CR060+ |
+| 3.3 | 2026-06-14 | host-orchestrator | 用户回复“同意”批准 CR053 CP8；CR053 静态 migration inventory / dry-run 交付关闭为 `closed-current-delivery`，S01-S05 保持 verified；CR058 / CR060+ / data lake migration / trading runtime 仅为后续候选，不自动启动，也不授权真实迁移、NAS、lake、git remote、runtime 或凭据读取 |
 
 ## Story 列表
 

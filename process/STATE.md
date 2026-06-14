@@ -8,14 +8,14 @@ active_story: ''
 iteration: 465
 blocked: false
 blocked_reason: ''
-last_action: CR053 CP8 release-readiness 已由 meta-qa/qa-jin 完成并通过主线程回填；CP8 自动预检 READY_WITH_RISK，人工检查点已生成，等待用户确认。
-next_action: "等待用户审查 CR053 CP8 close gate：可回复 approve / 修改: <具体修改点> / reject。CP8 approve 只接受静态 migration inventory / dry-run READY_WITH_RISK，不授权真实迁移、NAS、lake、git push、Windows full mount、runtime、凭据读取或自动启动 CR058/CR060+。"
+last_action: 用户回复“同意”，CR053 CP8 人工检查点已按 approve 回填；CR053 静态 migration inventory / dry-run 当前交付关闭为 closed-current-delivery。
+next_action: "CR053 已关闭；不自动启动 CR058 / CR060+ / data lake migration / trading runtime，也不授权真实迁移、NAS、lake、git remote、runtime 或凭据读取。CR046 仍保持用户暂停的 CP6 PASS / ready-for-verification 恢复点；后续若要真实迁移，需用户另行明确启动独立 CR / gate。"
 canonical_project_name: quant-lab
 legacy_project_alias: local_backtest
 cr_tracking:
   status: "active-formal-cr"
   index_path: process/changes/CR-INDEX.yaml
-  last_consistency_check: 'PASS at 2026-06-14T13:04:51+08:00 via uv run --python 3.11 python scripts/check_cr_tracking_consistency.py --project-root .'
+  last_consistency_check: 'PASS at 2026-06-14T13:45:17+08:00 via uv run --python 3.11 python scripts/check_cr_tracking_consistency.py --project-root .'
   active_crs:
   - id: CR-046
     title: QMT and MiniQMT Dual-Target Strategy Delivery Framework
@@ -52,13 +52,15 @@ cr_tracking:
     next_gate: User Paused before CP7 Verification
     next_action: 等待用户明确恢复 CR046 后再进入 CP7 verification-execution；挂起期间不调度 CP7、不启动 CR047/CR048/CR049、不执行真实运行 / 交易 / 凭据 / 传输导入。CR051 已关闭当前 Git 内交付，但不授权真实迁移、后续 CR 自动启动或 runtime。
     last_checked_at: '2026-06-14T00:29:41+08:00'
+  closed_crs:
   - id: CR-053
     title: quant-lab Migration Inventory and Dry-run
-    status: active-cp8-ready-for-human-review
+    status: closed-current-delivery
     source_tracking: USER-20260614-START-CR053-MIGRATION-INVENTORY
     formal_cr_path: process/changes/CR-053-QUANT-LAB-MIGRATION-INVENTORY-AND-DRY-RUN-2026-06-14.md
+    follow_up_tracking: process/changes/CR-053-FOLLOW-UP-TRACKING-2026-06-14.md
     priority: 1
-    blocked_by: 'cp8-ready-for-human-review: meta-qa/qa-jin 完成 CR053 CP8 release-readiness，生成 release context、release notes、deploy checklist、rollback、migration、feedback、follow-up tracking、CP8 自动预检和人工检查点；自动预检 READY_WITH_RISK。CR046 remains paused at CP6 PASS / ready-for-verification. CR053 当前等待用户 approve / 修改 / reject；不授权运行 inventory、真实目录重命名、文件移动、NAS 操作、external archive migration、provider/lake/publish、QMT/MiniQMT runtime、凭据读取、git push/tag 或重写历史。'
+    blocked_by: 'closed: 用户于 2026-06-14T13:42:40+08:00 回复“同意”，接受 CP8 READY_WITH_RISK；CR053 当前静态 migration inventory / dry-run 交付关闭为 closed-current-delivery。真实 repo-local mechanical move、NAS / archive real migration、data lake migration、trading runtime、凭据读取、git push/tag/remote rename/history rewrite 或自动启动 CR058/CR060+ 均不授权，后续必须另起独立 CR / runtime_authorization gate。CR046 remains paused at CP6 PASS / ready-for-verification.'
     impact_surface:
     - project migration inventory
     - quant-lab canonical identity
@@ -78,10 +80,9 @@ cr_tracking:
     - forbidden_content_boundary
     - CR053
     - CR051_follow_up
-    next_gate: CR053 CP8 human review
-    next_action: "等待用户审查 process/checkpoints/CP8-CR053-DELIVERY-READINESS.md；可回复 approve / 修改: <具体修改点> / reject。approve 表示接受 3 项推荐方案并关闭 CR053 静态交付，不授权 9 项禁止操作。"
-    last_checked_at: '2026-06-14T13:05:00+08:00'
-  closed_crs:
+    next_gate: closed
+    next_action: CR053 已关闭为 READY_WITH_RISK；CR058 / CR060+ / data lake migration / trading runtime 仅为后续候选，不自动启动，真实迁移需用户另行授权。
+    last_checked_at: '2026-06-14T13:42:40+08:00'
   - id: CR-051
     title: Strategy Research Lifecycle Framework and Strategy Taxonomy
     status: closed-current-delivery
@@ -744,9 +745,9 @@ cr_tracking:
     不占执行锁
   consistency_check: scripts/check_cr_tracking_consistency.py --project-root .
 human_gate_decisions:
-  status: awaiting-user
-  pending_gate: CP8-CR053
-  pending_checklist_path: process/checkpoints/CP8-CR053-DELIVERY-READINESS.md
+  status: approved
+  pending_gate: ''
+  pending_checklist_path: ''
   launch_message_path: process/checks/CP8-CR053-HUMAN-GATE-LAUNCH-MESSAGE.md
   pending_human_decisions:
   - id: DQ-CP8-CR053-01
@@ -760,9 +761,9 @@ human_gate_decisions:
     pros_cons: 推荐方案不扩大授权、能收敛当前 CR；备选可降低真实迁移未知，但会突破静态 dry-run 范围。
     impact_risk: 接受后仍不能真实迁移；后续需独立授权。
     rollback_switch: 用户要求先做真实环境验证时切换 NOT_READY。
-    status: pending
-    decided_by: ''
-    decided_at: ''
+    status: approved
+    decided_by: user
+    decided_at: '2026-06-14T13:42:40+08:00'
     source: process/checkpoints/CP8-CR053-DELIVERY-READINESS.md
   - id: DQ-CP8-CR053-02
     gate: CP8
@@ -775,9 +776,9 @@ human_gate_decisions:
     pros_cons: 推荐方案保持安全边界；备选可能满足即时执行诉求但风险高且需要完整 runtime evidence。
     impact_risk: 若误授权会导致数据、凭据、交易或 Git history 风险。
     rollback_switch: 用户指定单项操作、范围、路径、窗口、回滚和安全条件后，另起新 CR。
-    status: pending
-    decided_by: ''
-    decided_at: ''
+    status: approved
+    decided_by: user
+    decided_at: '2026-06-14T13:42:40+08:00'
     source: process/checkpoints/CP8-CR053-DELIVERY-READINESS.md
   - id: DQ-CP8-CR053-03
     gate: CP8
@@ -790,9 +791,9 @@ human_gate_decisions:
     pros_cons: 推荐方案保留路线图但不扩大本轮；合并推进会混淆 close gate 和真实执行。
     impact_risk: 后续候选不代表承诺执行；需要再次确认。
     rollback_switch: 用户明确推进或取消某个候选时更新 tracking。
-    status: pending
-    decided_by: ''
-    decided_at: ''
+    status: approved
+    decided_by: user
+    decided_at: '2026-06-14T13:42:40+08:00'
     source: process/checkpoints/CP8-CR053-DELIVERY-READINESS.md
   - id: DQ-CP5-CR053-01
     gate: CP5
@@ -9636,17 +9637,17 @@ orchestrator_session:
   agent_id: ''
   agent_name: host-orchestrator
   thread_id: ''
-  workflow_id: local_backtest-cr053
-  active_change: "CR-053"
-  status: awaiting-user
-  pending_gate: CP8-CR053
-  pending_checklist_path: process/checkpoints/CP8-CR053-DELIVERY-READINESS.md
-  pending_user_decision: "approve / 修改: <具体修改点> / reject"
-  pending_decision_ids:
+  workflow_id: local_backtest-cr046
+  active_change: "CR-046"
+  status: active-paused-formal-cr
+  pending_gate: ''
+  pending_checklist_path: ''
+  pending_user_decision: ''
+  pending_decision_ids: []
+  approved_decision_ids:
   - DQ-CP8-CR053-01
   - DQ-CP8-CR053-02
   - DQ-CP8-CR053-03
-  approved_decision_ids:
   - DQ-CP5-CR053-01
   - DQ-CP5-CR053-02
   - DQ-CP5-CR053-03
@@ -9713,7 +9714,7 @@ orchestrator_session:
   - QMT / MiniQMT runtime、连接、查询账户或交易动作
   - git push、tag、远端仓库改名或历史重写
   - 启动 CR058 / CR060+ 或执行真实迁移
-  resume_instruction: "CR053 CP8 release-readiness 已由 meta-qa/qa-jin 完成，release context=process/release/RELEASE-CONTEXT-CR053.yaml，checkpoint=process/checkpoints/CP8-CR053-DELIVERY-READINESS.md，launch message=process/checks/CP8-CR053-HUMAN-GATE-LAUNCH-MESSAGE.md。当前等待用户 approve / 修改: <具体修改点> / reject。CP8 只允许交付就绪和人工终验，不授权真实迁移、NAS mount/scan/mkdir/copy/delete、MARKET_DATA_LAKE_ROOT 替换、Windows full mount、凭据读取、provider/lake/publish、QMT/MiniQMT runtime、git push/tag/远端改名或启动 CR058/CR060+。"
+  resume_instruction: "CR053 CP8 已由用户回复“同意”批准并关闭为 closed-current-delivery；release context=process/release/RELEASE-CONTEXT-CR053.yaml，checkpoint=process/checkpoints/CP8-CR053-DELIVERY-READINESS.md。CR053 close 不授权真实迁移、NAS mount/scan/mkdir/copy/delete、MARKET_DATA_LAKE_ROOT 替换、Windows full mount、凭据读取、provider/lake/publish、QMT/MiniQMT runtime、git push/tag/远端改名或启动 CR058/CR060+。CR046 仍保持用户暂停的 CP6 PASS / ready-for-verification 恢复点。"
   cr051_cp4_story_planning_dispatch:
     mode: inline-host-orchestrator
     agent_id: ''
