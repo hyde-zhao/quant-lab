@@ -1,0 +1,51 @@
+schema_version: "1.0"
+context_id: "CP3-CR053-DESIGN-CONTEXT"
+change_id: "CR-053"
+status: ready-for-review
+phase: solution-design
+read_profile: compact
+created_at: "2026-06-14T10:02:00+08:00"
+updated_at: "2026-06-14T10:02:00+08:00"
+owner: host-orchestrator
+
+source_inputs:
+  cp2_context: "process/context/CP2-CR053-REQUIREMENT-CONTEXT.yaml"
+  cp2_checkpoint: "process/checkpoints/CP2-CR053-REQUIREMENTS-BASELINE.md"
+  user_added_input: "NAS 不扫描，但必须给出 NAS 目录使用、数据传输、目录映射、备份方案。"
+  archive_governance: "docs/research/ARCHIVE-GOVERNANCE.md"
+  host_workflow: "docs/research/HOST-WORKFLOW.md"
+  identity_migration: "docs/research/PROJECT-IDENTITY-MIGRATION.md"
+
+artifacts:
+  hld: "docs/design/HLD-CR053-QUANT-LAB-MIGRATION-INVENTORY-AND-DRY-RUN.md"
+  adr: "docs/design/ARCHITECTURE-DECISION-CR053.md"
+  discussion_log: "process/discussions/CP3-CR053-HLD-DISCUSSION-LOG.md"
+  discussion_checkpoint: "process/checks/CP3-CR053-DISCUSSION-CHECKPOINT.json"
+  auto_check: "process/checks/CP3-CR053-HLD-CONSISTENCY.md"
+  manual_checkpoint: "process/checkpoints/CP3-CR053-HLD-REVIEW.md"
+
+decision_items:
+  - id: DQ-CP3-CR053-01
+    type: architecture
+    summary: "Use logical NAS root mapping instead of real NAS scan."
+  - id: DQ-CP3-CR053-02
+    type: implementation
+    summary: "Use manifest-first two-phase transfer."
+  - id: DQ-CP3-CR053-03
+    type: architecture
+    summary: "Use 4T RAID as warm archive and 14T HDD as cold backup; hot cache is not durable."
+  - id: DQ-CP3-CR053-04
+    type: runtime_authorization
+    summary: "Real migration happens in CR058 CP6, not CR053."
+  - id: DQ-CP3-CR053-05
+    type: security
+    summary: "Trading PC only consumes read-only package exchange, no full archive mount."
+
+not_authorized:
+  - "NAS scan / mount / copy / delete / migration"
+  - "real directory rename / file move"
+  - "git push / tag publish / history rewrite"
+  - "credential / account / token / .env read"
+  - "provider fetch / lake write / catalog publish"
+  - "QMT / MiniQMT runtime"
+  - "submit / cancel / simulation / live"

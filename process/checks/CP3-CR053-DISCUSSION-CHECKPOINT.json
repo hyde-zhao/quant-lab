@@ -1,0 +1,31 @@
+{
+  "checkpoint_id": "CP3-CR053-DISCUSSION-CHECKPOINT",
+  "change_id": "CR-053",
+  "status": "ready-for-cp3-review",
+  "created_at": "2026-06-14T10:02:00+08:00",
+  "owner": "host-orchestrator",
+  "discussion_log": "process/discussions/CP3-CR053-HLD-DISCUSSION-LOG.md",
+  "architecture_gray_areas": [
+    "AGA-CR053-01",
+    "AGA-CR053-02",
+    "AGA-CR053-03",
+    "AGA-CR053-04"
+  ],
+  "decision_items": [
+    "DQ-CP3-CR053-01",
+    "DQ-CP3-CR053-02",
+    "DQ-CP3-CR053-03",
+    "DQ-CP3-CR053-04",
+    "DQ-CP3-CR053-05"
+  ],
+  "not_authorized": [
+    "nas_scan_mount_copy_delete_migration",
+    "real_directory_rename_or_file_move",
+    "git_push_tag_publish_or_history_rewrite",
+    "credential_account_token_env_read",
+    "provider_fetch_lake_write_catalog_publish",
+    "qmt_miniqmt_import_connection_runtime",
+    "submit_cancel_simulation_live_trading"
+  ],
+  "next_gate": "process/checkpoints/CP3-CR053-HLD-REVIEW.md"
+}

@@ -5,6 +5,7 @@ change: "CR-046"
 legacy_source: "process/ARCHITECTURE-DECISION.md"
 current_change_sources:
   - "docs/design/ARCHITECTURE-DECISION-CR046.md"
+  - "docs/design/ARCHITECTURE-DECISION-CR053.md"
 ---
 
 # Architecture Decision Current Index
@@ -15,6 +16,7 @@ current_change_sources:
 |---|---|---|---|
 | 1.0 | 2026-06-07 | meta-po | 新增 ADR 长期索引，按 Feature / Epic 聚合 legacy ADR 范围 |
 | 1.1 | 2026-06-13 | meta-po | 按 CR-046 增补双目标策略交付框架 ADR 入口 |
+| 1.2 | 2026-06-14 | host-orchestrator | 按 CR-053 增补 quant-lab migration inventory / dry-run ADR 入口 |
 
 ## 定位
 
@@ -33,6 +35,7 @@ current_change_sources:
 | FEAT-07 安全授权治理 | ADR-051、ADR-061、ADR-071..073、ADR-086、ADR-090..093 | 真实操作授权、redaction、HMAC / scope、fallback、no-real-operation、安全边界 |
 | FEAT-08 文档 / Runbook | ADR 派生，不单独编号 | README、USER-MANUAL、QMT runbook 和 CP8 只作为用户操作与审计入口，不提供 runtime authorization |
 | FEAT-09 QMT / MiniQMT 双目标策略交付框架 | ADR-CR046-001..006 | 独立 FEAT-09、平台无关策略核心、MiniQMT runner 安装设计、验证证据分级、CR047/CR051 后置 |
+| FEAT-10 Strategy Research Lifecycle / quant-lab Migration Governance | ADR-CR053-001..005 | NAS 逻辑目录映射、manifest-first 数据传输、warm/cold 备份、真实迁移 CR058 后置、交易主机只读 package exchange |
 
 ## 使用规则
 
@@ -42,4 +45,5 @@ current_change_sources:
 | 是否允许新增依赖 | 查对应 ADR 和 `docs/design/DEPENDENCY-MAP.md`；默认不允许外部框架 / QMT / DuckDB 依赖变更 |
 | 是否允许真实操作 | ADR 只能给出设计边界；真实操作必须另有 CP / per-run authorization |
 | 审查 CR046 ADR | 读取 `docs/design/ARCHITECTURE-DECISION-CR046.md` |
+| 审查 CR053 ADR | 读取 `docs/design/ARCHITECTURE-DECISION-CR053.md` |
 | ADR 与蓝图冲突 | 以 legacy ADR 正文和 HLD 事实为准，修订蓝图索引 |
