@@ -56,7 +56,7 @@ active_crs:
   last_checked_at: '2026-06-14T00:29:41+08:00'
 - id: CR-051
   title: Strategy Research Lifecycle Framework and Strategy Taxonomy
-  status: active-cp4-pass-pending-cp5-design-evidence
+  status: active-cp5-review-pending
   source_tracking: USER-20260614-START-CR051-DESIGN
   formal_cr_path: process/changes/CR-051-STRATEGY-RESEARCH-LIFECYCLE-FRAMEWORK-2026-06-14.md
   priority: 1
@@ -83,9 +83,9 @@ active_crs:
   - legacy_alias
   - CR051
   - CR046_follow_up
-  next_gate: CR051 CP5 design evidence batch
-  next_action: 为 CR051-S01..S04 生成 full-lld，为 CR051-S05..S06 生成 technical-note，并准备 `process/checkpoints/CP5-CR051-STRATEGY-RESEARCH-LIFECYCLE-BATCH-A-LLD-BATCH.md`；CP5 前仍不授权实现、目录重命名、NAS 操作、外部 archive 搬迁、provider/lake/publish、QMT/MiniQMT runtime、凭据读取或 Git push。
-  last_checked_at: '2026-06-14T08:19:09+08:00'
+  next_gate: CR051 CP5 human review
+  next_action: 用户审查 `process/checkpoints/CP5-CR051-STRATEGY-RESEARCH-LIFECYCLE-BATCH-A-LLD-BATCH.md`；若 approve，后续才能把 Story 推进到 lld-approved / dev-ready 计算。CP5 前仍不授权实现、目录重命名、NAS 操作、外部 archive 搬迁、provider/lake/publish、QMT/MiniQMT runtime、凭据读取或 Git push。
+  last_checked_at: '2026-06-14T08:46:04+08:00'
 closed_crs:
 - id: CR-045
   title: Goldminer Windows Bridge Readonly Probe

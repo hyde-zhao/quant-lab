@@ -1,6 +1,6 @@
 project_id: "local_backtest"
 version: "1.7"
-status: "cr051-story-plan-cp4-pass-pending-lld"
+status: "cr051-cp5-review-pending"
 confirmed: true
 confirmed_by: "user"
 confirmed_at: "2026-05-14"
@@ -87,7 +87,7 @@ cr046_implementation_allowed: false
 cr046_qmt_runtime_validation_authorized: false
 cr046_miniqmt_connection_authorized: false
 cr046_submit_cancel_authorized: false
-cr051_status: "story-plan-cp4-pass-pending-lld"
+cr051_status: "cp5-review-pending"
 cr051_confirmed: false
 cr051_formal_cr: "process/changes/CR-051-STRATEGY-RESEARCH-LIFECYCLE-FRAMEWORK-2026-06-14.md"
 cr051_lld_batches:
@@ -101,7 +101,7 @@ cr051_git_push_authorized: false
 
 cr051_story_planning:
   change_id: "CR-051"
-  status: "story-plan-cp4-pass-pending-lld"
+  status: "cp5-review-pending"
   cp4_check: "process/checks/CP4-CR051-STORY-DAG-PARALLEL-SAFETY.md"
   feature_design_matrix: "docs/design/FEATURE-DESIGN-MATRIX.md"
   required_feature_design:
@@ -111,8 +111,16 @@ cr051_story_planning:
     tasks: "docs/features/strategy-research-lifecycle/TASKS.md"
   cp5_batch: "CR051-STRATEGY-RESEARCH-LIFECYCLE-BATCH-A"
   cp5_manual_review: "process/checkpoints/CP5-CR051-STRATEGY-RESEARCH-LIFECYCLE-BATCH-A-LLD-BATCH.md"
-  cp5_manual_status: "not-started"
-  cp5_auto_status: "not-started"
+  cp5_manual_status: "pending"
+  cp5_auto_status: "PASS"
+  cp5_context: "process/context/CP5-CR051-LLD-CONTEXT.yaml"
+  cp5_auto_results:
+    - "process/checks/CP5-CR051-S01-lifecycle-and-taxonomy-framework-LLD-IMPLEMENTABILITY.md"
+    - "process/checks/CP5-CR051-S02-repository-archive-and-data-lake-governance-LLD-IMPLEMENTABILITY.md"
+    - "process/checks/CP5-CR051-S03-research-pc-and-trading-pc-workflow-LLD-IMPLEMENTABILITY.md"
+    - "process/checks/CP5-CR051-S04-registry-and-evidence-contracts-LLD-IMPLEMENTABILITY.md"
+    - "process/checks/CP5-CR051-S05-follow-up-cr-roadmap-and-admission-gates-TECHNICAL-NOTE-IMPLEMENTABILITY.md"
+    - "process/checks/CP5-CR051-S06-project-identity-rename-and-legacy-alias-TECHNICAL-NOTE-IMPLEMENTABILITY.md"
   lld_policy_summary:
     full_lld:
       - "CR051-S01-lifecycle-and-taxonomy-framework"
@@ -137,13 +145,13 @@ cr051_story_planning:
           assignee: "meta-dev"
           depends_on: []
           dependency_type: []
-          status: "lld-ready"
+          status: "lld-ready-for-review"
           output_files:
             - "docs/research/LIFECYCLE.md"
             - "docs/research/STRATEGY-TAXONOMY.md"
           lld_gate:
             required: true
-            status: "not-started"
+            status: "ready-for-review"
             required_level: "full-lld"
         - story_id: "CR051-S02-repository-archive-and-data-lake-governance"
           title: "仓库、研究归档与数据湖边界治理"
@@ -151,13 +159,13 @@ cr051_story_planning:
           assignee: "meta-dev"
           depends_on: []
           dependency_type: []
-          status: "lld-ready"
+          status: "lld-ready-for-review"
           output_files:
             - "docs/research/ARCHIVE-GOVERNANCE.md"
             - "docs/research/RESEARCH-ARCHIVE-MANIFEST-SPEC.md"
           lld_gate:
             required: true
-            status: "not-started"
+            status: "ready-for-review"
             required_level: "full-lld"
         - story_id: "CR051-S06-project-identity-rename-and-legacy-alias"
           title: "项目身份改名与 legacy alias 兼容"
@@ -165,12 +173,12 @@ cr051_story_planning:
           assignee: "meta-dev"
           depends_on: []
           dependency_type: []
-          status: "lld-ready"
+          status: "lld-ready-for-review"
           output_files:
             - "docs/research/PROJECT-IDENTITY-MIGRATION.md"
           lld_gate:
             required: true
-            status: "not-started"
+            status: "ready-for-review"
             required_level: "technical-note"
     - wave: "CR051-W2-HOST-REGISTRY"
       parallel_lld: true
@@ -189,12 +197,12 @@ cr051_story_planning:
           dependency_type:
             - "contract"
             - "alias-policy"
-          status: "lld-ready"
+          status: "lld-ready-for-review"
           output_files:
             - "docs/research/HOST-WORKFLOW.md"
           lld_gate:
             required: true
-            status: "not-started"
+            status: "ready-for-review"
             required_level: "full-lld"
         - story_id: "CR051-S04-registry-and-evidence-contracts"
           title: "研究 registry 与证据合同"
@@ -206,12 +214,12 @@ cr051_story_planning:
           dependency_type:
             - "contract"
             - "manifest-boundary"
-          status: "lld-ready"
+          status: "lld-ready-for-review"
           output_files:
             - "docs/research/RESEARCH-REGISTRY-SPEC.md"
           lld_gate:
             required: true
-            status: "not-started"
+            status: "ready-for-review"
             required_level: "full-lld"
     - wave: "CR051-W3-FOLLOW-UP-GATES"
       parallel_lld: false
@@ -232,12 +240,12 @@ cr051_story_planning:
           dependency_type:
             - "contract"
             - "handoff"
-          status: "lld-ready"
+          status: "lld-ready-for-review"
           output_files:
             - "process/changes/CR-051-STRATEGY-RESEARCH-LIFECYCLE-FRAMEWORK-2026-06-14.md"
           lld_gate:
             required: true
-            status: "not-started"
+            status: "ready-for-review"
             required_level: "technical-note"
   dependency_graph:
     nodes:

@@ -2,7 +2,7 @@
 story_id: "CR051-S03-research-pc-and-trading-pc-workflow"
 title: "研究主机与交易主机工作流边界"
 story_slug: "research-pc-and-trading-pc-workflow"
-status: "lld-ready"
+status: "lld-ready-for-review"
 priority: "P0"
 wave: "CR051-W2-HOST-REGISTRY"
 depends_on:
@@ -39,7 +39,7 @@ lld_gate:
     - "CR051-S06-project-identity-rename-and-legacy-alias"
   design_evidence_type: "full-lld"
   design_evidence_path: "process/stories/CR051-S03-research-pc-and-trading-pc-workflow-LLD.md"
-  status: "not-started"
+  status: "ready-for-review"
 implementation_gate:
   evidence_required: true
   evidence_path: ""
@@ -56,7 +56,7 @@ dev_gate:
   file_conflict_free: true
 task_count: 1
 created_at: "2026-06-14T08:19:09+08:00"
-updated_at: "2026-06-14T08:19:09+08:00"
+updated_at: "2026-06-14T08:46:04+08:00"
 change_id: "CR-051"
 ---
 

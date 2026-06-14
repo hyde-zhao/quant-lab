@@ -2,7 +2,7 @@
 story_id: "CR051-S02-repository-archive-and-data-lake-governance"
 title: "仓库、研究归档与数据湖边界治理"
 story_slug: "repository-archive-and-data-lake-governance"
-status: "lld-ready"
+status: "lld-ready-for-review"
 priority: "P0"
 wave: "CR051-W1-LIFECYCLE-ARCHIVE-IDENTITY"
 depends_on: []
@@ -37,7 +37,7 @@ lld_gate:
     - "docs/features/strategy-research-lifecycle/DESIGN.md"
   design_evidence_type: "full-lld"
   design_evidence_path: "process/stories/CR051-S02-repository-archive-and-data-lake-governance-LLD.md"
-  status: "not-started"
+  status: "ready-for-review"
 implementation_gate:
   evidence_required: true
   evidence_path: ""
@@ -54,7 +54,7 @@ dev_gate:
   file_conflict_free: true
 task_count: 2
 created_at: "2026-06-14T08:19:09+08:00"
-updated_at: "2026-06-14T08:19:09+08:00"
+updated_at: "2026-06-14T08:46:04+08:00"
 change_id: "CR-051"
 ---
 
