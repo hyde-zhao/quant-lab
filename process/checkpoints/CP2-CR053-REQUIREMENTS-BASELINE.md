@@ -2,11 +2,11 @@
 checkpoint_id: "CP2-CR053"
 checkpoint_name: "CR053 Requirements / Migration Inventory and Dry-run Baseline"
 type: "auto_then_manual"
-status: "pending"
+status: "approved"
 owner: "host-orchestrator"
 created_at: "2026-06-14T09:39:26+08:00"
-reviewed_by: ""
-reviewed_at: ""
+reviewed_by: "user"
+reviewed_at: "2026-06-14T09:51:11+08:00"
 auto_check_result: "process/checks/CP2-CR053-REQUIREMENTS-BASELINE.md"
 auto_final_authorization: false
 target:
@@ -97,42 +97,42 @@ target:
 
 | 条目 | 状态 | 证据 | 审查意见 |
 |---|---|---|---|
-| 自动预检 PASS | 待审查 | `process/checks/CP2-CR053-REQUIREMENTS-BASELINE.md` | 阻断项 0。 |
-| 待人工决策项已收集 | 待审查 | 本文件 Decision Brief | DQ-CR053-01..05。 |
-| 不授权边界已用户可见 | 待审查 | 本文件“不授权项” | CP2 approve 不授权真实迁移。 |
+| 自动预检 PASS | 通过 | `process/checks/CP2-CR053-REQUIREMENTS-BASELINE.md` | 阻断项 0。 |
+| 待人工决策项已收集 | 通过 | 本文件 Decision Brief | DQ-CR053-01..05 已接受推荐方案。 |
+| 不授权边界已用户可见 | 通过 | 本文件“不授权项” | CP2 approve 不授权真实迁移。 |
 
 ## Checklist
 
 | # | 检查项 | 审查结果 | 证据 | 审查意见 |
 |---|---|---|---|---|
-| 1 | 是否接受 CR053 只做 migration inventory / dry-run 设计 | 待审查 | DQ-CR053-01 |  |
-| 2 | 是否接受首版 inventory surface 限定为 Git 内对象 | 待审查 | DQ-CR053-02 |  |
-| 3 | 是否继续禁止凭据 / runtime / provider / lake / publish / 交易动作 | 待审查 | DQ-CR053-03 |  |
-| 4 | 是否接受 CR053 编号冲突处理 | 待审查 | DQ-CR053-04 |  |
-| 5 | 是否确认 CP2 approve 不授权执行 inventory / 迁移 / push | 待审查 | DQ-CR053-05 |  |
+| 1 | 是否接受 CR053 只做 migration inventory / dry-run 设计 | 通过 | DQ-CR053-01 | 用户回复“好的，同意”，接受推荐方案。 |
+| 2 | 是否接受首版 inventory surface 限定为 Git 内对象 | 通过 | DQ-CR053-02 | 接受推荐方案。 |
+| 3 | 是否继续禁止凭据 / runtime / provider / lake / publish / 交易动作 | 通过 | DQ-CR053-03 | 接受推荐方案。 |
+| 4 | 是否接受 CR053 编号冲突处理 | 通过 | DQ-CR053-04 | 接受推荐方案。 |
+| 5 | 是否确认 CP2 approve 不授权执行 inventory / 迁移 / push | 通过 | DQ-CR053-05 | 接受推荐方案；仅放行 CP3 设计。 |
 
 ## Exit Criteria
 
 | 条目 | 审查结果 | 证据 | 审查意见 |
 |---|---|---|---|
-| 用户明确 approve / 修改 / reject | 待审查 | 当前对话 | 等待用户回复。 |
-| 无阻断项 | 待审查 | CP2 自动预检 | PASS。 |
-| 不授权边界明确 | 待审查 | 本文件“不授权项” | CP2 只放行 CP3 设计。 |
+| 用户明确 approve / 修改 / reject | 通过 | 当前对话：用户回复“好的，同意” | 按 approve 处理。 |
+| 无阻断项 | 通过 | CP2 自动预检 | PASS。 |
+| 不授权边界明确 | 通过 | 本文件“不授权项” | CP2 只放行 CP3 设计。 |
 
 ## Deliverables
 
 | 交付物 | 路径 | 审查结果 | 审查意见 |
 |---|---|---|---|
-| CR053 正式 CR | `process/changes/CR-053-QUANT-LAB-MIGRATION-INVENTORY-AND-DRY-RUN-2026-06-14.md` | 待审查 |  |
-| CP2 Context Capsule | `process/context/CP2-CR053-REQUIREMENT-CONTEXT.yaml` | 待审查 |  |
-| CP2 自动预检 | `process/checks/CP2-CR053-REQUIREMENTS-BASELINE.md` | 待审查 |  |
-| CP2 场景讨论日志 | `process/discussions/CP2-CR053-SCENARIO-DISCUSSION-LOG.md` | 待审查 |  |
-| CP2 讨论恢复点 | `process/checks/CP2-CR053-DISCUSSION-CHECKPOINT.json` | 待审查 |  |
+| CR053 正式 CR | `process/changes/CR-053-QUANT-LAB-MIGRATION-INVENTORY-AND-DRY-RUN-2026-06-14.md` | 通过 | 可进入 CP3 设计。 |
+| CP2 Context Capsule | `process/context/CP2-CR053-REQUIREMENT-CONTEXT.yaml` | 通过 | approved。 |
+| CP2 自动预检 | `process/checks/CP2-CR053-REQUIREMENTS-BASELINE.md` | 通过 | PASS。 |
+| CP2 场景讨论日志 | `process/discussions/CP2-CR053-SCENARIO-DISCUSSION-LOG.md` | 通过 | SGQ-CR053-01..05 已确认。 |
+| CP2 讨论恢复点 | `process/checks/CP2-CR053-DISCUSSION-CHECKPOINT.json` | 通过 | approved。 |
 
 ## 人工审查结果
 
-- 结论：`approved | changes_requested | rejected`
-- 审查人：
-- 审查时间：
-- 修改意见：
-- 风险接受项：
+- 结论：`approved`
+- 审查人：user
+- 审查时间：2026-06-14T09:51:11+08:00
+- 修改意见：无；用户回复“好的，同意”。
+- 风险接受项：接受 DQ-CR053-01..05 推荐方案；CP2 approve 只允许进入 CP3 设计，不授权运行 inventory、真实目录重命名 / 文件移动、NAS 操作、external archive migration、provider/lake/publish、QMT/MiniQMT runtime、submit/cancel、simulation/live、账户查询、凭据读取、git push/tag 或重写历史。

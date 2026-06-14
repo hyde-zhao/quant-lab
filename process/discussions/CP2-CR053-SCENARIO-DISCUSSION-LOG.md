@@ -1,7 +1,7 @@
 ---
 cr_id: CR-053
 discussion_id: CP2-CR053-SCENARIO-DISCUSSION
-status: ready-for-cp2-review
+status: approved
 owner: host-orchestrator
 created_at: 2026-06-14T09:39:26+08:00
 ---
@@ -16,11 +16,11 @@ created_at: 2026-06-14T09:39:26+08:00
 
 | 问题 ID | 问题 | 推荐方案 | 当前结论 | 影响 |
 |---|---|---|---|---|
-| SGQ-CR053-01 | `cr053` 是否解释为迁移 inventory / dry-run？ | 是。按最新 STATE / CR-INDEX 和用户当前指令启动迁移盘点 / dry-run。 | 等待 CP2 approve | 避免把本轮误转到事件型策略研究。 |
-| SGQ-CR053-02 | CR053 是否可以执行真实目录迁移？ | 不可以。CR053 CP2 只放行 CP3 设计。 | 等待 CP2 approve | 防止提前移动目录、改远端或破坏恢复点。 |
-| SGQ-CR053-03 | inventory 是否包含 NAS / 外部 archive？ | 首版不包含。只设计 Git 内 inventory / dry-run；NAS 和外部 archive 另行授权。 | 等待 CP2 approve | 避免访问外部存储和大数据。 |
-| SGQ-CR053-04 | 是否允许读取 `.env` 或凭据定位敏感路径？ | 不允许。敏感路径只能通过文件名 / ignore / manifest 规则静态识别，不读内容。 | 等待 CP2 approve | 维持凭据边界。 |
-| SGQ-CR053-05 | 旧事件型策略 CR053 候选如何处理？ | 改号为 `CR057-candidate`，不删除。 | 等待 CP2 approve | 保留策略路线追溯，释放 CR053 给迁移 dry-run。 |
+| SGQ-CR053-01 | `cr053` 是否解释为迁移 inventory / dry-run？ | 是。按最新 STATE / CR-INDEX 和用户当前指令启动迁移盘点 / dry-run。 | 用户已回复“好的，同意” | 避免把本轮误转到事件型策略研究。 |
+| SGQ-CR053-02 | CR053 是否可以执行真实目录迁移？ | 不可以。CR053 CP2 只放行 CP3 设计。 | 用户已回复“好的，同意” | 防止提前移动目录、改远端或破坏恢复点。 |
+| SGQ-CR053-03 | inventory 是否包含 NAS / 外部 archive？ | 首版不包含。只设计 Git 内 inventory / dry-run；NAS 和外部 archive 另行授权。 | 用户已回复“好的，同意” | 避免访问外部存储和大数据。 |
+| SGQ-CR053-04 | 是否允许读取 `.env` 或凭据定位敏感路径？ | 不允许。敏感路径只能通过文件名 / ignore / manifest 规则静态识别，不读内容。 | 用户已回复“好的，同意” | 维持凭据边界。 |
+| SGQ-CR053-05 | 旧事件型策略 CR053 候选如何处理？ | 改号为 `CR057-candidate`，不删除。 | 用户已回复“好的，同意” | 保留策略路线追溯，释放 CR053 给迁移 dry-run。 |
 
 ## 冻结场景草案
 
