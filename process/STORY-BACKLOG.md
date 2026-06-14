@@ -1,15 +1,15 @@
 ---
-version: "2.6"
-last_updated: "2026-06-13T23:06:37+08:00"
-status: "cr046-story-plan-cp4-pass-pending-lld"
+version: "2.7"
+last_updated: "2026-06-14T08:19:09+08:00"
+status: "cr051-story-plan-cp4-pass-pending-lld"
 confirmed: true
 confirmed_by: "user"
 confirmed_at: "2026-05-14"
 source_hld: "process/HLD.md"
 companion_hld: "process/HLD-DATA-LAKE.md"
 source_adr: "process/ARCHITECTURE-DECISION.md"
-story_count: 141
-wave_count: 64
+story_count: 147
+wave_count: 67
 baseline_story_count: 13
 cr004_story_count: 5
 cr005_story_count: 6
@@ -29,7 +29,8 @@ cr025_story_count: 6
 cr030_story_count: 8
 cr020_story_count: 6
 cr046_story_count: 7
-active_change: "CR-046"
+cr051_story_count: 6
+active_change: "CR-051"
 secondary_change: "CR-020/CR-030 legacy"
 cr004_status: "draft-pending-cp4"
 cr004_confirmed: false
@@ -71,6 +72,8 @@ cr025_status: "story-plan-cp4-pass-pending-lld"
 cr030_status: "story-plan-cp4-pass-pending-lld"
 cr046_status: "story-plan-cp4-pass-pending-lld"
 cr046_lld_batch: "CR046-DUAL-TARGET-FRAMEWORK-BATCH-A"
+cr051_status: "story-plan-cp4-pass-pending-lld"
+cr051_lld_batch: "CR051-STRATEGY-RESEARCH-LIFECYCLE-BATCH-A"
 cr020_status: "fixture-static-verified-pending-manual-windows-qmt-validation"
 cr015_lld_batches:
   - "CR015-QMT-FOUNDATION-BATCH-A"
@@ -88,6 +91,8 @@ cr030_lld_batches:
   - "CR030-MULTIFACTOR-RESEARCH-LOOP-BATCH-A"
 cr020_lld_batches:
   - "CR020-QMT-GATEWAY-READONLY-BATCH-A"
+cr051_lld_batches:
+  - "CR051-STRATEGY-RESEARCH-LIFECYCLE-BATCH-A"
 created_by: "meta-se"
 ---
 
@@ -126,6 +131,7 @@ created_by: "meta-se"
 | 2.4 | 2026-06-03 | meta-se | 按 CR-030 CP3 approved 口径追加 CR030-S01..S08 与 4 个增量 Wave：外部项目矩阵与总合同、FactorSpec / FactorRunSpec、FactorPanel / LabelWindow、单因子评价、多因子组合、ExperimentManifest / ResearchReportCatalog、StrategyAdmissionPackage / `order_intent_draft_v1` handoff、安全验证与文档边界；CP4 自动预检 PASS；本轮只做 Story Plan / CP4，不生成 LLD、不实现、不改依赖、不运行外部项目、不触发 provider/lake/publish/QMT/simulation/live、不读取凭据 |
 | 2.5 | 2026-06-05 | meta-se | 按 CR-020 CP3 approved 口径追加 CR020-S01..S06 与 4 个增量 Wave：Windows gateway runtime admission、S 端 QMT login / session ready gate、Linux C 端 REST transport、HMAC pairing / allowlist / scope / nonce fail-closed、`query_positions` 单接口只读准入、docs/runbook 与 CP7 实机只读验收边界；CP4 自动预检 PASS；本轮只做 Story Plan / CP4，不生成 LLD、不实现、不改依赖、不启动 gateway、不绑定端口、不连接 QMT / MiniQMT / XtQuant、不读取真实 `.env`、不输出凭据、不交易、不账户写入、不 simulation/live、不 provider/lake/publish/reports overwrite |
 | 2.6 | 2026-06-05 | meta-po | CR020-S01..S06 已完成 CP5 approved、代码 / 文档实现、CP6 PASS 与 CP7 fixture/static PASS；`75 passed`、`py_compile` PASS、`git diff --check` PASS，真实 `.env` 读取、gateway 启动、端口绑定、QMT 连接和真实 `query_positions` 均为 0。当前等待用户按 Windows S 端和 Linux C 端手工安装调试手册执行真实只读验证，CR-020 不关闭、不授权交易 / 账户写入 / simulation/live / provider/lake/publish / 凭据输出 |
+| 2.7 | 2026-06-14 | host-orchestrator | 按 CR-051 CP3 approved 口径追加 CR051-S01..S06 与 3 个增量 Wave：策略研究生命周期和 taxonomy、仓库 / 归档 / 数据湖边界、研究主机与交易主机工作流、registry / evidence 合同、后续 CR roadmap、`quant-lab` canonical name 与 `local_backtest` legacy alias；CP4 自动预检 PASS；本轮只做 Story Plan / CP4，不生成 LLD、不实现、不执行目录重命名、不操作 NAS、不运行 QMT / MiniQMT、不 provider/lake/publish、不 git push |
 
 ## Story 列表
 
@@ -792,3 +798,33 @@ graph TD
 | CR046-W2-TARGETS-INSTALL | 2 | 2 | 0 | 0 | 0 | 0 | 0 |
 | CR046-W3-VALIDATION-GATES | 1 | 1 | 0 | 0 | 0 | 0 | 0 |
 | CR046-W4-FOLLOW-UP-HANDOFF | 2 | 2 | 0 | 0 | 0 | 0 | 0 |
+
+## CR-051：策略研究生命周期与 quant-lab 迁移治理
+
+| 对象 | 状态 | 证据 | 下一步 |
+|---|---|---|---|
+| CP2 需求 / 场景基线 | approved | `process/checkpoints/CP2-CR051-REQUIREMENTS-BASELINE.md` | 已进入 CP3 / CP4 |
+| CP3 HLD / 架构决策 | approved | `process/checkpoints/CP3-CR051-HLD-REVIEW.md`、`docs/design/HLD-CR051-STRATEGY-RESEARCH-LIFECYCLE-FRAMEWORK.md` | 已批准单主仓库、外部 archive、硬件冷热分层、交易主机边界、阶段化迁移和 `quant-lab` 命名 |
+| Feature design | ready-for-cp5-review | `docs/design/FEATURE-DESIGN-MATRIX.md`、`docs/features/strategy-research-lifecycle/*` | 作为 S01..S06 的 CP5 输入 |
+| Story Plan / CP4 | PASS | `process/checks/CP4-CR051-STORY-DAG-PARALLEL-SAFETY.md` | 进入全量设计证据批次，CP5 前不得实现 |
+| LLD batch / CP5 | pending | `process/checkpoints/CP5-CR051-STRATEGY-RESEARCH-LIFECYCLE-BATCH-A-LLD-BATCH.md` | S01..S04 full-lld、S05..S06 technical-note 待生成并统一确认 |
+| 安全边界 | not-authorized | CP2 / CP3 / CP4 不授权项 | 不授权目录重命名、NAS 操作、外部 archive 搬迁、provider/lake/publish、QMT/MiniQMT runtime、凭据读取或 git push |
+
+### CR051 Story Plan 队列
+
+| Story ID | 标题 | Wave | 状态 | LLD 策略 | Dev Gate | 阻塞 |
+|---|---|---|---|---|---|---|
+| CR051-S01-lifecycle-and-taxonomy-framework | 策略研究生命周期与 taxonomy 框架 | CR051-W1-LIFECYCLE-ARCHIVE-IDENTITY | lld-ready | full-lld | blocked before CP5 | 无上游 Story；不得实现策略 |
+| CR051-S02-repository-archive-and-data-lake-governance | 仓库、研究归档与数据湖边界治理 | CR051-W1-LIFECYCLE-ARCHIVE-IDENTITY | lld-ready | full-lld | blocked before CP5 | 无上游 Story；不得操作 NAS / lake |
+| CR051-S06-project-identity-rename-and-legacy-alias | 项目身份改名与 legacy alias 兼容 | CR051-W1-LIFECYCLE-ARCHIVE-IDENTITY | lld-ready | technical-note | blocked before CP5 | 无上游 Story；不得真实重命名 / push |
+| CR051-S03-research-pc-and-trading-pc-workflow | 研究主机与交易主机工作流边界 | CR051-W2-HOST-REGISTRY | lld-ready | full-lld | blocked before CP5 | 依赖 S02 / S06 contract |
+| CR051-S04-registry-and-evidence-contracts | 研究 registry 与证据合同 | CR051-W2-HOST-REGISTRY | lld-ready | full-lld | blocked before CP5 | 依赖 S01 / S02 contract |
+| CR051-S05-follow-up-cr-roadmap-and-admission-gates | 后续 CR 路线与准入门禁 | CR051-W3-FOLLOW-UP-GATES | lld-ready | technical-note | blocked before CP5 | 依赖 S01..S04 contract |
+
+### CR051 Wave 进度
+
+| Wave | 总数 | lld-ready | lld-review | dev-ready | in-dev | verified | blocked |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| CR051-W1-LIFECYCLE-ARCHIVE-IDENTITY | 3 | 3 | 0 | 0 | 0 | 0 | 0 |
+| CR051-W2-HOST-REGISTRY | 2 | 2 | 0 | 0 | 0 | 0 | 0 |
+| CR051-W3-FOLLOW-UP-GATES | 1 | 1 | 0 | 0 | 0 | 0 | 0 |

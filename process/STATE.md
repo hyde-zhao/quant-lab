@@ -3,19 +3,19 @@ project_id: local_backtest
 workflow_mode: production
 current_phase: story-planning
 current_agent: host-orchestrator
-active_change: "CR-046"
+active_change: "CR-051"
 active_story: ''
-iteration: 457
+iteration: 458
 blocked: false
 blocked_reason: ''
-last_action: 用户回复“同意”，CR051 CP3 已回填 approved；接受 DQ-CP3-CR051-01..06，包括单主仓库、硬件冷热分层、交易主机边界、阶段化迁移、不授权真实操作和 `quant-lab` 正式命名。
-next_action: 进入 CR051 story-planning / CP4：生成或更新 BLUEPRINT / DOMAIN-MAP / DEPENDENCY-MAP / FEATURE-DESIGN-MATRIX、Story backlog、Development Plan 和 CP4 自动预检。CR046 仍保持 paused，不推进 CP7。
+last_action: CR051 CP4 Story Planning 已完成并 PASS；已补 FEAT-10 蓝图 / 领域 / 依赖 / Feature Matrix、Feature 三件套、Story Backlog、Development Plan、6 张 Story 卡片和 CP4 自动预检。
+next_action: 进入 CR051 CP5 设计证据写作批次：为 CR051-S01..S04 生成 full-lld，为 CR051-S05..S06 生成 technical-note，并准备 CP5 批次人工确认；CR046 仍保持 paused，不推进 CP7。
 canonical_project_name: quant-lab
 legacy_project_alias: local_backtest
 cr_tracking:
   status: "active-formal-cr"
   index_path: process/changes/CR-INDEX.yaml
-  last_consistency_check: 'PASS at 2026-06-14T08:03:59+08:00 via uv run --python 3.11 python scripts/check_cr_tracking_consistency.py --project-root .'
+  last_consistency_check: 'PASS at 2026-06-14T08:19:09+08:00 via uv run --python 3.11 python scripts/check_cr_tracking_consistency.py --project-root .'
   active_crs:
   - id: CR-046
     title: QMT and MiniQMT Dual-Target Strategy Delivery Framework
@@ -54,11 +54,11 @@ cr_tracking:
     last_checked_at: '2026-06-14T00:29:41+08:00'
   - id: CR-051
     title: Strategy Research Lifecycle Framework and Strategy Taxonomy
-    status: active-cp3-approved-ready-for-cp4
+    status: active-cp4-pass-pending-cp5-design-evidence
     source_tracking: USER-20260614-START-CR051-DESIGN
     formal_cr_path: process/changes/CR-051-STRATEGY-RESEARCH-LIFECYCLE-FRAMEWORK-2026-06-14.md
     priority: 1
-    blocked_by: 'parallel-design-authorized: CR046 remains paused at CP6 PASS / ready-for-verification, but user approved CR051 active-lock handling, CP2 and CP3 on 2026-06-14. CR051 may proceed to story-planning / CP4 only; it does not restore CR046 and does not authorize implementation, directory rename, runtime, provider, lake, publish, archive migration execution or git push.'
+    blocked_by: 'parallel-design-authorized: CR046 remains paused at CP6 PASS / ready-for-verification, but user approved CR051 active-lock handling, CP2 and CP3 on 2026-06-14. CR051 CP4 story-planning PASS allows CP5 design evidence writing only; it does not restore CR046 and does not authorize implementation, directory rename, runtime, provider, lake, publish, archive migration execution or git push.'
     impact_surface:
     - strategy research lifecycle
     - strategy taxonomy
@@ -81,9 +81,9 @@ cr_tracking:
     - legacy_alias
     - CR051
     - CR046_follow_up
-    next_gate: CR051 CP4 Story DAG and parallel safety
-    next_action: 生成或更新 CR051 story-planning 产物，并将正式项目名 `quant-lab`、legacy alias `local_backtest` 纳入 Story 拆解；不授权实现、目录重命名、NAS 操作、外部 archive 搬迁、provider/lake/publish、QMT/MiniQMT runtime 或 Git push。
-    last_checked_at: '2026-06-14T08:03:59+08:00'
+    next_gate: CR051 CP5 design evidence batch
+    next_action: 为 CR051-S01..S04 生成 full-lld，为 CR051-S05..S06 生成 technical-note，并准备 `process/checkpoints/CP5-CR051-STRATEGY-RESEARCH-LIFECYCLE-BATCH-A-LLD-BATCH.md`；CP5 前仍不授权实现、目录重命名、NAS 操作、外部 archive 搬迁、provider/lake/publish、QMT/MiniQMT runtime、凭据读取或 Git push。
+    last_checked_at: '2026-06-14T08:19:09+08:00'
   closed_crs:
   - id: CR-045
     title: Goldminer Windows Bridge Readonly Probe
@@ -9411,7 +9411,17 @@ orchestrator_session:
   - 查询资金 / 持仓 / 委托 / 成交
   - 下单 / 撤单 / simulation/live
   - provider fetch / lake write / catalog publish
-  resume_instruction: "CR051 CP3 已 approved，接受 DQ-CP3-CR051-01..06，其中 DQ-CP3-CR051-06 表示正式项目名采用 quant-lab、local_backtest 保留为 legacy alias。下一步进入 story-planning / CP4，生成或更新 BLUEPRINT / DOMAIN-MAP / DEPENDENCY-MAP / FEATURE-DESIGN-MATRIX、Story backlog、Development Plan 和 CP4 自动预检。CR046 仍保持 paused CP6 恢复点，不推进 CP7，不授权具体策略交付、目录重命名、NAS 操作、外部 archive 搬迁、真实传输/导入、QMT/MiniQMT runtime、submit/cancel、simulation/live、账户查询、凭据读取、provider/lake/publish 或 git push。"
+  resume_instruction: "CR051 CP4 已 PASS，FEAT-10 蓝图 / 领域 / 依赖 / Feature Matrix、Feature 三件套、Story Backlog、Development Plan、6 张 Story 卡片、CP4 自动预检和 CP5 context capsule 已生成。下一步进入 CP5 设计证据写作批次：S01..S04 full-lld，S05..S06 technical-note，然后发起 CP5 批次人工确认。CR046 仍保持 paused CP6 恢复点，不推进 CP7，不授权具体策略交付、目录重命名、NAS 操作、外部 archive 搬迁、真实传输/导入、QMT/MiniQMT runtime、submit/cancel、simulation/live、账户查询、凭据读取、provider/lake/publish 或 git push。"
+  cr051_cp4_story_planning_dispatch:
+    mode: inline-host-orchestrator
+    agent_id: ''
+    agent_name: host-orchestrator
+    thread_id: ''
+    tool_name: n/a
+    started_at: '2026-06-14T08:19:09+08:00'
+    completed_at: '2026-06-14T08:19:09+08:00'
+    handoff_path: ''
+    scope: CR-051 story-planning / CP4 only; generated FEAT-10 Blueprint / Domain / Dependency / Feature Matrix updates, Feature design docs, Story backlog, Development Plan, Story cards, CP4 precheck and CP5 context capsule. No implementation, no LLD evidence yet, no directory rename, no NAS operation, no QMT/MiniQMT runtime, no provider/lake/publish, no git push and no credential/account read.
   cp4_story_planning_dispatch:
     mode: inline-host-orchestrator
     agent_id: ''

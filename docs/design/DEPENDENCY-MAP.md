@@ -1,8 +1,8 @@
 ---
 status: "draft-current-index"
-version: "1.1"
+version: "1.2"
 source_blueprint: "docs/design/BLUEPRINT.md"
-change: "CR-046"
+change: "CR-051"
 ---
 
 # Dependency Map
@@ -13,6 +13,7 @@ change: "CR-046"
 |---|---|---|---|
 | 1.0 | 2026-06-07 | meta-po | 新增跨 Feature 允许依赖、禁止依赖和循环风险索引 |
 | 1.1 | 2026-06-13 | meta-po | 按 CR-046 增补 FEAT-09 双目标策略交付框架的允许依赖、禁止依赖和循环风险 |
+| 1.2 | 2026-06-14 | host-orchestrator | 按 CR-051 增补 FEAT-10 策略研究生命周期和项目迁移治理的依赖方向、禁止依赖和循环风险 |
 
 ## 依赖关系
 
@@ -30,6 +31,11 @@ change: "CR-046"
 | FEAT-09 双目标策略交付框架 | FEAT-04 OrderIntentDraft | read / schema alignment | allowed | 策略核心合同需要继承 order intent draft 语义 | CR046 static design review |
 | FEAT-09 双目标策略交付框架 | FEAT-07 安全授权 | runtime guard | allowed | 策略交付、runner 安装和验证证据必须受不授权边界约束 | CP3/CP5/CP7 |
 | FEAT-08 文档 Runbook | FEAT-09 双目标策略交付框架 | read / summarize | allowed | 用户手册需要说明策略包结构、QMT terminal 目标、MiniQMT runner 安装设计和不授权项 | CP8 |
+| FEAT-10 策略研究生命周期 | FEAT-02 数据湖 catalog / data release | read | allowed | 研究协议和 run manifest 只记录已发布数据 release 或 structured missing | CR051 manifest review |
+| FEAT-10 策略研究生命周期 | FEAT-03 StrategyAdmissionPackage | read / handoff | allowed | delivery_candidate 需要消费研究准入证据和 blocked claim | CR051 / CR052 |
+| FEAT-10 策略研究生命周期 | FEAT-09 StrategyCoreContract / StrategyValidationEvidence | read / contract alignment | allowed | 研究生命周期需要知道策略交付合同的最小证据字段 | CR051 CP5 |
+| FEAT-08 文档 Runbook | FEAT-10 策略研究生命周期 | read / summarize | allowed | README / USER-MANUAL 需要说明 quant-lab、archive 和迁移边界 | CP8 |
+| FEAT-07 安全授权 | FEAT-10 项目迁移治理 | guard / review | allowed | 迁移、archive、alias 和运行声明均必须受 no-real-operation 边界约束 | CP4/CP5/CP7 |
 
 ## 禁止依赖
 
@@ -51,6 +57,13 @@ change: "CR-046"
 | FD-14 | FEAT-09 策略包合同 | FEAT-06 OMS runtime submit/cancel | 策略包合同不得绕过 stage gate 触发订单 | FollowUpStrategyDeliveryGate + runtime authorization | 误触真实下单或撤单 |
 | FD-15 | FEAT-03 研究框架 | FEAT-09 target adapter runtime | 研究框架完善只能消费合同，不得直接驱动 QMT/MiniQMT | StrategyCoreContract / StrategyValidationEvidence | 研究执行路径变成交易运行路径 |
 | FD-16 | FEAT-09 交付文档 | runtime verified claim | 未执行 QMT / MiniQMT 真实验证时不得声明 runtime verified | 证据分级声明 | 用户误以为可直接运行 |
+| FD-17 | FEAT-10 研究生命周期 | provider SDK / lake write / catalog publish | CR051 只设计研究生命周期和归档治理，不授权补数、写湖或发布 | 记录 data release ref 或 structured missing | 污染事实源并误触真实数据生产 |
+| FD-18 | FEAT-10 迁移治理 | QMT / XtQuant / MiniQMT runtime | 项目迁移和研究 archive 不得触发交易终端或 runner | 只消费策略包合同和 redacted evidence | 误触 runtime 或账户环境 |
+| FD-19 | FEAT-10 archive | broker lake write | research archive 不拥有 broker facts | broker lake 独立 CR / stage gate | 敏感交易事实进入研究归档 |
+| FD-20 | FEAT-10 repository layout | Git 存 raw data / large artifact / credentials | Git 只存代码、schema、manifest、docs 和脱敏摘要 | 外部 archive / lake / ignored artifact roots | 仓库膨胀、凭据泄露、审计污染 |
+| FD-21 | CR051 migration Story | NAS 真实扫描 / 挂载 / 搬迁 | CP4/CP5 只做设计，未获运行授权前不得碰真实 NAS | inventory spec + dry-run checklist | 误删、误搬迁或泄露本地数据 |
+| FD-22 | ProjectIdentity rename | 批量重写历史 process / CR / handoff 文件 | legacy alias 是审计事实，历史证据不得机械改写 | 新文档使用 canonical name，旧文档保留 alias | 破坏审计链和历史可追溯性 |
+| FD-23 | Trading PC workflow | full research archive mount | 交易主机只消费 package，不承担研究 archive 或开发职责 | strategy package / runner bundle + checksum | 交易环境膨胀并扩大运行风险面 |
 
 ## 循环风险
 
@@ -63,6 +76,9 @@ change: "CR-046"
 | CYCLE-05 | FEAT-08 docs <-> FEAT-07 safety | 文档为了易用性弱化不授权项 | eliminated：docs guardrail 必须列不授权项和 no-real-op 计数 |
 | CYCLE-06 | FEAT-09 策略包合同 <-> FEAT-06 交易治理 | 策略包合同被解释为可提交订单的 adapter 实现 | eliminated：CR046 只输出合同和验证计划；submit/cancel 必须后续 runtime authorization |
 | CYCLE-07 | FEAT-09 MiniQMT runner target <-> FEAT-05 QMT gateway | runner 安装设计与 gateway runtime 边界混淆 | eliminated：runner target 只定义安装 / 进程 / 日志 / kill switch 合同，不启动 gateway 或连接 MiniQMT |
+| CYCLE-08 | FEAT-10 研究生命周期 <-> FEAT-09 策略交付合同 | delivery_candidate 被反向解释为可运行策略包 | eliminated：delivery_candidate 只进入后续 CR；runtime_candidate 必须独立授权 |
+| CYCLE-09 | ProjectIdentity alias <-> 历史审计证据 | 为了新名 `quant-lab` 批量改写 `local_backtest` 历史证据 | eliminated：新文档用 canonical，历史材料保留 legacy alias |
+| CYCLE-10 | Research archive <-> Market data lake current truth | 研究归档 manifest 被误当作事实源或 publish gate | eliminated：archive 只存指针和脱敏摘要，current truth 仍由 FEAT-02 publish gate 管理 |
 
 ## 依赖自检
 
@@ -71,4 +87,4 @@ change: "CR-046"
 | 允许依赖方向覆盖主要跨 Feature 调用 | PASS | §依赖关系 |
 | 禁止依赖写明替代路径和违反风险 | PASS | §禁止依赖 |
 | 循环风险已状态化 | PASS | §循环风险 |
-| 未新增运行授权 | PASS | FD-07、FD-10、FD-12..FD-16、CYCLE-02、CYCLE-03、CYCLE-06、CYCLE-07 |
+| 未新增运行授权 | PASS | FD-07、FD-10、FD-12..FD-23、CYCLE-02、CYCLE-03、CYCLE-06..CYCLE-10 |

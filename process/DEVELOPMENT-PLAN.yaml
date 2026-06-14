@@ -1,18 +1,18 @@
 project_id: "local_backtest"
-version: "1.6"
-status: "cr020-fixture-static-verified-pending-manual-windows-qmt-validation"
+version: "1.7"
+status: "cr051-story-plan-cp4-pass-pending-lld"
 confirmed: true
 confirmed_by: "user"
 confirmed_at: "2026-05-14"
 created_at: "2026-05-14"
 created_by: "meta-se"
-last_updated: "2026-06-14T00:16:26+08:00"
+last_updated: "2026-06-14T08:19:09+08:00"
 source_hld: "process/HLD.md"
 companion_hld: "process/HLD-DATA-LAKE.md"
 source_adr: "process/ARCHITECTURE-DECISION.md"
 story_backlog: "process/STORY-BACKLOG.md"
-active_change: "CR-046"
-secondary_change: "CR-030"
+active_change: "CR-051"
+secondary_change: "CR-046-paused"
 cr004_status: "draft-pending-cp4"
 cr004_confirmed: false
 cr005_status: "verified-cp7-pass"
@@ -87,6 +87,184 @@ cr046_implementation_allowed: false
 cr046_qmt_runtime_validation_authorized: false
 cr046_miniqmt_connection_authorized: false
 cr046_submit_cancel_authorized: false
+cr051_status: "story-plan-cp4-pass-pending-lld"
+cr051_confirmed: false
+cr051_formal_cr: "process/changes/CR-051-STRATEGY-RESEARCH-LIFECYCLE-FRAMEWORK-2026-06-14.md"
+cr051_lld_batches:
+  - "CR051-STRATEGY-RESEARCH-LIFECYCLE-BATCH-A"
+cr051_implementation_allowed: false
+cr051_real_migration_authorized: false
+cr051_nas_operation_authorized: false
+cr051_qmt_miniqmt_runtime_authorized: false
+cr051_provider_lake_publish_authorized: false
+cr051_git_push_authorized: false
+
+cr051_story_planning:
+  change_id: "CR-051"
+  status: "story-plan-cp4-pass-pending-lld"
+  cp4_check: "process/checks/CP4-CR051-STORY-DAG-PARALLEL-SAFETY.md"
+  feature_design_matrix: "docs/design/FEATURE-DESIGN-MATRIX.md"
+  required_feature_design:
+    feature_id: "FEAT-10"
+    design: "docs/features/strategy-research-lifecycle/DESIGN.md"
+    test_plan: "docs/features/strategy-research-lifecycle/TEST-PLAN.md"
+    tasks: "docs/features/strategy-research-lifecycle/TASKS.md"
+  cp5_batch: "CR051-STRATEGY-RESEARCH-LIFECYCLE-BATCH-A"
+  cp5_manual_review: "process/checkpoints/CP5-CR051-STRATEGY-RESEARCH-LIFECYCLE-BATCH-A-LLD-BATCH.md"
+  cp5_manual_status: "not-started"
+  cp5_auto_status: "not-started"
+  lld_policy_summary:
+    full_lld:
+      - "CR051-S01-lifecycle-and-taxonomy-framework"
+      - "CR051-S02-repository-archive-and-data-lake-governance"
+      - "CR051-S03-research-pc-and-trading-pc-workflow"
+      - "CR051-S04-registry-and-evidence-contracts"
+    technical_note:
+      - "CR051-S05-follow-up-cr-roadmap-and-admission-gates"
+      - "CR051-S06-project-identity-rename-and-legacy-alias"
+  waves:
+    - wave: "CR051-W1-LIFECYCLE-ARCHIVE-IDENTITY"
+      parallel_lld: true
+      parallel_dev: false
+      cp5_batch: "CR051-STRATEGY-RESEARCH-LIFECYCLE-BATCH-A"
+      entry_conditions:
+        - "CR051 CP3 approved"
+        - "FEAT-10 design docs generated"
+      stories:
+        - story_id: "CR051-S01-lifecycle-and-taxonomy-framework"
+          title: "策略研究生命周期与 taxonomy 框架"
+          priority: "P0"
+          assignee: "meta-dev"
+          depends_on: []
+          dependency_type: []
+          status: "lld-ready"
+          output_files:
+            - "docs/research/LIFECYCLE.md"
+            - "docs/research/STRATEGY-TAXONOMY.md"
+          lld_gate:
+            required: true
+            status: "not-started"
+            required_level: "full-lld"
+        - story_id: "CR051-S02-repository-archive-and-data-lake-governance"
+          title: "仓库、研究归档与数据湖边界治理"
+          priority: "P0"
+          assignee: "meta-dev"
+          depends_on: []
+          dependency_type: []
+          status: "lld-ready"
+          output_files:
+            - "docs/research/ARCHIVE-GOVERNANCE.md"
+            - "docs/research/RESEARCH-ARCHIVE-MANIFEST-SPEC.md"
+          lld_gate:
+            required: true
+            status: "not-started"
+            required_level: "full-lld"
+        - story_id: "CR051-S06-project-identity-rename-and-legacy-alias"
+          title: "项目身份改名与 legacy alias 兼容"
+          priority: "P0"
+          assignee: "meta-dev"
+          depends_on: []
+          dependency_type: []
+          status: "lld-ready"
+          output_files:
+            - "docs/research/PROJECT-IDENTITY-MIGRATION.md"
+          lld_gate:
+            required: true
+            status: "not-started"
+            required_level: "technical-note"
+    - wave: "CR051-W2-HOST-REGISTRY"
+      parallel_lld: true
+      parallel_dev: false
+      cp5_batch: "CR051-STRATEGY-RESEARCH-LIFECYCLE-BATCH-A"
+      entry_conditions:
+        - "CR051-W1 contracts declared"
+      stories:
+        - story_id: "CR051-S03-research-pc-and-trading-pc-workflow"
+          title: "研究主机与交易主机工作流边界"
+          priority: "P0"
+          assignee: "meta-dev"
+          depends_on:
+            - "CR051-S02-repository-archive-and-data-lake-governance"
+            - "CR051-S06-project-identity-rename-and-legacy-alias"
+          dependency_type:
+            - "contract"
+            - "alias-policy"
+          status: "lld-ready"
+          output_files:
+            - "docs/research/HOST-WORKFLOW.md"
+          lld_gate:
+            required: true
+            status: "not-started"
+            required_level: "full-lld"
+        - story_id: "CR051-S04-registry-and-evidence-contracts"
+          title: "研究 registry 与证据合同"
+          priority: "P0"
+          assignee: "meta-dev"
+          depends_on:
+            - "CR051-S01-lifecycle-and-taxonomy-framework"
+            - "CR051-S02-repository-archive-and-data-lake-governance"
+          dependency_type:
+            - "contract"
+            - "manifest-boundary"
+          status: "lld-ready"
+          output_files:
+            - "docs/research/RESEARCH-REGISTRY-SPEC.md"
+          lld_gate:
+            required: true
+            status: "not-started"
+            required_level: "full-lld"
+    - wave: "CR051-W3-FOLLOW-UP-GATES"
+      parallel_lld: false
+      parallel_dev: false
+      cp5_batch: "CR051-STRATEGY-RESEARCH-LIFECYCLE-BATCH-A"
+      entry_conditions:
+        - "CR051-S01..S04 design contracts declared"
+      stories:
+        - story_id: "CR051-S05-follow-up-cr-roadmap-and-admission-gates"
+          title: "后续 CR 路线与准入门禁"
+          priority: "P1"
+          assignee: "meta-dev"
+          depends_on:
+            - "CR051-S01-lifecycle-and-taxonomy-framework"
+            - "CR051-S02-repository-archive-and-data-lake-governance"
+            - "CR051-S03-research-pc-and-trading-pc-workflow"
+            - "CR051-S04-registry-and-evidence-contracts"
+          dependency_type:
+            - "contract"
+            - "handoff"
+          status: "lld-ready"
+          output_files:
+            - "process/changes/CR-051-STRATEGY-RESEARCH-LIFECYCLE-FRAMEWORK-2026-06-14.md"
+          lld_gate:
+            required: true
+            status: "not-started"
+            required_level: "technical-note"
+  dependency_graph:
+    nodes:
+      - "CR051-S01-lifecycle-and-taxonomy-framework"
+      - "CR051-S02-repository-archive-and-data-lake-governance"
+      - "CR051-S03-research-pc-and-trading-pc-workflow"
+      - "CR051-S04-registry-and-evidence-contracts"
+      - "CR051-S05-follow-up-cr-roadmap-and-admission-gates"
+      - "CR051-S06-project-identity-rename-and-legacy-alias"
+    edges:
+      - ["CR051-S02-repository-archive-and-data-lake-governance", "CR051-S03-research-pc-and-trading-pc-workflow"]
+      - ["CR051-S06-project-identity-rename-and-legacy-alias", "CR051-S03-research-pc-and-trading-pc-workflow"]
+      - ["CR051-S01-lifecycle-and-taxonomy-framework", "CR051-S04-registry-and-evidence-contracts"]
+      - ["CR051-S02-repository-archive-and-data-lake-governance", "CR051-S04-registry-and-evidence-contracts"]
+      - ["CR051-S01-lifecycle-and-taxonomy-framework", "CR051-S05-follow-up-cr-roadmap-and-admission-gates"]
+      - ["CR051-S02-repository-archive-and-data-lake-governance", "CR051-S05-follow-up-cr-roadmap-and-admission-gates"]
+      - ["CR051-S03-research-pc-and-trading-pc-workflow", "CR051-S05-follow-up-cr-roadmap-and-admission-gates"]
+      - ["CR051-S04-registry-and-evidence-contracts", "CR051-S05-follow-up-cr-roadmap-and-admission-gates"]
+  dag_validation_result:
+    checked_by: "host-orchestrator using dependency-mapper / wave-planner / dag-validator rules"
+    checked_at: "2026-06-14T08:19:09+08:00"
+    cycles: []
+    invalid_references: []
+    parallel_internal_dependencies: 0
+    isolated_nodes: []
+    conclusion: "PASS"
+    note: "CR051 增量 DAG 从 W1 lifecycle/archive/identity 单向流向 W2 host/registry，再流向 W3 follow-up gates。LLD 可按文件所有权并行起草；开发仍受 CP5、依赖类型、文件所有权和不授权边界门控。"
 
 cr046_story_planning:
   change_id: "CR-046"

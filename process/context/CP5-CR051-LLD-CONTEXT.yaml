@@ -1,0 +1,85 @@
+context_id: "CP5-CR051-LLD-CONTEXT"
+status: "ready-for-design-evidence"
+created_at: "2026-06-14T08:19:09+08:00"
+created_by: "host-orchestrator"
+change_id: "CR-051"
+source_cp4_check: "process/checks/CP4-CR051-STORY-DAG-PARALLEL-SAFETY.md"
+cp5_batch: "CR051-STRATEGY-RESEARCH-LIFECYCLE-BATCH-A"
+next_checkpoint: "process/checkpoints/CP5-CR051-STRATEGY-RESEARCH-LIFECYCLE-BATCH-A-LLD-BATCH.md"
+read_profile: "compact"
+must_read:
+  - "process/checks/CP4-CR051-STORY-DAG-PARALLEL-SAFETY.md"
+  - "docs/features/strategy-research-lifecycle/DESIGN.md"
+  - "docs/features/strategy-research-lifecycle/TEST-PLAN.md"
+  - "docs/features/strategy-research-lifecycle/TASKS.md"
+  - "docs/design/FEATURE-DESIGN-MATRIX.md"
+  - "process/DEVELOPMENT-PLAN.yaml"
+  - "process/STORY-BACKLOG.md"
+  - "process/stories/CR051-S01-lifecycle-and-taxonomy-framework.md"
+  - "process/stories/CR051-S02-repository-archive-and-data-lake-governance.md"
+  - "process/stories/CR051-S03-research-pc-and-trading-pc-workflow.md"
+  - "process/stories/CR051-S04-registry-and-evidence-contracts.md"
+  - "process/stories/CR051-S05-follow-up-cr-roadmap-and-admission-gates.md"
+  - "process/stories/CR051-S06-project-identity-rename-and-legacy-alias.md"
+read_if_needed:
+  - "docs/design/HLD-CR051-STRATEGY-RESEARCH-LIFECYCLE-FRAMEWORK.md"
+  - "docs/design/BLUEPRINT.md"
+  - "docs/design/DOMAIN-MAP.md"
+  - "docs/design/DEPENDENCY-MAP.md"
+  - "process/checkpoints/CP3-CR051-HLD-REVIEW.md"
+do_not_read_by_default:
+  - "full historical process/STATE.md history"
+  - "unrelated CR046 implementation evidence"
+  - "raw data, credentials, .env, account files or NAS contents"
+batch_scope:
+  full_lld:
+    - story_id: "CR051-S01-lifecycle-and-taxonomy-framework"
+      evidence_path: "process/stories/CR051-S01-lifecycle-and-taxonomy-framework-LLD.md"
+    - story_id: "CR051-S02-repository-archive-and-data-lake-governance"
+      evidence_path: "process/stories/CR051-S02-repository-archive-and-data-lake-governance-LLD.md"
+    - story_id: "CR051-S03-research-pc-and-trading-pc-workflow"
+      evidence_path: "process/stories/CR051-S03-research-pc-and-trading-pc-workflow-LLD.md"
+    - story_id: "CR051-S04-registry-and-evidence-contracts"
+      evidence_path: "process/stories/CR051-S04-registry-and-evidence-contracts-LLD.md"
+  technical_note:
+    - story_id: "CR051-S05-follow-up-cr-roadmap-and-admission-gates"
+      evidence_path: "process/stories/CR051-S05-follow-up-cr-roadmap-and-admission-gates.md#技术说明"
+    - story_id: "CR051-S06-project-identity-rename-and-legacy-alias"
+      evidence_path: "process/stories/CR051-S06-project-identity-rename-and-legacy-alias.md#技术说明"
+decisions_accepted:
+  - "DQ-CP3-CR051-01: one main Git repository plus external archive/lake/broker archive"
+  - "DQ-CP3-CR051-02: hardware-aware hot/warm/cold storage tiering"
+  - "DQ-CP3-CR051-03: trading PC is package consumer, not research environment"
+  - "DQ-CP3-CR051-04: phased migration with Git archive point, inventory, mechanical move and verification"
+  - "DQ-CP3-CR051-05: CP3 approval does not authorize real operations"
+  - "DQ-CP3-CR051-06: canonical name quant-lab, local_backtest retained as legacy alias"
+not_authorized:
+  - "directory rename"
+  - "remote repository rename"
+  - "git push or tag publish"
+  - "NAS scan, mount, copy, delete or migration"
+  - "external archive migration execution"
+  - "provider fetch, lake write, catalog publish"
+  - "QMT / MiniQMT import, connection or runtime"
+  - "credential, token, account, password, session, cookie or private key read"
+  - "submit, cancel, simulation or live trading"
+  - "bulk rewrite of historical process / CR / handoff evidence"
+cp4_summary:
+  result: "PASS"
+  blocking_items: 0
+  new_human_decisions: 0
+  dag_nodes: 6
+  dag_edges: 8
+  cycles: 0
+  invalid_references: 0
+  implementation_allowed: false
+  real_operation_counters:
+    provider_fetch: 0
+    lake_write: 0
+    catalog_publish: 0
+    qmt_miniqmt_runtime: 0
+    nas_operation: 0
+    directory_rename: 0
+    git_push: 0
+    credential_read: 0
+read_expansion_log: []

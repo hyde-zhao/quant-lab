@@ -1,8 +1,8 @@
 ---
 status: "draft-current-index"
-version: "1.1"
+version: "1.2"
 source_blueprint: "docs/design/BLUEPRINT.md"
-change: "CR-046"
+change: "CR-051"
 ---
 
 # Domain Map
@@ -13,6 +13,7 @@ change: "CR-046"
 |---|---|---|---|
 | 1.0 | 2026-06-07 | meta-po | 新增领域对象、状态机、术语和核心业务规则索引 |
 | 1.1 | 2026-06-13 | meta-po | 按 CR-046 增补双目标策略交付框架领域对象、状态机和规则 |
+| 1.2 | 2026-06-14 | host-orchestrator | 按 CR-051 增补策略研究生命周期、研究归档、项目身份迁移和硬件冷热分层规则 |
 
 ## 术语表
 
@@ -35,6 +36,12 @@ change: "CR-046"
 | MiniQMT runner target | 面向外部 Python runner 的策略包目标形态和安装设计 | CR-046 | 本 CR 只设计 install dry-run，不真实安装或连接 |
 | strategy package contract | 双目标策略交付包的目录、schema、配置、文档和验证证据约束 | CR-046 | 后续 CR047 具体策略必须消费 |
 | strategy validation evidence | 策略包静态、fixture、dry-run 和人工验证计划证据集合 | CR-046 | 不等于 QMT / MiniQMT runtime verified |
+| quant-lab | 本项目迁移后的 canonical 项目名 | CR-051 | 新文档、新迁移目标和后续项目身份使用该名称 |
+| local_backtest legacy alias | 本项目历史审计名和兼容别名 | CR-051 | 不批量重写旧 CR / process / handoff 证据 |
+| research archive | 研究协议、运行证据、报告摘要、artifact 指针和归档 manifest 的外部归档域 | CR-051 | 不等于 Git 仓库，也不等于 market data lake |
+| hot / warm / cold archive | 当前硬件下的冷热分层：研究主机 2T SSD、NAS 512G SSD、NAS 4T RAID、NAS 14T HDD | CR-051 | 交易主机 512G SSD 只消费 package，不做研究归档主机 |
+| delivery_candidate | 研究输出满足策略交付合同所需证据，可进入后续策略交付 CR | CR-051 / CR-046 | 不等于 runtime_candidate 或 trade-ready |
+| runtime_candidate | 已具备后续 runtime 验证条件的候选 | CR-051 | 需要独立 CR、授权和运行证据 |
 
 ## 领域对象
 
@@ -72,6 +79,17 @@ change: "CR-046"
 | OBJ-30 | StrategyValidationEvidence | FEAT-09 / FEAT-07 | fixture_result、schema_result、static_guardrail_result、dry_run_plan、manual_validation_plan | missing / partial / pass / blocked | CR-046 |
 | OBJ-31 | RunnerInstallPlan | FEAT-09 / FEAT-08 | windows_root、venv_policy、upgrade_plan、rollback_plan、uninstall_plan、redaction_policy | draft / dry_run_reviewed / blocked | CR-046 |
 | OBJ-32 | FollowUpStrategyDeliveryGate | FEAT-09 / FEAT-07 | candidate_cr、required_strategy_selection、runtime_authorization_required、evidence_prerequisites | open / ready_for_cr / blocked | CR047 / CR049 / CR051 candidates |
+| OBJ-33 | InformationSource | FEAT-10 | source_id、source_type、title、url_or_ref、license_note、credibility、captured_at | captured / triaged / rejected / archived | CR-051 |
+| OBJ-34 | StrategyIdea | FEAT-10 | idea_id、hypothesis、source_refs、market_scope、expected_signal、risk_note | captured / triaged / chartered / rejected | CR-051 |
+| OBJ-35 | ResearchProject | FEAT-10 | project_id、strategy_family、owner、protocol_ref、archive_root_ref、status | chartered / running / validation_ready / closed / retired | CR-051 |
+| OBJ-36 | ResearchProtocol | FEAT-10 | protocol_id、universe、data_release_ref、metric_suite、cost_model、risk_assumptions | draft / protocol_ready / superseded | CR-051 |
+| OBJ-37 | ResearchRun | FEAT-10 / FEAT-03 | run_id、commit、data_release、config_hash、seed、artifact_refs、archive_manifest_ref | planned / running / completed / failed / archived | CR-051 |
+| OBJ-38 | ValidationEvidence | FEAT-10 / FEAT-07 | evidence_id、run_refs、metrics、bias_checks、claim_boundary、runtime_claim_level | missing / partial / pass / blocked | CR-051 |
+| OBJ-39 | ResearchArchiveManifest | FEAT-10 | manifest_id、storage_tier、archive_root、artifact_refs、checksum、retention_policy | draft / indexed / archived / stale | CR-051 |
+| OBJ-40 | StrategyTaxonomyEntry | FEAT-10 | taxonomy_id、strategy_family、timeframe、data_dependency、execution_dependency、risk_class | draft / active / deprecated | CR-051 |
+| OBJ-41 | ProjectIdentity | FEAT-10 | canonical_name、legacy_aliases、repo_name_target、package_name_target、doc_alias_policy | local_backtest_legacy / quant_lab_canonical / alias_verified | CR-051 |
+| OBJ-42 | MigrationInventory | FEAT-10 / FEAT-08 | inventory_id、path_class、owner_feature、move_action、verification_rule、rollback_ref | draft / inventory_ready / move_ready / verified | CR-051 |
+| OBJ-43 | ArchivePointer | FEAT-10 | pointer_id、logical_type、external_root_ref、relative_path、checksum、redaction_status | planned / available / missing / redacted | CR-051 |
 
 ## 状态机
 
@@ -89,6 +107,9 @@ change: "CR-046"
 | SM-10 | StrategyPackageContract | draft -> review_ready -> approved -> delivered_by_followup | CP3/CP5/CP8 只批准合同；具体策略交付必须后续 CR | approved 不得自动生成可交易策略包 |
 | SM-11 | QMTTerminalTargetContract | draft -> validated -> runtime_deferred | 本 CR 只能到设计和静态验证计划 | terminal shadow / 模拟盘运行请求必须 blocked |
 | SM-12 | MiniQMTRunnerTargetContract | draft -> install_dry_run_ready -> runtime_deferred | 本 CR 只能到 install dry-run 设计 | 真实安装、连接、行情订阅或 submit/cancel 必须 blocked |
+| SM-13 | StrategyIdea -> ResearchProject -> ValidationEvidence | captured -> triaged -> chartered -> protocol_ready -> research_running -> validation_ready -> admission_review -> research_only / paper_candidate / delivery_candidate / rejected -> packaged -> retired | 只有 protocol、run manifest、validation evidence 和 claim boundary 齐备后才能升级 | delivery_candidate 不得被解释为 runtime_candidate 或 trade-ready |
+| SM-14 | MigrationInventory | baseline_archived -> design_approved -> inventory_ready -> mechanical_move_ready -> moved -> externalized -> verified -> released | 每一步必须有 Git 归档点、inventory、验证规则和用户授权 | CP3/CP4/CP5 approval 不得自动触发真实移动 |
+| SM-15 | ProjectIdentity | local_backtest_legacy -> quant_lab_canonical -> alias_compatibility_verified | 新文档使用 `quant-lab`；历史证据保留 legacy alias | 批量改写历史 process / handoff / CR 证据必须 blocked |
 
 ## 业务规则
 
@@ -110,3 +131,10 @@ change: "CR-046"
 | RULE-14 | 策略包验证证据必须区分 fixture/static/design pass 与 runtime verified | FEAT-09 / FEAT-08 | CR-046、后续 CR047 | docs guardrail |
 | RULE-15 | CR047 首个具体策略交付必须消费 CR046 策略包合同，不得在 CR046 内提前交付 | FEAT-09 | CR047-candidate | follow-up gate |
 | RULE-16 | CR051 研究框架完善必须反向消费 StrategyCoreContract 和 StrategyValidationEvidence，不得扩大 CR046 范围 | FEAT-03 / FEAT-09 | CR051-candidate | follow-up tracking |
+| RULE-17 | Git 仓库不得存放真实大体量行情、broker facts、凭据、账户标识或未脱敏运行日志 | FEAT-10 / FEAT-07 | CR-051、迁移 Story | repository guardrail |
+| RULE-18 | ResearchRun / RunManifest 必须记录 commit、data release、config hash、seed、artifact refs 和 archive manifest ref | FEAT-10 | CR-051、CR052 | manifest validation |
+| RULE-19 | `delivery_candidate` 只表示研究交付候选，不等于 runtime_candidate、simulation-ready 或 live-ready | FEAT-10 / FEAT-07 | CR-051..CR056 | claim boundary review |
+| RULE-20 | 交易主机 512G SSD 只消费 strategy package / runner bundle，不作为研究开发或 archive 主机 | FEAT-10 / FEAT-07 | CR-051、后续 runner CR | migration plan review |
+| RULE-21 | `quant-lab` 是 canonical 项目名；`local_backtest` 是 legacy alias，不批量重写历史审计材料 | FEAT-10 / FEAT-08 | CR-051 migration | alias compatibility review |
+| RULE-22 | CP3 / CP4 / CP5 设计通过不授权目录重命名、NAS 操作、外部 archive 搬迁、远端仓库改名或 git push | FEAT-10 / FEAT-07 | CR-051 | no-real-operation safety review |
+| RULE-23 | market data lake、research archive 和 broker lake 必须保持三类事实域隔离 | FEAT-02 / FEAT-06 / FEAT-10 | CR-051、后续迁移 | dependency / archive manifest review |

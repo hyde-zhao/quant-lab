@@ -1,6 +1,6 @@
 ---
 status: "draft-current-index"
-version: "1.1"
+version: "1.2"
 source_use_cases: "process/USE-CASES.md"
 source_requirements: "process/REQUIREMENTS.md"
 source_story_backlog: "process/STORY-BACKLOG.md"
@@ -8,15 +8,16 @@ source_hld:
   - "process/HLD.md"
   - "process/HLD-DATA-LAKE.md"
   - "process/HLD-QMT-TRADING.md"
+  - "docs/design/HLD-CR051-STRATEGY-RESEARCH-LIFECYCLE-FRAMEWORK.md"
 source_adr: "process/ARCHITECTURE-DECISION.md"
-change: "CR-046"
+change: "CR-051"
 confirmed_by: ""
 confirmed_at: ""
 ---
 
 # Blueprint
 
-> 本文是 `local_backtest` 的蓝图层 current index，用于归一化跨 Feature / Epic 的能力边界、数据归属、跨模块流程和后续 Feature 设计入口。历史设计细节仍以 `process/HLD*.md`、`process/ARCHITECTURE-DECISION.md` 和 `process/STORY-BACKLOG.md` 为审计来源。
+> 本文是 `quant-lab` 的蓝图层 current index；`local_backtest` 保留为 legacy alias 和历史审计名。本文用于归一化跨 Feature / Epic 的能力边界、数据归属、跨模块流程和后续 Feature 设计入口。历史设计细节仍以 `process/HLD*.md`、`process/ARCHITECTURE-DECISION.md` 和 `process/STORY-BACKLOG.md` 为审计来源。
 
 ## 修订记录
 
@@ -24,15 +25,16 @@ confirmed_at: ""
 |---|---|---|---|
 | 1.0 | 2026-06-07 | meta-po | 按 CR-031 新增蓝图层索引，覆盖研究回测、生产数据湖、多因子研究、执行语义、QMT gateway、交易治理、安全授权和文档 Runbook 八个 Feature / Epic |
 | 1.1 | 2026-06-13 | meta-po | 按 CR-046 增补 QMT terminal + MiniQMT runner 双目标策略交付框架 Feature、策略包契约、验证框架和不授权边界 |
+| 1.2 | 2026-06-14 | host-orchestrator | 按 CR-051 增补策略研究生命周期、研究归档治理、硬件冷热分层、项目迁移和 `quant-lab` / `local_backtest` 身份边界 |
 
 ## 蓝图定位
 
 | 项 | 当前口径 |
 |---|---|
-| 项目类型 | 本地 Python 量化研究、回测、数据湖和 QMT 接入准备工具 |
-| 当前执行状态 | `process/STATE.md` 中 CR-046 已通过 CP2，正在进行 QMT terminal + MiniQMT runner 双目标策略交付框架 CP3 设计；不执行终端运行验证 |
+| 项目类型 | 本地 Python 量化研究、回测、数据湖、策略交付合同和交易接入准备工具 |
+| 当前执行状态 | `process/STATE.md` 中 CR-046 保持 paused at CP6 / ready-for-verification；CR-051 已通过 CP3，正在进行 strategy research lifecycle / quant-lab migration 的 CP4 story-planning |
 | 蓝图作用 | 为长期维护提供能力边界和数据归属索引，不替代 HLD、ADR、LLD 或检查点 |
-| 授权边界 | 本文不授权真实 provider、lake、publish、gateway、QMT、simulation、live、凭据读取或账户操作 |
+| 授权边界 | 本文不授权真实 provider、lake、publish、gateway、QMT、MiniQMT、simulation、live、凭据读取、账户操作、NAS 扫描 / 挂载 / 搬迁、目录重命名、远端仓库改名、git push 或历史文件批量替换 |
 
 ## 能力地图
 
@@ -47,6 +49,7 @@ confirmed_at: ""
 | CAP-07 | 安全、授权与 no-real-operation 治理 | 保证 CP、Story verified、runbook 和 gateway health 不被误读为真实操作授权 | 全部 CR，重点 CR-014、CR-019、CR-020、CR-025、CR-030 | FEAT-07 |
 | CAP-08 | 文档、Runbook 与发布证据 | 让用户能按当前安全边界操作、验证和恢复，同时保留审计证据 | README、docs/USER-MANUAL.md、docs/QMT-*.md、CP8 | FEAT-08 |
 | CAP-09 | 双目标策略交付框架 | 让同一研究策略核心可按合同交付到 QMT 终端策略包和 MiniQMT runner 包，并由统一验证框架审查 | CR-046、CR047-candidate、CR049-candidate、CR051-candidate | FEAT-09 |
+| CAP-10 | 策略研究生命周期与项目迁移治理 | 将 idea、资料、研究项目、运行证据、归档、策略交付候选和 quant-lab 迁移路径纳入统一生命周期与安全边界 | CR-051、CR052..CR056-candidate | FEAT-10 |
 
 ## Feature / Epic 边界
 
@@ -61,6 +64,7 @@ confirmed_at: ""
 | FEAT-07 | 安全、授权与 no-real-operation 治理 | runtime authorization、risk acceptance、credential redaction、no-real-operation counters、forbidden import、human gate 不授权项 | 业务算法或数据 schema 本身 | AuthorizationDecision、NoRealOpCounter、RedactionPolicy、ForbiddenDependencyRule | 全部 Feature 的设计 / 测试 / 日志证据 | 任何通过文档或健康检查隐式升级运行授权的路径 |
 | FEAT-08 | 文档、Runbook 与发布证据 | README、USER-MANUAL、QMT 安装 / 运行手册、incident playbook、release readiness、CP8 用户终验摘要 | 改变业务范围、授权真实操作、修改事实源 | Runbook、UserManualSection、ReleaseNote、RollbackPlan、FeedbackEntry | HLD / ADR / verification report / CP8 | 文档声明超出已验证状态或绕过 gate |
 | FEAT-09 | QMT / MiniQMT 双目标策略交付框架 | 策略核心合同、策略包目录、QMT terminal target、MiniQMT runner target 安装设计、统一验证证据模型、后续策略交付门禁 | 具体策略交付、QMT 终端运行验证、MiniQMT 真实连接、真实安装、submit/cancel、simulation/live | StrategyCoreContract、StrategyPackageContract、QMTTerminalTargetContract、MiniQMTRunnerTargetContract、StrategyValidationEvidence | FEAT-03 StrategyAdmissionPackage、FEAT-04 OrderIntentDraft、FEAT-06 风控边界、FEAT-07 授权记录 | 策略核心直连 QMT / XtQuant、验证框架触发真实运行、安装设计读取凭据或写真实运行目录 |
+| FEAT-10 | 策略研究生命周期与项目迁移治理 | InformationSource、StrategyIdea、ResearchProject、ResearchProtocol、ResearchRun、ValidationEvidence、ResearchArchiveManifest、ProjectIdentity、MigrationInventory、Follow-up CR roadmap | 具体策略实现、真实交易、provider/lake/publish、QMT/MiniQMT runtime、目录实际重命名、NAS 实际扫描 / 挂载 / 搬迁、远端仓库改名或 git push | InformationSource、StrategyIdea、ResearchProject、ResearchProtocol、ResearchRun、ValidationEvidence、ResearchArchiveManifest、StrategyTaxonomyEntry、ProjectIdentity、MigrationInventory | FEAT-02 catalog/data release、FEAT-03 admission package、FEAT-09 StrategyCoreContract / StrategyValidationEvidence | provider SDK、QMT / XtQuant / MiniQMT、broker lake write、真实 NAS 操作、凭据读取、git push / remote rename、批量重写历史 process 证据 |
 
 ## 跨 Feature 流程
 
@@ -75,6 +79,8 @@ confirmed_at: ""
 | FLOW-07 | 文档发布和终验 | FEAT-08 -> FEAT-07 | FEAT-08 | README / runbook / CP8 不得声明未授权真实能力 | docs guardrail tests、CP8 |
 | FLOW-08 | 研究策略进入双目标交付 | FEAT-03 / FEAT-04 -> FEAT-09 -> FEAT-07 | FEAT-09 | 缺少策略核心合同、order intent draft、风险假设或验证证据时，策略包不得进入 CR047 交付 | CR046 CP3/CP5、后续 CR047 |
 | FLOW-09 | MiniQMT runner 安装设计审查 | FEAT-09 -> FEAT-07 -> FEAT-08 | FEAT-09 | 本 CR 只允许 install dry-run 设计；真实安装、连接和运行必须进入 CR049 / runtime authorization gate | CR046 验证框架、后续 CR049 |
+| FLOW-10 | 策略想法进入研究闭环 | FEAT-10 -> FEAT-03 -> FEAT-09 -> FEAT-07 | FEAT-10 / FEAT-03 / FEAT-09 | idea、protocol、run、validation 任一证据缺失时只能保持 research-only 或 blocked，不得升级为 delivery_candidate | CR051 CP5/CP7、后续 CR052 |
+| FLOW-11 | 项目身份和仓库结构迁移 | FEAT-10 -> FEAT-08 -> FEAT-07 | FEAT-10 | 仅在 inventory、Git archive、mechanical move plan、legacy alias 验证和用户授权齐备后才允许真实迁移；CP4/CP5 只做设计 | CR051 CP4/CP5、后续迁移授权门禁 |
 
 ## 共享能力
 
@@ -88,6 +94,8 @@ confirmed_at: ""
 | SH-06 | Runbook Boundary Statements | 用户、FEAT-05、FEAT-06 | FEAT-08 / FEAT-07 | docs -> operator | 文档必须列不授权项 |
 | SH-07 | Strategy Core Contract | FEAT-03、FEAT-04、FEAT-09 | FEAT-09 | research/admission -> strategy package | 合同缺字段时 blocked，不生成目标包 |
 | SH-08 | Strategy Validation Evidence | FEAT-07、FEAT-08、FEAT-09 | FEAT-09 / FEAT-07 | package validation -> CP gate / docs | 只有 fixture/static/dry-run 证据，不得声称 terminal/runtime verified |
+| SH-09 | Research Archive Manifest / Run Manifest | FEAT-01、FEAT-02、FEAT-03、FEAT-08、FEAT-10 | FEAT-10 | research run -> archive manifest / docs | 缺 commit、data release、config hash、seed 或 artifact ref 时 blocked |
+| SH-10 | Project Identity Alias / Migration Guardrail | 全部 Feature | FEAT-10 / FEAT-07 | project docs / migration plan -> consumers | `quant-lab` 为 canonical；`local_backtest` 作为 legacy alias，不批量重写历史审计 |
 
 ## 待确认边界
 
@@ -96,6 +104,7 @@ confirmed_at: ""
 | DQ-BP-001 | follow_up_tracking | 是否把 CR-031 的蓝图索引作为后续 CR-021..024 的默认设计入口 | 推荐：作为默认入口，但不替代 legacy HLD/ADR 审计 | 仅保留为临时说明 | 推荐方案能降低后续翻阅成本；备选不改变现状但边界继续分散 | 影响后续 QMT simulation/live 设计交接 | 若发现索引与 legacy 事实冲突，以 legacy HLD/ADR/Story 为准并修订蓝图 |
 | DQ-BP-002 | implementation | 是否立即回写 134 个 Story 的 `feature_design_refs` | 推荐：本轮不批量回写，只在后续变更 Story 中引用矩阵 | 批量回写所有 Story | 推荐方案低风险；批量回写会污染已验证证据且容易引入误差 | 影响 Story 历史审计和 git diff 规模 | 后续新 CR 或重开 Story 时增量回写 |
 | DQ-BP-CR046-01 | architecture | CR046 是否新增独立 FEAT-09 承载双目标策略交付框架，而不把能力并入 FEAT-05 / FEAT-06 | 推荐：新增 FEAT-09，FEAT-05/06 仍保留 gateway 和交易治理边界 | 并入 FEAT-05；并入 FEAT-06 | 推荐方案避免把“策略交付合同”误读为 gateway runtime 或 OMS 授权；并入方案更少 Feature 但边界混淆 | 影响 CR047 策略包和 CR049 runner install 的消费入口 | 若后续只保留 QMT terminal 且放弃 MiniQMT，可将 FEAT-09 降级为 FEAT-05/06 的子能力 |
+| DQ-BP-CR051-01 | architecture | CR051 是否新增 FEAT-10 承载策略研究生命周期和 quant-lab 迁移治理 | 推荐：新增 FEAT-10，FEAT-03 继续负责因子研究和 admission，FEAT-09 继续负责策略交付包 | 并入 FEAT-03；并入 FEAT-08 | 推荐方案能把研究 lifecycle、archive、项目身份和迁移边界集中管理；并入 FEAT-03 会扩大研究算法边界，并入 FEAT-08 会把迁移治理误降级为文档刷新 | 影响 CR052..CR056 的进入门禁和本项目迁移顺序 | 若 CR051 CP5 发现 FEAT-10 只剩文档更新，可降级为 FEAT-08 technical-note；若真实迁移启动，仍需独立 runtime_authorization / migration gate |
 
 ## 自检
 
@@ -104,4 +113,4 @@ confirmed_at: ""
 | 每个 Feature / Epic 有职责、非职责和数据归属 | PASS | §Feature / Epic 边界 |
 | 跨 Feature 流程写明 Owner 和失败路径 | PASS | §跨 Feature 流程 |
 | 共享能力写明调用方向和降级策略 | PASS | §共享能力 |
-| 运行授权边界未被蓝图放大 | PASS | §蓝图定位、FEAT-07、FEAT-09、DQ-BP-CR046-01 |
+| 运行授权边界未被蓝图放大 | PASS | §蓝图定位、FEAT-07、FEAT-09、FEAT-10、DQ-BP-CR046-01、DQ-BP-CR051-01 |
