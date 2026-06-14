@@ -5,17 +5,17 @@ current_phase: documentation
 current_agent: host-orchestrator
 active_change: "CR-046"
 active_story: ''
-iteration: 461
+iteration: 462
 blocked: false
 blocked_reason: ''
-last_action: CR051 CP8 已由用户回复“同意”批准；CR051 当前交付关闭为 closed-current-delivery / READY，并修正 CR046 追踪状态继续停在 CP6 paused recovery point。
-next_action: 不自动启动 CR052..CR056；推荐下一步在用户明确授权后单独启动 CR053 migration inventory / dry-run。CR046 仍保持 paused CP6 恢复点，不调度 CP7、不执行 runtime / 交易 / 凭据 / provider/lake/publish。
+last_action: 用户回复“cr053”；已启动 CR053 为 quant-lab migration inventory / dry-run CP2 review，并把旧事件型策略 CR053-candidate 改号为 CR057-candidate。
+next_action: 等待用户审查 `process/checkpoints/CP2-CR053-REQUIREMENTS-BASELINE.md` 并回复 `approve` / `修改: <具体修改点>` / `reject`；approve 只允许 CR053 进入 CP3 设计，不授权运行 inventory、真实迁移、NAS 操作、git push、runtime、凭据或 provider/lake/publish。
 canonical_project_name: quant-lab
 legacy_project_alias: local_backtest
 cr_tracking:
   status: "active-formal-cr"
   index_path: process/changes/CR-INDEX.yaml
-  last_consistency_check: 'PASS at 2026-06-14T09:34:00+08:00 via uv run --python 3.11 python scripts/check_cr_tracking_consistency.py --project-root .'
+  last_consistency_check: 'PASS at 2026-06-14T09:46:23+08:00 via uv run --python 3.11 python scripts/check_cr_tracking_consistency.py --project-root .'
   active_crs:
   - id: CR-046
     title: QMT and MiniQMT Dual-Target Strategy Delivery Framework
@@ -52,6 +52,35 @@ cr_tracking:
     next_gate: User Paused before CP7 Verification
     next_action: 等待用户明确恢复 CR046 后再进入 CP7 verification-execution；挂起期间不调度 CP7、不启动 CR047/CR048/CR049、不执行真实运行 / 交易 / 凭据 / 传输导入。CR051 已关闭当前 Git 内交付，但不授权真实迁移、后续 CR 自动启动或 runtime。
     last_checked_at: '2026-06-14T00:29:41+08:00'
+  - id: CR-053
+    title: quant-lab Migration Inventory and Dry-run
+    status: active-cp2-review-pending
+    source_tracking: USER-20260614-START-CR053-MIGRATION-INVENTORY
+    formal_cr_path: process/changes/CR-053-QUANT-LAB-MIGRATION-INVENTORY-AND-DRY-RUN-2026-06-14.md
+    priority: 1
+    blocked_by: 'cp2-review-pending: 用户回复“cr053”启动 migration inventory / dry-run；CR046 remains paused at CP6 PASS / ready-for-verification. CR053 CP2 只发起需求 / 场景基线确认，不授权真实目录重命名、文件移动、NAS 操作、external archive migration、provider/lake/publish、QMT/MiniQMT runtime、凭据读取、git push/tag 或重写历史。'
+    impact_surface:
+    - project migration inventory
+    - quant-lab canonical identity
+    - local_backtest legacy alias
+    - repository path taxonomy
+    - dry-run migration report
+    - git archive checkpoint design
+    - research archive boundary
+    - forbidden content scan design
+    - CR051 follow-up numbering
+    conflict_keys:
+    - project_migration
+    - quant_lab_identity
+    - repository_relayout
+    - git_archive
+    - migration_dry_run
+    - forbidden_content_boundary
+    - CR053
+    - CR051_follow_up
+    next_gate: CR053 CP2 requirements review
+    next_action: 用户审查 `process/checkpoints/CP2-CR053-REQUIREMENTS-BASELINE.md`；approve 只确认 CR053 进入 CP3 设计，不授权运行 inventory、真实迁移、NAS 操作、git push 或 runtime。
+    last_checked_at: '2026-06-14T09:39:26+08:00'
   closed_crs:
   - id: CR-051
     title: Strategy Research Lifecycle Framework and Strategy Taxonomy
@@ -715,11 +744,76 @@ cr_tracking:
     不占执行锁
   consistency_check: scripts/check_cr_tracking_consistency.py --project-root .
 human_gate_decisions:
-  status: approved
-  pending_gate: ''
-  pending_checklist_path: ''
-  launch_message_path: process/checks/CP8-CR051-HUMAN-GATE-LAUNCH-MESSAGE.md
+  status: awaiting-user
+  pending_gate: CP2-CR053
+  pending_checklist_path: process/checkpoints/CP2-CR053-REQUIREMENTS-BASELINE.md
+  launch_message_path: process/checks/CP2-CR053-HUMAN-GATE-LAUNCH-MESSAGE.md
   pending_human_decisions:
+  - id: DQ-CR053-01
+    gate: CP2
+    decision_type: scope
+    question: CR053 是否定位为 quant-lab 迁移 inventory / dry-run 设计，而不是真实迁移？
+    recommendation: 是。CR053 先冻结迁移前盘点、dry-run 报告和禁止操作门禁。
+    alternatives:
+    - 立即执行真实目录迁移
+    - 只保留 CR051 设计，不启动 CR053
+    pros_cons: 推荐方案可审计、可回滚；立即真实迁移风险过高且缺少 inventory；不启动 CR053 无法推进用户迁移目标。
+    impact_risk: 本轮不移动文件，后续仍需 CP3/CP5/CP6/CP7/CP8。
+    rollback_switch: 若用户需要真实迁移，必须另起 runtime_authorization / mechanical move CR。
+    status: pending
+    source: process/checkpoints/CP2-CR053-REQUIREMENTS-BASELINE.md
+  - id: DQ-CR053-02
+    gate: CP2
+    decision_type: implementation
+    question: CR053 首版 inventory surface 是否限定为 Git 仓库内可审计对象？
+    recommendation: 是。首版只设计 Git tracked / repo-local metadata / 文档引用的 inventory，不扫 NAS、不扫外部 archive、不读 untracked data。
+    alternatives:
+    - 同时扫描 NAS
+    - 同时扫描全部 untracked 文件和 data 目录
+    pros_cons: 推荐方案最小权限且可复现；备选可能触碰外部数据、大文件和敏感边界。
+    impact_risk: 后续报告可能不覆盖外部 archive 实际容量，需要单独 CR。
+    rollback_switch: 用户明确授权 NAS inventory 后再扩展。
+    status: pending
+    source: process/checkpoints/CP2-CR053-REQUIREMENTS-BASELINE.md
+  - id: DQ-CR053-03
+    gate: CP2
+    decision_type: security
+    question: 是否继续禁止凭据、账户事实、provider/lake/publish、QMT/MiniQMT 和交易动作？
+    recommendation: 是。CR053 不读取 `.env` / token / account，不连接 runtime，不写 lake。
+    alternatives:
+    - 读取 `.env` 辅助找路径
+    - 同步做 provider/lake 检查
+    pros_cons: 推荐方案保护安全边界；备选引入凭据和外部写入风险。
+    impact_risk: 可能需要用静态规则替代真实路径确认。
+    rollback_switch: 若确需凭据或外部系统，必须另起授权门。
+    status: pending
+    source: process/checkpoints/CP2-CR053-REQUIREMENTS-BASELINE.md
+  - id: DQ-CR053-04
+    gate: CP2
+    decision_type: follow_up_tracking
+    question: CR053 编号冲突如何处理？
+    recommendation: 使用 CR053 作为 migration inventory / dry-run；旧事件型策略候选改号为 CR057-candidate。
+    alternatives:
+    - 保持事件型策略为 CR053，把迁移改为 CR057
+    - 暂停编号，要求重新命名
+    pros_cons: 推荐方案匹配最新 STATE / CR-INDEX 和用户当前指令；备选会与当前对话或状态不一致。
+    impact_risk: 需要更新 CR051 后续表，保留旧候选追溯。
+    rollback_switch: 若用户明确说 CR053 指事件型策略，则回退并改本 CR 为 rejected / superseded。
+    status: pending
+    source: process/checkpoints/CP2-CR053-REQUIREMENTS-BASELINE.md
+  - id: DQ-CR053-05
+    gate: CP2
+    decision_type: runtime_authorization
+    question: CP2 approve 是否授权运行 inventory、移动文件或 push？
+    recommendation: 否。CP2 approve 只允许进入 CP3 设计；运行任何 inventory / dry-run 命令也需后续 CP5/CP6 门禁。
+    alternatives:
+    - CP2 同时授权 repo-local inventory 命令
+    - CP2 同时授权真实迁移
+    pros_cons: 推荐方案保持需求门和执行门分离；备选跳过设计或风险过高。
+    impact_risk: 本轮不会产出 inventory 报告，只产出设计门禁。
+    rollback_switch: 用户可在 CP3/CP5 后单独授权受控 repo-local inventory。
+    status: pending
+    source: process/checkpoints/CP2-CR053-REQUIREMENTS-BASELINE.md
   - id: DQ-CP3-CR051-01
     gate: CP3
     decision_type: architecture
@@ -9352,13 +9446,18 @@ orchestrator_session:
   agent_id: ''
   agent_name: host-orchestrator
   thread_id: ''
-  workflow_id: local_backtest-cr051
-  active_change: "CR-051"
-  status: cr051-closed-current-delivery
-  pending_gate: ''
-  pending_checklist_path: ''
-  pending_user_decision: ''
-  pending_decision_ids: []
+  workflow_id: local_backtest-cr053
+  active_change: "CR-053"
+  status: awaiting-user
+  pending_gate: CP2-CR053
+  pending_checklist_path: process/checkpoints/CP2-CR053-REQUIREMENTS-BASELINE.md
+  pending_user_decision: "approve | 修改: <具体修改点> | reject"
+  pending_decision_ids:
+  - DQ-CR053-01
+  - DQ-CR053-02
+  - DQ-CR053-03
+  - DQ-CR053-04
+  - DQ-CR053-05
   approved_decision_ids:
   - DQ-CP3-CR051-01
   - DQ-CP3-CR051-02
@@ -9412,7 +9511,7 @@ orchestrator_session:
   - 查询资金 / 持仓 / 委托 / 成交
   - 下单 / 撤单 / simulation/live
   - provider fetch / lake write / catalog publish
-  resume_instruction: "CR051 CP8 已由用户回复“同意”批准；CR051 当前交付关闭为 closed-current-delivery / READY。下一步不得自动启动 CR052..CR056；如用户明确授权，建议单独启动 CR053 migration inventory / dry-run。CR046 仍保持 paused CP6 恢复点；不授权目录重命名、NAS 操作、外部 archive 搬迁、真实传输/导入、QMT/MiniQMT runtime、submit/cancel、simulation/live、账户查询、凭据读取、provider/lake/publish、git push。"
+  resume_instruction: "CR053 已按用户回复“cr053”启动为 quant-lab migration inventory / dry-run，当前等待 CP2 人工确认：process/checkpoints/CP2-CR053-REQUIREMENTS-BASELINE.md。approve 只接受 DQ-CR053-01..05 推荐方案并允许进入 CP3 设计，不授权运行 inventory、真实目录重命名 / 文件移动、NAS 操作、external archive migration、provider/lake/publish、QMT/MiniQMT runtime、submit/cancel、simulation/live、账户查询、凭据读取、git push/tag 或重写历史。CR046 仍保持 paused CP6 恢复点。"
   cr051_cp4_story_planning_dispatch:
     mode: inline-host-orchestrator
     agent_id: ''
@@ -14417,6 +14516,32 @@ agent_lifecycle:
     completed_at: '2026-05-16T19:33:15+08:00'
     closed_at: '2026-05-16T19:33:15+08:00'
 history:
+- at: '2026-06-14T09:39:26+08:00'
+  actor: host-orchestrator
+  action: cr053-started-cp2-review-pending
+  from_phase: documentation
+  to_phase: requirement-clarification
+  reason: 用户回复“cr053”；按 CR051 关闭后的最新 STATE / CR-INDEX 推荐，将 CR053 启动为 quant-lab migration inventory / dry-run，而不是事件型策略研究流程。旧 CR051 后续表中的事件型 CR053-candidate 改号为 CR057-candidate。CR053 当前只发起 CP2 需求 / 场景基线人工确认，不执行 inventory 命令或真实迁移。
+  artifacts:
+  - process/changes/CR-053-QUANT-LAB-MIGRATION-INVENTORY-AND-DRY-RUN-2026-06-14.md
+  - process/context/CP2-CR053-REQUIREMENT-CONTEXT.yaml
+  - process/discussions/CP2-CR053-SCENARIO-DISCUSSION-LOG.md
+  - process/checks/CP2-CR053-REQUIREMENTS-BASELINE.md
+  - process/checkpoints/CP2-CR053-REQUIREMENTS-BASELINE.md
+  next_gate: CR053 CP2 requirements review
+  safety_confirmations:
+    cr046_restored: false
+    cr046_cp7_dispatched: false
+    inventory_command_authorized: false
+    directory_rename_authorized: false
+    file_move_authorized: false
+    nas_access_authorized: false
+    external_archive_migration_authorized: false
+    provider_lake_publish_authorized: false
+    qmt_miniqmt_runtime_authorized: false
+    trading_authorized: false
+    credential_read_authorized: false
+    git_push_authorized: false
 - at: '2026-06-14T09:30:26+08:00'
   actor: host-orchestrator
   action: cr051-cp8-approved-closed-current-delivery
