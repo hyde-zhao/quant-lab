@@ -8,8 +8,8 @@ active_story: ''
 iteration: 465
 blocked: false
 blocked_reason: ''
-last_action: 用户回复“同意，继续推进”；已回填 CR053 CP3 approved，补充 Linux / Windows / 数据湖映射细化，并完成 CR053 CP4 Story DAG / parallel safety PASS。
-next_action: "进入 CR053 CP5 设计证据写作：S01..S04 full-lld，S05 technical-note；仍不授权实现、inventory 运行、NAS 操作、数据湖移动、git push、runtime、凭据或 provider/lake/publish。"
+last_action: CR053 CP5 设计证据写作完成；S01-S04 full-lld、S05 technical-note 和 5 份 CP5 自动预检均已生成，阻断项 0。
+next_action: "等待用户审查 CR053 CP5 LLD batch：process/checkpoints/CP5-CR053-MIGRATION-INVENTORY-BATCH-A-LLD-BATCH.md；approve 仅接受设计证据，不授权真实迁移、NAS、lake、git push、Windows full mount、runtime 或凭据读取。"
 canonical_project_name: quant-lab
 legacy_project_alias: local_backtest
 cr_tracking:
@@ -54,11 +54,11 @@ cr_tracking:
     last_checked_at: '2026-06-14T00:29:41+08:00'
   - id: CR-053
     title: quant-lab Migration Inventory and Dry-run
-    status: active-cp4-pass-ready-for-cp5
+    status: active-cp5-review-pending
     source_tracking: USER-20260614-START-CR053-MIGRATION-INVENTORY
     formal_cr_path: process/changes/CR-053-QUANT-LAB-MIGRATION-INVENTORY-AND-DRY-RUN-2026-06-14.md
     priority: 1
-    blocked_by: 'cp4-pass-ready-for-cp5: 用户回复“同意，继续推进”，CR053 CP3 HLD / ADR approved，并确认 Linux 研究机可统一映射 NAS 三分区、现有 MARKET_DATA_LAKE_ROOT 不调整、Windows 交易机只映射 package exchange。CP4 Story DAG / parallel safety PASS，CR053-S01..S05 进入 CP5 设计证据写作准备。CR046 remains paused at CP6 PASS / ready-for-verification. CR053 当前不授权运行 inventory、真实目录重命名、文件移动、NAS 操作、external archive migration、provider/lake/publish、QMT/MiniQMT runtime、凭据读取、git push/tag 或重写历史。'
+    blocked_by: 'cp5-review-pending: CR053 S01-S04 full-lld、S05 technical-note 和 5 份 CP5 自动预检已完成；等待用户审查 process/checkpoints/CP5-CR053-MIGRATION-INVENTORY-BATCH-A-LLD-BATCH.md。CR046 remains paused at CP6 PASS / ready-for-verification. CR053 当前仍不授权实现、运行 inventory、真实目录重命名、文件移动、NAS 操作、external archive migration、provider/lake/publish、QMT/MiniQMT runtime、凭据读取、git push/tag 或重写历史。'
     impact_surface:
     - project migration inventory
     - quant-lab canonical identity
@@ -78,8 +78,8 @@ cr_tracking:
     - forbidden_content_boundary
     - CR053
     - CR051_follow_up
-    next_gate: CR053 CP5 LLD batch review
-    next_action: 进入 CR053 CP5 设计证据写作：S01..S04 full-lld，S05 technical-note；仍不授权实现、inventory 运行、NAS 操作、数据湖移动、git push 或 runtime。
+    next_gate: CR053 CP5 LLD batch human review
+    next_action: 等待用户回复 approve / 修改 / reject；approve 仅接受设计证据批次，不授权真实迁移、NAS、lake、git push、Windows full mount、runtime 或凭据读取。
     last_checked_at: '2026-06-14T10:59:13+08:00'
   closed_crs:
   - id: CR-051
@@ -744,11 +744,63 @@ cr_tracking:
     不占执行锁
   consistency_check: scripts/check_cr_tracking_consistency.py --project-root .
 human_gate_decisions:
-  status: approved
-  pending_gate: ''
-  pending_checklist_path: ''
-  launch_message_path: process/checks/CP3-CR053-HUMAN-GATE-LAUNCH-MESSAGE.md
+  status: awaiting-user
+  pending_gate: CP5
+  pending_checklist_path: process/checkpoints/CP5-CR053-MIGRATION-INVENTORY-BATCH-A-LLD-BATCH.md
+  launch_message_path: process/checks/CP5-CR053-HUMAN-GATE-LAUNCH-MESSAGE.md
   pending_human_decisions:
+  - id: DQ-CP5-CR053-01
+    gate: CP5
+    decision_type: implementation
+    question: 是否接受 CR053-MIGRATION-INVENTORY-BATCH-A 的全量设计证据批次？
+    recommendation: 接受 S01-S04 full-lld 和 S05 technical-note 作为后续 CP6 静态报告实现输入。
+    alternatives:
+    - 要求补强某个 Story LLD
+    - 暂停批次并回 CP4 重拆 Story
+    pros_cons: 推荐方案覆盖 root map、inventory、path dry-run、backup plan 和 CR058 gate；备选更保守但延迟。
+    impact_risk: 决定是否允许进入 CP6 静态报告实现；不授权真实迁移。
+    rollback_switch: 若任一 LLD 不足，退回对应 Story；若 Story 边界错误，回 CP4。
+    status: pending
+    source: process/checkpoints/CP5-CR053-MIGRATION-INVENTORY-BATCH-A-LLD-BATCH.md
+  - id: DQ-CP5-CR053-02
+    gate: CP5
+    decision_type: implementation
+    question: 是否接受 S05 保持 technical-note 而非 full-lld？
+    recommendation: 接受。S05 只定义 CR058 输入门禁和 CR053 close gate，不新增 schema / scanner / mover。
+    alternatives:
+    - 升级 S05 为 full-lld
+    - 延后 S05 到 CP8 前补齐
+    pros_cons: 推荐方案匹配低代码治理收敛；升级更强但成本更高，延后会削弱 CR058 输入追溯。
+    impact_risk: 影响 CR058 何时具备启动输入。
+    rollback_switch: 若后续引入自动迁移、脚本、状态机或真实路径绑定，S05 必须升级 full-lld。
+    status: pending
+    source: process/checkpoints/CP5-CR053-MIGRATION-INVENTORY-BATCH-A-LLD-BATCH.md
+  - id: DQ-CP5-CR053-03
+    gate: CP5
+    decision_type: runtime_authorization
+    question: CP5 approve 是否仍不授权真实 NAS / data lake / git / Windows 映射操作？
+    recommendation: 确认不授权。CP5 只批准设计证据，后续 CP6 也仅可实现静态 Markdown 报告和 guardrail 证据。
+    alternatives:
+    - 同时授权 repo-local dry-run scanner
+    - 同时授权 NAS read-only inventory
+    pros_cons: 推荐方案权限最小；备选需要独立运行授权、范围、命令、输出路径和回滚条件。
+    impact_risk: 防止 CP5 被误读为可以 mount、scan、copy、move、push 或改 `.env`。
+    rollback_switch: 任何真实运行、NAS 访问、lake 移动、git push/tag 或 Windows 映射必须另行 gate / CR。
+    status: pending
+    source: process/checkpoints/CP5-CR053-MIGRATION-INVENTORY-BATCH-A-LLD-BATCH.md
+  - id: DQ-CP5-CR053-04
+    gate: CP5
+    decision_type: risk_acceptance
+    question: 是否接受当前无阻断 clarification、OPEN / Spike 为 0，可进入 CP6 静态实现准备？
+    recommendation: 接受。当前 `blocks_lld=true` 未回答项为 0，S01-S05 均 ready-for-review。
+    alternatives:
+    - 要求先做真实路径 Spike
+    - 暂停到 CR058 / CR060 授权后再实现
+    pros_cons: 推荐方案允许先交付可审计静态报告；备选可获得真实路径事实但会扩大授权或阻塞。
+    impact_risk: 影响 CR053 是否能继续输出 dry-run 报告，而不触碰真实环境。
+    rollback_switch: 若用户要求真实路径绑定，先发起新授权门；否则 CP6/CP7 只做静态 / 文档 / 结构验证。
+    status: pending
+    source: process/checkpoints/CP5-CR053-MIGRATION-INVENTORY-BATCH-A-LLD-BATCH.md
   - id: DQ-CP3-CR053-01
     gate: CP3
     decision_type: architecture
@@ -9533,11 +9585,15 @@ orchestrator_session:
   thread_id: ''
   workflow_id: local_backtest-cr053
   active_change: "CR-053"
-  status: cp4-pass-ready-for-cp5
-  pending_gate: ''
-  pending_checklist_path: ''
-  pending_user_decision: ''
-  pending_decision_ids: []
+  status: awaiting-user
+  pending_gate: CP5
+  pending_checklist_path: process/checkpoints/CP5-CR053-MIGRATION-INVENTORY-BATCH-A-LLD-BATCH.md
+  pending_user_decision: "approve / 修改: <具体修改点> / reject"
+  pending_decision_ids:
+  - DQ-CP5-CR053-01
+  - DQ-CP5-CR053-02
+  - DQ-CP5-CR053-03
+  - DQ-CP5-CR053-04
   approved_decision_ids:
   - DQ-CP3-CR053-01
   - DQ-CP3-CR053-02
@@ -9588,25 +9644,16 @@ orchestrator_session:
   - DQ-CP5-CR046-04
   - DQ-CP5-CR046-05
   pending_non_authorized_items:
-  - CR046 CP7 验证或关闭
-  - CR047 / CR048 / CR049 启动
-  - 外部 archive 实际复制 / 删除 / 搬迁
-  - git push、删除分支、重写历史
+  - NAS mount / scan / mkdir / copy / delete / migration
+  - 真实目录移动、重命名、删除或 repo-local mechanical move
+  - MARKET_DATA_LAKE_ROOT 替换或真实 data lake 移动
+  - Windows 交易机 full archive / cold backup / full lake 映射
+  - 读取 `.env`、token、账号、密码、session、cookie、private key
   - provider fetch / lake write / catalog publish
-  - QMT / MiniQMT runtime、连接、传输、导入
-  - 账户 / 资金 / 持仓 / 委托 / 成交查询
-  - 下单 / 撤单 / simulation / live
-  - 读取 `.env`、token、account_id、账号、密码、session、cookie、private key
-  - 交付具体交易策略或可交易策略包
-  - 执行 QMT 终端 shadow / 模拟盘运行验证
-  - 真实安装 MiniQMT runner
-  - 连接 MiniQMT / XtQuant / QMT 外部 Python API
-  - 订阅真实行情或启动 runner runtime
-  - 读取 `.env`、token、account_id、账号、密码、session、cookie、private key
-  - 查询资金 / 持仓 / 委托 / 成交
-  - 下单 / 撤单 / simulation/live
-  - provider fetch / lake write / catalog publish
-  resume_instruction: "CR053 CP3 已由用户回复“同意，继续推进”批准，DQ-CP3-CR053-01..05 accepted，并确认 Linux 研究机可统一映射 NAS 三分区、现有 MARKET_DATA_LAKE_ROOT 不调整、Windows 交易机只映射 package exchange。CP4 Story DAG / parallel safety 已 PASS，CR053-S01..S05 进入 CP5 设计证据写作准备：S01..S04 full-lld，S05 technical-note。仍不授权实现、inventory 运行、真实目录重命名 / 文件移动、NAS mount/scan/mkdir/copy/delete、external archive migration、MARKET_DATA_LAKE_ROOT 替换或真实 lake 移动、provider/lake/publish、QMT/MiniQMT runtime、submit/cancel、simulation/live、账户查询、凭据读取、git push/tag 或重写历史。CR046 仍保持 paused CP6 恢复点。"
+  - QMT / MiniQMT runtime、连接、查询账户或交易动作
+  - git push、tag、远端仓库改名或历史重写
+  - 启动 CR058 / CR060+ 或执行真实迁移
+  resume_instruction: "CR053 CP5 设计证据批次已完成并发起人工审查，checklist=process/checkpoints/CP5-CR053-MIGRATION-INVENTORY-BATCH-A-LLD-BATCH.md。用户回复 approve 表示接受 DQ-CP5-CR053-01..04 推荐方案：S01-S04 full-lld + S05 technical-note 可作为 CP6 静态报告实现输入、S05 不升级 full-lld、继续不授权真实 NAS / lake / git / Windows 映射操作、当前无阻断 clarification。approve 不授权真实迁移、NAS mount/scan/mkdir/copy/delete、MARKET_DATA_LAKE_ROOT 替换、Windows full mount、凭据读取、provider/lake/publish、QMT/MiniQMT runtime、git push/tag/远端改名或启动 CR058/CR060+。"
   cr051_cp4_story_planning_dispatch:
     mode: inline-host-orchestrator
     agent_id: ''
@@ -9630,7 +9677,7 @@ orchestrator_session:
   spawned_at: '2026-05-18T20:15:21+08:00'
   resumed_at: ''
   last_seen_at: '2026-06-05T06:49:15+08:00'
-  awaiting_since: '2026-06-14T01:52:00+08:00'
+  awaiting_since: '2026-06-14T11:28:56+08:00'
   closed_at: ''
   previous_agent_id: 019e3b01-e3c3-7672-bdce-089f98da46df
   previous_thread_id: 019e3b01-e3c3-7672-bdce-089f98da46df
@@ -9645,6 +9692,25 @@ agent_lifecycle:
       checked_at: '2026-05-17T20:53:58+08:00'
       note: CR005-S02 blocker fix meta-dev/dev-zhu 已完成 CP6；meta-qa/qa-he the 2nd 已完成 S02 CP7 重验并 PASS；CR-005 Batch A 已 verified。
   active_agents:
+  - role: meta-dev
+    agent_id: 019ec420-5ade-70c2-8342-dec87ab63425
+    agent_name: dev-zhu
+    thread_id: 019ec420-5ade-70c2-8342-dec87ab63425
+    workflow_id: local_backtest-cr053
+    change_id: CR-053
+    story_id: CR053-S01;CR053-S02;CR053-S03;CR053-S04;CR053-S05
+    wave_id: CR053-MIGRATION-INVENTORY-BATCH-A-LLD
+    handoff_path: process/handoffs/META-DEV-CR053-LLD-BATCH-2026-06-14.md
+    status: completed
+    evidence: main thread spawn_agent returned agent_id=019ec420-5ade-70c2-8342-dec87ab63425 nickname=dev-zhu for CR053 CP5 LLD batch; wait_agent returned completed with S01-S04 full-lld, S05 technical-note and 5 CP5 PASS checks.
+    tool_name: multi_agent_v1.spawn_agent
+    reusable: false
+    spawned_at: '2026-06-14T11:15:24+08:00'
+    resumed_at: ''
+    last_seen_at: '2026-06-14T11:28:56+08:00'
+    completed_at: '2026-06-14T11:28:56+08:00'
+    closed_at: '2026-06-14T11:37:29+08:00'
+    fallback_reason: ''
   - role: meta-qa
     agent_id: 019eb753-8518-71e2-80dd-be52ccc387d1
     agent_name: qa-zhang
@@ -14611,6 +14677,28 @@ agent_lifecycle:
     completed_at: '2026-05-16T19:33:15+08:00'
     closed_at: '2026-05-16T19:33:15+08:00'
 history:
+- at: '2026-06-14T11:28:56+08:00'
+  actor: host-orchestrator
+  action: cr053-cp5-lld-batch-human-gate-launched
+  reason: CR053 CP5 设计证据批次已由 meta-dev/dev-zhu 完成；host-orchestrator 复核 4 份 full-lld、S05 technical-note、5 份 CP5 自动预检均可读且 PASS，阻断 clarification 为 0，并发起 CP5 人工审查。
+  artifacts:
+  - process/checkpoints/CP5-CR053-MIGRATION-INVENTORY-BATCH-A-LLD-BATCH.md
+  - process/checks/CP5-CR053-HUMAN-GATE-LAUNCH-MESSAGE.md
+  - process/handoffs/META-DEV-CR053-LLD-BATCH-2026-06-14.md
+  - process/stories/CR053-S01-root-map-and-host-mapping-contract-LLD.md
+  - process/stories/CR053-S02-repo-inventory-and-path-classification-LLD.md
+  - process/stories/CR053-S03-path-reference-and-legacy-alias-dry-run-LLD.md
+  - process/stories/CR053-S04-manifest-transfer-and-backup-plan-LLD.md
+  next_gate: CR053 CP5 LLD batch human review
+  not_authorized:
+  - true migration
+  - NAS mount / scan / mkdir / copy / delete
+  - MARKET_DATA_LAKE_ROOT replacement or real lake move
+  - Windows full archive / cold backup / full lake mount
+  - credential read
+  - provider/lake/publish
+  - QMT/MiniQMT runtime
+  - git push/tag/remote rename/history rewrite
 - at: '2026-06-14T10:59:13+08:00'
   actor: host-orchestrator
   action: cr053-cp3-approved-cp4-pass-ready-for-cp5

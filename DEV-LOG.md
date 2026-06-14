@@ -610,3 +610,26 @@
 - 结论：`PASS_WITH_RISK`；无 P0/P1 缺陷，无 meta-dev 回修项。
 - 剩余风险：L3 Windows bridge runtime、L4 real readonly、L5 submit/cancel/simulation/live 仍未授权；这些是 CP8 风险接受 / 不授权输入，不是本轮 L2 blocker。
 - 不授权边界：未读取 `.env` / `.env.*`、token、account_id、账号、密码、session、cookie、private key；未启动 Windows bridge runtime；未导入或调用真实 `gm` / `gmtrade` runtime；未登录/连接 Goldminer 或 broker；未查询账户/cash/position/order/fill；未下单、撤单、simulation/live、provider fetch、lake write 或 catalog publish。
+
+## 2026-06-14 - CR053 CP5 设计证据写作完成
+
+- 任务：按 `lld-designer` 协议推进 CR053 `CR053-MIGRATION-INVENTORY-BATCH-A` CP5 设计证据；本轮只写 LLD / technical-note / CP5 自动预检，不写实现代码，不创建 CP5 人工 checkpoint。
+- 批次：S01-S04 为 full-lld，S05 为 technical-note；CP3 已 approved，CP4 `process/checks/CP4-CR053-STORY-DAG-PARALLEL-SAFETY.md` 为 PASS。
+- 设计证据文件清单：
+  - `process/stories/CR053-S01-root-map-and-host-mapping-contract-LLD.md`
+  - `process/stories/CR053-S02-repo-inventory-and-path-classification-LLD.md`
+  - `process/stories/CR053-S03-path-reference-and-legacy-alias-dry-run-LLD.md`
+  - `process/stories/CR053-S04-manifest-transfer-and-backup-plan-LLD.md`
+  - `process/stories/CR053-S05-cr058-migration-input-and-close-gate.md#技术说明`
+- CP5 自动预检文件清单：
+  - `process/checks/CP5-CR053-S01-root-map-and-host-mapping-contract-LLD-IMPLEMENTABILITY.md`
+  - `process/checks/CP5-CR053-S02-repo-inventory-and-path-classification-LLD-IMPLEMENTABILITY.md`
+  - `process/checks/CP5-CR053-S03-path-reference-and-legacy-alias-dry-run-LLD-IMPLEMENTABILITY.md`
+  - `process/checks/CP5-CR053-S04-manifest-transfer-and-backup-plan-LLD-IMPLEMENTABILITY.md`
+  - `process/checks/CP5-CR053-S05-cr058-migration-input-and-close-gate-LLD-IMPLEMENTABILITY.md`
+- 设计摘要：S01 冻结 7 类 logical root、Linux `/mnt/quant-lab/hot` / `archive` / `cold-backup` 逻辑视图、Windows package exchange 只读窄映射和 `MARKET_DATA_LAKE_ROOT` 不调整；S02 冻结 repo-local inventory 字段、path classification、move_action 和 forbidden content fail-closed；S03 冻结 legacy alias dry-run、manual-review 和历史证据保留策略；S04 冻结 manifest-first transfer、warm / cold backup 分层、restore rehearsal 和 lake policy boundary；S05 technical-note 汇总 CR058 input gate 和 CR053 close gate。
+- Story 状态：S01-S05 均更新为 `lld-ready-for-review`；`lld_gate.status=ready-for-review`；`dev_gate.design_evidence_confirmed=false`、`lld_confirmed=false`、`implementation_allowed=false` 均保持未放行。
+- clarification queue：未新增 LCQ；本轮无 `blocks_lld=true` item。S01-S05 设计证据均记录 OPEN / Spike / clarification 为 0。
+- CP5 结果：5 份自动预检均为 `PASS`；阻断项 0，豁免项 0。等待 host-orchestrator 收齐后生成 `process/checkpoints/CP5-CR053-MIGRATION-INVENTORY-BATCH-A-LLD-BATCH.md` 并发起统一人工确认。
+- 不授权边界：未执行 NAS mount / scan / mkdir / copy / delete / migration；未执行真实目录 move / rename；未替换 `MARKET_DATA_LAKE_ROOT` 或移动真实 lake；未读 `.env` / token / account / password / private key；未 provider fetch、lake write、catalog publish、QMT / MiniQMT runtime、git push / tag / history rewrite。
+- 未运行检查：本轮为 CP5 设计证据写作，未运行 pytest、inventory scanner、NAS / lake / provider / QMT / Windows 映射或真实迁移命令。

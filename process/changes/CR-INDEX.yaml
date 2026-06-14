@@ -1,6 +1,6 @@
 version: 1
 status: "active-formal-cr"
-updated_at: '2026-06-14T10:59:13+08:00'
+updated_at: '2026-06-14T11:28:56+08:00'
 owner: meta-po
 source: CR-046 started by user target change to terminal-native simulation strategy export, then upgraded by user to QMT + MiniQMT dual-target strategy delivery and verification framework; current CR first freezes QMT/MiniQMT framework, verification framework design, strategy package contract, and MiniQMT runner install design; concrete strategy delivery and runtime validation are deferred until permissions / strategy selection are ready. CR051 design draft was created by explicit USER-20260614-START-CR051-DESIGN for Strategy Research Lifecycle Framework; user approved CR051 active-lock handling, CP2, CP3 and CP8 on 2026-06-14, so CR051 is closed-current-delivery while CR046 remains paused at CP6 recovery point. CR053 was started by user reply `cr053` as quant-lab migration inventory / dry-run and user approved CP2 on 2026-06-14T09:51:11+08:00, resolving the old CR051 follow-up numbering conflict by renumbering event-strategy research flow to CR057-candidate. CR051 CP3 approved hardware-aware storage tiering for NAS 512G SSD / 4T RAID / 14T HDD, research PC 2T SSD and trading PC 512G SSD, plus project identity rename from local_backtest to quant-lab with local_backtest retained as legacy alias. CR-045 closed-current-delivery as Goldminer Windows Bridge Readonly Probe; CR-044 closed-current-delivery as offline-admission-design-ready; CR-043 closed-spike-complete with NEEDS_ACCOUNT_PERMISSION; CR-042 closed-current-delivery for Broker-Neutral Adapter Contract; CR-041 closed-current-delivery for API-less Paper Simulation Runner; CR-039 and CR-040 closed-current-delivery; CR-020
   is deleted-by-user; CR-021..CR-024 are cancelled-user-deleted
@@ -56,11 +56,11 @@ active_crs:
   last_checked_at: '2026-06-14T00:29:41+08:00'
 - id: CR-053
   title: quant-lab Migration Inventory and Dry-run
-  status: active-cp4-pass-ready-for-cp5
+  status: active-cp5-review-pending
   source_tracking: USER-20260614-START-CR053-MIGRATION-INVENTORY
   formal_cr_path: process/changes/CR-053-QUANT-LAB-MIGRATION-INVENTORY-AND-DRY-RUN-2026-06-14.md
   priority: 1
-  blocked_by: 'cp4-pass-ready-for-cp5: 用户回复“同意，继续推进”，CR053 CP3 HLD / ADR approved，并确认 Linux 研究机可统一映射 NAS 三分区、现有 MARKET_DATA_LAKE_ROOT 不调整、Windows 交易机只映射 package exchange。CP4 Story DAG / parallel safety PASS，CR053-S01..S05 进入 CP5 设计证据写作准备。CR046 remains paused at CP6 PASS / ready-for-verification. CR053 当前不授权运行 inventory、真实目录重命名、文件移动、NAS 操作、external archive migration、provider/lake/publish、QMT/MiniQMT runtime、凭据读取、git push/tag 或重写历史。'
+  blocked_by: 'cp5-review-pending: CR053 S01-S04 full-lld、S05 technical-note 和 5 份 CP5 自动预检已完成；等待用户审查 process/checkpoints/CP5-CR053-MIGRATION-INVENTORY-BATCH-A-LLD-BATCH.md。CR046 remains paused at CP6 PASS / ready-for-verification. CR053 当前仍不授权实现、运行 inventory、真实目录重命名、文件移动、NAS 操作、external archive migration、provider/lake/publish、QMT/MiniQMT runtime、凭据读取、git push/tag 或重写历史。'
   impact_surface:
   - project migration inventory
   - quant-lab canonical identity
@@ -80,9 +80,9 @@ active_crs:
   - forbidden_content_boundary
   - CR053
   - CR051_follow_up
-  next_gate: CR053 CP5 LLD batch review
-  next_action: 进入 CR053 CP5 设计证据写作：S01..S04 full-lld，S05 technical-note；仍不授权实现、inventory 运行、NAS 操作、数据湖移动、git push 或 runtime。
-  last_checked_at: '2026-06-14T10:59:13+08:00'
+  next_gate: CR053 CP5 LLD batch human review
+  next_action: 等待用户回复 approve / 修改 / reject；approve 仅接受设计证据批次，不授权真实迁移、NAS、lake、git push、Windows full mount、runtime 或凭据读取。
+  last_checked_at: '2026-06-14T11:28:56+08:00'
 closed_crs:
 - id: CR-051
   title: Strategy Research Lifecycle Framework and Strategy Taxonomy

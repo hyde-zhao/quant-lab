@@ -2,7 +2,7 @@
 story_id: "CR053-S04-manifest-transfer-and-backup-plan"
 title: "manifest-first transfer 与 backup plan"
 story_slug: "manifest-transfer-and-backup-plan"
-status: "lld-ready"
+status: "lld-ready-for-review"
 priority: "P0"
 wave: "CR053-W2-REFERENCE-BACKUP"
 depends_on:
@@ -29,9 +29,25 @@ file_ownership:
     - "real backup execute"
     - "real restore execute"
     - "NAS copy / delete"
+lld_gate:
+  design_evidence_type: "full-lld"
+  design_evidence_path: "process/stories/CR053-S04-manifest-transfer-and-backup-plan-LLD.md"
+  status: "ready-for-review"
+  confirmed: false
+dev_gate:
+  design_evidence_confirmed: false
+  lld_confirmed: false
+  dependencies_satisfied: false
+  file_conflict_free: true
+  implementation_allowed: false
+  dependency_note: "依赖 S01 root map 合同；CP5 全量确认前不得实现。"
+  not_authorized:
+    - "real backup execute"
+    - "real restore execute"
+    - "NAS copy / delete"
 change_id: "CR-053"
 created_at: "2026-06-14T10:59:13+08:00"
-updated_at: "2026-06-14T10:59:13+08:00"
+updated_at: "2026-06-14T11:16:58+08:00"
 ---
 
 # CR053-S04：manifest-first transfer 与 backup plan

@@ -2,7 +2,7 @@
 story_id: "CR053-S02-repo-inventory-and-path-classification"
 title: "Git 内 inventory 与路径分类器"
 story_slug: "repo-inventory-and-path-classification"
-status: "lld-ready"
+status: "lld-ready-for-review"
 priority: "P0"
 wave: "CR053-W1-MAPPING-INVENTORY"
 depends_on:
@@ -29,9 +29,25 @@ file_ownership:
     - "NAS scan"
     - "untracked data bulk scan"
     - "credential read"
+lld_gate:
+  design_evidence_type: "full-lld"
+  design_evidence_path: "process/stories/CR053-S02-repo-inventory-and-path-classification-LLD.md"
+  status: "ready-for-review"
+  confirmed: false
+dev_gate:
+  design_evidence_confirmed: false
+  lld_confirmed: false
+  dependencies_satisfied: false
+  file_conflict_free: true
+  implementation_allowed: false
+  dependency_note: "依赖 S01 root map 合同；CP5 全量确认前不得实现。"
+  not_authorized:
+    - "NAS scan"
+    - "untracked data bulk scan"
+    - "credential read"
 change_id: "CR-053"
 created_at: "2026-06-14T10:59:13+08:00"
-updated_at: "2026-06-14T10:59:13+08:00"
+updated_at: "2026-06-14T11:16:58+08:00"
 ---
 
 # CR053-S02：Git 内 inventory 与路径分类器
