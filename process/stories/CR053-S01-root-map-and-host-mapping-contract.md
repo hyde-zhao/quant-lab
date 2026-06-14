@@ -2,8 +2,10 @@
 story_id: "CR053-S01-root-map-and-host-mapping-contract"
 title: "迁移 root map 与主机映射合同"
 story_slug: "root-map-and-host-mapping-contract"
-status: "lld-ready-for-review"
+status: "dev-ready"
 priority: "P0"
+implementation_allowed: true
+implementation_allowed_until: "CP5 approved at 2026-06-14T11:52:15+08:00; static Markdown reports / guardrail evidence only"
 wave: "CR053-W1-MAPPING-INVENTORY"
 depends_on: []
 dependency_type: []
@@ -30,21 +32,21 @@ file_ownership:
 lld_gate:
   design_evidence_type: "full-lld"
   design_evidence_path: "process/stories/CR053-S01-root-map-and-host-mapping-contract-LLD.md"
-  status: "ready-for-review"
-  confirmed: false
+  status: "confirmed"
+  confirmed: true
 dev_gate:
-  design_evidence_confirmed: false
-  lld_confirmed: false
+  design_evidence_confirmed: true
+  lld_confirmed: true
   dependencies_satisfied: true
   file_conflict_free: true
-  implementation_allowed: false
+  implementation_allowed: true
   not_authorized:
     - "NAS mount / scan / mkdir / copy / delete"
     - "MARKET_DATA_LAKE_ROOT replacement"
     - "Windows trading PC full archive mount"
 change_id: "CR-053"
 created_at: "2026-06-14T10:59:13+08:00"
-updated_at: "2026-06-14T11:16:58+08:00"
+updated_at: "2026-06-14T11:52:15+08:00"
 ---
 
 # CR053-S01：迁移 root map 与主机映射合同

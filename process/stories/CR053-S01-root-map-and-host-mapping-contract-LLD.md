@@ -4,12 +4,12 @@ title: "迁移 root map 与主机映射合同"
 story_slug: "root-map-and-host-mapping-contract"
 lld_version: "1.0"
 tier: "M"
-status: "ready-for-review"
-confirmed: false
+status: "confirmed"
+confirmed: true
 created_by: "meta-dev"
 created_at: "2026-06-14T11:16:58+08:00"
-confirmed_by: ""
-confirmed_at: ""
+confirmed_by: "user"
+confirmed_at: "2026-06-14T11:52:15+08:00"
 shared_fragments:
   - "docs/design/HLD-CR053-QUANT-LAB-MIGRATION-INVENTORY-AND-DRY-RUN.md#5-nas-逻辑目录映射"
   - "docs/design/ARCHITECTURE-DECISION-CR053.md#adr-cr053-001nas-目录映射使用逻辑-root"

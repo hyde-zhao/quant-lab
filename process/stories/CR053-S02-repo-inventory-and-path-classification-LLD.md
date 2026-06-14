@@ -4,12 +4,12 @@ title: "Git 内 inventory 与路径分类器"
 story_slug: "repo-inventory-and-path-classification"
 lld_version: "1.0"
 tier: "M"
-status: "ready-for-review"
-confirmed: false
+status: "confirmed"
+confirmed: true
 created_by: "meta-dev"
 created_at: "2026-06-14T11:16:58+08:00"
-confirmed_by: ""
-confirmed_at: ""
+confirmed_by: "user"
+confirmed_at: "2026-06-14T11:52:15+08:00"
 shared_fragments:
   - "docs/design/HLD-CR053-QUANT-LAB-MIGRATION-INVENTORY-AND-DRY-RUN.md#8-dry-run-report-contract"
 feature_design_refs:

@@ -2,11 +2,11 @@
 checkpoint_id: "CP5"
 checkpoint_name: "CR053 Migration Inventory Batch A LLD Batch Review"
 type: "batch_auto_then_manual"
-status: "pending"
+status: "approved"
 owner: "host-orchestrator"
 created_at: "2026-06-14T11:28:56+08:00"
-reviewed_by: ""
-reviewed_at: ""
+reviewed_by: "user"
+reviewed_at: "2026-06-14T11:52:15+08:00"
 auto_check_result: "process/checks/CP5-CR053-S01-root-map-and-host-mapping-contract-LLD-IMPLEMENTABILITY.md; process/checks/CP5-CR053-S02-repo-inventory-and-path-classification-LLD-IMPLEMENTABILITY.md; process/checks/CP5-CR053-S03-path-reference-and-legacy-alias-dry-run-LLD-IMPLEMENTABILITY.md; process/checks/CP5-CR053-S04-manifest-transfer-and-backup-plan-LLD-IMPLEMENTABILITY.md; process/checks/CP5-CR053-S05-cr058-migration-input-and-close-gate-LLD-IMPLEMENTABILITY.md"
 auto_final_authorization: false
 target:
@@ -42,7 +42,7 @@ target:
 | 字段 | 内容 |
 |---|---|
 | capsule 路径 | `process/context/CP5-CR053-LLD-CONTEXT.yaml` |
-| capsule 状态 | ready-for-lld-design |
+| capsule 状态 | approved |
 | read_profile | compact |
 | 默认读取策略 | 先读 capsule；仅在缺失、冲突、字段不足、人工审计或深度评审时读取完整文档。 |
 | 全文档读取扩展 | 1 次；CP5 发起需要读取 Story LLD、S05 technical-note、CP5 自动预检、CP4 自动预检和 meta-dev handoff。 |
@@ -122,40 +122,40 @@ target:
 
 | # | 检查项 | 审查结果 | 证据 | 审查意见 |
 |---|---|---|---|---|
-| 1 | 是否接受 S01-S04 full-lld + S05 technical-note 作为全量 CP5 批次 | 待审查 | DQ-CP5-CR053-01 | 等待用户确认。 |
-| 2 | 是否接受 S05 不升级 full-lld | 待审查 | DQ-CP5-CR053-02 | 等待用户确认。 |
-| 3 | 是否确认 CP5 approve 不授权真实 NAS / lake / git / Windows 映射操作 | 待审查 | DQ-CP5-CR053-03 | 等待用户确认。 |
-| 4 | 是否接受当前无阻断 clarification，可进入 CP6 静态实现准备 | 待审查 | DQ-CP5-CR053-04 | 等待用户确认。 |
+| 1 | 是否接受 S01-S04 full-lld + S05 technical-note 作为全量 CP5 批次 | approved | DQ-CP5-CR053-01；用户回复“同意” | 接受推荐方案。 |
+| 2 | 是否接受 S05 不升级 full-lld | approved | DQ-CP5-CR053-02；用户回复“同意” | 接受推荐方案。 |
+| 3 | 是否确认 CP5 approve 不授权真实 NAS / lake / git / Windows 映射操作 | approved | DQ-CP5-CR053-03；用户回复“同意” | 接受推荐方案；真实操作继续不授权。 |
+| 4 | 是否接受当前无阻断 clarification，可进入 CP6 静态实现准备 | approved | DQ-CP5-CR053-04；用户回复“同意” | 接受推荐方案。 |
 
 ## Exit Criteria
 
 | 条目 | 审查结果 | 证据 | 审查意见 |
 |---|---|---|---|
-| 人工结论为 approved / changes_requested / rejected | 待审查 | 当前对话 | 等待用户回复。 |
-| 若 approved，CR053 可进入 story-execution / CP6 | 待审查 | 本文件 | 只允许静态报告 / guardrail 证据实现，不授权真实操作。 |
-| 若 changes_requested，按修改点退回对应 Story LLD 或 CP4 | 待审查 | 当前对话 | 等待用户回复。 |
-| 若 rejected，CR053 回退或关闭 | 待审查 | 当前对话 | 等待用户回复。 |
+| 人工结论为 approved / changes_requested / rejected | approved | 当前对话；用户回复“同意” | 按 `approve` 处理。 |
+| 若 approved，CR053 可进入 story-execution / CP6 | approved | 本文件 | 只允许静态报告 / guardrail 证据实现，不授权真实操作。 |
+| 若 changes_requested，按修改点退回对应 Story LLD 或 CP4 | N/A | 当前对话 | 用户未提出修改点。 |
+| 若 rejected，CR053 回退或关闭 | N/A | 当前对话 | 用户未拒绝。 |
 
 ## Deliverables
 
 | 交付物 | 路径 | 审查结果 | 审查意见 |
 |---|---|---|---|
-| CP5 Context Capsule | `process/context/CP5-CR053-LLD-CONTEXT.yaml` | 待审查 | ready-for-lld-design。 |
-| CP4 自动预检 | `process/checks/CP4-CR053-STORY-DAG-PARALLEL-SAFETY.md` | 待审查 | PASS。 |
-| S01 LLD | `process/stories/CR053-S01-root-map-and-host-mapping-contract-LLD.md` | 待审查 | full-lld ready-for-review。 |
-| S02 LLD | `process/stories/CR053-S02-repo-inventory-and-path-classification-LLD.md` | 待审查 | full-lld ready-for-review。 |
-| S03 LLD | `process/stories/CR053-S03-path-reference-and-legacy-alias-dry-run-LLD.md` | 待审查 | full-lld ready-for-review。 |
-| S04 LLD | `process/stories/CR053-S04-manifest-transfer-and-backup-plan-LLD.md` | 待审查 | full-lld ready-for-review。 |
-| S05 technical-note | `process/stories/CR053-S05-cr058-migration-input-and-close-gate.md#技术说明` | 待审查 | technical-note ready-for-review。 |
-| CP5 自动预检 | `process/checks/CP5-CR053-*` | 待审查 | 5 PASS。 |
+| CP5 Context Capsule | `process/context/CP5-CR053-LLD-CONTEXT.yaml` | approved | approved。 |
+| CP4 自动预检 | `process/checks/CP4-CR053-STORY-DAG-PARALLEL-SAFETY.md` | approved | PASS。 |
+| S01 LLD | `process/stories/CR053-S01-root-map-and-host-mapping-contract-LLD.md` | approved | full-lld confirmed。 |
+| S02 LLD | `process/stories/CR053-S02-repo-inventory-and-path-classification-LLD.md` | approved | full-lld confirmed。 |
+| S03 LLD | `process/stories/CR053-S03-path-reference-and-legacy-alias-dry-run-LLD.md` | approved | full-lld confirmed。 |
+| S04 LLD | `process/stories/CR053-S04-manifest-transfer-and-backup-plan-LLD.md` | approved | full-lld confirmed。 |
+| S05 technical-note | `process/stories/CR053-S05-cr058-migration-input-and-close-gate.md#技术说明` | approved | technical-note confirmed。 |
+| CP5 自动预检 | `process/checks/CP5-CR053-*` | approved | 5 PASS。 |
 
 ## 人工审查结果
 
-- 结论：`pending`
-- reviewed_by:
-- reviewed_at:
-- 用户回复：
-- 接受的决策项：
-- 修改意见：
-- 风险接受项：
+- 结论：`approved`
+- reviewed_by: user
+- reviewed_at: 2026-06-14T11:52:15+08:00
+- 用户回复：同意
+- 接受的决策项：DQ-CP5-CR053-01..04 推荐方案。
+- 修改意见：N/A
+- 风险接受项：接受 CR053 后续 CP6 仅进入静态 Markdown 报告 / guardrail evidence 实现准备；真实 repo-local mechanical move、NAS / archive 实迁、data lake 移动、git push/tag/远端改名、Windows full mount、凭据读取、provider/lake/publish 和 QMT/MiniQMT runtime 仍作为不授权范围。
 - 备注：本门禁不授权真实 NAS / data lake / git / Windows 映射 / 凭据 / provider / QMT 操作。

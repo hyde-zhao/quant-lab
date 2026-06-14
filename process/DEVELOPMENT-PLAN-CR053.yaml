@@ -2,7 +2,7 @@ project_id: "local_backtest"
 canonical_project_name: "quant-lab"
 change_id: "CR-053"
 version: "1.0"
-status: "cp4-pass-pending-lld"
+status: "cp5-approved-ready-for-cp6"
 created_at: "2026-06-14T10:59:13+08:00"
 created_by: "host-orchestrator"
 source_hld: "docs/design/HLD-CR053-QUANT-LAB-MIGRATION-INVENTORY-AND-DRY-RUN.md"
@@ -13,7 +13,10 @@ feature_design:
   tasks: "docs/features/quant-lab-migration-dry-run/TASKS.md"
 cp5_batch: "CR053-MIGRATION-INVENTORY-BATCH-A"
 cp5_manual_review: "process/checkpoints/CP5-CR053-MIGRATION-INVENTORY-BATCH-A-LLD-BATCH.md"
-implementation_allowed: false
+implementation_allowed: true
+implementation_scope: "static Markdown reports / guardrail evidence only"
+cp5_approved_at: "2026-06-14T11:52:15+08:00"
+cp5_approved_by: "user"
 real_migration_authorized: false
 nas_operation_authorized: false
 data_lake_mapping_change_authorized: false

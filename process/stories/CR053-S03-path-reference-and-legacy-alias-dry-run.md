@@ -2,8 +2,10 @@
 story_id: "CR053-S03-path-reference-and-legacy-alias-dry-run"
 title: "路径引用与 legacy alias dry-run"
 story_slug: "path-reference-and-legacy-alias-dry-run"
-status: "lld-ready-for-review"
+status: "dev-ready"
 priority: "P0"
+implementation_allowed: true
+implementation_allowed_until: "CP5 approved at 2026-06-14T11:52:15+08:00; static Markdown reports / guardrail evidence only"
 wave: "CR053-W2-REFERENCE-BACKUP"
 depends_on:
   - "CR053-S02-repo-inventory-and-path-classification"
@@ -31,21 +33,21 @@ file_ownership:
 lld_gate:
   design_evidence_type: "full-lld"
   design_evidence_path: "process/stories/CR053-S03-path-reference-and-legacy-alias-dry-run-LLD.md"
-  status: "ready-for-review"
-  confirmed: false
+  status: "confirmed"
+  confirmed: true
 dev_gate:
-  design_evidence_confirmed: false
-  lld_confirmed: false
-  dependencies_satisfied: false
+  design_evidence_confirmed: true
+  lld_confirmed: true
+  dependencies_satisfied: true
   file_conflict_free: true
-  implementation_allowed: false
-  dependency_note: "依赖 S02 inventory 合同；CP5 全量确认前不得实现。"
+  implementation_allowed: true
+  dependency_note: "依赖 S02 inventory 合同；CP5 已全量确认，可进入静态 Markdown 报告 / guardrail evidence 实现。"
   not_authorized:
     - "bulk rewrite of historical process / CR / handoff evidence"
     - "git history rewrite"
 change_id: "CR-053"
 created_at: "2026-06-14T10:59:13+08:00"
-updated_at: "2026-06-14T11:16:58+08:00"
+updated_at: "2026-06-14T11:52:15+08:00"
 ---
 
 # CR053-S03：路径引用与 legacy alias dry-run

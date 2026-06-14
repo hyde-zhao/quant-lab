@@ -1,7 +1,7 @@
 ---
-version: "2.8"
-last_updated: "2026-06-14T10:59:13+08:00"
-status: "cr053-story-plan-cp4-pass-pending-lld"
+version: "2.9"
+last_updated: "2026-06-14T11:52:15+08:00"
+status: "cr053-cp5-approved-ready-for-cp6"
 confirmed: true
 confirmed_by: "user"
 confirmed_at: "2026-05-14"
@@ -137,6 +137,7 @@ created_by: "meta-se"
 | 2.6 | 2026-06-05 | meta-po | CR020-S01..S06 已完成 CP5 approved、代码 / 文档实现、CP6 PASS 与 CP7 fixture/static PASS；`75 passed`、`py_compile` PASS、`git diff --check` PASS，真实 `.env` 读取、gateway 启动、端口绑定、QMT 连接和真实 `query_positions` 均为 0。当前等待用户按 Windows S 端和 Linux C 端手工安装调试手册执行真实只读验证，CR-020 不关闭、不授权交易 / 账户写入 / simulation/live / provider/lake/publish / 凭据输出 |
 | 2.7 | 2026-06-14 | host-orchestrator | 按 CR-051 CP3 approved 口径追加 CR051-S01..S06 与 3 个增量 Wave：策略研究生命周期和 taxonomy、仓库 / 归档 / 数据湖边界、研究主机与交易主机工作流、registry / evidence 合同、后续 CR roadmap、`quant-lab` canonical name 与 `local_backtest` legacy alias；CP4 自动预检 PASS；本轮只做 Story Plan / CP4，不生成 LLD、不实现、不执行目录重命名、不操作 NAS、不运行 QMT / MiniQMT、不 provider/lake/publish、不 git push |
 | 2.8 | 2026-06-14 | host-orchestrator | 按 CR-053 CP3 approved 口径追加 CR053-S01..S05 与 3 个增量 Wave：root map / host mapping、repo inventory、path reference dry-run、manifest transfer / backup plan、CR058 migration input；CP4 自动预检 PASS；本轮只做 Story Plan / CP4，不生成 LLD、不实现、不执行 NAS mount / scan / copy / delete、不移动目录、不调整现有 `MARKET_DATA_LAKE_ROOT`、不 git push |
+| 2.9 | 2026-06-14 | host-orchestrator | 用户回复“同意”后回填 CR053 CP5 approved：S01-S04 full-lld 与 S05 technical-note 均确认，Story 卡片推进到 `dev-ready`；后续 CP6 仅允许静态 Markdown 报告 / guardrail evidence，不授权真实迁移、NAS 操作、lake 移动、Windows full mount、凭据读取、provider/lake/publish、QMT/MiniQMT runtime 或 git push/tag |
 
 ## Story 列表
 

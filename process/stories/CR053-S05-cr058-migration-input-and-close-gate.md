@@ -2,8 +2,10 @@
 story_id: "CR053-S05-cr058-migration-input-and-close-gate"
 title: "CR058 真实迁移输入与关闭门禁"
 story_slug: "cr058-migration-input-and-close-gate"
-status: "lld-ready-for-review"
+status: "dev-ready"
 priority: "P1"
+implementation_allowed: true
+implementation_allowed_until: "CP5 approved at 2026-06-14T11:52:15+08:00; static Markdown reports / guardrail evidence only"
 wave: "CR053-W3-MIGRATION-GATE"
 depends_on:
   - "CR053-S02-repo-inventory-and-path-classification"
@@ -36,22 +38,22 @@ file_ownership:
 lld_gate:
   design_evidence_type: "technical-note"
   design_evidence_path: "process/stories/CR053-S05-cr058-migration-input-and-close-gate.md#技术说明"
-  status: "ready-for-review"
-  confirmed: false
+  status: "confirmed"
+  confirmed: true
 dev_gate:
-  design_evidence_confirmed: false
-  lld_confirmed: false
-  dependencies_satisfied: false
+  design_evidence_confirmed: true
+  lld_confirmed: true
+  dependencies_satisfied: true
   file_conflict_free: true
-  implementation_allowed: false
-  dependency_note: "依赖 S02/S03/S04 设计合同；CP5 全量确认前不得实现。"
+  implementation_allowed: true
+  dependency_note: "依赖 S02/S03/S04 设计合同；CP5 已全量确认，可进入静态 Markdown 报告 / guardrail evidence 实现。"
   not_authorized:
     - "real file move"
     - "git push / tag"
     - "remote repo rename"
 change_id: "CR-053"
 created_at: "2026-06-14T10:59:13+08:00"
-updated_at: "2026-06-14T11:16:58+08:00"
+updated_at: "2026-06-14T11:52:15+08:00"
 ---
 
 # CR053-S05：CR058 真实迁移输入与关闭门禁

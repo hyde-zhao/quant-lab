@@ -8,14 +8,14 @@ active_story: ''
 iteration: 465
 blocked: false
 blocked_reason: ''
-last_action: CR053 CP5 设计证据写作完成；S01-S04 full-lld、S05 technical-note 和 5 份 CP5 自动预检均已生成，阻断项 0。
-next_action: "等待用户审查 CR053 CP5 LLD batch：process/checkpoints/CP5-CR053-MIGRATION-INVENTORY-BATCH-A-LLD-BATCH.md；approve 仅接受设计证据，不授权真实迁移、NAS、lake、git push、Windows full mount、runtime 或凭据读取。"
+last_action: CR053 CP5 LLD batch 已按用户回复“同意”回填为 approved；S01-S04 full-lld、S05 technical-note 已 confirmed，S01-S05 Story 卡片已 dev-ready。
+next_action: "进入 CR053 CP6 静态实现：仅生成 docs/release Markdown 报告和 guardrail evidence；不授权真实迁移、NAS、lake、git push、Windows full mount、runtime 或凭据读取。"
 canonical_project_name: quant-lab
 legacy_project_alias: local_backtest
 cr_tracking:
   status: "active-formal-cr"
   index_path: process/changes/CR-INDEX.yaml
-  last_consistency_check: 'PASS at 2026-06-14T11:12:55+08:00 via uv run --python 3.11 python scripts/check_cr_tracking_consistency.py --project-root .'
+  last_consistency_check: 'PASS at 2026-06-14T12:00:36+08:00 via uv run --python 3.11 python scripts/check_cr_tracking_consistency.py --project-root .'
   active_crs:
   - id: CR-046
     title: QMT and MiniQMT Dual-Target Strategy Delivery Framework
@@ -54,11 +54,11 @@ cr_tracking:
     last_checked_at: '2026-06-14T00:29:41+08:00'
   - id: CR-053
     title: quant-lab Migration Inventory and Dry-run
-    status: active-cp5-review-pending
+    status: active-cp5-approved-ready-for-cp6
     source_tracking: USER-20260614-START-CR053-MIGRATION-INVENTORY
     formal_cr_path: process/changes/CR-053-QUANT-LAB-MIGRATION-INVENTORY-AND-DRY-RUN-2026-06-14.md
     priority: 1
-    blocked_by: 'cp5-review-pending: CR053 S01-S04 full-lld、S05 technical-note 和 5 份 CP5 自动预检已完成；等待用户审查 process/checkpoints/CP5-CR053-MIGRATION-INVENTORY-BATCH-A-LLD-BATCH.md。CR046 remains paused at CP6 PASS / ready-for-verification. CR053 当前仍不授权实现、运行 inventory、真实目录重命名、文件移动、NAS 操作、external archive migration、provider/lake/publish、QMT/MiniQMT runtime、凭据读取、git push/tag 或重写历史。'
+    blocked_by: 'cp5-approved-ready-for-cp6: 用户回复“同意”，CR053 S01-S04 full-lld、S05 technical-note 和 5 份 CP5 自动预检已 approved；S01-S05 Story 卡片已 dev-ready。CR046 remains paused at CP6 PASS / ready-for-verification. CR053 CP6 仅允许静态 Markdown 报告 / guardrail evidence，不授权运行 inventory、真实目录重命名、文件移动、NAS 操作、external archive migration、provider/lake/publish、QMT/MiniQMT runtime、凭据读取、git push/tag 或重写历史。'
     impact_surface:
     - project migration inventory
     - quant-lab canonical identity
@@ -78,9 +78,9 @@ cr_tracking:
     - forbidden_content_boundary
     - CR053
     - CR051_follow_up
-    next_gate: CR053 CP5 LLD batch human review
-    next_action: 等待用户回复 approve / 修改 / reject；approve 仅接受设计证据批次，不授权真实迁移、NAS、lake、git push、Windows full mount、runtime 或凭据读取。
-    last_checked_at: '2026-06-14T10:59:13+08:00'
+    next_gate: CR053 CP6 static implementation
+    next_action: 调度 CR053 CP6 静态实现；仅生成 docs/release Markdown 报告和 guardrail evidence，不执行真实迁移、NAS、lake、git push、Windows full mount、runtime 或凭据读取。
+    last_checked_at: '2026-06-14T11:52:15+08:00'
   closed_crs:
   - id: CR-051
     title: Strategy Research Lifecycle Framework and Strategy Taxonomy
@@ -744,9 +744,9 @@ cr_tracking:
     不占执行锁
   consistency_check: scripts/check_cr_tracking_consistency.py --project-root .
 human_gate_decisions:
-  status: awaiting-user
-  pending_gate: CP5
-  pending_checklist_path: process/checkpoints/CP5-CR053-MIGRATION-INVENTORY-BATCH-A-LLD-BATCH.md
+  status: approved
+  pending_gate: ''
+  pending_checklist_path: ''
   launch_message_path: process/checks/CP5-CR053-HUMAN-GATE-LAUNCH-MESSAGE.md
   pending_human_decisions:
   - id: DQ-CP5-CR053-01
@@ -760,7 +760,9 @@ human_gate_decisions:
     pros_cons: 推荐方案覆盖 root map、inventory、path dry-run、backup plan 和 CR058 gate；备选更保守但延迟。
     impact_risk: 决定是否允许进入 CP6 静态报告实现；不授权真实迁移。
     rollback_switch: 若任一 LLD 不足，退回对应 Story；若 Story 边界错误，回 CP4。
-    status: pending
+    status: approved
+    decided_by: user
+    decided_at: '2026-06-14T11:52:15+08:00'
     source: process/checkpoints/CP5-CR053-MIGRATION-INVENTORY-BATCH-A-LLD-BATCH.md
   - id: DQ-CP5-CR053-02
     gate: CP5
@@ -773,7 +775,9 @@ human_gate_decisions:
     pros_cons: 推荐方案匹配低代码治理收敛；升级更强但成本更高，延后会削弱 CR058 输入追溯。
     impact_risk: 影响 CR058 何时具备启动输入。
     rollback_switch: 若后续引入自动迁移、脚本、状态机或真实路径绑定，S05 必须升级 full-lld。
-    status: pending
+    status: approved
+    decided_by: user
+    decided_at: '2026-06-14T11:52:15+08:00'
     source: process/checkpoints/CP5-CR053-MIGRATION-INVENTORY-BATCH-A-LLD-BATCH.md
   - id: DQ-CP5-CR053-03
     gate: CP5
@@ -786,7 +790,9 @@ human_gate_decisions:
     pros_cons: 推荐方案权限最小；备选需要独立运行授权、范围、命令、输出路径和回滚条件。
     impact_risk: 防止 CP5 被误读为可以 mount、scan、copy、move、push 或改 `.env`。
     rollback_switch: 任何真实运行、NAS 访问、lake 移动、git push/tag 或 Windows 映射必须另行 gate / CR。
-    status: pending
+    status: approved
+    decided_by: user
+    decided_at: '2026-06-14T11:52:15+08:00'
     source: process/checkpoints/CP5-CR053-MIGRATION-INVENTORY-BATCH-A-LLD-BATCH.md
   - id: DQ-CP5-CR053-04
     gate: CP5
@@ -799,7 +805,9 @@ human_gate_decisions:
     pros_cons: 推荐方案允许先交付可审计静态报告；备选可获得真实路径事实但会扩大授权或阻塞。
     impact_risk: 影响 CR053 是否能继续输出 dry-run 报告，而不触碰真实环境。
     rollback_switch: 若用户要求真实路径绑定，先发起新授权门；否则 CP6/CP7 只做静态 / 文档 / 结构验证。
-    status: pending
+    status: approved
+    decided_by: user
+    decided_at: '2026-06-14T11:52:15+08:00'
     source: process/checkpoints/CP5-CR053-MIGRATION-INVENTORY-BATCH-A-LLD-BATCH.md
   - id: DQ-CP3-CR053-01
     gate: CP3
@@ -9585,16 +9593,16 @@ orchestrator_session:
   thread_id: ''
   workflow_id: local_backtest-cr053
   active_change: "CR-053"
-  status: awaiting-user
-  pending_gate: CP5
-  pending_checklist_path: process/checkpoints/CP5-CR053-MIGRATION-INVENTORY-BATCH-A-LLD-BATCH.md
-  pending_user_decision: "approve / 修改: <具体修改点> / reject"
-  pending_decision_ids:
+  status: cp5-approved-ready-for-cp6
+  pending_gate: ''
+  pending_checklist_path: ''
+  pending_user_decision: ''
+  pending_decision_ids: []
+  approved_decision_ids:
   - DQ-CP5-CR053-01
   - DQ-CP5-CR053-02
   - DQ-CP5-CR053-03
   - DQ-CP5-CR053-04
-  approved_decision_ids:
   - DQ-CP3-CR053-01
   - DQ-CP3-CR053-02
   - DQ-CP3-CR053-03
@@ -9637,6 +9645,10 @@ orchestrator_session:
   - DQ-CP3-CR046-05
   - DQ-CP3-CR046-06
   approved_cp5_decision_ids:
+  - DQ-CP5-CR053-01
+  - DQ-CP5-CR053-02
+  - DQ-CP5-CR053-03
+  - DQ-CP5-CR053-04
   - CP5-CR051-LLD-BATCH-APPROVED
   - DQ-CP5-CR046-01
   - DQ-CP5-CR046-02
@@ -9653,7 +9665,7 @@ orchestrator_session:
   - QMT / MiniQMT runtime、连接、查询账户或交易动作
   - git push、tag、远端仓库改名或历史重写
   - 启动 CR058 / CR060+ 或执行真实迁移
-  resume_instruction: "CR053 CP5 设计证据批次已完成并发起人工审查，checklist=process/checkpoints/CP5-CR053-MIGRATION-INVENTORY-BATCH-A-LLD-BATCH.md。用户回复 approve 表示接受 DQ-CP5-CR053-01..04 推荐方案：S01-S04 full-lld + S05 technical-note 可作为 CP6 静态报告实现输入、S05 不升级 full-lld、继续不授权真实 NAS / lake / git / Windows 映射操作、当前无阻断 clarification。approve 不授权真实迁移、NAS mount/scan/mkdir/copy/delete、MARKET_DATA_LAKE_ROOT 替换、Windows full mount、凭据读取、provider/lake/publish、QMT/MiniQMT runtime、git push/tag/远端改名或启动 CR058/CR060+。"
+  resume_instruction: "CR053 CP5 设计证据批次已由用户回复“同意”批准，checklist=process/checkpoints/CP5-CR053-MIGRATION-INVENTORY-BATCH-A-LLD-BATCH.md。DQ-CP5-CR053-01..04 推荐方案均 accepted：S01-S04 full-lld + S05 technical-note 可作为 CP6 静态报告实现输入、S05 不升级 full-lld、继续不授权真实 NAS / lake / git / Windows 映射操作、当前无阻断 clarification。下一步进入 CR053 CP6 static implementation；仅允许 docs/release Markdown reports / guardrail evidence，不授权真实迁移、NAS mount/scan/mkdir/copy/delete、MARKET_DATA_LAKE_ROOT 替换、Windows full mount、凭据读取、provider/lake/publish、QMT/MiniQMT runtime、git push/tag/远端改名或启动 CR058/CR060+。"
   cr051_cp4_story_planning_dispatch:
     mode: inline-host-orchestrator
     agent_id: ''
@@ -9677,7 +9689,7 @@ orchestrator_session:
   spawned_at: '2026-05-18T20:15:21+08:00'
   resumed_at: ''
   last_seen_at: '2026-06-05T06:49:15+08:00'
-  awaiting_since: '2026-06-14T11:28:56+08:00'
+  awaiting_since: ''
   closed_at: ''
   previous_agent_id: 019e3b01-e3c3-7672-bdce-089f98da46df
   previous_thread_id: 019e3b01-e3c3-7672-bdce-089f98da46df
@@ -14677,6 +14689,29 @@ agent_lifecycle:
     completed_at: '2026-05-16T19:33:15+08:00'
     closed_at: '2026-05-16T19:33:15+08:00'
 history:
+- at: '2026-06-14T11:52:15+08:00'
+  actor: host-orchestrator
+  action: cr053-cp5-approved-ready-for-cp6
+  reason: 用户回复“同意”，按 CR053 CP5 LLD batch approve 处理，接受 DQ-CP5-CR053-01..04 推荐方案；S01-S04 full-lld 与 S05 technical-note 均确认，S01-S05 Story 卡片推进到 dev-ready。
+  artifacts:
+  - process/checkpoints/CP5-CR053-MIGRATION-INVENTORY-BATCH-A-LLD-BATCH.md
+  - process/context/CP5-CR053-LLD-CONTEXT.yaml
+  - process/stories/CR053-S01-root-map-and-host-mapping-contract.md
+  - process/stories/CR053-S02-repo-inventory-and-path-classification.md
+  - process/stories/CR053-S03-path-reference-and-legacy-alias-dry-run.md
+  - process/stories/CR053-S04-manifest-transfer-and-backup-plan.md
+  - process/stories/CR053-S05-cr058-migration-input-and-close-gate.md
+  - process/DEVELOPMENT-PLAN-CR053.yaml
+  next_gate: CR053 CP6 static implementation
+  not_authorized:
+  - true migration
+  - NAS mount / scan / mkdir / copy / delete
+  - MARKET_DATA_LAKE_ROOT replacement or real lake move
+  - Windows full archive / cold backup / full lake mount
+  - credential read
+  - provider/lake/publish
+  - QMT/MiniQMT runtime
+  - git push/tag/remote rename/history rewrite
 - at: '2026-06-14T11:28:56+08:00'
   actor: host-orchestrator
   action: cr053-cp5-lld-batch-human-gate-launched
