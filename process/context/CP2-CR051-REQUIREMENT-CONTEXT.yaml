@@ -1,0 +1,101 @@
+schema_version: "1.0"
+context_id: "CP2-CR051-REQUIREMENT-CONTEXT"
+change_id: "CR-051"
+status: approved
+phase: requirement-clarification
+read_profile: compact
+created_at: "2026-06-14T01:28:00+08:00"
+updated_at: "2026-06-14T01:48:00+08:00"
+owner: host-orchestrator
+
+source_request:
+  user_summary: "用户同意推进 CR051，并明确要求设计必须考虑本项目整体迁移；改造完成后会将当前项目全部迁移为设计后的结构，包括 Git 归档。"
+  interpretation: "本轮解除 CR051 active-lock 阻塞，进入 CP2 / CP3 准备；先冻结策略研究生命周期、仓库 / 归档 / 数据湖治理、研究 PC / 交易 PC 边界和项目迁移设计，不执行真实运行、provider、lake、publish 或交易动作。"
+
+upstream_evidence:
+  formal_cr: "process/changes/CR-051-STRATEGY-RESEARCH-LIFECYCLE-FRAMEWORK-2026-06-14.md"
+  hld_draft: "docs/design/HLD-CR051-STRATEGY-RESEARCH-LIFECYCLE-FRAMEWORK.md"
+  cr_index: "process/changes/CR-INDEX.yaml"
+  state: "process/STATE.md"
+  parent_cr: "process/changes/CR-046-TERMINAL-NATIVE-SIMULATION-STRATEGY-EXPORT-2026-06-13.md"
+  baseline_commit: "bd679fe Archive workspace before CR051 migration"
+
+hardware_context:
+  nas:
+    ssd_hot_layer: "512G SSD"
+    raid_warm_layer: "4T HDD RAID"
+    cold_hdd_layer: "14T HDD"
+  hosts:
+    research_pc: "2T SSD; primary development and research host"
+    trading_pc: "512G SSD; controlled package consumption and trading runtime host"
+  design_implication:
+    - "Research PC keeps the full Git checkout and active workspace."
+    - "NAS 4T RAID is the default RESEARCH_ARCHIVE_ROOT warm archive."
+    - "NAS 512G SSD is a hot cache / strategy package exchange layer."
+    - "NAS 14T HDD is the cold archive / backup layer."
+    - "Trading PC keeps only approved packages, checksums, docs bundle and small runtime evidence."
+    - "No private NAS mount path is hard-coded into Git."
+
+scope:
+  included:
+    - "Strategy Research Lifecycle Framework"
+    - "strategy family taxonomy"
+    - "research repository topology"
+    - "research archive governance"
+    - "market data lake / research archive / broker lake boundary"
+    - "research PC workflow"
+    - "trading PC package consumption workflow"
+    - "project-wide migration target structure"
+    - "hardware-aware archive hot/warm/cold tiering"
+    - "Git archive / rollback checkpoint design"
+    - "follow-up CR052..CR056 roadmap"
+  excluded:
+    - "concrete strategy implementation"
+    - "CR046 CP7 verification"
+    - "CR047 / CR048 / CR049 execution"
+    - "QMT / MiniQMT runtime validation"
+    - "credential or account_id read"
+    - "account/cash/position/order/fill query"
+    - "order submit/cancel"
+    - "simulation/live runtime"
+    - "provider fetch / lake write / catalog publish"
+    - "actual external archive copy or deletion"
+    - "git push, branch deletion, history rewrite"
+
+decision_items:
+  - id: DQ-CR051-01
+    type: scope
+    summary: "Approve CR051 as a framework and migration design CR, not a concrete strategy or runtime CR."
+  - id: DQ-CR051-02
+    type: architecture
+    summary: "Adopt one main Git repository plus external research archive / market data lake / broker archive."
+  - id: DQ-CR051-03
+    type: architecture
+    summary: "Use staged migration with Git archive checkpoints before mechanical moves."
+  - id: DQ-CR051-04
+    type: security
+    summary: "Keep credentials, account facts, large market data, broker facts and full research artifacts outside Git."
+  - id: DQ-CR051-05
+    type: follow_up_tracking
+    summary: "Keep CR052..CR056 as follow-up candidates gated by CR051."
+
+approval:
+  status: approved
+  reviewed_by: user
+  reviewed_at: "2026-06-14T01:48:00+08:00"
+  accepted_decisions:
+    - DQ-CR051-01
+    - DQ-CR051-02
+    - DQ-CR051-03
+    - DQ-CR051-04
+    - DQ-CR051-05
+  additional_design_input: "Hardware context: NAS 512G SSD + 4T RAID HDD + 14T HDD; trading PC 512G SSD; main research PC 2T SSD."
+
+next_gate:
+  checkpoint: "process/checkpoints/CP3-CR051-HLD-REVIEW.md"
+  auto_check: "process/checks/CP3-CR051-HLD-CONSISTENCY.md"
+  launch_message: "process/checks/CP3-CR051-HUMAN-GATE-LAUNCH-MESSAGE.md"
+  expected_user_replies:
+    - approve
+    - "修改: <具体修改点>"
+    - reject

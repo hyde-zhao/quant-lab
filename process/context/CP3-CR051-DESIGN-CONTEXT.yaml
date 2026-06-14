@@ -1,0 +1,86 @@
+schema_version: "1.0"
+context_id: "CP3-CR051-DESIGN-CONTEXT"
+change_id: "CR-051"
+status: approved
+phase: solution-design
+read_profile: compact
+created_at: "2026-06-14T01:52:00+08:00"
+updated_at: "2026-06-14T08:03:59+08:00"
+owner: host-orchestrator
+
+upstream_evidence:
+  cp2_auto_check: "process/checks/CP2-CR051-REQUIREMENTS-BASELINE.md"
+  cp2_checkpoint: "process/checkpoints/CP2-CR051-REQUIREMENTS-BASELINE.md"
+  cp2_context: "process/context/CP2-CR051-REQUIREMENT-CONTEXT.yaml"
+  formal_cr: "process/changes/CR-051-STRATEGY-RESEARCH-LIFECYCLE-FRAMEWORK-2026-06-14.md"
+  hld: "docs/design/HLD-CR051-STRATEGY-RESEARCH-LIFECYCLE-FRAMEWORK.md"
+  baseline_commit: "bd679fe Archive workspace before CR051 migration"
+
+hardware_context:
+  nas:
+    ssd_hot_layer: "512G SSD"
+    raid_warm_layer: "4T HDD RAID"
+    cold_hdd_layer: "14T HDD"
+  research_pc: "2T SSD; primary full development checkout and active research workspace"
+  trading_pc: "512G SSD; controlled package consumption and small runtime evidence only"
+
+project_identity:
+  canonical_name: "quant-lab"
+  legacy_alias: "local_backtest"
+  naming_decision_source: "user 2026-06-14: 就叫quant-lab，简洁一点"
+  migration_policy: "Use quant-lab for new docs, migration target, pyproject/project identity and future path variables; keep local_backtest as legacy alias for historical process/handoff/audit files and migration compatibility."
+  not_authorized_by_cp3:
+    - "repository directory rename"
+    - "remote repository rename"
+    - "bulk rewrite of historical process files"
+    - "git push / tag publication"
+
+architecture_decisions:
+  - id: DQ-CP3-CR051-01
+    type: architecture
+    summary: "Keep one main Git repo plus external archive/lake roots."
+  - id: DQ-CP3-CR051-02
+    type: architecture
+    summary: "Map current hardware to hot/warm/cold archive tiers."
+  - id: DQ-CP3-CR051-03
+    type: security
+    summary: "Keep trading PC as package consumer, not research host."
+  - id: DQ-CP3-CR051-04
+    type: implementation
+    summary: "Use staged migration gates and Git archive checkpoints."
+  - id: DQ-CP3-CR051-05
+    type: runtime_authorization
+    summary: "CP3 approval does not authorize NAS access, archive movement, provider/lake/publish, Git push or trading runtime."
+  - id: DQ-CP3-CR051-06
+    type: architecture
+    summary: "Rename canonical project identity from local_backtest to quant-lab while retaining local_backtest as legacy alias and historical audit name."
+
+not_authorized:
+  - "NAS mount / scan / copy / delete / migration execution"
+  - "provider fetch / lake write / catalog publish"
+  - "QMT / MiniQMT runtime, transfer, import, connection"
+  - "account/cash/position/order/fill query"
+  - "submit / cancel / simulation / live"
+  - "credential or account_id read"
+  - "git push, branch deletion, history rewrite"
+
+next_gate:
+  checkpoint: "process/checks/CP4-CR051-STORY-DAG-PARALLEL-SAFETY.md"
+  auto_check: "process/checks/CP4-CR051-STORY-DAG-PARALLEL-SAFETY.md"
+  expected_user_replies: []
+
+approval:
+  gate: CP3
+  result: approved
+  reviewed_by: user
+  reviewed_at: "2026-06-14T08:03:59+08:00"
+  accepted_decisions:
+    - DQ-CP3-CR051-01
+    - DQ-CP3-CR051-02
+    - DQ-CP3-CR051-03
+    - DQ-CP3-CR051-04
+    - DQ-CP3-CR051-05
+    - DQ-CP3-CR051-06
+  checkpoint: "process/checkpoints/CP3-CR051-HLD-REVIEW.md"
+  next_phase: story-planning
+  not_authorized: "CP3 approval does not authorize directory rename, NAS operations, archive migration execution, provider/lake/publish, QMT/MiniQMT, trading, credential read, git push, remote repository rename or historical process bulk rewrite."

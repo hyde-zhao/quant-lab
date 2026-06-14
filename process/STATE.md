@@ -1,19 +1,21 @@
 ---
 project_id: local_backtest
 workflow_mode: production
-current_phase: story-execution
-current_agent: meta-po
+current_phase: story-planning
+current_agent: host-orchestrator
 active_change: "CR-046"
 active_story: ''
-iteration: 453
-blocked: true
-blocked_reason: 'USER-20260614-PAUSE-CR046: 用户要求 CR046 先挂起；恢复点为 CP6 framework-first implementation PASS / ready-for-verification。挂起期间不得推进 CR046 CP7、不得调度验证、不得关闭 CR046、不得启动 CR047/CR048/CR049，也不得执行 QMT / MiniQMT 真实运行、传输、导入、连接、submit/cancel、simulation/live、provider/lake/publish 或凭据读取。USER-20260614-START-CR051-DESIGN 明确允许先创建 CR051 设计草案，但不表示 CR051 已正式激活实现或授权任何 runtime。'
-last_action: 用户要求 CR046 先挂起；已保留 CP6 PASS / ready-for-verification 恢复点，不进入 CP7。
-next_action: 暂停 CR046 推进；本轮仅做策略研究框架缺口规划。恢复 CR046 时从 CP7 verification-execution 前置状态继续，且仍需真实 meta-qa 调度证据。
+iteration: 457
+blocked: false
+blocked_reason: ''
+last_action: 用户回复“同意”，CR051 CP3 已回填 approved；接受 DQ-CP3-CR051-01..06，包括单主仓库、硬件冷热分层、交易主机边界、阶段化迁移、不授权真实操作和 `quant-lab` 正式命名。
+next_action: 进入 CR051 story-planning / CP4：生成或更新 BLUEPRINT / DOMAIN-MAP / DEPENDENCY-MAP / FEATURE-DESIGN-MATRIX、Story backlog、Development Plan 和 CP4 自动预检。CR046 仍保持 paused，不推进 CP7。
+canonical_project_name: quant-lab
+legacy_project_alias: local_backtest
 cr_tracking:
   status: "active-formal-cr"
   index_path: process/changes/CR-INDEX.yaml
-  last_consistency_check: 'PASS at 2026-06-14T00:29:41+08:00 via uv run --python 3.11 python scripts/check_cr_tracking_consistency.py --project-root .'
+  last_consistency_check: 'PASS at 2026-06-14T08:03:59+08:00 via uv run --python 3.11 python scripts/check_cr_tracking_consistency.py --project-root .'
   active_crs:
   - id: CR-046
     title: QMT and MiniQMT Dual-Target Strategy Delivery Framework
@@ -48,8 +50,40 @@ cr_tracking:
     - no_runtime_connection
     - no_terminal_validation
     next_gate: User Paused before CP7 Verification
-    next_action: 等待用户明确恢复 CR046 后再进入 CP7 verification-execution；挂起期间不调度 CP7、不启动 CR047/CR048/CR049、不执行真实运行 / 交易 / 凭据 / 传输导入。CR051 仅允许 design draft，不授权实现或 runtime。
+    next_action: 等待用户明确恢复 CR046 后再进入 CP7 verification-execution；挂起期间不调度 CP7、不启动 CR047/CR048/CR049、不执行真实运行 / 交易 / 凭据 / 传输导入。CR051 已获准并行推进设计门禁，但不授权实现或 runtime。
     last_checked_at: '2026-06-14T00:29:41+08:00'
+  - id: CR-051
+    title: Strategy Research Lifecycle Framework and Strategy Taxonomy
+    status: active-cp3-approved-ready-for-cp4
+    source_tracking: USER-20260614-START-CR051-DESIGN
+    formal_cr_path: process/changes/CR-051-STRATEGY-RESEARCH-LIFECYCLE-FRAMEWORK-2026-06-14.md
+    priority: 1
+    blocked_by: 'parallel-design-authorized: CR046 remains paused at CP6 PASS / ready-for-verification, but user approved CR051 active-lock handling, CP2 and CP3 on 2026-06-14. CR051 may proceed to story-planning / CP4 only; it does not restore CR046 and does not authorize implementation, directory rename, runtime, provider, lake, publish, archive migration execution or git push.'
+    impact_surface:
+    - strategy research lifecycle
+    - strategy taxonomy
+    - research repository topology
+    - research archive governance
+    - market data lake boundary
+    - research PC workflow
+    - trading PC package consumption
+    - project migration target structure
+    - git archive checkpoint design
+    - project identity rename
+    - legacy alias compatibility
+    - follow-up CR roadmap
+    conflict_keys:
+    - strategy_research_lifecycle
+    - repository_archive_governance
+    - project_migration
+    - git_archive
+    - project_identity_rename
+    - legacy_alias
+    - CR051
+    - CR046_follow_up
+    next_gate: CR051 CP4 Story DAG and parallel safety
+    next_action: 生成或更新 CR051 story-planning 产物，并将正式项目名 `quant-lab`、legacy alias `local_backtest` 纳入 Story 拆解；不授权实现、目录重命名、NAS 操作、外部 archive 搬迁、provider/lake/publish、QMT/MiniQMT runtime 或 Git push。
+    last_checked_at: '2026-06-14T08:03:59+08:00'
   closed_crs:
   - id: CR-045
     title: Goldminer Windows Bridge Readonly Probe
@@ -531,31 +565,7 @@ cr_tracking:
     next_gate: cancelled
     next_action: 不启动；不从任何历史 small-live 或研究结果自动放大资金。
     last_checked_at: '2026-06-10T22:20:00+08:00'
-  blocked_crs:
-  - id: CR-051
-    title: Strategy Research Lifecycle Framework and Strategy Taxonomy
-    status: blocked-design-draft-pending-active-lock
-    source_tracking: USER-20260614-START-CR051-DESIGN
-    formal_cr_path: process/changes/CR-051-STRATEGY-RESEARCH-LIFECYCLE-FRAMEWORK-2026-06-14.md
-    priority: 1
-    blocked_by: CR046 remains active-paused at CP6 PASS / ready-for-verification; user authorized CR051 design draft only. Formal CP2/CP3 activation needs explicit active-lock handling.
-    impact_surface:
-    - strategy research lifecycle
-    - strategy taxonomy
-    - research repository topology
-    - research archive governance
-    - market data lake boundary
-    - research PC workflow
-    - trading PC package consumption
-    - follow-up CR roadmap
-    conflict_keys:
-    - strategy_research_lifecycle
-    - repository_archive_governance
-    - CR051
-    - CR046_follow_up
-    next_gate: CR051 CP2 intake after active-lock decision
-    next_action: 使用 CR051 正式变更单和 HLD 草案作为上下文；正式推进前确认是否保持 CR046 挂起并允许 CR051 并行进入 CP2。
-    last_checked_at: '2026-06-14T01:03:43+08:00'
+  blocked_crs: []
   follow_up_candidates:
   - id: CR-026
     title: Qlib isolated runner optional Spike (narrowed after CR030-039 coverage)
@@ -705,11 +715,178 @@ cr_tracking:
     不占执行锁
   consistency_check: scripts/check_cr_tracking_consistency.py --project-root .
 human_gate_decisions:
-  status: idle
-  pending_gate: ''
+  status: approved
+  pending_gate: none
   pending_checklist_path: ''
   launch_message_path: ''
   pending_human_decisions:
+  - id: DQ-CP3-CR051-01
+    gate: CP3
+    decision_type: architecture
+    question: 是否确认 CR051 首版继续采用一个主代码仓库 + 外部 archive/lake/broker archive？
+    recommendation: 是，正式项目名 / 未来仓库名采用 quant-lab，当前 local_backtest 作为 legacy alias；外部根承载大 artifact / 数据 / broker facts。
+    alternatives:
+    - 拆多仓库
+    - Git LFS / 单仓库全量保存
+    pros_cons: 推荐方案最适合当前单人 / 小团队和迁移成本；拆仓库当前过早；Git 全量保存污染风险高。
+    impact_risk: 后续要做 path / forbidden content guardrail。
+    rollback_switch: 多用户权限隔离或交易生产发布成熟后再评估拆仓。
+    status: approved
+    decided_by: user
+    decided_at: '2026-06-14T08:03:59+08:00'
+    source: process/checkpoints/CP3-CR051-HLD-REVIEW.md
+  - id: DQ-CP3-CR051-02
+    gate: CP3
+    decision_type: architecture
+    question: 是否采用基于当前硬件的冷热分层？
+    recommendation: 是：研究主机 2T SSD 做活跃 workspace；NAS 512G SSD 做热缓存 / package exchange；NAS 4T RAID 做 research archive 主层；NAS 14T HDD 做冷归档；交易主机 512G SSD 只做 package 消费和小型运行证据。
+    alternatives:
+    - 全部 archive 放研究主机
+    - 全部 archive 放 NAS 14T
+    - 交易主机也保存完整 archive
+    pros_cons: 推荐方案兼顾性能、容量和风险；研究主机全放容量和备份风险高；14T 全放热读写慢；交易主机全放扩大风险面。
+    impact_risk: 需要后续通过配置表达路径，不写死私有挂载。
+    rollback_switch: 若 NAS 性能或可用性不足，可临时把 active workspace 放研究主机，archive 延后同步。
+    status: approved
+    decided_by: user
+    decided_at: '2026-06-14T08:03:59+08:00'
+    source: process/checkpoints/CP3-CR051-HLD-REVIEW.md
+  - id: DQ-CP3-CR051-03
+    gate: CP3
+    decision_type: security
+    question: 是否确认交易主机不是研究环境？
+    recommendation: 是，交易主机默认只消费 zip + sha256 + manifest + docs bundle 或只读 checkout。
+    alternatives:
+    - 交易主机 clone 完整研究仓库
+    - 交易主机也挂载 research archive
+    pros_cons: 推荐方案权限最小；完整 clone / archive 会增加误运行研究脚本和敏感数据暴露风险。
+    impact_risk: 后续策略包交付必须有 checksum 和人工 gate。
+    rollback_switch: 隔离测试机可临时 read-only checkout，但不得默认化。
+    status: approved
+    decided_by: user
+    decided_at: '2026-06-14T08:03:59+08:00'
+    source: process/checkpoints/CP3-CR051-HLD-REVIEW.md
+  - id: DQ-CP3-CR051-04
+    gate: CP3
+    decision_type: implementation
+    question: 是否确认迁移采用 Git 归档点 + inventory + mechanical move + verification？
+    recommendation: 是，机械移动与语义修改分提交。
+    alternatives:
+    - 一次性大迁移
+    - 只改文档不迁移
+    pros_cons: 推荐方案可回滚和审计；一次性迁移失败定位难；只改文档无法落地用户目标。
+    impact_risk: 会带来较多路径引用修正和验证工作。
+    rollback_switch: CP3 未通过不迁移；机械移动失败回退到 pre-file-move。
+    status: approved
+    decided_by: user
+    decided_at: '2026-06-14T08:03:59+08:00'
+    source: process/checkpoints/CP3-CR051-HLD-REVIEW.md
+  - id: DQ-CP3-CR051-05
+    gate: CP3
+    decision_type: runtime_authorization
+    question: 是否确认 CP3 approve 不授权任何真实操作？
+    recommendation: 是，不授权 NAS mount / copy / delete、provider/lake/publish、QMT/MiniQMT、交易、凭据、Git push。
+    alternatives:
+    - 同时授权 NAS inventory
+    - 同时授权 archive migration
+    pros_cons: 推荐方案保持设计门和执行门分离；备选均需要独立 runtime_authorization 和清单。
+    impact_risk: CP3 只冻结设计，后续 CP5/CP6 才能讨论实现。
+    rollback_switch: 用户另行授权后再启动 inventory / migration。
+    status: approved
+    decided_by: user
+    decided_at: '2026-06-14T08:03:59+08:00'
+    source: process/checkpoints/CP3-CR051-HLD-REVIEW.md
+  - id: DQ-CP3-CR051-06
+    gate: CP3
+    decision_type: architecture
+    question: 是否确认项目正式名称从 local_backtest 迁移为 quant-lab？
+    recommendation: 是，quant-lab 作为正式项目名 / 仓库名 / 新文档名；local_backtest 作为 legacy alias 和历史审计名保留。
+    alternatives:
+    - 继续使用 local_backtest
+    - 使用更长名称如 quant-strategy-lab
+    - 立即全量替换历史文件中的旧名
+    pros_cons: 推荐方案简洁且覆盖范围不再局限于回测；继续旧名会误导范围；长名称不如 quant-lab 简洁；全量替换历史文件会污染审计链。
+    impact_risk: 后续迁移需更新 README、USER-MANUAL、pyproject.toml、新环境变量、Windows 默认路径和路径 guardrail；历史 process 不批量替换。
+    rollback_switch: 若后续发现名称冲突，可在 CP4 前重开命名决策；若实现阶段发现兼容成本过高，可保留 local_backtest 为更长过渡期 alias。
+    status: approved
+    decided_by: user
+    decided_at: '2026-06-14T08:03:59+08:00'
+    source: process/checkpoints/CP3-CR051-HLD-REVIEW.md
+  - id: DQ-CR051-01
+    gate: CP2
+    decision_type: scope
+    question: CR051 是否定位为策略研究生命周期和项目迁移设计 CR，而不是具体策略实现或 runtime CR？
+    recommendation: 是。CR051 只冻结生命周期、taxonomy、归档、仓库拓扑、PC 使用方式、迁移方案和后续 CR 路线。
+    alternatives:
+    - 将多因子 proof cycle 并入 CR051
+    - 只做文档，不设计迁移
+    pros_cons: 推荐方案让后续 CR052+ 有稳定框架；并入多因子会让 CR051 过大且难验证；只做文档无法支撑用户要求的项目整体迁移。
+    impact_risk: 本轮不产出可交易策略，也不迁移外部 archive。
+    rollback_switch: 若用户需要立即研究多因子，回退并拆出 CR052；若迁移暂缓，保留 CR051 为设计基线。
+    status: approved
+    source: process/checkpoints/CP2-CR051-REQUIREMENTS-BASELINE.md
+    decided_by: user
+    decided_at: '2026-06-14T01:48:00+08:00'
+  - id: DQ-CR051-02
+    gate: CP2
+    decision_type: architecture
+    question: 仓库拓扑是否采用一个主 Git 仓库 + 外部 research archive / market data lake / broker archive？
+    recommendation: 是。保持 local_backtest 为 canonical 主仓库，Git 只存代码、文档、schema、小型 redacted fixture、manifest 和 pointer。
+    alternatives:
+    - 拆多仓库
+    - 单仓库保存全部 artifact
+    pros_cons: 推荐方案迁移成本最低且安全边界清晰；多仓库当前运维成本过高；单仓库保存全部 artifact 高风险污染 Git。
+    impact_risk: 需要后续 guardrail 防止大 artifact / 敏感事实进入 Git。
+    rollback_switch: 若多人权限隔离或交易生产权限成为硬约束，再评估多仓库。
+    status: approved
+    source: process/checkpoints/CP2-CR051-REQUIREMENTS-BASELINE.md
+    decided_by: user
+    decided_at: '2026-06-14T01:48:00+08:00'
+  - id: DQ-CR051-03
+    gate: CP2
+    decision_type: architecture
+    question: 本项目整体迁移是否采用阶段化 Git 归档与清单化机械迁移？
+    recommendation: 是。先 baseline commit / 可选 tag，再 CP3 设计冻结，再 inventory，再 mechanical move，再 externalization，再验证。
+    alternatives:
+    - 直接一次性搬目录
+    - 只整理文档不迁移结构
+    pros_cons: 推荐方案可审计、可回滚；一次性搬目录难以定位失败；只整理文档不满足用户迁移目标。
+    impact_risk: 后续会产生较大文件移动 diff，需要单独提交和路径引用检查。
+    rollback_switch: 若 CP3 未通过，停止迁移；若机械迁移失败，回退到 pre-file-move 归档点。
+    status: approved
+    source: process/checkpoints/CP2-CR051-REQUIREMENTS-BASELINE.md
+    decided_by: user
+    decided_at: '2026-06-14T01:48:00+08:00'
+  - id: DQ-CR051-04
+    gate: CP2
+    decision_type: security
+    question: 是否继续禁止凭据、账户事实、完整市场数据、大型研究 artifact、broker facts 进入 Git？
+    recommendation: 是。Git 只保留 schema、docs、summary、redacted fixture、manifest、checksum 和 pointer。
+    alternatives:
+    - 将小型研究输出全部留在 Git
+    - 将 archive 放入 Git LFS
+    pros_cons: 推荐方案最保守，符合当前安全边界；小型研究输出全留 Git 需要逐项大小 / 敏感性审查；Git LFS 引入新工具和权限治理成本。
+    impact_risk: 迁移阶段必须做 inventory 和 forbidden content scan。
+    rollback_switch: 若某 artifact 需要留 Git，必须在 M2 inventory 中标为 redacted-small 并有 owner。
+    status: approved
+    source: process/checkpoints/CP2-CR051-REQUIREMENTS-BASELINE.md
+    decided_by: user
+    decided_at: '2026-06-14T01:48:00+08:00'
+  - id: DQ-CR051-05
+    gate: CP2
+    decision_type: follow_up_tracking
+    question: 是否把 CR052..CR056 作为 CR051 后续路线，且全部受 CR051 gate 阻塞？
+    recommendation: 是。CR052 多因子 proof cycle，CR053 事件型，CR054 ML Spike，CR055 消费桥，CR056 反馈闭环。
+    alternatives:
+    - 只登记 CR052
+    - 将 CR053+ 放入 backlog 不编号
+    pros_cons: 推荐方案让路线可追踪；只登记 CR052 会遗漏策略族扩展；backlog 不编号降低状态机可查询性。
+    impact_risk: 后续 CR 仍需单独 CP2/CP3/CP5 和运行授权；不自动启动。
+    rollback_switch: CR051 CP8 后可重排优先级或取消候选。
+    status: approved
+    source: process/checkpoints/CP2-CR051-REQUIREMENTS-BASELINE.md
+    decided_by: user
+    decided_at: '2026-06-14T01:48:00+08:00'
   - id: DQ-CR046-01
     gate: CP2
     decision_type: scope
@@ -9171,17 +9348,24 @@ parallel_execution:
     required_status: done
     reason: S06 CP6/CP7 均已 PASS，CR008-BATCH-A 六个 Story 已全部 verified。
 orchestrator_session:
-  role: meta-po
-  agent_id: 019e3bd0-969f-7ab1-87a9-2ecfb3b0d0f3
-  agent_name: po-sun
-  thread_id: 019e3bd0-969f-7ab1-87a9-2ecfb3b0d0f3
-  workflow_id: local_backtest-cr046
+  role: host-orchestrator
+  agent_id: ''
+  agent_name: host-orchestrator
+  thread_id: ''
+  workflow_id: local_backtest-cr051
   active_change: "CR-046"
-  status: active
-  pending_gate: ''
+  status: cp3-approved-ready-for-cp4
+  pending_gate: CP4
   pending_checklist_path: ''
   pending_user_decision: ''
+  pending_decision_ids: []
   approved_decision_ids:
+  - DQ-CP3-CR051-01
+  - DQ-CP3-CR051-02
+  - DQ-CP3-CR051-03
+  - DQ-CP3-CR051-04
+  - DQ-CP3-CR051-05
+  - DQ-CP3-CR051-06
   - DQ-CR046-01
   - DQ-CR046-02
   - DQ-CR046-03
@@ -9190,6 +9374,12 @@ orchestrator_session:
   - DQ-CR046-06
   - DQ-CR046-07
   approved_cp3_decision_ids:
+  - DQ-CP3-CR051-01
+  - DQ-CP3-CR051-02
+  - DQ-CP3-CR051-03
+  - DQ-CP3-CR051-04
+  - DQ-CP3-CR051-05
+  - DQ-CP3-CR051-06
   - DQ-CP3-CR046-01
   - DQ-CP3-CR046-02
   - DQ-CP3-CR046-03
@@ -9203,6 +9393,15 @@ orchestrator_session:
   - DQ-CP5-CR046-04
   - DQ-CP5-CR046-05
   pending_non_authorized_items:
+  - CR046 CP7 验证或关闭
+  - CR047 / CR048 / CR049 启动
+  - 外部 archive 实际复制 / 删除 / 搬迁
+  - git push、删除分支、重写历史
+  - provider fetch / lake write / catalog publish
+  - QMT / MiniQMT runtime、连接、传输、导入
+  - 账户 / 资金 / 持仓 / 委托 / 成交查询
+  - 下单 / 撤单 / simulation / live
+  - 读取 `.env`、token、account_id、账号、密码、session、cookie、private key
   - 交付具体交易策略或可交易策略包
   - 执行 QMT 终端 shadow / 模拟盘运行验证
   - 真实安装 MiniQMT runner
@@ -9212,7 +9411,7 @@ orchestrator_session:
   - 查询资金 / 持仓 / 委托 / 成交
   - 下单 / 撤单 / simulation/live
   - provider fetch / lake write / catalog publish
-  resume_instruction: "CR046 CP2 / CP3 / CP5 已 approve，CP4 Story Plan / DAG / 并行安全自动预检已 PASS；CR046-DUAL-TARGET-FRAMEWORK-BATCH-A 的 S01..S05 full-lld、S06..S07 technical-note 已 confirmed；CP6 framework-first 文档 / 契约实现 PASS。当前进入 CP7 verification-execution，验证 framework docs、contract evidence、follow-up tracking 和 no-real-operation boundary。不授权具体策略交付、真实传输/导入、QMT 运行验证、MiniQMT 真实安装或连接、submit/cancel、simulation/live、账户查询、凭据读取或 provider/lake/publish。"
+  resume_instruction: "CR051 CP3 已 approved，接受 DQ-CP3-CR051-01..06，其中 DQ-CP3-CR051-06 表示正式项目名采用 quant-lab、local_backtest 保留为 legacy alias。下一步进入 story-planning / CP4，生成或更新 BLUEPRINT / DOMAIN-MAP / DEPENDENCY-MAP / FEATURE-DESIGN-MATRIX、Story backlog、Development Plan 和 CP4 自动预检。CR046 仍保持 paused CP6 恢复点，不推进 CP7，不授权具体策略交付、目录重命名、NAS 操作、外部 archive 搬迁、真实传输/导入、QMT/MiniQMT runtime、submit/cancel、simulation/live、账户查询、凭据读取、provider/lake/publish 或 git push。"
   cp4_story_planning_dispatch:
     mode: inline-host-orchestrator
     agent_id: ''
@@ -9226,7 +9425,7 @@ orchestrator_session:
   spawned_at: '2026-05-18T20:15:21+08:00'
   resumed_at: ''
   last_seen_at: '2026-06-05T06:49:15+08:00'
-  awaiting_since: ''
+  awaiting_since: '2026-06-14T01:52:00+08:00'
   closed_at: ''
   previous_agent_id: 019e3b01-e3c3-7672-bdce-089f98da46df
   previous_thread_id: 019e3b01-e3c3-7672-bdce-089f98da46df
@@ -14207,6 +14406,106 @@ agent_lifecycle:
     completed_at: '2026-05-16T19:33:15+08:00'
     closed_at: '2026-05-16T19:33:15+08:00'
 history:
+- at: '2026-06-14T08:03:59+08:00'
+  actor: host-orchestrator
+  action: cr051-cp3-approved-ready-for-cp4
+  from_phase: solution-design
+  to_phase: story-planning
+  reason: 用户回复“同意”，按 CR051 CP3 approve 处理，接受 DQ-CP3-CR051-01..06 推荐方案：单主仓库 + 外部 archive/lake/broker archive、当前硬件冷热分层、交易主机非研究环境、阶段化迁移和 Git 归档点、CP3 不授权真实操作、正式项目名 `quant-lab` 且 `local_backtest` 作为 legacy alias。CR051 可进入 story-planning / CP4。
+  artifacts:
+  - process/checkpoints/CP3-CR051-HLD-REVIEW.md
+  - docs/design/HLD-CR051-STRATEGY-RESEARCH-LIFECYCLE-FRAMEWORK.md
+  - process/context/CP3-CR051-DESIGN-CONTEXT.yaml
+  next_gate: CR051 CP4 Story DAG and parallel safety
+  safety_confirmations:
+    cr046_restored: false
+    cr046_cp7_dispatched: false
+    directory_rename_authorized: false
+    nas_access_authorized: false
+    external_archive_migration_authorized: false
+    provider_lake_publish_authorized: false
+    qmt_miniqmt_runtime_authorized: false
+    trading_authorized: false
+    credential_read_authorized: false
+    git_push_authorized: false
+    remote_repo_rename_authorized: false
+    historical_process_bulk_rewrite_authorized: false
+- at: '2026-06-14T07:53:18+08:00'
+  actor: host-orchestrator
+  action: cr051-project-name-quant-lab-added-to-cp3
+  from_phase: solution-design
+  to_phase: solution-design
+  reason: 用户回复“就叫quant-lab，简洁一点”，明确 CR051 迁移后的正式项目名；主线程将项目命名作为 CP3 架构决策 DQ-CP3-CR051-06 纳入 HLD v0.4、CP3 context、CP3 自动预检、人工审查稿和门禁发起消息。当前仅确认设计，不执行目录重命名、历史文件批量替换、Git push 或远端仓库改名。
+  artifacts:
+  - docs/design/HLD-CR051-STRATEGY-RESEARCH-LIFECYCLE-FRAMEWORK.md
+  - process/context/CP3-CR051-DESIGN-CONTEXT.yaml
+  - process/checks/CP3-CR051-HLD-CONSISTENCY.md
+  - process/checkpoints/CP3-CR051-HLD-REVIEW.md
+  - process/checks/CP3-CR051-HUMAN-GATE-LAUNCH-MESSAGE.md
+  next_gate: CR051 CP3 HLD architecture review
+  safety_confirmations:
+    directory_rename_authorized: false
+    historical_process_bulk_rewrite_authorized: false
+    remote_repo_rename_authorized: false
+    git_push_authorized: false
+- at: '2026-06-14T01:52:00+08:00'
+  actor: host-orchestrator
+  action: cr051-cp2-approved-cp3-launched
+  from_phase: requirement-clarification
+  to_phase: solution-design
+  reason: 用户回复“同意”，按 CR051 CP2 approve 处理，接受 DQ-CR051-01..05 推荐方案；用户补充当前硬件条件：NAS 512G SSD、4T RAID、14T HDD，交易主机 512G SSD，主力研究主机 2T SSD。主线程已将硬件事实纳入 HLD v0.3 的冷热分层和主机职责设计，并生成 CP3 自动预检与人工审查稿。
+  artifacts:
+  - process/checkpoints/CP2-CR051-REQUIREMENTS-BASELINE.md
+  - docs/design/HLD-CR051-STRATEGY-RESEARCH-LIFECYCLE-FRAMEWORK.md
+  - process/context/CP3-CR051-DESIGN-CONTEXT.yaml
+  - process/checks/CP3-CR051-HLD-CONSISTENCY.md
+  - process/checkpoints/CP3-CR051-HLD-REVIEW.md
+  - process/checks/CP3-CR051-HUMAN-GATE-LAUNCH-MESSAGE.md
+  next_gate: CR051 CP3 HLD architecture review
+  safety_confirmations:
+    nas_access_authorized: false
+    external_archive_migration_authorized: false
+    git_push_authorized: false
+    cr046_restored: false
+    cr046_cp7_dispatched: false
+    qmt_runtime_validation_authorized: false
+    miniqmt_connection_authorized: false
+    credential_read_authorized: false
+    provider_fetch_authorized: false
+    lake_write_authorized: false
+    catalog_publish_authorized: false
+- at: '2026-06-14T01:28:00+08:00'
+  actor: host-orchestrator
+  action: cr051-active-lock-approved-cp2-launched
+  from_phase: story-execution
+  to_phase: requirement-clarification
+  reason: 用户回复“同意，你可以推进CR051了”，并要求 CR051 设计必须考虑当前项目整体迁移和 Git 归档。主线程已先提交全量基线 `bd679fe Archive workspace before CR051 migration`，随后将 CR051 从 blocked design draft 转为 active CP2 review pending；CR046 保持 paused CP6 恢复点，不推进 CP7。
+  artifacts:
+  - process/changes/CR-051-STRATEGY-RESEARCH-LIFECYCLE-FRAMEWORK-2026-06-14.md
+  - docs/design/HLD-CR051-STRATEGY-RESEARCH-LIFECYCLE-FRAMEWORK.md
+  - process/context/CP2-CR051-REQUIREMENT-CONTEXT.yaml
+  - process/discussions/CP2-CR051-SCENARIO-DISCUSSION-LOG.md
+  - process/checks/CP2-CR051-REQUIREMENTS-BASELINE.md
+  - process/checkpoints/CP2-CR051-REQUIREMENTS-BASELINE.md
+  - process/checks/CP2-CR051-HUMAN-GATE-LAUNCH-MESSAGE.md
+  - process/changes/CR-INDEX.yaml
+  next_gate: CR051 CP2 requirements baseline human review
+  safety_confirmations:
+    baseline_commit_created: bd679fe
+    cr046_restored: false
+    cr046_cp7_dispatched: false
+    cr047_started: false
+    cr048_started: false
+    cr049_started: false
+    concrete_strategy_delivery_authorized: false
+    external_archive_migration_authorized: false
+    git_push_authorized: false
+    qmt_runtime_validation_authorized: false
+    miniqmt_connection_authorized: false
+    credential_read_authorized: false
+    provider_fetch_authorized: false
+    lake_write_authorized: false
+    catalog_publish_authorized: false
 - at: '2026-06-14T01:03:43+08:00'
   actor: host-orchestrator
   action: cr051-design-draft-created

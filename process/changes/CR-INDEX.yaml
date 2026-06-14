@@ -1,10 +1,10 @@
 version: 1
 status: "active-formal-cr"
-updated_at: '2026-06-14T01:03:43+08:00'
+updated_at: '2026-06-14T08:03:59+08:00'
 owner: meta-po
-source: CR-046 started by user target change to terminal-native simulation strategy export, then upgraded by user to QMT + MiniQMT dual-target strategy delivery and verification framework; current CR first freezes QMT/MiniQMT framework, verification framework design, strategy package contract, and MiniQMT runner install design; concrete strategy delivery and runtime validation are deferred until permissions / strategy selection are ready. CR051 design draft was created by explicit USER-20260614-START-CR051-DESIGN for Strategy Research Lifecycle Framework; it remains blocked pending active-lock decision while CR046 is paused. CR-045 closed-current-delivery as Goldminer Windows Bridge Readonly Probe; CR-044 closed-current-delivery as offline-admission-design-ready; CR-043 closed-spike-complete with NEEDS_ACCOUNT_PERMISSION; CR-042 closed-current-delivery for Broker-Neutral Adapter Contract; CR-041 closed-current-delivery for API-less Paper Simulation Runner; CR-039 and CR-040 closed-current-delivery; CR-020
+source: CR-046 started by user target change to terminal-native simulation strategy export, then upgraded by user to QMT + MiniQMT dual-target strategy delivery and verification framework; current CR first freezes QMT/MiniQMT framework, verification framework design, strategy package contract, and MiniQMT runner install design; concrete strategy delivery and runtime validation are deferred until permissions / strategy selection are ready. CR051 design draft was created by explicit USER-20260614-START-CR051-DESIGN for Strategy Research Lifecycle Framework; user approved CR051 active-lock handling, CP2 and CP3 on 2026-06-14, so CR051 is allowed to proceed to story-planning / CP4 while CR046 remains paused at CP6 recovery point. CR051 CP3 approved hardware-aware storage tiering for NAS 512G SSD / 4T RAID / 14T HDD, research PC 2T SSD and trading PC 512G SSD, plus project identity rename from local_backtest to quant-lab with local_backtest retained as legacy alias. CR-045 closed-current-delivery as Goldminer Windows Bridge Readonly Probe; CR-044 closed-current-delivery as offline-admission-design-ready; CR-043 closed-spike-complete with NEEDS_ACCOUNT_PERMISSION; CR-042 closed-current-delivery for Broker-Neutral Adapter Contract; CR-041 closed-current-delivery for API-less Paper Simulation Runner; CR-039 and CR-040 closed-current-delivery; CR-020
   is deleted-by-user; CR-021..CR-024 are cancelled-user-deleted
-last_consistency_check: 'PASS at 2026-06-14T00:29:41+08:00 via uv run --python 3.11 python scripts/check_cr_tracking_consistency.py --project-root .'
+last_consistency_check: 'PASS at 2026-06-14T08:03:59+08:00 via uv run --python 3.11 python scripts/check_cr_tracking_consistency.py --project-root .'
 index_schema:
 - id
 - title
@@ -52,8 +52,40 @@ active_crs:
   - no_runtime_connection
   - no_terminal_validation
   next_gate: User Paused before CP7 Verification
-  next_action: 等待用户明确恢复 CR046 后再进入 CP7 verification-execution；挂起期间不调度 CP7、不启动 CR047/CR048/CR049、不执行真实运行 / 交易 / 凭据 / 传输导入。CR051 仅允许 design draft，不授权实现或 runtime。
+  next_action: 等待用户明确恢复 CR046 后再进入 CP7 verification-execution；挂起期间不调度 CP7、不启动 CR047/CR048/CR049、不执行真实运行 / 交易 / 凭据 / 传输导入。CR051 已获准并行推进设计门禁，但不授权实现或 runtime。
   last_checked_at: '2026-06-14T00:29:41+08:00'
+- id: CR-051
+  title: Strategy Research Lifecycle Framework and Strategy Taxonomy
+  status: active-cp3-approved-ready-for-cp4
+  source_tracking: USER-20260614-START-CR051-DESIGN
+  formal_cr_path: process/changes/CR-051-STRATEGY-RESEARCH-LIFECYCLE-FRAMEWORK-2026-06-14.md
+  priority: 1
+  blocked_by: 'parallel-design-authorized: CR046 remains paused at CP6 PASS / ready-for-verification, but user approved CR051 active-lock handling, CP2 and CP3 on 2026-06-14. CR051 may proceed to story-planning / CP4 only; it does not restore CR046 and does not authorize implementation, directory rename, runtime, provider, lake, publish, archive migration execution or git push.'
+  impact_surface:
+  - strategy research lifecycle
+  - strategy taxonomy
+  - research repository topology
+  - research archive governance
+  - market data lake boundary
+  - research PC workflow
+  - trading PC package consumption
+  - project migration target structure
+  - git archive checkpoint design
+  - project identity rename
+  - legacy alias compatibility
+  - follow-up CR roadmap
+  conflict_keys:
+  - strategy_research_lifecycle
+  - repository_archive_governance
+  - project_migration
+  - git_archive
+  - project_identity_rename
+  - legacy_alias
+  - CR051
+  - CR046_follow_up
+  next_gate: CR051 CP4 Story DAG and parallel safety
+  next_action: 生成或更新 CR051 story-planning 产物，并将正式项目名 `quant-lab`、legacy alias `local_backtest` 纳入 Story 拆解；不授权实现、目录重命名、NAS 操作、外部 archive 搬迁、provider/lake/publish、QMT/MiniQMT runtime 或 Git push。
+  last_checked_at: '2026-06-14T08:03:59+08:00'
 closed_crs:
 - id: CR-045
   title: Goldminer Windows Bridge Readonly Probe
@@ -532,31 +564,7 @@ cancelled_crs:
   next_gate: cancelled
   next_action: 不启动；不从任何历史 small-live 或研究结果自动放大资金。
   last_checked_at: '2026-06-10T22:20:00+08:00'
-blocked_crs:
-- id: "CR-051"
-  title: Strategy Research Lifecycle Framework and Strategy Taxonomy
-  status: blocked-design-draft-pending-active-lock
-  source_tracking: USER-20260614-START-CR051-DESIGN
-  formal_cr_path: process/changes/CR-051-STRATEGY-RESEARCH-LIFECYCLE-FRAMEWORK-2026-06-14.md
-  priority: 1
-  blocked_by: CR046 remains active-paused at CP6 PASS / ready-for-verification; user authorized CR051 design draft only. Formal CP2/CP3 activation needs explicit active-lock handling.
-  impact_surface:
-  - strategy research lifecycle
-  - strategy taxonomy
-  - research repository topology
-  - research archive governance
-  - market data lake boundary
-  - research PC workflow
-  - trading PC package consumption
-  - follow-up CR roadmap
-  conflict_keys:
-  - strategy_research_lifecycle
-  - repository_archive_governance
-  - CR051
-  - CR046_follow_up
-  next_gate: CR051 CP2 intake after active-lock decision
-  next_action: 使用 CR051 正式变更单和 HLD 草案作为上下文；正式推进前确认是否保持 CR046 挂起并允许 CR051 并行进入 CP2。
-  last_checked_at: '2026-06-14T01:03:43+08:00'
+blocked_crs: []
 follow_up_candidates:
 - id: "CR-026"
   title: Qlib isolated runner optional Spike (narrowed after CR030-039 coverage)
