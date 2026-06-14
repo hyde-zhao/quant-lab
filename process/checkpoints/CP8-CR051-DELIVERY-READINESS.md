@@ -2,11 +2,11 @@
 checkpoint_id: "CP8-CR051-DELIVERY-READINESS"
 checkpoint_name: "CR051 Delivery Readiness Review"
 type: "auto_then_manual"
-status: "pending"
+status: "approved"
 owner: "host-orchestrator"
 created_at: "2026-06-14T09:00:24+08:00"
-reviewed_by: ""
-reviewed_at: ""
+reviewed_by: "user"
+reviewed_at: "2026-06-14T09:30:26+08:00"
 auto_check_result: "process/checks/CP8-CR051-DELIVERY-READINESS.md"
 target:
   phase: "documentation"
@@ -91,46 +91,45 @@ target:
 
 | 条目 | 状态 | 证据 | 审查意见 |
 |---|---|---|---|
-| CP7 PASS | 待审查 | `docs/quality/VERIFICATION-REPORT-CR051.md` | S01..S06 verified |
-| CP8 自动预检 PASS | 待审查 | `process/checks/CP8-CR051-DELIVERY-READINESS.md` | 阻断项 0 |
-| Release context 已生成 | 待审查 | `process/release/RELEASE-CONTEXT-CR051.yaml` | READY |
+| CP7 PASS | 通过 | `docs/quality/VERIFICATION-REPORT-CR051.md` | S01..S06 verified |
+| CP8 自动预检 PASS | 通过 | `process/checks/CP8-CR051-DELIVERY-READINESS.md` | 阻断项 0 |
+| Release context 已生成 | 通过 | `process/release/RELEASE-CONTEXT-CR051.yaml` | READY |
 
 ## Checklist
 
 | # | 检查项 | 审查结果 | 证据 | 审查意见 |
 |---|---|---|---|---|
-| 1 | 交付范围明确 | 待审查 | Release context |  |
-| 2 | release_decision 合法 | 待审查 | READY |  |
-| 3 | release docs 齐备 | 待审查 | `docs/release/*-CR051.md` |  |
-| 4 | 回滚方案明确 | 待审查 | `ROLLBACK-CR051.md` |  |
-| 5 | 迁移说明明确 | 待审查 | `MIGRATION-CR051.md` |  |
-| 6 | 反馈回流明确 | 待审查 | `FEEDBACK-CR051.md` |  |
-| 7 | 不授权项独立列出 | 待审查 | 本文件不授权项 |  |
-| 8 | 后续 CR 未自动启动 | 待审查 | CR index / feedback |  |
+| 1 | 交付范围明确 | 通过 | Release context | 用户回复“同意”。 |
+| 2 | release_decision 合法 | 通过 | READY | 用户接受 READY 结论。 |
+| 3 | release docs 齐备 | 通过 | `docs/release/*-CR051.md` | 交付文档齐备。 |
+| 4 | 回滚方案明确 | 通过 | `ROLLBACK-CR051.md` | 仅 Git 内文件回退，无外部状态回滚。 |
+| 5 | 迁移说明明确 | 通过 | `MIGRATION-CR051.md` | 真实迁移仍未授权。 |
+| 6 | 反馈回流明确 | 通过 | `FEEDBACK-CR051.md` | 后续 CR 需单独启动。 |
+| 7 | 不授权项独立列出 | 通过 | 本文件不授权项 | approve 不等于运行授权。 |
+| 8 | 后续 CR 未自动启动 | 通过 | CR index / feedback | CR052..CR056 保持候选。 |
 
 ## Exit Criteria
 
 | 条目 | 审查结果 | 证据 | 审查意见 |
 |---|---|---|---|
-| 用户明确 approve / 修改 / reject | 待审查 | 当前对话 | 等待用户回复 |
-| approve 后可关闭 CR051 当前交付 | 待审查 | release_decision READY | 不等于 RELEASED |
+| 用户明确 approve / 修改 / reject | 通过 | 当前对话 | 用户回复“同意”。 |
+| approve 后可关闭 CR051 当前交付 | 通过 | release_decision READY | 不等于 RELEASED；仅关闭当前 Git 内交付。 |
 
 ## Deliverables
 
 | 交付物 | 路径 | 审查结果 | 审查意见 |
 |---|---|---|---|
-| Release Context | `process/release/RELEASE-CONTEXT-CR051.yaml` | 待审查 |  |
-| Release Notes | `docs/release/RELEASE-NOTES-CR051.md` | 待审查 |  |
-| Deploy Checklist | `docs/release/DEPLOY-CHECKLIST-CR051.md` | 待审查 |  |
-| Rollback | `docs/release/ROLLBACK-CR051.md` | 待审查 |  |
-| Migration | `docs/release/MIGRATION-CR051.md` | 待审查 |  |
-| Feedback | `docs/release/FEEDBACK-CR051.md` | 待审查 |  |
+| Release Context | `process/release/RELEASE-CONTEXT-CR051.yaml` | 通过 | READY accepted |
+| Release Notes | `docs/release/RELEASE-NOTES-CR051.md` | 通过 | READY accepted |
+| Deploy Checklist | `docs/release/DEPLOY-CHECKLIST-CR051.md` | 通过 | 无运行部署 |
+| Rollback | `docs/release/ROLLBACK-CR051.md` | 通过 | Git 内回退 |
+| Migration | `docs/release/MIGRATION-CR051.md` | 通过 | 真实迁移另起 CR |
+| Feedback | `docs/release/FEEDBACK-CR051.md` | 通过 | 后续 CR 候选保留 |
 
 ## 人工审查结果
 
-- 结论：`approved | changes_requested | rejected`
-- 审查人：
-- 审查时间：
-- 修改意见：
-- 风险接受项：
-
+- 结论：`approved`
+- 审查人：user
+- 审查时间：2026-06-14T09:30:26+08:00
+- 修改意见：无；用户回复“同意”。
+- 风险接受项：接受 CR051 当前交付 `READY`，但不等于 `RELEASED`；不授权目录重命名、远端仓库改名、git push/tag、重写历史、NAS 操作、external archive migration、provider fetch、lake write、catalog publish、QMT/MiniQMT runtime、凭据 / 账户读取、submit/cancel/simulation/live 或自动启动 CR052..CR056。

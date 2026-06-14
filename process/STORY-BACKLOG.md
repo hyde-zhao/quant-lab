@@ -1,7 +1,7 @@
 ---
 version: "2.7"
-last_updated: "2026-06-14T08:19:09+08:00"
-status: "cr051-cp8-review-pending"
+last_updated: "2026-06-14T09:30:26+08:00"
+status: "cr051-closed-current-delivery"
 confirmed: true
 confirmed_by: "user"
 confirmed_at: "2026-05-14"
@@ -72,7 +72,7 @@ cr025_status: "story-plan-cp4-pass-pending-lld"
 cr030_status: "story-plan-cp4-pass-pending-lld"
 cr046_status: "story-plan-cp4-pass-pending-lld"
 cr046_lld_batch: "CR046-DUAL-TARGET-FRAMEWORK-BATCH-A"
-cr051_status: "cp8-review-pending"
+cr051_status: "closed-current-delivery"
 cr051_lld_batch: "CR051-STRATEGY-RESEARCH-LIFECYCLE-BATCH-A"
 cr020_status: "fixture-static-verified-pending-manual-windows-qmt-validation"
 cr015_lld_batches:

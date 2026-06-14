@@ -5,21 +5,21 @@ current_phase: documentation
 current_agent: host-orchestrator
 active_change: "CR-046"
 active_story: ''
-iteration: 460
+iteration: 461
 blocked: false
 blocked_reason: ''
-last_action: CR051 CP8 release readiness 已完成；release_decision=READY，CP8 自动预检 PASS，人工终验稿已生成。
-next_action: 等待用户审查 `process/checkpoints/CP8-CR051-DELIVERY-READINESS.md` 并回复 `approve` / `修改: <具体修改点>` / `reject`；approve 只确认 CR051 READY，不授权真实迁移、runtime、push、凭据、provider/lake/publish 或启动 CR052..CR056。
+last_action: CR051 CP8 已由用户回复“同意”批准；CR051 当前交付关闭为 closed-current-delivery / READY，并修正 CR046 追踪状态继续停在 CP6 paused recovery point。
+next_action: 不自动启动 CR052..CR056；推荐下一步在用户明确授权后单独启动 CR053 migration inventory / dry-run。CR046 仍保持 paused CP6 恢复点，不调度 CP7、不执行 runtime / 交易 / 凭据 / provider/lake/publish。
 canonical_project_name: quant-lab
 legacy_project_alias: local_backtest
 cr_tracking:
   status: "active-formal-cr"
   index_path: process/changes/CR-INDEX.yaml
-  last_consistency_check: 'PASS at 2026-06-14T08:19:09+08:00 via uv run --python 3.11 python scripts/check_cr_tracking_consistency.py --project-root .'
+  last_consistency_check: 'PASS at 2026-06-14T09:34:00+08:00 via uv run --python 3.11 python scripts/check_cr_tracking_consistency.py --project-root .'
   active_crs:
   - id: CR-046
     title: QMT and MiniQMT Dual-Target Strategy Delivery Framework
-    status: active-cp8-review-pending
+    status: active-cp6-pass-ready-for-verification
     source_tracking: USER-20260613-TERMINAL-NATIVE-STRATEGY-EXPORT
     formal_cr_path: process/changes/CR-046-TERMINAL-NATIVE-SIMULATION-STRATEGY-EXPORT-2026-06-13.md
     follow_up_tracking: process/changes/CR-046-FOLLOW-UP-TRACKING-2026-06-13.md
@@ -50,15 +50,16 @@ cr_tracking:
     - no_runtime_connection
     - no_terminal_validation
     next_gate: User Paused before CP7 Verification
-    next_action: 等待用户明确恢复 CR046 后再进入 CP7 verification-execution；挂起期间不调度 CP7、不启动 CR047/CR048/CR049、不执行真实运行 / 交易 / 凭据 / 传输导入。CR051 已获准并行推进设计门禁，但不授权实现或 runtime。
+    next_action: 等待用户明确恢复 CR046 后再进入 CP7 verification-execution；挂起期间不调度 CP7、不启动 CR047/CR048/CR049、不执行真实运行 / 交易 / 凭据 / 传输导入。CR051 已关闭当前 Git 内交付，但不授权真实迁移、后续 CR 自动启动或 runtime。
     last_checked_at: '2026-06-14T00:29:41+08:00'
+  closed_crs:
   - id: CR-051
     title: Strategy Research Lifecycle Framework and Strategy Taxonomy
-    status: active-cp6-pass-ready-for-verification
+    status: closed-current-delivery
     source_tracking: USER-20260614-START-CR051-DESIGN
     formal_cr_path: process/changes/CR-051-STRATEGY-RESEARCH-LIFECYCLE-FRAMEWORK-2026-06-14.md
     priority: 1
-    blocked_by: 'parallel-design-authorized: CR046 remains paused at CP6 PASS / ready-for-verification, but user approved CR051 active-lock handling, CP2 and CP3 on 2026-06-14. CR051 CP4 story-planning PASS allows CP5 design evidence writing only; it does not restore CR046 and does not authorize implementation, directory rename, runtime, provider, lake, publish, archive migration execution or git push.'
+    blocked_by: 'closed: 用户于 2026-06-14T09:30:26+08:00 回复“同意”，接受 CP8 READY；CR051 当前交付关闭为 strategy-research-lifecycle-framework-ready。不授权目录重命名、远端仓库改名、git push/tag、重写历史、NAS 操作、external archive migration、provider fetch、lake write、catalog publish、QMT/MiniQMT runtime、凭据 / 账户读取、submit/cancel/simulation/live 或自动启动 CR052..CR056。'
     impact_surface:
     - strategy research lifecycle
     - strategy taxonomy
@@ -81,10 +82,9 @@ cr_tracking:
     - legacy_alias
     - CR051
     - CR046_follow_up
-    next_gate: CR051 CP8 human review
-    next_action: 用户审查 `process/checkpoints/CP8-CR051-DELIVERY-READINESS.md`；approve 只确认 CR051 READY，不授权目录重命名、NAS 操作、外部 archive 搬迁、provider/lake/publish、QMT/MiniQMT runtime、凭据读取、Git push 或启动 CR052..CR056。
-    last_checked_at: '2026-06-14T09:00:24+08:00'
-  closed_crs:
+    next_gate: closed
+    next_action: CR051 已关闭为 READY；推荐下一步单独启动 CR053 migration inventory / dry-run，但尚未授权真实迁移、目录重命名、NAS 操作、git push 或启动任何后续 CR。
+    last_checked_at: '2026-06-14T09:30:26+08:00'
   - id: CR-045
     title: Goldminer Windows Bridge Readonly Probe
     status: closed-current-delivery
@@ -715,9 +715,9 @@ cr_tracking:
     不占执行锁
   consistency_check: scripts/check_cr_tracking_consistency.py --project-root .
 human_gate_decisions:
-  status: awaiting-user
-  pending_gate: CP8-CR051
-  pending_checklist_path: process/checkpoints/CP8-CR051-DELIVERY-READINESS.md
+  status: approved
+  pending_gate: ''
+  pending_checklist_path: ''
   launch_message_path: process/checks/CP8-CR051-HUMAN-GATE-LAUNCH-MESSAGE.md
   pending_human_decisions:
   - id: DQ-CP3-CR051-01
@@ -9354,8 +9354,8 @@ orchestrator_session:
   thread_id: ''
   workflow_id: local_backtest-cr051
   active_change: "CR-051"
-  status: awaiting-user
-  pending_gate: CP8-CR051
+  status: cr051-closed-current-delivery
+  pending_gate: ''
   pending_checklist_path: ''
   pending_user_decision: ''
   pending_decision_ids: []
@@ -9412,7 +9412,7 @@ orchestrator_session:
   - 查询资金 / 持仓 / 委托 / 成交
   - 下单 / 撤单 / simulation/live
   - provider fetch / lake write / catalog publish
-  resume_instruction: "CR051 CP8 release readiness 已完成，release_decision=READY，人工终验稿为 process/checkpoints/CP8-CR051-DELIVERY-READINESS.md。下一步等待用户回复 approve / 修改 / reject。CR046 仍保持 paused CP6 恢复点；不授权目录重命名、NAS 操作、外部 archive 搬迁、真实传输/导入、QMT/MiniQMT runtime、submit/cancel、simulation/live、账户查询、凭据读取、provider/lake/publish、git push 或启动 CR052..CR056。"
+  resume_instruction: "CR051 CP8 已由用户回复“同意”批准；CR051 当前交付关闭为 closed-current-delivery / READY。下一步不得自动启动 CR052..CR056；如用户明确授权，建议单独启动 CR053 migration inventory / dry-run。CR046 仍保持 paused CP6 恢复点；不授权目录重命名、NAS 操作、外部 archive 搬迁、真实传输/导入、QMT/MiniQMT runtime、submit/cancel、simulation/live、账户查询、凭据读取、provider/lake/publish、git push。"
   cr051_cp4_story_planning_dispatch:
     mode: inline-host-orchestrator
     agent_id: ''
@@ -14417,6 +14417,30 @@ agent_lifecycle:
     completed_at: '2026-05-16T19:33:15+08:00'
     closed_at: '2026-05-16T19:33:15+08:00'
 history:
+- at: '2026-06-14T09:30:26+08:00'
+  actor: host-orchestrator
+  action: cr051-cp8-approved-closed-current-delivery
+  from_phase: documentation
+  to_phase: documentation
+  reason: 用户回复“同意”，按 CR051 CP8 approve 处理；CR051 release_decision=READY，当前 Git 内交付关闭为 closed-current-delivery。真实迁移、目录重命名、NAS 操作、git push、provider/lake/publish、QMT/MiniQMT runtime、凭据 / 账户读取和 CR052..CR056 自动启动均未授权。同步修正 CR046 追踪状态，继续停在 paused CP6 recovery point。
+  artifacts:
+  - process/checkpoints/CP8-CR051-DELIVERY-READINESS.md
+  - process/release/RELEASE-CONTEXT-CR051.yaml
+  - process/changes/CR-051-STRATEGY-RESEARCH-LIFECYCLE-FRAMEWORK-2026-06-14.md
+  - process/changes/CR-INDEX.yaml
+  next_gate: optional CR053 migration inventory / dry-run only after explicit user authorization
+  safety_confirmations:
+    cr046_restored: false
+    cr046_cp7_dispatched: false
+    directory_rename_authorized: false
+    nas_access_authorized: false
+    external_archive_migration_authorized: false
+    provider_lake_publish_authorized: false
+    qmt_miniqmt_runtime_authorized: false
+    trading_authorized: false
+    credential_read_authorized: false
+    git_push_authorized: false
+    follow_up_cr_auto_started: false
 - at: '2026-06-14T08:03:59+08:00'
   actor: host-orchestrator
   action: cr051-cp3-approved-ready-for-cp4

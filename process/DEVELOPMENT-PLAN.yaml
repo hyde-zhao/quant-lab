@@ -1,12 +1,12 @@
 project_id: "local_backtest"
 version: "1.7"
-status: "cr051-cp8-review-pending"
+status: "cr051-closed-current-delivery"
 confirmed: true
 confirmed_by: "user"
 confirmed_at: "2026-05-14"
 created_at: "2026-05-14"
 created_by: "meta-se"
-last_updated: "2026-06-14T08:19:09+08:00"
+last_updated: "2026-06-14T09:30:26+08:00"
 source_hld: "process/HLD.md"
 companion_hld: "process/HLD-DATA-LAKE.md"
 source_adr: "process/ARCHITECTURE-DECISION.md"
@@ -87,7 +87,7 @@ cr046_implementation_allowed: false
 cr046_qmt_runtime_validation_authorized: false
 cr046_miniqmt_connection_authorized: false
 cr046_submit_cancel_authorized: false
-cr051_status: "cp8-review-pending"
+cr051_status: "closed-current-delivery"
 cr051_confirmed: true
 cr051_formal_cr: "process/changes/CR-051-STRATEGY-RESEARCH-LIFECYCLE-FRAMEWORK-2026-06-14.md"
 cr051_lld_batches:
@@ -101,7 +101,7 @@ cr051_git_push_authorized: false
 
 cr051_story_planning:
   change_id: "CR-051"
-  status: "cp8-review-pending"
+  status: "closed-current-delivery"
   cp4_check: "process/checks/CP4-CR051-STORY-DAG-PARALLEL-SAFETY.md"
   feature_design_matrix: "docs/design/FEATURE-DESIGN-MATRIX.md"
   required_feature_design:
@@ -138,7 +138,9 @@ cr051_story_planning:
   cp8_auto_status: "PASS"
   cp8_check: "process/checks/CP8-CR051-DELIVERY-READINESS.md"
   cp8_manual_review: "process/checkpoints/CP8-CR051-DELIVERY-READINESS.md"
-  cp8_manual_status: "pending"
+  cp8_manual_status: "approved"
+  cp8_approved_by: "user"
+  cp8_approved_at: "2026-06-14T09:30:26+08:00"
   release_context: "process/release/RELEASE-CONTEXT-CR051.yaml"
   release_decision: "READY"
   cp5_auto_results:
