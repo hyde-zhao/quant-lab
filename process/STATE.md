@@ -1,15 +1,15 @@
 ---
 project_id: local_backtest
 workflow_mode: production
-current_phase: story-planning
+current_phase: documentation
 current_agent: host-orchestrator
-active_change: "CR-051"
+active_change: "CR-046"
 active_story: ''
-iteration: 459
+iteration: 460
 blocked: false
 blocked_reason: ''
-last_action: CR051 CP5 设计证据写作已完成；S01..S04 full-lld、S05..S06 technical-note、6 份 CP5 自动预检和 CP5 批次人工审查稿均已生成，等待用户 CP5 审查。
-next_action: 发起 CR051 CP5 人工确认：用户审查 `process/checkpoints/CP5-CR051-STRATEGY-RESEARCH-LIFECYCLE-BATCH-A-LLD-BATCH.md` 并回复 `approve` / `修改: <具体修改点>` / `reject`。CP5 approve 前不得实现或迁移。
+last_action: CR051 CP8 release readiness 已完成；release_decision=READY，CP8 自动预检 PASS，人工终验稿已生成。
+next_action: 等待用户审查 `process/checkpoints/CP8-CR051-DELIVERY-READINESS.md` 并回复 `approve` / `修改: <具体修改点>` / `reject`；approve 只确认 CR051 READY，不授权真实迁移、runtime、push、凭据、provider/lake/publish 或启动 CR052..CR056。
 canonical_project_name: quant-lab
 legacy_project_alias: local_backtest
 cr_tracking:
@@ -19,7 +19,7 @@ cr_tracking:
   active_crs:
   - id: CR-046
     title: QMT and MiniQMT Dual-Target Strategy Delivery Framework
-    status: active-cp6-pass-ready-for-verification
+    status: active-cp8-review-pending
     source_tracking: USER-20260613-TERMINAL-NATIVE-STRATEGY-EXPORT
     formal_cr_path: process/changes/CR-046-TERMINAL-NATIVE-SIMULATION-STRATEGY-EXPORT-2026-06-13.md
     follow_up_tracking: process/changes/CR-046-FOLLOW-UP-TRACKING-2026-06-13.md
@@ -54,7 +54,7 @@ cr_tracking:
     last_checked_at: '2026-06-14T00:29:41+08:00'
   - id: CR-051
     title: Strategy Research Lifecycle Framework and Strategy Taxonomy
-    status: active-cp5-review-pending
+    status: active-cp6-pass-ready-for-verification
     source_tracking: USER-20260614-START-CR051-DESIGN
     formal_cr_path: process/changes/CR-051-STRATEGY-RESEARCH-LIFECYCLE-FRAMEWORK-2026-06-14.md
     priority: 1
@@ -81,9 +81,9 @@ cr_tracking:
     - legacy_alias
     - CR051
     - CR046_follow_up
-    next_gate: CR051 CP5 human review
-    next_action: 用户审查 `process/checkpoints/CP5-CR051-STRATEGY-RESEARCH-LIFECYCLE-BATCH-A-LLD-BATCH.md`；若 approve，后续才能把 Story 推进到 lld-approved / dev-ready 计算。CP5 前仍不授权实现、目录重命名、NAS 操作、外部 archive 搬迁、provider/lake/publish、QMT/MiniQMT runtime、凭据读取或 Git push。
-    last_checked_at: '2026-06-14T08:46:04+08:00'
+    next_gate: CR051 CP8 human review
+    next_action: 用户审查 `process/checkpoints/CP8-CR051-DELIVERY-READINESS.md`；approve 只确认 CR051 READY，不授权目录重命名、NAS 操作、外部 archive 搬迁、provider/lake/publish、QMT/MiniQMT runtime、凭据读取、Git push 或启动 CR052..CR056。
+    last_checked_at: '2026-06-14T09:00:24+08:00'
   closed_crs:
   - id: CR-045
     title: Goldminer Windows Bridge Readonly Probe
@@ -715,10 +715,10 @@ cr_tracking:
     不占执行锁
   consistency_check: scripts/check_cr_tracking_consistency.py --project-root .
 human_gate_decisions:
-  status: approved
-  pending_gate: CP5-CR051
-  pending_checklist_path: process/checkpoints/CP5-CR051-STRATEGY-RESEARCH-LIFECYCLE-BATCH-A-LLD-BATCH.md
-  launch_message_path: process/checks/CP5-CR051-HUMAN-GATE-LAUNCH-MESSAGE.md
+  status: awaiting-user
+  pending_gate: CP8-CR051
+  pending_checklist_path: process/checkpoints/CP8-CR051-DELIVERY-READINESS.md
+  launch_message_path: process/checks/CP8-CR051-HUMAN-GATE-LAUNCH-MESSAGE.md
   pending_human_decisions:
   - id: DQ-CP3-CR051-01
     gate: CP3
@@ -9353,9 +9353,9 @@ orchestrator_session:
   agent_name: host-orchestrator
   thread_id: ''
   workflow_id: local_backtest-cr051
-  active_change: "CR-046"
-  status: cp3-approved-ready-for-cp4
-  pending_gate: CP4
+  active_change: "CR-051"
+  status: awaiting-user
+  pending_gate: CP8-CR051
   pending_checklist_path: ''
   pending_user_decision: ''
   pending_decision_ids: []
@@ -9387,6 +9387,7 @@ orchestrator_session:
   - DQ-CP3-CR046-05
   - DQ-CP3-CR046-06
   approved_cp5_decision_ids:
+  - CP5-CR051-LLD-BATCH-APPROVED
   - DQ-CP5-CR046-01
   - DQ-CP5-CR046-02
   - DQ-CP5-CR046-03
@@ -9411,7 +9412,7 @@ orchestrator_session:
   - 查询资金 / 持仓 / 委托 / 成交
   - 下单 / 撤单 / simulation/live
   - provider fetch / lake write / catalog publish
-  resume_instruction: "CR051 CP5 设计证据已生成，S01..S04 full-lld、S05..S06 technical-note、6 份 CP5 自动预检和 CP5 批次人工审查稿已 ready-for-review。下一步等待用户审查 `process/checkpoints/CP5-CR051-STRATEGY-RESEARCH-LIFECYCLE-BATCH-A-LLD-BATCH.md` 并回复 approve / 修改 / reject。CR046 仍保持 paused CP6 恢复点，不推进 CP7，不授权具体策略交付、目录重命名、NAS 操作、外部 archive 搬迁、真实传输/导入、QMT/MiniQMT runtime、submit/cancel、simulation/live、账户查询、凭据读取、provider/lake/publish 或 git push。"
+  resume_instruction: "CR051 CP8 release readiness 已完成，release_decision=READY，人工终验稿为 process/checkpoints/CP8-CR051-DELIVERY-READINESS.md。下一步等待用户回复 approve / 修改 / reject。CR046 仍保持 paused CP6 恢复点；不授权目录重命名、NAS 操作、外部 archive 搬迁、真实传输/导入、QMT/MiniQMT runtime、submit/cancel、simulation/live、账户查询、凭据读取、provider/lake/publish、git push 或启动 CR052..CR056。"
   cr051_cp4_story_planning_dispatch:
     mode: inline-host-orchestrator
     agent_id: ''

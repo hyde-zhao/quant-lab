@@ -4,12 +4,12 @@ title: "仓库、研究归档与数据湖边界治理"
 story_slug: "repository-archive-and-data-lake-governance"
 lld_version: "1.0"
 tier: "M"
-status: "ready-for-review"
-confirmed: false
+status: "approved"
+confirmed: true
 created_by: "host-orchestrator"
 created_at: "2026-06-14T08:46:04+08:00"
-confirmed_by: ""
-confirmed_at: ""
+confirmed_by: "user"
+confirmed_at: "2026-06-14T09:00:24+08:00"
 shared_fragments: []
 feature_design_refs:
   - "docs/features/strategy-research-lifecycle/DESIGN.md"

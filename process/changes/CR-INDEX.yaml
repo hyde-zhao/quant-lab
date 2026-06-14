@@ -1,6 +1,6 @@
 version: 1
 status: "active-formal-cr"
-updated_at: '2026-06-14T08:03:59+08:00'
+updated_at: '2026-06-14T09:00:24+08:00'
 owner: meta-po
 source: CR-046 started by user target change to terminal-native simulation strategy export, then upgraded by user to QMT + MiniQMT dual-target strategy delivery and verification framework; current CR first freezes QMT/MiniQMT framework, verification framework design, strategy package contract, and MiniQMT runner install design; concrete strategy delivery and runtime validation are deferred until permissions / strategy selection are ready. CR051 design draft was created by explicit USER-20260614-START-CR051-DESIGN for Strategy Research Lifecycle Framework; user approved CR051 active-lock handling, CP2 and CP3 on 2026-06-14, so CR051 is allowed to proceed to story-planning / CP4 while CR046 remains paused at CP6 recovery point. CR051 CP3 approved hardware-aware storage tiering for NAS 512G SSD / 4T RAID / 14T HDD, research PC 2T SSD and trading PC 512G SSD, plus project identity rename from local_backtest to quant-lab with local_backtest retained as legacy alias. CR-045 closed-current-delivery as Goldminer Windows Bridge Readonly Probe; CR-044 closed-current-delivery as offline-admission-design-ready; CR-043 closed-spike-complete with NEEDS_ACCOUNT_PERMISSION; CR-042 closed-current-delivery for Broker-Neutral Adapter Contract; CR-041 closed-current-delivery for API-less Paper Simulation Runner; CR-039 and CR-040 closed-current-delivery; CR-020
   is deleted-by-user; CR-021..CR-024 are cancelled-user-deleted
@@ -21,7 +21,7 @@ index_schema:
 active_crs:
 - id: CR-046
   title: QMT and MiniQMT Dual-Target Strategy Delivery Framework
-  status: active-cp6-pass-ready-for-verification
+  status: active-cp8-review-pending
   source_tracking: USER-20260613-TERMINAL-NATIVE-STRATEGY-EXPORT
   formal_cr_path: process/changes/CR-046-TERMINAL-NATIVE-SIMULATION-STRATEGY-EXPORT-2026-06-13.md
   follow_up_tracking: process/changes/CR-046-FOLLOW-UP-TRACKING-2026-06-13.md
@@ -56,11 +56,11 @@ active_crs:
   last_checked_at: '2026-06-14T00:29:41+08:00'
 - id: CR-051
   title: Strategy Research Lifecycle Framework and Strategy Taxonomy
-  status: active-cp5-review-pending
+  status: active-cp6-pass-ready-for-verification
   source_tracking: USER-20260614-START-CR051-DESIGN
   formal_cr_path: process/changes/CR-051-STRATEGY-RESEARCH-LIFECYCLE-FRAMEWORK-2026-06-14.md
   priority: 1
-  blocked_by: 'parallel-design-authorized: CR046 remains paused at CP6 PASS / ready-for-verification, but user approved CR051 active-lock handling, CP2 and CP3 on 2026-06-14. CR051 CP4 story-planning PASS allows CP5 design evidence writing only; it does not restore CR046 and does not authorize implementation, directory rename, runtime, provider, lake, publish, archive migration execution or git push.'
+  blocked_by: 'parallel-design-authorized: CR046 remains paused at CP6 PASS / ready-for-verification. User approved CR051 CP5 on 2026-06-14T09:00:24+08:00. CR051 CP6 completed Git-only documentation / contract implementation; it does not restore CR046 and does not authorize directory rename, runtime, provider, lake, publish, archive migration execution, NAS operation, credential read or git push.'
   impact_surface:
   - strategy research lifecycle
   - strategy taxonomy
@@ -83,9 +83,9 @@ active_crs:
   - legacy_alias
   - CR051
   - CR046_follow_up
-  next_gate: CR051 CP5 human review
-  next_action: 用户审查 `process/checkpoints/CP5-CR051-STRATEGY-RESEARCH-LIFECYCLE-BATCH-A-LLD-BATCH.md`；若 approve，后续才能把 Story 推进到 lld-approved / dev-ready 计算。CP5 前仍不授权实现、目录重命名、NAS 操作、外部 archive 搬迁、provider/lake/publish、QMT/MiniQMT runtime、凭据读取或 Git push。
-  last_checked_at: '2026-06-14T08:46:04+08:00'
+  next_gate: CR051 CP8 human review
+  next_action: 用户审查 `process/checkpoints/CP8-CR051-DELIVERY-READINESS.md`；approve 只确认 CR051 READY，不授权目录重命名、NAS 操作、外部 archive 搬迁、provider/lake/publish、QMT/MiniQMT runtime、凭据读取、Git push 或启动 CR052..CR056。
+  last_checked_at: '2026-06-14T09:00:24+08:00'
 closed_crs:
 - id: CR-045
   title: Goldminer Windows Bridge Readonly Probe

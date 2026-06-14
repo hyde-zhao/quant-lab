@@ -2,7 +2,7 @@
 story_id: "CR051-S03-research-pc-and-trading-pc-workflow"
 title: "研究主机与交易主机工作流边界"
 story_slug: "research-pc-and-trading-pc-workflow"
-status: "lld-ready-for-review"
+status: "verified"
 priority: "P0"
 wave: "CR051-W2-HOST-REGISTRY"
 depends_on:
@@ -39,24 +39,30 @@ lld_gate:
     - "CR051-S06-project-identity-rename-and-legacy-alias"
   design_evidence_type: "full-lld"
   design_evidence_path: "process/stories/CR051-S03-research-pc-and-trading-pc-workflow-LLD.md"
-  status: "ready-for-review"
+  status: "approved"
 implementation_gate:
   evidence_required: true
-  evidence_path: ""
+  evidence_path: "process/stories/CR051-S03-research-pc-and-trading-pc-workflow-IMPLEMENTATION.md"
   evidence_type: "implementation-md"
   implementation_objects: ["docs-handoff", "migration-plan"]
   test_plan_refs:
     - "docs/features/strategy-research-lifecycle/TEST-PLAN.md"
-  local_validation_results: []
-  status: "not-started"
+  local_validation_results:
+    - "process/checks/CP6-CR051-S03-research-pc-and-trading-pc-workflow-CODING-DONE.md"
+  status: "PASS"
 dev_gate:
-  design_evidence_confirmed: false
-  lld_confirmed: false
-  dependencies_satisfied: false
+  design_evidence_confirmed: true
+  lld_confirmed: true
+  dependencies_satisfied: true
   file_conflict_free: true
+  implementation_allowed: true
+  cp6_status: "PASS"
+  cp6_result: "process/checks/CP6-CR051-S03-research-pc-and-trading-pc-workflow-CODING-DONE.md"
+  cp7_status: "PASS"
+  cp7_result: "process/checks/CP7-CR051-S03-research-pc-and-trading-pc-workflow-VERIFICATION-DONE.md"
 task_count: 1
 created_at: "2026-06-14T08:19:09+08:00"
-updated_at: "2026-06-14T08:46:04+08:00"
+updated_at: "2026-06-14T09:00:24+08:00"
 change_id: "CR-051"
 ---
 
@@ -85,3 +91,12 @@ change_id: "CR-051"
 | 异常、失败与回退 | 若用户要求交易主机承载研究环境，需回退 CP3 重新决策 |
 | 测试入口 | TC-CR051-03、SEC-TC-05 |
 | 风险与重访条件 | CR049 MiniQMT 或后续 package consumer CR 启动时重访 |
+
+## 实现摘要
+
+| 项目 | 内容 |
+|---|---|
+| 实现证据 | `process/stories/CR051-S03-research-pc-and-trading-pc-workflow-IMPLEMENTATION.md` |
+| CP6 结果 | `process/checks/CP6-CR051-S03-research-pc-and-trading-pc-workflow-CODING-DONE.md`，PASS |
+| 输出文件 | `docs/research/HOST-WORKFLOW.md` |
+| 剩余风险 | CP7 需验证交易主机仅 package consumer、无 transfer/import/runtime 措辞 |

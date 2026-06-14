@@ -1,7 +1,7 @@
 ---
 version: "2.7"
 last_updated: "2026-06-14T08:19:09+08:00"
-status: "cr051-cp5-review-pending"
+status: "cr051-cp8-review-pending"
 confirmed: true
 confirmed_by: "user"
 confirmed_at: "2026-05-14"
@@ -72,7 +72,7 @@ cr025_status: "story-plan-cp4-pass-pending-lld"
 cr030_status: "story-plan-cp4-pass-pending-lld"
 cr046_status: "story-plan-cp4-pass-pending-lld"
 cr046_lld_batch: "CR046-DUAL-TARGET-FRAMEWORK-BATCH-A"
-cr051_status: "cp5-review-pending"
+cr051_status: "cp8-review-pending"
 cr051_lld_batch: "CR051-STRATEGY-RESEARCH-LIFECYCLE-BATCH-A"
 cr020_status: "fixture-static-verified-pending-manual-windows-qmt-validation"
 cr015_lld_batches:
@@ -805,26 +805,28 @@ graph TD
 |---|---|---|---|
 | CP2 需求 / 场景基线 | approved | `process/checkpoints/CP2-CR051-REQUIREMENTS-BASELINE.md` | 已进入 CP3 / CP4 |
 | CP3 HLD / 架构决策 | approved | `process/checkpoints/CP3-CR051-HLD-REVIEW.md`、`docs/design/HLD-CR051-STRATEGY-RESEARCH-LIFECYCLE-FRAMEWORK.md` | 已批准单主仓库、外部 archive、硬件冷热分层、交易主机边界、阶段化迁移和 `quant-lab` 命名 |
-| Feature design | ready-for-cp5-review | `docs/design/FEATURE-DESIGN-MATRIX.md`、`docs/features/strategy-research-lifecycle/*` | 作为 S01..S06 的 CP5 输入 |
-| Story Plan / CP4 | PASS | `process/checks/CP4-CR051-STORY-DAG-PARALLEL-SAFETY.md` | 已进入全量设计证据批次，CP5 前不得实现 |
-| LLD batch / CP5 | review-pending | `process/checkpoints/CP5-CR051-STRATEGY-RESEARCH-LIFECYCLE-BATCH-A-LLD-BATCH.md` | S01..S04 full-lld、S05..S06 technical-note 已生成；等待用户统一确认 |
+| Feature design | approved | `docs/design/FEATURE-DESIGN-MATRIX.md`、`docs/features/strategy-research-lifecycle/*` | 已被 S01..S06 消费 |
+| Story Plan / CP4 | PASS | `process/checks/CP4-CR051-STORY-DAG-PARALLEL-SAFETY.md` | 已完成 |
+| LLD batch / CP5 | approved | `process/checkpoints/CP5-CR051-STRATEGY-RESEARCH-LIFECYCLE-BATCH-A-LLD-BATCH.md` | 用户已同意，6 个 Story 设计证据确认 |
+| CP6 implementation | PASS | `process/context/CP6-CR051-IMPLEMENTATION-CONTEXT.yaml`、`process/checks/CP6-CR051-*-CODING-DONE.md` | 7 份 `docs/research/*` 合同文档和 6 份 Story IMPLEMENTATION 已生成 |
+| CP7 verification | PASS | `docs/quality/VERIFICATION-REPORT-CR051.md`、`process/context/CP7-CR051-VERIFICATION-CONTEXT.yaml` | 6 个 Story 均已静态验证 PASS |
 | 安全边界 | not-authorized | CP2 / CP3 / CP4 不授权项 | 不授权目录重命名、NAS 操作、外部 archive 搬迁、provider/lake/publish、QMT/MiniQMT runtime、凭据读取或 git push |
 
 ### CR051 Story Plan 队列
 
 | Story ID | 标题 | Wave | 状态 | LLD 策略 | Dev Gate | 阻塞 |
 |---|---|---|---|---|---|---|
-| CR051-S01-lifecycle-and-taxonomy-framework | 策略研究生命周期与 taxonomy 框架 | CR051-W1-LIFECYCLE-ARCHIVE-IDENTITY | lld-ready-for-review | full-lld | blocked before CP5 | 无上游 Story；不得实现策略 |
-| CR051-S02-repository-archive-and-data-lake-governance | 仓库、研究归档与数据湖边界治理 | CR051-W1-LIFECYCLE-ARCHIVE-IDENTITY | lld-ready-for-review | full-lld | blocked before CP5 | 无上游 Story；不得操作 NAS / lake |
-| CR051-S06-project-identity-rename-and-legacy-alias | 项目身份改名与 legacy alias 兼容 | CR051-W1-LIFECYCLE-ARCHIVE-IDENTITY | lld-ready-for-review | technical-note | blocked before CP5 | 无上游 Story；不得真实重命名 / push |
-| CR051-S03-research-pc-and-trading-pc-workflow | 研究主机与交易主机工作流边界 | CR051-W2-HOST-REGISTRY | lld-ready-for-review | full-lld | blocked before CP5 | 依赖 S02 / S06 contract |
-| CR051-S04-registry-and-evidence-contracts | 研究 registry 与证据合同 | CR051-W2-HOST-REGISTRY | lld-ready-for-review | full-lld | blocked before CP5 | 依赖 S01 / S02 contract |
-| CR051-S05-follow-up-cr-roadmap-and-admission-gates | 后续 CR 路线与准入门禁 | CR051-W3-FOLLOW-UP-GATES | lld-ready-for-review | technical-note | blocked before CP5 | 依赖 S01..S04 contract |
+| CR051-S01-lifecycle-and-taxonomy-framework | 策略研究生命周期与 taxonomy 框架 | CR051-W1-LIFECYCLE-ARCHIVE-IDENTITY | verified | full-lld | CP6/CP7 PASS | 输出 lifecycle / taxonomy；不得实现具体策略 |
+| CR051-S02-repository-archive-and-data-lake-governance | 仓库、研究归档与数据湖边界治理 | CR051-W1-LIFECYCLE-ARCHIVE-IDENTITY | verified | full-lld | CP6/CP7 PASS | 输出 archive governance / manifest spec；不得操作 NAS / lake |
+| CR051-S06-project-identity-rename-and-legacy-alias | 项目身份改名与 legacy alias 兼容 | CR051-W1-LIFECYCLE-ARCHIVE-IDENTITY | verified | technical-note | CP6/CP7 PASS | 输出 identity migration；不得真实重命名 / push |
+| CR051-S03-research-pc-and-trading-pc-workflow | 研究主机与交易主机工作流边界 | CR051-W2-HOST-REGISTRY | verified | full-lld | CP6/CP7 PASS | 输出 host workflow；不得 transfer / import / runtime |
+| CR051-S04-registry-and-evidence-contracts | 研究 registry 与证据合同 | CR051-W2-HOST-REGISTRY | verified | full-lld | CP6/CP7 PASS | 输出 registry spec；不得保存凭据 / broker facts |
+| CR051-S05-follow-up-cr-roadmap-and-admission-gates | 后续 CR 路线与准入门禁 | CR051-W3-FOLLOW-UP-GATES | verified | technical-note | CP6/CP7 PASS | 后续 CR 仍 blocked_by=CR051 |
 
 ### CR051 Wave 进度
 
-| Wave | 总数 | lld-ready | lld-review | dev-ready | in-dev | verified | blocked |
+| Wave | 总数 | lld-ready | lld-review | ready-for-verification | in-dev | verified | blocked |
 |---|---:|---:|---:|---:|---:|---:|---:|
-| CR051-W1-LIFECYCLE-ARCHIVE-IDENTITY | 3 | 0 | 3 | 0 | 0 | 0 | 0 |
-| CR051-W2-HOST-REGISTRY | 2 | 0 | 2 | 0 | 0 | 0 | 0 |
-| CR051-W3-FOLLOW-UP-GATES | 1 | 0 | 1 | 0 | 0 | 0 | 0 |
+| CR051-W1-LIFECYCLE-ARCHIVE-IDENTITY | 3 | 0 | 0 | 0 | 0 | 3 | 0 |
+| CR051-W2-HOST-REGISTRY | 2 | 0 | 0 | 0 | 0 | 2 | 0 |
+| CR051-W3-FOLLOW-UP-GATES | 1 | 0 | 0 | 0 | 0 | 1 | 0 |

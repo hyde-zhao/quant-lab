@@ -2,7 +2,7 @@
 story_id: "CR051-S04-registry-and-evidence-contracts"
 title: "研究 registry 与证据合同"
 story_slug: "registry-and-evidence-contracts"
-status: "lld-ready-for-review"
+status: "verified"
 priority: "P0"
 wave: "CR051-W2-HOST-REGISTRY"
 depends_on:
@@ -38,24 +38,30 @@ lld_gate:
     - "CR051-S02-repository-archive-and-data-lake-governance"
   design_evidence_type: "full-lld"
   design_evidence_path: "process/stories/CR051-S04-registry-and-evidence-contracts-LLD.md"
-  status: "ready-for-review"
+  status: "approved"
 implementation_gate:
   evidence_required: true
-  evidence_path: ""
+  evidence_path: "process/stories/CR051-S04-registry-and-evidence-contracts-IMPLEMENTATION.md"
   evidence_type: "implementation-md"
   implementation_objects: ["template-schema", "guardrail-test"]
   test_plan_refs:
     - "docs/features/strategy-research-lifecycle/TEST-PLAN.md"
-  local_validation_results: []
-  status: "not-started"
+  local_validation_results:
+    - "process/checks/CP6-CR051-S04-registry-and-evidence-contracts-CODING-DONE.md"
+  status: "PASS"
 dev_gate:
-  design_evidence_confirmed: false
-  lld_confirmed: false
-  dependencies_satisfied: false
+  design_evidence_confirmed: true
+  lld_confirmed: true
+  dependencies_satisfied: true
   file_conflict_free: true
+  implementation_allowed: true
+  cp6_status: "PASS"
+  cp6_result: "process/checks/CP6-CR051-S04-registry-and-evidence-contracts-CODING-DONE.md"
+  cp7_status: "PASS"
+  cp7_result: "process/checks/CP7-CR051-S04-registry-and-evidence-contracts-VERIFICATION-DONE.md"
 task_count: 2
 created_at: "2026-06-14T08:19:09+08:00"
-updated_at: "2026-06-14T08:46:04+08:00"
+updated_at: "2026-06-14T09:00:24+08:00"
 change_id: "CR-051"
 ---
 
@@ -84,3 +90,12 @@ change_id: "CR-051"
 | 异常、失败与回退 | 字段不足时 blocked，不得静默生成 delivery_candidate |
 | 测试入口 | TC-CR051-02、TC-CR051-06、SEC-TC-01、SEC-TC-03 |
 | 风险与重访条件 | 后续实现 schema 校验或 registry 存储时重访 |
+
+## 实现摘要
+
+| 项目 | 内容 |
+|---|---|
+| 实现证据 | `process/stories/CR051-S04-registry-and-evidence-contracts-IMPLEMENTATION.md` |
+| CP6 结果 | `process/checks/CP6-CR051-S04-registry-and-evidence-contracts-CODING-DONE.md`，PASS |
+| 输出文件 | `docs/research/RESEARCH-REGISTRY-SPEC.md` |
+| 剩余风险 | CP7 需验证 registry 不保存凭据、账户、broker facts 原文和 runtime-ready claim |

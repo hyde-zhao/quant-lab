@@ -2,11 +2,11 @@
 checkpoint_id: "CP5-CR051-STRATEGY-RESEARCH-LIFECYCLE-BATCH-A-LLD-BATCH"
 checkpoint_name: "CR051 Strategy Research Lifecycle Batch A LLD Review"
 type: "batch_auto_then_manual"
-status: "pending"
+status: "approved"
 owner: "host-orchestrator"
 created_at: "2026-06-14T08:46:04+08:00"
-reviewed_by: ""
-reviewed_at: ""
+reviewed_by: "user"
+reviewed_at: "2026-06-14T09:00:24+08:00"
 auto_check_result: "process/checks/CP5-CR051-*-IMPLEMENTABILITY.md"
 target:
   phase: "story-planning"
@@ -141,8 +141,8 @@ target:
 
 ## 人工审查结果
 
-- 结论：`approved | changes_requested | rejected`
-- 审查人：
-- 审查时间：
-- 修改意见：
-- 风险接受项：
+- 结论：`approved`
+- 审查人：user
+- 审查时间：2026-06-14T09:00:24+08:00
+- 修改意见：无；用户回复“同意，继续推进”。
+- 风险接受项：接受本批次 S01..S06 设计证据进入受控实现；仍不授权目录重命名、远端仓库改名、git push / tag、NAS scan / mount / copy / delete / migration、external archive migration execution、provider fetch、lake write、catalog publish、QMT / MiniQMT import / connection / runtime、凭据读取、submit / cancel / simulation / live trading 或批量重写历史审计文件。

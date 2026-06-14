@@ -1,0 +1,69 @@
+context_id: "RELEASE-CONTEXT-CR051"
+status: "ready"
+created_at: "2026-06-14T09:00:24+08:00"
+created_by: "host-orchestrator"
+change_id: "CR-051"
+release_artifact_profile: "compact"
+release_decision: "READY"
+release_scope:
+  version_label: "cr051-strategy-research-lifecycle-framework"
+  in_scope:
+    - "Strategy research lifecycle contract"
+    - "Strategy taxonomy"
+    - "Research archive governance"
+    - "Research archive manifest spec"
+    - "Research PC / NAS / trading PC workflow"
+    - "Research registry spec"
+    - "Project identity migration plan"
+    - "Follow-up CR052..CR056 gates"
+  out_of_scope:
+    - "directory rename"
+    - "remote repository rename"
+    - "NAS scan / mount / copy / delete / migration"
+    - "provider fetch / lake write / catalog publish"
+    - "QMT / MiniQMT runtime"
+    - "credential / account / token / .env read"
+    - "submit / cancel / simulation / live trading"
+quality_summary:
+  cp6_status: "PASS"
+  cp7_status: "PASS"
+  verification_report: "docs/quality/VERIFICATION-REPORT-CR051.md"
+  blocker_count: 0
+  high_count: 0
+  pass_with_risk_count: 0
+affected_surface:
+  docs:
+    - "docs/research/*"
+    - "docs/quality/VERIFICATION-REPORT-CR051.md"
+  process:
+    - "process/stories/CR051-*"
+    - "process/checks/CP6-CR051-*"
+    - "process/checks/CP7-CR051-*"
+  config: []
+  runtime: []
+install_validation_summary:
+  applicable: false
+  reason: "CR051 只交付 Git 内文档合同和过程证据，无安装器、服务或 runtime。"
+release_documents:
+  release_notes: "docs/release/RELEASE-NOTES-CR051.md"
+  deploy_checklist: "docs/release/DEPLOY-CHECKLIST-CR051.md"
+  rollback: "docs/release/ROLLBACK-CR051.md"
+  migration: "docs/release/MIGRATION-CR051.md"
+  feedback: "docs/release/FEEDBACK-CR051.md"
+non_authorized_items:
+  - "真实目录重命名 / 远端仓库改名"
+  - "git push / tag publish / 重写历史"
+  - "NAS scan / mount / copy / delete / migration"
+  - "external archive migration execution"
+  - "provider fetch / lake write / catalog publish"
+  - "QMT / MiniQMT import / connection / runtime"
+  - "凭据、账户、token、.env 读取"
+  - "submit / cancel / simulation / live trading"
+follow_up_summary:
+  candidates:
+    - "CR052 多因子完整证明周期"
+    - "CR053 archive migration / inventory"
+    - "CR054 docs/package rename"
+    - "CR055 research consumption bridge"
+    - "CR056 strategy family expansion / feedback loop"
+  note: "候选 CR 仍 blocked_by=CR051 CP8，CP8 approve 只关闭 CR051 当前交付，不自动启动后续 CR。"

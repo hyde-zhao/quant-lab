@@ -2,7 +2,7 @@
 story_id: "CR051-S05-follow-up-cr-roadmap-and-admission-gates"
 title: "后续 CR 路线与准入门禁"
 story_slug: "follow-up-cr-roadmap-and-admission-gates"
-status: "lld-ready-for-review"
+status: "verified"
 priority: "P1"
 wave: "CR051-W3-FOLLOW-UP-GATES"
 depends_on:
@@ -40,24 +40,30 @@ lld_gate:
     - "CR051-S04-registry-and-evidence-contracts"
   design_evidence_type: "technical-note"
   design_evidence_path: "process/stories/CR051-S05-follow-up-cr-roadmap-and-admission-gates.md#技术说明"
-  status: "ready-for-review"
+  status: "approved"
 implementation_gate:
-  evidence_required: false
-  evidence_path: ""
-  evidence_type: "story-summary"
+  evidence_required: true
+  evidence_path: "process/stories/CR051-S05-follow-up-cr-roadmap-and-admission-gates-IMPLEMENTATION.md"
+  evidence_type: "implementation-md"
   implementation_objects: ["docs-handoff"]
   test_plan_refs:
     - "docs/features/strategy-research-lifecycle/TEST-PLAN.md"
-  local_validation_results: []
-  status: "not-started"
+  local_validation_results:
+    - "process/checks/CP6-CR051-S05-follow-up-cr-roadmap-and-admission-gates-CODING-DONE.md"
+  status: "PASS"
 dev_gate:
-  design_evidence_confirmed: false
-  lld_confirmed: false
-  dependencies_satisfied: false
+  design_evidence_confirmed: true
+  lld_confirmed: true
+  dependencies_satisfied: true
   file_conflict_free: true
+  implementation_allowed: true
+  cp6_status: "PASS"
+  cp6_result: "process/checks/CP6-CR051-S05-follow-up-cr-roadmap-and-admission-gates-CODING-DONE.md"
+  cp7_status: "PASS"
+  cp7_result: "process/checks/CP7-CR051-S05-follow-up-cr-roadmap-and-admission-gates-VERIFICATION-DONE.md"
 task_count: 1
 created_at: "2026-06-14T08:19:09+08:00"
-updated_at: "2026-06-14T08:46:04+08:00"
+updated_at: "2026-06-14T09:00:24+08:00"
 change_id: "CR-051"
 ---
 
@@ -97,3 +103,12 @@ change_id: "CR-051"
 |---|---|---|
 | blocking clarification | 0 | CP2 / CP3 已确认路线和不授权边界 |
 | non-blocking OPEN | 0 | 后续 CR 的优先级可在 CR051 CP8 后重排 |
+
+## 实现摘要
+
+| 项目 | 内容 |
+|---|---|
+| 实现证据 | `process/stories/CR051-S05-follow-up-cr-roadmap-and-admission-gates-IMPLEMENTATION.md` |
+| CP6 结果 | `process/checks/CP6-CR051-S05-follow-up-cr-roadmap-and-admission-gates-CODING-DONE.md`，PASS |
+| 输出文件 | `process/changes/CR-051-STRATEGY-RESEARCH-LIFECYCLE-FRAMEWORK-2026-06-14.md` §后续事项台账 |
+| 剩余风险 | CP7 需验证未启动 CR052..CR056，且后续 gate 仍 blocked_by=CR051 |

@@ -4,12 +4,12 @@ title: "研究 registry 与证据合同"
 story_slug: "registry-and-evidence-contracts"
 lld_version: "1.0"
 tier: "M"
-status: "ready-for-review"
-confirmed: false
+status: "approved"
+confirmed: true
 created_by: "host-orchestrator"
 created_at: "2026-06-14T08:46:04+08:00"
-confirmed_by: ""
-confirmed_at: ""
+confirmed_by: "user"
+confirmed_at: "2026-06-14T09:00:24+08:00"
 shared_fragments: []
 feature_design_refs:
   - "docs/features/strategy-research-lifecycle/DESIGN.md"

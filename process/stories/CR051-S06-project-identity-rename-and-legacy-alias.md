@@ -2,7 +2,7 @@
 story_id: "CR051-S06-project-identity-rename-and-legacy-alias"
 title: "项目身份改名与 legacy alias 兼容"
 story_slug: "project-identity-rename-and-legacy-alias"
-status: "lld-ready-for-review"
+status: "verified"
 priority: "P0"
 wave: "CR051-W1-LIFECYCLE-ARCHIVE-IDENTITY"
 depends_on: []
@@ -38,24 +38,30 @@ lld_gate:
     - "DQ-CP3-CR051-06"
   design_evidence_type: "technical-note"
   design_evidence_path: "process/stories/CR051-S06-project-identity-rename-and-legacy-alias.md#技术说明"
-  status: "ready-for-review"
+  status: "approved"
 implementation_gate:
-  evidence_required: false
-  evidence_path: ""
-  evidence_type: "story-summary"
+  evidence_required: true
+  evidence_path: "process/stories/CR051-S06-project-identity-rename-and-legacy-alias-IMPLEMENTATION.md"
+  evidence_type: "implementation-md"
   implementation_objects: ["docs-handoff", "migration-plan"]
   test_plan_refs:
     - "docs/features/strategy-research-lifecycle/TEST-PLAN.md"
-  local_validation_results: []
-  status: "not-started"
+  local_validation_results:
+    - "process/checks/CP6-CR051-S06-project-identity-rename-and-legacy-alias-CODING-DONE.md"
+  status: "PASS"
 dev_gate:
-  design_evidence_confirmed: false
-  lld_confirmed: false
+  design_evidence_confirmed: true
+  lld_confirmed: true
   dependencies_satisfied: true
   file_conflict_free: true
+  implementation_allowed: true
+  cp6_status: "PASS"
+  cp6_result: "process/checks/CP6-CR051-S06-project-identity-rename-and-legacy-alias-CODING-DONE.md"
+  cp7_status: "PASS"
+  cp7_result: "process/checks/CP7-CR051-S06-project-identity-rename-and-legacy-alias-VERIFICATION-DONE.md"
 task_count: 2
 created_at: "2026-06-14T08:19:09+08:00"
-updated_at: "2026-06-14T08:46:04+08:00"
+updated_at: "2026-06-14T09:00:24+08:00"
 change_id: "CR-051"
 ---
 
@@ -111,3 +117,12 @@ change_id: "CR-051"
 - 不改远端仓库名、不 git push。
 - 不批量替换历史 `process/`、handoff、CR 中的 `local_backtest`。
 - 不把 canonical name 决策理解为迁移执行授权。
+
+## 实现摘要
+
+| 项目 | 内容 |
+|---|---|
+| 实现证据 | `process/stories/CR051-S06-project-identity-rename-and-legacy-alias-IMPLEMENTATION.md` |
+| CP6 结果 | `process/checks/CP6-CR051-S06-project-identity-rename-and-legacy-alias-CODING-DONE.md`，PASS |
+| 输出文件 | `docs/research/PROJECT-IDENTITY-MIGRATION.md` |
+| 剩余风险 | CP7 需验证未改目录、远端、package metadata、README、USER-MANUAL 或历史审计文件 |
