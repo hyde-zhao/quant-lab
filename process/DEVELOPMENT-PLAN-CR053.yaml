@@ -2,7 +2,7 @@ project_id: "local_backtest"
 canonical_project_name: "quant-lab"
 change_id: "CR-053"
 version: "1.0"
-status: "cp5-approved-ready-for-cp6"
+status: "cp6-pass-ready-for-verification"
 created_at: "2026-06-14T10:59:13+08:00"
 created_by: "host-orchestrator"
 source_hld: "docs/design/HLD-CR053-QUANT-LAB-MIGRATION-INVENTORY-AND-DRY-RUN.md"
@@ -17,6 +17,17 @@ implementation_allowed: true
 implementation_scope: "static Markdown reports / guardrail evidence only"
 cp5_approved_at: "2026-06-14T11:52:15+08:00"
 cp5_approved_by: "user"
+cp6_status: "PASS"
+cp6_completed_at: "2026-06-14T12:19:53+08:00"
+cp6_check: "process/checks/CP6-CR053-MIGRATION-INVENTORY-BATCH-A-CODING-DONE.md"
+cp6_context: "process/context/CP6-CR053-IMPLEMENTATION-CONTEXT.yaml"
+implementation_evidence: "process/stories/CR053-BATCH-A-IMPLEMENTATION.md"
+ready_for_verification:
+  - "CR053-S01-root-map-and-host-mapping-contract"
+  - "CR053-S02-repo-inventory-and-path-classification"
+  - "CR053-S03-path-reference-and-legacy-alias-dry-run"
+  - "CR053-S04-manifest-transfer-and-backup-plan"
+  - "CR053-S05-cr058-migration-input-and-close-gate"
 real_migration_authorized: false
 nas_operation_authorized: false
 data_lake_mapping_change_authorized: false

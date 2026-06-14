@@ -1,7 +1,7 @@
 ---
-version: "2.9"
-last_updated: "2026-06-14T11:52:15+08:00"
-status: "cr053-cp5-approved-ready-for-cp6"
+version: "3.0"
+last_updated: "2026-06-14T12:19:53+08:00"
+status: "cr053-cp6-pass-ready-for-verification"
 confirmed: true
 confirmed_by: "user"
 confirmed_at: "2026-05-14"
@@ -138,6 +138,7 @@ created_by: "meta-se"
 | 2.7 | 2026-06-14 | host-orchestrator | 按 CR-051 CP3 approved 口径追加 CR051-S01..S06 与 3 个增量 Wave：策略研究生命周期和 taxonomy、仓库 / 归档 / 数据湖边界、研究主机与交易主机工作流、registry / evidence 合同、后续 CR roadmap、`quant-lab` canonical name 与 `local_backtest` legacy alias；CP4 自动预检 PASS；本轮只做 Story Plan / CP4，不生成 LLD、不实现、不执行目录重命名、不操作 NAS、不运行 QMT / MiniQMT、不 provider/lake/publish、不 git push |
 | 2.8 | 2026-06-14 | host-orchestrator | 按 CR-053 CP3 approved 口径追加 CR053-S01..S05 与 3 个增量 Wave：root map / host mapping、repo inventory、path reference dry-run、manifest transfer / backup plan、CR058 migration input；CP4 自动预检 PASS；本轮只做 Story Plan / CP4，不生成 LLD、不实现、不执行 NAS mount / scan / copy / delete、不移动目录、不调整现有 `MARKET_DATA_LAKE_ROOT`、不 git push |
 | 2.9 | 2026-06-14 | host-orchestrator | 用户回复“同意”后回填 CR053 CP5 approved：S01-S04 full-lld 与 S05 technical-note 均确认，Story 卡片推进到 `dev-ready`；后续 CP6 仅允许静态 Markdown 报告 / guardrail evidence，不授权真实迁移、NAS 操作、lake 移动、Windows full mount、凭据读取、provider/lake/publish、QMT/MiniQMT runtime 或 git push/tag |
+| 3.0 | 2026-06-14 | meta-dev / host-orchestrator | 用户明确授权使用 meta-dev 子 Agent 推进 CR053 CP6；dev-shi 生成五份 `docs/release/*CR053.md` 静态报告、CP6 implementation evidence、CP6 context 和 CP6 自动检查，S01-S05 均进入 `ready-for-verification`；下一步仅允许 CP7 静态验证，不授权真实迁移、NAS、lake、git push、runtime 或凭据读取 |
 
 ## Story 列表
 

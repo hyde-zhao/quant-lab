@@ -1,10 +1,10 @@
 version: 1
 status: "active-formal-cr"
-updated_at: '2026-06-14T11:52:15+08:00'
+updated_at: '2026-06-14T12:19:53+08:00'
 owner: meta-po
 source: CR-046 started by user target change to terminal-native simulation strategy export, then upgraded by user to QMT + MiniQMT dual-target strategy delivery and verification framework; current CR first freezes QMT/MiniQMT framework, verification framework design, strategy package contract, and MiniQMT runner install design; concrete strategy delivery and runtime validation are deferred until permissions / strategy selection are ready. CR051 design draft was created by explicit USER-20260614-START-CR051-DESIGN for Strategy Research Lifecycle Framework; user approved CR051 active-lock handling, CP2, CP3 and CP8 on 2026-06-14, so CR051 is closed-current-delivery while CR046 remains paused at CP6 recovery point. CR053 was started by user reply `cr053` as quant-lab migration inventory / dry-run and user approved CP2 on 2026-06-14T09:51:11+08:00, resolving the old CR051 follow-up numbering conflict by renumbering event-strategy research flow to CR057-candidate. CR051 CP3 approved hardware-aware storage tiering for NAS 512G SSD / 4T RAID / 14T HDD, research PC 2T SSD and trading PC 512G SSD, plus project identity rename from local_backtest to quant-lab with local_backtest retained as legacy alias. CR-045 closed-current-delivery as Goldminer Windows Bridge Readonly Probe; CR-044 closed-current-delivery as offline-admission-design-ready; CR-043 closed-spike-complete with NEEDS_ACCOUNT_PERMISSION; CR-042 closed-current-delivery for Broker-Neutral Adapter Contract; CR-041 closed-current-delivery for API-less Paper Simulation Runner; CR-039 and CR-040 closed-current-delivery; CR-020
   is deleted-by-user; CR-021..CR-024 are cancelled-user-deleted
-last_consistency_check: 'PASS at 2026-06-14T12:00:36+08:00 via uv run --python 3.11 python scripts/check_cr_tracking_consistency.py --project-root .'
+last_consistency_check: 'PASS at 2026-06-14T12:23:31+08:00 via uv run --python 3.11 python scripts/check_cr_tracking_consistency.py --project-root .'
 index_schema:
 - id
 - title
@@ -56,11 +56,11 @@ active_crs:
   last_checked_at: '2026-06-14T00:29:41+08:00'
 - id: CR-053
   title: quant-lab Migration Inventory and Dry-run
-  status: active-cp5-approved-ready-for-cp6
+  status: active-cp6-pass-ready-for-verification
   source_tracking: USER-20260614-START-CR053-MIGRATION-INVENTORY
   formal_cr_path: process/changes/CR-053-QUANT-LAB-MIGRATION-INVENTORY-AND-DRY-RUN-2026-06-14.md
   priority: 1
-  blocked_by: 'cp5-approved-ready-for-cp6: 用户回复“同意”，CR053 S01-S04 full-lld、S05 technical-note 和 5 份 CP5 自动预检已 approved；S01-S05 Story 卡片已 dev-ready。CR046 remains paused at CP6 PASS / ready-for-verification. CR053 CP6 仅允许静态 Markdown 报告 / guardrail evidence，不授权运行 inventory、真实目录重命名、文件移动、NAS 操作、external archive migration、provider/lake/publish、QMT/MiniQMT runtime、凭据读取、git push/tag 或重写历史。'
+  blocked_by: 'cp6-pass-ready-for-verification: meta-dev/dev-shi 完成 CR053 CP6 静态实现并生成 docs/release 五份报告、implementation evidence、CP6 context 和 CP6 check；S01-S05 已 ready-for-verification。CR046 remains paused at CP6 PASS / ready-for-verification. CR053 下一步仅允许 CP7 静态验证，不授权运行 inventory、真实目录重命名、文件移动、NAS 操作、external archive migration、provider/lake/publish、QMT/MiniQMT runtime、凭据读取、git push/tag 或重写历史。'
   impact_surface:
   - project migration inventory
   - quant-lab canonical identity
@@ -80,9 +80,9 @@ active_crs:
   - forbidden_content_boundary
   - CR053
   - CR051_follow_up
-  next_gate: CR053 CP6 static implementation
-  next_action: 调度 CR053 CP6 静态实现；仅生成 docs/release Markdown 报告和 guardrail evidence，不执行真实迁移、NAS、lake、git push、Windows full mount、runtime 或凭据读取。
-  last_checked_at: '2026-06-14T11:52:15+08:00'
+  next_gate: CR053 CP7 static verification
+  next_action: 调度 meta-qa 执行 CR053 CP7 静态验证；验证五份 docs/release 报告、CP6 implementation evidence、CP6 context、CP6 check、Story 状态和不授权边界。
+  last_checked_at: '2026-06-14T12:19:53+08:00'
 closed_crs:
 - id: CR-051
   title: Strategy Research Lifecycle Framework and Strategy Taxonomy
