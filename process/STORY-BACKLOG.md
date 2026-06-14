@@ -1,15 +1,15 @@
 ---
-version: "2.7"
-last_updated: "2026-06-14T09:30:26+08:00"
-status: "cr051-closed-current-delivery"
+version: "2.8"
+last_updated: "2026-06-14T10:59:13+08:00"
+status: "cr053-story-plan-cp4-pass-pending-lld"
 confirmed: true
 confirmed_by: "user"
 confirmed_at: "2026-05-14"
 source_hld: "process/HLD.md"
 companion_hld: "process/HLD-DATA-LAKE.md"
 source_adr: "process/ARCHITECTURE-DECISION.md"
-story_count: 147
-wave_count: 67
+story_count: 152
+wave_count: 70
 baseline_story_count: 13
 cr004_story_count: 5
 cr005_story_count: 6
@@ -30,7 +30,8 @@ cr030_story_count: 8
 cr020_story_count: 6
 cr046_story_count: 7
 cr051_story_count: 6
-active_change: "CR-051"
+cr053_story_count: 5
+active_change: "CR-053"
 secondary_change: "CR-020/CR-030 legacy"
 cr004_status: "draft-pending-cp4"
 cr004_confirmed: false
@@ -73,6 +74,7 @@ cr030_status: "story-plan-cp4-pass-pending-lld"
 cr046_status: "story-plan-cp4-pass-pending-lld"
 cr046_lld_batch: "CR046-DUAL-TARGET-FRAMEWORK-BATCH-A"
 cr051_status: "closed-current-delivery"
+cr053_status: "story-plan-cp4-pass-pending-lld"
 cr051_lld_batch: "CR051-STRATEGY-RESEARCH-LIFECYCLE-BATCH-A"
 cr020_status: "fixture-static-verified-pending-manual-windows-qmt-validation"
 cr015_lld_batches:
@@ -93,6 +95,8 @@ cr020_lld_batches:
   - "CR020-QMT-GATEWAY-READONLY-BATCH-A"
 cr051_lld_batches:
   - "CR051-STRATEGY-RESEARCH-LIFECYCLE-BATCH-A"
+cr053_lld_batches:
+  - "CR053-MIGRATION-INVENTORY-BATCH-A"
 created_by: "meta-se"
 ---
 
@@ -132,11 +136,17 @@ created_by: "meta-se"
 | 2.5 | 2026-06-05 | meta-se | 按 CR-020 CP3 approved 口径追加 CR020-S01..S06 与 4 个增量 Wave：Windows gateway runtime admission、S 端 QMT login / session ready gate、Linux C 端 REST transport、HMAC pairing / allowlist / scope / nonce fail-closed、`query_positions` 单接口只读准入、docs/runbook 与 CP7 实机只读验收边界；CP4 自动预检 PASS；本轮只做 Story Plan / CP4，不生成 LLD、不实现、不改依赖、不启动 gateway、不绑定端口、不连接 QMT / MiniQMT / XtQuant、不读取真实 `.env`、不输出凭据、不交易、不账户写入、不 simulation/live、不 provider/lake/publish/reports overwrite |
 | 2.6 | 2026-06-05 | meta-po | CR020-S01..S06 已完成 CP5 approved、代码 / 文档实现、CP6 PASS 与 CP7 fixture/static PASS；`75 passed`、`py_compile` PASS、`git diff --check` PASS，真实 `.env` 读取、gateway 启动、端口绑定、QMT 连接和真实 `query_positions` 均为 0。当前等待用户按 Windows S 端和 Linux C 端手工安装调试手册执行真实只读验证，CR-020 不关闭、不授权交易 / 账户写入 / simulation/live / provider/lake/publish / 凭据输出 |
 | 2.7 | 2026-06-14 | host-orchestrator | 按 CR-051 CP3 approved 口径追加 CR051-S01..S06 与 3 个增量 Wave：策略研究生命周期和 taxonomy、仓库 / 归档 / 数据湖边界、研究主机与交易主机工作流、registry / evidence 合同、后续 CR roadmap、`quant-lab` canonical name 与 `local_backtest` legacy alias；CP4 自动预检 PASS；本轮只做 Story Plan / CP4，不生成 LLD、不实现、不执行目录重命名、不操作 NAS、不运行 QMT / MiniQMT、不 provider/lake/publish、不 git push |
+| 2.8 | 2026-06-14 | host-orchestrator | 按 CR-053 CP3 approved 口径追加 CR053-S01..S05 与 3 个增量 Wave：root map / host mapping、repo inventory、path reference dry-run、manifest transfer / backup plan、CR058 migration input；CP4 自动预检 PASS；本轮只做 Story Plan / CP4，不生成 LLD、不实现、不执行 NAS mount / scan / copy / delete、不移动目录、不调整现有 `MARKET_DATA_LAKE_ROOT`、不 git push |
 
 ## Story 列表
 
 | Story ID | 标题 | 目标 | 范围 | 非范围 | 优先级 | 依赖 | Wave | 量化验收标准摘要 | 需求映射 | HLD 映射 | ADR 映射 |
 |---|---|---|---|---|---|---|---|---|---|---|---|
+| CR053-S01-root-map-and-host-mapping-contract | 迁移 root map 与主机映射合同 | 定义 quant-lab root map、Linux 研究机三分区统一视图、Windows package exchange 窄映射和数据湖 alias 兼容 | `docs/release/NAS-MAPPING-CR053.md` 静态报告合同、root map schema、host map schema | 不执行 mount / scan / mkdir / copy / delete；不替换 `MARKET_DATA_LAKE_ROOT` | P0 | 无 | CR053-W1-MAPPING-INVENTORY | 7 类 root 100% 覆盖；Windows 交易机 full archive mount allowed count=0 | SC-CR053-01..06 | HLD-CR053 §5 | ADR-CR053-001/006/007 |
+| CR053-S02-repo-inventory-and-path-classification | Git 内 inventory 与路径分类器 | 设计 repo-local inventory 报告合同，分类路径、owner、artifact class、move_action、risk 和 verification_rule | `docs/release/MIGRATION-INVENTORY-CR053.md` 静态报告合同、forbidden content policy | 不扫 NAS、不扫全部 untracked data、不读 `.env` | P0 | CR053-S01 | CR053-W1-MAPPING-INVENTORY | inventory 必填字段覆盖率 100%；forbidden 操作计数=0 | SC-CR053-01..04 | HLD-CR053 §8 | ADR-CR053-001/004 |
+| CR053-S03-path-reference-and-legacy-alias-dry-run | 路径引用与 legacy alias dry-run | 设计 `local_backtest` / legacy env / docs link 引用扫描 dry-run 和 manual-review 合同 | `docs/release/PATH-REFERENCES-CR053.md` 静态报告合同 | 不批量改写历史 process / CR / handoff；不 git history rewrite | P0 | CR053-S02 | CR053-W2-REFERENCE-BACKUP | 引用分类 100% 输出 action；manual-review 项不自动改写 | SC-CR053-02 | HLD-CR053 §8 / §12 | ADR-CR053-004 |
+| CR053-S04-manifest-transfer-and-backup-plan | manifest-first transfer 与 backup plan | 设计 transfer manifest、backup plan、restore rehearsal 和数据湖现有备份合同的关系 | `docs/release/BACKUP-PLAN-CR053.md` 静态报告合同 | 不执行真实备份、restore、NAS copy / delete 或 lake migration | P0 | CR053-S01 | CR053-W2-REFERENCE-BACKUP | transfer / backup 字段覆盖率 100%；restore drill 仅为计划状态 | SC-CR053-03..06 | HLD-CR053 §6 / §7 | ADR-CR053-002/003/006 |
+| CR053-S05-cr058-migration-input-and-close-gate | CR058 真实迁移输入与关闭门禁 | 聚合 CR053 dry-run 输出，定义 CR058 mechanical move 输入、rollback_ref 和关闭门禁 | `docs/release/MIGRATION-PLAN-CR053.md` 静态报告合同、后续 CR058 / CR059 gate | 不执行真实 move、远端 rename、git push/tag 或 NAS 操作 | P1 | CR053-S02, CR053-S03, CR053-S04 | CR053-W3-MIGRATION-GATE | CR058 输入 5 项前置均齐全；缺任一项 blocked | SC-CR053-06 | HLD-CR053 §15 | ADR-CR053-004 |
 | STORY-001 | 工程基线与数据契约骨架 | 建立本地 Python 研究工具的目录、依赖和契约骨架 | `pyproject.toml`、`uv.lock`、`config/`、`engine/`、`strategies/`、`data/`、`reports/`、契约常量/文档内联 | 不实现回测逻辑；不联网 | P0 | 无 | M0 | 目录与文件边界覆盖 100% P0 路径；Python 依赖统一由 uv 管理 | REQ-001, REQ-013, REQ-036 | §3, §5, §6, §16 | ADR-002 |
 | STORY-002 | 数据准备节流重试与 manifest | 实现独立联网数据准备编排和 JSONL checkpoint | data_prep 入口、AKShare adapter 边界、节流、重试、退避、断点续传、raw 写入、manifest | 不写回测主路径；不生成策略报告 | P0 | STORY-001 | M0 | 相邻请求间隔 >=2 秒；单批 <=50；并发 <=1；每批 manifest 字段完整 | REQ-016, REQ-047, REQ-048, REQ-049, REQ-050, REQ-051, REQ-055 | §8.1, §8.2, §8.4, §12.1 | ADR-001, ADR-005 |
 | STORY-003 | 标准化 parquet 与数据质量报告 | 从 raw 派生三类 parquet，并输出质量报告和降级状态 | normalizer、parquet writer、quality reporter、`pass/warn/fail`、数据新鲜度 | 不实现策略回测；不做自动清理 raw | P0 | STORY-001, STORY-002 | M0 | 三类 parquet schema 校验；质量报告字段覆盖 HLD 列表；缺失率阈值按 ADR-006 处理 | REQ-021, REQ-022, REQ-052, REQ-053, REQ-054, REQ-056, REQ-057 | §8.3, §8.5, §12.1, §12.4 | ADR-003, ADR-006 |

@@ -1,12 +1,12 @@
 ---
-status: "cp3-review-pending"
-version: "0.1"
+status: "confirmed"
+version: "0.2"
 change_id: "CR-053"
 complexity: "standard"
 selected_option: "logical-nas-map-plus-manifest-first-transfer-and-cold-backup"
-confirmed: false
-confirmed_by: ""
-confirmed_at: ""
+confirmed: true
+confirmed_by: "user"
+confirmed_at: "2026-06-14T10:59:13+08:00"
 real_migration_authorized: false
 nas_scan_authorized: false
 nas_copy_authorized: false
@@ -20,6 +20,7 @@ git_push_authorized: false
 | 版本 | 日期 | 修订人 | 变更要点 |
 |---|---|---|---|
 | 0.1 | 2026-06-14 | host-orchestrator | 初版 CP3 HLD，覆盖 NAS 目录映射、传输方案、备份方案、dry-run 合同和真实迁移后置门禁 |
+| 0.2 | 2026-06-14 | host-orchestrator | 按用户确认补充：Linux 研究机可统一映射 NAS 三分区但物理分层不混并；现有 `MARKET_DATA_LAKE_ROOT` 不调整；Windows 交易机只映射 package exchange |
 
 ## 1. 问题定义
 
@@ -146,6 +147,43 @@ CR051 已确认 `quant-lab` 是未来 canonical 项目名，`local_backtest` 作
 | Cold backup | `QUANT_LAB_COLD_BACKUP_ROOT` | NAS 14T HDD | `quant-lab/cold-backup` | warm archive snapshot、git bundle、manifest snapshot、retired project backup | active workspace、未登记临时文件 | cold durable |
 | Trading evidence | `QUANT_LAB_TRADING_EVIDENCE_ROOT` | 交易主机 512G SSD 或 broker archive | `quant-lab/trading-evidence` | 脱敏运行摘要、小型证据 | 凭据、未脱敏账户、full archive | 后续交易 CR |
 
+### 主机映射约束
+
+| 主机 | 推荐映射 | 允许范围 | 禁止范围 | 说明 |
+|---|---|---|---|---|
+| Linux 研究机 | 可同时挂载 NAS 512G SSD、4T RAID、14T HDD，并汇总到 `/mnt/quant-lab/*` 逻辑视图 | `/mnt/quant-lab/hot`、`/mnt/quant-lab/archive`、`/mnt/quant-lab/cold-backup` | 不把三个分区 overlay / merger 成一个职责不明的大盘 | Linux 研究机是主要挂载端；统一路径只是命名空间，物理层仍保持 hot / warm / cold 分离。 |
+| Windows 交易机 | 只映射 package exchange | `Q:\quant-lab\package-exchange` 或 UNC `\\NAS\\<hot-share>\\quant-lab\\hot\\package-exchange` | 不映射 research archive、cold backup、完整 market data lake、完整研究 Git workspace | 交易机只读消费 zip / manifest / sha256 / docs bundle；可选写回脱敏 evidence inbox。 |
+| 数据湖现有挂载 | 保持 `MARKET_DATA_LAKE_ROOT` / `--lake-root` 合同 | 由用户系统层挂载，项目只消费外置 lake root | CR053 不迁移、不改名、不替换现有 lake root 变量 | `QUANT_LAB_MARKET_DATA_LAKE_ROOT` 仅作为未来文档 alias / pointer，不作为现阶段代码入口。 |
+
+### Linux 研究机逻辑视图建议
+
+```text
+/mnt/quant-lab/
+  hot/                 -> NAS 512G SSD
+    cache/
+    package-exchange/
+  archive/             -> NAS 4T RAID
+    research/
+    lake-pointers/
+    package-manifest-mirror/
+  cold-backup/         -> NAS 14T HDD
+    git-bundles/
+    archive-snapshots/
+    restore-tests/
+    retired-projects/
+  lake/                -> 现有 MARKET_DATA_LAKE_ROOT 的挂载点或只读 pointer，不在 CR053 调整
+```
+
+底层可由用户系统层分别挂载，例如：
+
+```text
+/mnt/nas-ssd512/quant-lab/hot
+/mnt/nas-raid4t/quant-lab/archive
+/mnt/nas-hdd14t/quant-lab/cold-backup
+```
+
+再通过 bind mount 或 symlink 暴露到 `/mnt/quant-lab/*`。CR053 不创建这些目录，不执行 mount，不验证真实路径。
+
 ### 目录树建议
 
 ```text
@@ -208,6 +246,10 @@ CR051 已确认 `quant-lab` 是未来 canonical 项目名，`local_backtest` 作
 
 ## 7. 备份方案
 
+### 数据湖映射兼容性
+
+现有数据湖映射不在 CR053 中调整。当前仓库和 CLI 已以 `MARKET_DATA_LAKE_ROOT`、`MARKET_DATA_LAKE_ARCHIVE_ROOT`、`MARKET_DATA_LAKE_BACKUP_ROOT`、`MARKET_DATA_LAKE_RESTORE_ROOT` 作为数据湖运维合同；CR053 只确认这些 root 应继续保持在仓库外，并由用户系统层完成 NAS / 外置路径挂载。若未来需要移动真实 lake root，必须另起数据湖迁移 CR，先执行 backup / restore drill，再切换 `.env` 或运行参数。
+
 ### 备份等级
 
 | 对象 | 主位置 | 备份位置 | 频率建议 | 保留期建议 | 恢复验收 |
@@ -267,6 +309,8 @@ CR051 已确认 `quant-lab` 是未来 canonical 项目名，`local_backtest` 作
 | ADR-CR053-003 | 备份分层 | 4T RAID 主 archive + 14T cold backup + Git bundle | 只依赖 RAID / 全量云备份 | DQ-CP3-CR053-03 |
 | ADR-CR053-004 | 真实迁移时点 | CR058 CP6 执行 repo-local mechanical move | CR053 内执行 / 延后无限期 | DQ-CP3-CR053-04 |
 | ADR-CR053-005 | 交易主机边界 | 只读 package exchange，不挂 full archive | 交易主机挂 archive | DQ-CP3-CR053-05 |
+| ADR-CR053-006 | 现有数据湖映射 | 保持 `MARKET_DATA_LAKE_ROOT` / `--lake-root`，`QUANT_LAB_MARKET_DATA_LAKE_ROOT` 只作 alias / pointer | 立即替换数据湖变量 / 在 CR053 中迁移 lake | DQ-CP3-CR053-01 refinement |
+| ADR-CR053-007 | 主机挂载策略 | Linux 研究机挂三分区统一视图；Windows 交易机只映射 package exchange | 三分区混并 / Windows 交易机映射 full archive | DQ-CP3-CR053-05 refinement |
 
 ## 12. 待人工决策项
 
@@ -277,6 +321,15 @@ CR051 已确认 `quant-lab` 是未来 canonical 项目名，`local_backtest` 作
 | DQ-CP3-CR053-03 | architecture | 是否采用 warm archive + cold backup 分层？ | 是，4T RAID 主 archive，14T cold backup | 只依赖 RAID；hot SSD 也备份 | 只依赖 RAID 不满足备份 |
 | DQ-CP3-CR053-04 | runtime_authorization | 真实迁移何时执行？ | CR058 CP5 approved 后的 CR058 CP6 | CR053 CP6 执行；暂不规划 | CR053 仍不授权真实迁移 |
 | DQ-CP3-CR053-05 | security | 交易主机是否只读消费 package exchange？ | 是，不挂 full archive | 交易主机挂 archive；交易主机保存完整研究仓库 | 降低交易主机暴露面 |
+
+### 已确认细化项
+
+| 细化项 | 决策 | 影响 |
+|---|---|---|
+| NAS 三分区能否一起映射 | 可以在 Linux 研究机统一映射到 `/mnt/quant-lab/*`，但底层仍是三个独立分区，不做职责混并。 | CP4/CP5 设计应生成 logical map / mount map schema，但不执行 mount。 |
+| 当前数据湖映射是否调整 | 不调整。继续使用 `MARKET_DATA_LAKE_ROOT` / 显式 `--lake-root`；`QUANT_LAB_MARKET_DATA_LAKE_ROOT` 只作为文档 alias / pointer。 | 避免破坏已验证的数据湖 CLI、backup / restore 和 publish gate。 |
+| Windows 交易机是否映射 | 只映射 package exchange，默认 read-only；不映射 research archive / cold backup / full lake。 | package import 后续必须校验 manifest / sha256。 |
+| Linux 研究机是否都可映射 | 可以，是主要映射端；可同时挂载 hot / archive / cold-backup 三层。 | 后续真实路径绑定仍需用户授权或提供配置。 |
 
 ## 13. 风险与缓解
 

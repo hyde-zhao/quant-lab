@@ -1,21 +1,21 @@
 ---
 project_id: local_backtest
 workflow_mode: production
-current_phase: solution-design
+current_phase: story-planning
 current_agent: host-orchestrator
 active_change: "CR-046"
 active_story: ''
-iteration: 464
+iteration: 465
 blocked: false
 blocked_reason: ''
-last_action: 用户补充 NAS 目录映射、数据传输和备份方案要求；已生成 CR053 CP3 HLD / ADR / discussion / auto check / checkpoint，CR053 进入 active-cp3-review-pending。
-next_action: "等待用户审查 `process/checkpoints/CP3-CR053-HLD-REVIEW.md` 并回复 `approve` / `修改: <具体修改点>` / `reject`；approve 只确认 HLD / ADR，不授权运行 inventory、真实迁移、NAS 操作、git push、runtime、凭据或 provider/lake/publish。"
+last_action: 用户回复“同意，继续推进”；已回填 CR053 CP3 approved，补充 Linux / Windows / 数据湖映射细化，并完成 CR053 CP4 Story DAG / parallel safety PASS。
+next_action: "进入 CR053 CP5 设计证据写作：S01..S04 full-lld，S05 technical-note；仍不授权实现、inventory 运行、NAS 操作、数据湖移动、git push、runtime、凭据或 provider/lake/publish。"
 canonical_project_name: quant-lab
 legacy_project_alias: local_backtest
 cr_tracking:
   status: "active-formal-cr"
   index_path: process/changes/CR-INDEX.yaml
-  last_consistency_check: 'PASS at 2026-06-14T10:42:36+08:00 via uv run --python 3.11 python scripts/check_cr_tracking_consistency.py --project-root .'
+  last_consistency_check: 'PASS at 2026-06-14T11:12:55+08:00 via uv run --python 3.11 python scripts/check_cr_tracking_consistency.py --project-root .'
   active_crs:
   - id: CR-046
     title: QMT and MiniQMT Dual-Target Strategy Delivery Framework
@@ -54,11 +54,11 @@ cr_tracking:
     last_checked_at: '2026-06-14T00:29:41+08:00'
   - id: CR-053
     title: quant-lab Migration Inventory and Dry-run
-    status: active-cp3-review-pending
+    status: active-cp4-pass-ready-for-cp5
     source_tracking: USER-20260614-START-CR053-MIGRATION-INVENTORY
     formal_cr_path: process/changes/CR-053-QUANT-LAB-MIGRATION-INVENTORY-AND-DRY-RUN-2026-06-14.md
     priority: 1
-    blocked_by: 'cp3-review-pending: CR053 CP3 HLD / ADR 已生成，用户新增 NAS 目录映射、数据传输和备份方案已纳入 DQ-CP3-CR053-01..05；等待用户审查 CP3。CR046 remains paused at CP6 PASS / ready-for-verification. CR053 CP3 approve 不授权运行 inventory、真实目录重命名、文件移动、NAS 操作、external archive migration、provider/lake/publish、QMT/MiniQMT runtime、凭据读取、git push/tag 或重写历史。'
+    blocked_by: 'cp4-pass-ready-for-cp5: 用户回复“同意，继续推进”，CR053 CP3 HLD / ADR approved，并确认 Linux 研究机可统一映射 NAS 三分区、现有 MARKET_DATA_LAKE_ROOT 不调整、Windows 交易机只映射 package exchange。CP4 Story DAG / parallel safety PASS，CR053-S01..S05 进入 CP5 设计证据写作准备。CR046 remains paused at CP6 PASS / ready-for-verification. CR053 当前不授权运行 inventory、真实目录重命名、文件移动、NAS 操作、external archive migration、provider/lake/publish、QMT/MiniQMT runtime、凭据读取、git push/tag 或重写历史。'
     impact_surface:
     - project migration inventory
     - quant-lab canonical identity
@@ -78,9 +78,9 @@ cr_tracking:
     - forbidden_content_boundary
     - CR053
     - CR051_follow_up
-    next_gate: CR053 CP3 HLD review
-    next_action: 用户审查 `process/checkpoints/CP3-CR053-HLD-REVIEW.md`；approve 只确认 HLD / ADR，不授权运行 inventory、真实迁移、NAS 操作、git push 或 runtime。
-    last_checked_at: '2026-06-14T10:02:00+08:00'
+    next_gate: CR053 CP5 LLD batch review
+    next_action: 进入 CR053 CP5 设计证据写作：S01..S04 full-lld，S05 technical-note；仍不授权实现、inventory 运行、NAS 操作、数据湖移动、git push 或 runtime。
+    last_checked_at: '2026-06-14T10:59:13+08:00'
   closed_crs:
   - id: CR-051
     title: Strategy Research Lifecycle Framework and Strategy Taxonomy
@@ -744,23 +744,25 @@ cr_tracking:
     不占执行锁
   consistency_check: scripts/check_cr_tracking_consistency.py --project-root .
 human_gate_decisions:
-  status: awaiting-user
-  pending_gate: CP3-CR053
-  pending_checklist_path: process/checkpoints/CP3-CR053-HLD-REVIEW.md
+  status: approved
+  pending_gate: ''
+  pending_checklist_path: ''
   launch_message_path: process/checks/CP3-CR053-HUMAN-GATE-LAUNCH-MESSAGE.md
   pending_human_decisions:
   - id: DQ-CP3-CR053-01
     gate: CP3
     decision_type: architecture
     question: 是否采用逻辑 NAS root 映射，而不扫描 NAS？
-    recommendation: 是，按 `QUANT_LAB_*_ROOT` 映射 512G hot、4T warm、14T cold。
+    recommendation: 是，按 `QUANT_LAB_*_ROOT` 映射 512G hot、4T warm、14T cold；Linux 研究机可统一暴露 `/mnt/quant-lab/*`，底层三分区仍分离。
     alternatives:
     - 立即扫描 NAS
     - 只做 Git-only
     pros_cons: 推荐方案满足不扫描前提且能给出目录方案；立即扫描 NAS 需要额外授权；Git-only 不满足用户关于目录映射、传输和备份的要求。
     impact_risk: 真实路径后续可能不同，需要在 CR058 / CR060 前由用户提供真实路径或授权 read-only inventory 绑定。
     rollback_switch: 若用户不接受逻辑映射，CP3 回到修改状态，补充真实 NAS root 决策后重新发起。
-    status: pending
+    status: approved
+    decided_by: user
+    decided_at: '2026-06-14T10:59:13+08:00'
     source: process/checkpoints/CP3-CR053-HLD-REVIEW.md
   - id: DQ-CP3-CR053-02
     gate: CP3
@@ -773,7 +775,9 @@ human_gate_decisions:
     pros_cons: 推荐方案可审计、可回滚；直接复制失败难定位；整目录 mirror 容易扩大范围并复制不应进入 archive 的内容。
     impact_risk: 后续实现需要 manifest schema、checksum 和 promote 记录。
     rollback_switch: 若只处理小型 Git fixture，可走 Git commit；大 artifact / archive 仍保持 manifest-first。
-    status: pending
+    status: approved
+    decided_by: user
+    decided_at: '2026-06-14T10:59:13+08:00'
     source: process/checkpoints/CP3-CR053-HLD-REVIEW.md
   - id: DQ-CP3-CR053-03
     gate: CP3
@@ -786,7 +790,9 @@ human_gate_decisions:
     pros_cons: 推荐方案符合“RAID 不是备份”；只依赖 RAID 不满足备份；hot SSD 容量和职责不适合做 durable backup。
     impact_risk: 后续真实迁移前必须做恢复演练并记录证据。
     rollback_switch: 若 14T HDD 不可用，暂停真实迁移或另选 cold backup，再重开备份决策。
-    status: pending
+    status: approved
+    decided_by: user
+    decided_at: '2026-06-14T10:59:13+08:00'
     source: process/checkpoints/CP3-CR053-HLD-REVIEW.md
   - id: DQ-CP3-CR053-04
     gate: CP3
@@ -799,20 +805,24 @@ human_gate_decisions:
     pros_cons: 推荐方案保持 dry-run 和真实迁移门禁分离；CR053 CP6 执行会混淆盘点 dry-run 与实迁；不规划会阻断项目迁移目标。
     impact_risk: CR053 仍不授权真实移动、NAS 操作、git push 或重写历史。
     rollback_switch: 用户另行授权 CR058 后才进入真实迁移；否则停留在 dry-run / 设计基线。
-    status: pending
+    status: approved
+    decided_by: user
+    decided_at: '2026-06-14T10:59:13+08:00'
     source: process/checkpoints/CP3-CR053-HLD-REVIEW.md
   - id: DQ-CP3-CR053-05
     gate: CP3
     decision_type: security
     question: 交易主机是否只读消费 package exchange？
-    recommendation: 是，不挂载 full research archive，不保留完整研究环境。
+    recommendation: 是，Windows 交易机只映射 package exchange，默认 read-only；不挂载 full research archive、cold backup 或完整 lake。
     alternatives:
     - 交易主机挂载 full research archive
     - 交易主机保留完整研究仓库
     pros_cons: 推荐方案最小化交易主机暴露面；备选会增加误运行研究脚本、敏感数据暴露和交易环境污染风险。
     impact_risk: 后续 package import 需要 checksum、manifest 和人工 gate。
     rollback_switch: 隔离测试机可临时 read-only checkout；交易主机默认仍只读消费包。
-    status: pending
+    status: approved
+    decided_by: user
+    decided_at: '2026-06-14T10:59:13+08:00'
     source: process/checkpoints/CP3-CR053-HLD-REVIEW.md
   - id: DQ-CR053-01
     gate: CP2
@@ -9523,17 +9533,17 @@ orchestrator_session:
   thread_id: ''
   workflow_id: local_backtest-cr053
   active_change: "CR-053"
-  status: awaiting-user
-  pending_gate: CP3-CR053
-  pending_checklist_path: process/checkpoints/CP3-CR053-HLD-REVIEW.md
-  pending_user_decision: "approve | 修改: <具体修改点> | reject"
-  pending_decision_ids:
+  status: cp4-pass-ready-for-cp5
+  pending_gate: ''
+  pending_checklist_path: ''
+  pending_user_decision: ''
+  pending_decision_ids: []
+  approved_decision_ids:
   - DQ-CP3-CR053-01
   - DQ-CP3-CR053-02
   - DQ-CP3-CR053-03
   - DQ-CP3-CR053-04
   - DQ-CP3-CR053-05
-  approved_decision_ids:
   - DQ-CR053-01
   - DQ-CR053-02
   - DQ-CR053-03
@@ -9553,6 +9563,11 @@ orchestrator_session:
   - DQ-CR046-06
   - DQ-CR046-07
   approved_cp3_decision_ids:
+  - DQ-CP3-CR053-01
+  - DQ-CP3-CR053-02
+  - DQ-CP3-CR053-03
+  - DQ-CP3-CR053-04
+  - DQ-CP3-CR053-05
   - DQ-CP3-CR051-01
   - DQ-CP3-CR051-02
   - DQ-CP3-CR051-03
@@ -9591,7 +9606,7 @@ orchestrator_session:
   - 查询资金 / 持仓 / 委托 / 成交
   - 下单 / 撤单 / simulation/live
   - provider fetch / lake write / catalog publish
-  resume_instruction: "CR053 CP3 HLD / ADR 已生成并进入人工审查，等待用户回复 `approve` / `修改: <具体修改点>` / `reject`。approve 表示接受 DQ-CP3-CR053-01..05：逻辑 NAS root 映射、manifest-first 两阶段传输、4T RAID warm archive + 14T cold backup、真实迁移延后到 CR058 CP5 approved 后的 CR058 CP6、交易主机只读消费 package exchange；approve 不授权运行 inventory、真实目录重命名 / 文件移动、NAS scan/mount/copy/delete、external archive migration、provider/lake/publish、QMT/MiniQMT runtime、submit/cancel、simulation/live、账户查询、凭据读取、git push/tag 或重写历史。CR046 仍保持 paused CP6 恢复点。"
+  resume_instruction: "CR053 CP3 已由用户回复“同意，继续推进”批准，DQ-CP3-CR053-01..05 accepted，并确认 Linux 研究机可统一映射 NAS 三分区、现有 MARKET_DATA_LAKE_ROOT 不调整、Windows 交易机只映射 package exchange。CP4 Story DAG / parallel safety 已 PASS，CR053-S01..S05 进入 CP5 设计证据写作准备：S01..S04 full-lld，S05 technical-note。仍不授权实现、inventory 运行、真实目录重命名 / 文件移动、NAS mount/scan/mkdir/copy/delete、external archive migration、MARKET_DATA_LAKE_ROOT 替换或真实 lake 移动、provider/lake/publish、QMT/MiniQMT runtime、submit/cancel、simulation/live、账户查询、凭据读取、git push/tag 或重写历史。CR046 仍保持 paused CP6 恢复点。"
   cr051_cp4_story_planning_dispatch:
     mode: inline-host-orchestrator
     agent_id: ''
@@ -14596,6 +14611,45 @@ agent_lifecycle:
     completed_at: '2026-05-16T19:33:15+08:00'
     closed_at: '2026-05-16T19:33:15+08:00'
 history:
+- at: '2026-06-14T10:59:13+08:00'
+  actor: host-orchestrator
+  action: cr053-cp3-approved-cp4-pass-ready-for-cp5
+  from_phase: solution-design
+  to_phase: story-planning
+  reason: 用户回复“同意，继续推进”，按 CR053 CP3 approve 处理，接受 DQ-CP3-CR053-01..05，并确认 Linux 研究机可统一映射 NAS 三分区、现有 MARKET_DATA_LAKE_ROOT 不调整、Windows 交易机只映射 package exchange。已完成 CR053 CP4 Story DAG / parallel safety PASS，生成 Feature 三件套、CR053-S01..S05 Story 卡片、scoped development plan 和 CP5 context。
+  artifacts:
+  - docs/design/HLD-CR053-QUANT-LAB-MIGRATION-INVENTORY-AND-DRY-RUN.md
+  - docs/design/ARCHITECTURE-DECISION-CR053.md
+  - process/checkpoints/CP3-CR053-HLD-REVIEW.md
+  - docs/features/quant-lab-migration-dry-run/DESIGN.md
+  - docs/features/quant-lab-migration-dry-run/TEST-PLAN.md
+  - docs/features/quant-lab-migration-dry-run/TASKS.md
+  - process/STORY-BACKLOG.md
+  - process/DEVELOPMENT-PLAN-CR053.yaml
+  - process/checks/CP4-CR053-STORY-DAG-PARALLEL-SAFETY.md
+  - process/context/CP5-CR053-LLD-CONTEXT.yaml
+  next_gate: CR053 CP5 LLD batch review
+  safety_confirmations:
+    cr046_restored: false
+    cr046_cp7_dispatched: false
+    implementation_authorized: false
+    inventory_command_authorized: false
+    directory_rename_authorized: false
+    file_move_authorized: false
+    nas_access_authorized: false
+    nas_scan_authorized: false
+    nas_mount_authorized: false
+    nas_mkdir_authorized: false
+    nas_copy_authorized: false
+    nas_delete_authorized: false
+    data_lake_mapping_change_authorized: false
+    market_data_lake_move_authorized: false
+    external_archive_migration_authorized: false
+    provider_lake_publish_authorized: false
+    qmt_miniqmt_runtime_authorized: false
+    trading_authorized: false
+    credential_read_authorized: false
+    git_push_authorized: false
 - at: '2026-06-14T10:02:00+08:00'
   actor: host-orchestrator
   action: cr053-cp3-review-pending
