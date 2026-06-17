@@ -1,0 +1,20 @@
+version: 1
+project: quant-lab
+process_ledger:
+  owner: external-process-project
+  container_root: /home/hyde/workspace/process
+  default_root: /home/hyde/workspace/process/quant-lab
+  project_namespace: quant-lab
+  env_override: PROCESS_LEDGER_ROOT
+  local_entry: process
+  local_entry_type: symlink
+  local_entry_target: ../process/quant-lab
+  managed_by_cr: CR-082
+  previous_externalization_cr: CR-081
+  current_status: active
+  tracked_by_current_project_git: false
+  bootstrap_script: scripts/link-engineering-ledger.sh
+  notes:
+    - "process/** is owned by /home/hyde/workspace/process/quant-lab, not by quant-lab Git."
+    - "The quant-lab repository keeps only this pointer metadata and bootstrap script."
+    - "data/, reports/, credentials, runtime and remote Git operations are outside CR081/CR082 scope."

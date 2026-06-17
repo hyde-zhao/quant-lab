@@ -28,6 +28,11 @@ pnpm-debug.log*
 .codex/
 .claude/
 
+# CR081/CR082：过程台账迁移到仓库外部 sibling process project，
+# 并归档到 /home/hyde/workspace/process/quant-lab。
+# 本项目只保留本地 symlink 入口，不跟踪 process 本体或 symlink。
+/process
+
 # 本地数据湖与报告产物不得入库；真实 lake root 必须通过 --lake-root
 # 或 MARKET_DATA_LAKE_ROOT 指向仓库外部目录。
 data/
