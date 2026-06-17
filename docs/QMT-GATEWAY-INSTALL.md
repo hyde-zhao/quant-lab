@@ -160,6 +160,7 @@ QMT_CLIENT_ID=<manual-client-id>
 QMT_CLIENT_SECRET=<manual-long-random-secret>
 QMT_ACCOUNT_REF=<qmt-account-ref>
 QMT_ACCOUNT_TYPE=STOCK
+QMT_XTQUANT_SITE_PACKAGES=<qmt-xtquant-site-packages-parent>
 QMT_MINIQMT_PATH=<qmt-miniqmt-userdata-path>
 QMT_RUNTIME_REF=<manual-runtime-authorization-ref>
 QMT_SESSION_TTL_SECONDS=3600
@@ -175,6 +176,7 @@ QMT_SESSION_TTL_SECONDS=3600
 | `QMT_CLIENT_ID` / `QMT_CLIENT_SECRET` | C/S HMAC 身份 | Windows S 端和 Linux C 端必须一致 |
 | `QMT_ACCOUNT_REF` | QMT 账号引用 | 不要把真实值贴到对话或日志 |
 | `QMT_ACCOUNT_TYPE` | XtQuant `StockAccount` 类型 | A 股普通股票账户通常为 `STOCK` |
+| `QMT_XTQUANT_SITE_PACKAGES` | 包含 `xtquant/` 目录的父目录 | 例如 QMT 安装目录下 `bin.x64\Lib\site-packages`；诊断输出只显示是否配置，不输出真实路径 |
 | `QMT_MINIQMT_PATH` | MiniQMT user data 目录 | 常见为 `userdata_mini` 路径，以本机实际安装为准 |
 | `QMT_RUNTIME_REF` | 本次人工运行授权引用 | 例如 `manual-cr020-20260605` |
 
@@ -193,6 +195,7 @@ uv run --with typer --python 3.11 python -m trading.qmt_runtime_cli server-diagn
 | `status` | `ok` |
 | `config.client_secret_ref` | `[REDACTED]` |
 | `config.account_ref` | `account_ref:<hash>` |
+| `config.xtquant_site_packages_configured` | `true` |
 | `config.miniqmt_path_configured` | `true` |
 | `config.allowed_source` | Linux C 端 IP/CIDR |
 
@@ -245,7 +248,7 @@ Ctrl+C
 | `typer_dependency_missing` | 未通过 `uv run --with typer` 启动 | 使用文档命令，或在隔离环境安装 Typer |
 | `miniqmt_path_configured=false` | `.env` 未填 `QMT_MINIQMT_PATH` | 填入本机 MiniQMT `userdata_mini` 路径 |
 | `missing-miniqmt-path-or-account` | `QMT_MINIQMT_PATH` 或 `QMT_ACCOUNT_REF` 缺失 | 补齐 `.env` |
-| `xtquant-runtime-error:ModuleNotFoundError` | 当前 Python 环境找不到 XtQuant | 在 Windows 当前 uv/Python 环境安装券商提供的 XtQuant |
+| `xtquant-runtime-error:ModuleNotFoundError` | 当前 Python 环境找不到 XtQuant | 在 `.env` 设置 `QMT_XTQUANT_SITE_PACKAGES=<包含 xtquant 的 site-packages 父目录>`，或在 Windows 当前 uv/Python 环境安装券商提供的 XtQuant |
 | `xtquant-connect-failed` | MiniQMT 未打开、路径错误或版本不匹配 | 打开 MiniQMT，确认路径和 XtQuant 版本 |
 | `xtquant-account-activation-failed` / `xtquant-login-failed` | 账号类型不匹配、账号未登录、`login` / `subscribe` 失败或 broker 侧状态异常 | 检查 `QMT_ACCOUNT_REF`、`QMT_ACCOUNT_TYPE` 和 MiniQMT GUI |
 | `auth_allowlist_mismatch` | Linux C 端 IP 不在 allowlist | 修改 `QMT_GATEWAY_ALLOWED_SOURCE=<linux-ip>/32` 并重启 S 端 |
