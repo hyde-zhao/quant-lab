@@ -1,0 +1,78 @@
+schema_version: cr089-strategy-package-manifest-v1
+package_id: strategy-package-qmt_interface_smoke-0.1.0
+strategy_id: qmt_interface_smoke
+version: 0.1.0
+status: skeleton-offline-intake-ready
+created_by: host-orchestrator
+created_at: "2026-06-17T22:03:03+08:00"
+change_id: CR-089
+parent_cr: CR-046
+approval_scope: cp2-cp3-cp5-readiness-only
+runtime_authorized: false
+nas_operation_authorized: false
+credential_read_authorized: false
+account_query_authorized: false
+trade_write_authorized: false
+targets:
+  - id: qmt_terminal
+    path: targets/qmt_terminal/README.md
+    runtime_required: true
+    runtime_authorized: false
+  - id: miniqmt_runner
+    path: targets/miniqmt_runner/README.md
+    runtime_required: true
+    runtime_authorized: false
+allowed_offline_checks:
+  - package_layout
+  - manifest_schema
+  - sha256_text_files
+  - target_docs_presence
+  - redaction_template_presence
+readonly_smoke_contract:
+  endpoint_id: query_positions
+  method: POST
+  path: /qmt/account/positions
+  required_scope: qmt:positions:read
+  execution_mode: manual_user_only_after_runtime_authorization
+  evidence_policy: redacted_summary_only
+forbidden_operations:
+  - nas_read
+  - nas_write
+  - nas_list
+  - nas_copy
+  - nas_publish
+  - nas_pull
+  - credential_read
+  - env_file_read
+  - qmt_start
+  - miniqmt_start
+  - xtquant_import
+  - gateway_start
+  - account_raw_query
+  - raw_positions_emit
+  - submit_order
+  - cancel_order
+  - simulation
+  - live
+exchange_contract:
+  research_package_root: ${STRATEGY_PACKAGE_EXCHANGE_ROOT}/packages/qmt_interface_smoke/0.1.0
+  package_index: ${STRATEGY_PACKAGE_EXCHANGE_ROOT}/index/package-index.yaml
+  approval_record: ${STRATEGY_PACKAGE_EXCHANGE_ROOT}/approvals/qmt_interface_smoke-0.1.0.yaml
+  quarantine_record: ${STRATEGY_PACKAGE_EXCHANGE_ROOT}/quarantine/qmt_interface_smoke-0.1.0/rejection.yaml
+  contract_status: contract_only_not_accessed
+trading_host_contract:
+  local_cache_root: ${TRADING_PACKAGE_CACHE_ROOT}/packages/qmt_interface_smoke/0.1.0
+  active_pointer: ${TRADING_PACKAGE_CACHE_ROOT}/active/qmt_interface_smoke
+  cache_policy: copy_after_checksum_pass_only
+  direct_nas_execution_allowed: false
+artifacts:
+  zip_name: strategy-package-qmt_interface_smoke-0.1.0.zip
+  zip_status: not_built
+  build_status: skeleton_not_zipped
+checksums:
+  file: checksums/SHA256SUMS
+evidence_template: evidence/redacted-smoke-result-template.yaml
+manual_validation:
+  guide: validation/offline-intake-checklist.md
+  runtime_gate_required: true
+  raw_account_output_allowed: false
