@@ -1,7 +1,7 @@
 """CR-038 第七章因子投资实践 runner。
 
 只读取本地第三章 factor panel / label parts 和 CR-037
-ROBUSTNESS-ADMISSION-SUMMARY，写本地 reports/process 研究产物；不读取凭据、
+ROBUSTNESS-ADMISSION-SUMMARY，写 NAS reports/runs 研究产物；不读取凭据、
 不触发 provider fetch、不写 data lake、不 publish catalog、不触发 QMT /
 simulation / live。
 """
@@ -35,6 +35,7 @@ from engine.chapter7_factor_practice import (
     Chapter7Config,
     run_chapter7_analysis,
 )
+from engine.research_paths import research_report_path, research_run_path
 from scripts.run_chapter4_factor_models import assert_chapter3_report_pass, read_label_parts
 
 
@@ -43,17 +44,17 @@ CHAPTER7_RUN_SCHEMA = "chapter7_factor_practice_run_v1"
 DEFAULT_INPUTS = (
     {
         "sample_id": "in_sample_2000_2019",
-        "panel_path": "reports/chapter3_factor_panel/run-chapter3-empirical-2000-2019-financial-fallback-20260610/factor_panel.parquet",
-        "label_root": "process/research/chapter3_empirical/run-chapter3-empirical-2000-2019-financial-fallback-20260610/label_parts",
-        "chapter3_report_path": "process/research/chapter3_empirical/run-chapter3-empirical-2000-2019-financial-fallback-20260610/EMPIRICAL-RUN-REPORT.json",
-        "robustness_admission_summary_path": "process/research/chapter6_factor_robustness/run-cr037-chapter6-robustness-20260610/ROBUSTNESS-ADMISSION-SUMMARY.json",
+        "panel_path": str(research_report_path("chapter3_factor_panel", "run-chapter3-empirical-2000-2019-financial-fallback-20260610", "factor_panel.parquet")),
+        "label_root": str(research_run_path("chapter3_empirical", "run-chapter3-empirical-2000-2019-financial-fallback-20260610", "label_parts")),
+        "chapter3_report_path": str(research_run_path("chapter3_empirical", "run-chapter3-empirical-2000-2019-financial-fallback-20260610", "EMPIRICAL-RUN-REPORT.json")),
+        "robustness_admission_summary_path": str(research_run_path("chapter6_factor_robustness", "run-cr037-chapter6-robustness-20260610", "ROBUSTNESS-ADMISSION-SUMMARY.json")),
     },
     {
         "sample_id": "observation_2020_2026_ytd",
-        "panel_path": "reports/chapter3_factor_panel/run-chapter3-empirical-2020-2026-ytd-financial-fallback-20260610/factor_panel.parquet",
-        "label_root": "process/research/chapter3_empirical/run-chapter3-empirical-2020-2026-ytd-financial-fallback-20260610/label_parts",
-        "chapter3_report_path": "process/research/chapter3_empirical/run-chapter3-empirical-2020-2026-ytd-financial-fallback-20260610/EMPIRICAL-RUN-REPORT.json",
-        "robustness_admission_summary_path": "process/research/chapter6_factor_robustness/run-cr037-chapter6-robustness-20260610/ROBUSTNESS-ADMISSION-SUMMARY.json",
+        "panel_path": str(research_report_path("chapter3_factor_panel", "run-chapter3-empirical-2020-2026-ytd-financial-fallback-20260610", "factor_panel.parquet")),
+        "label_root": str(research_run_path("chapter3_empirical", "run-chapter3-empirical-2020-2026-ytd-financial-fallback-20260610", "label_parts")),
+        "chapter3_report_path": str(research_run_path("chapter3_empirical", "run-chapter3-empirical-2020-2026-ytd-financial-fallback-20260610", "EMPIRICAL-RUN-REPORT.json")),
+        "robustness_admission_summary_path": str(research_run_path("chapter6_factor_robustness", "run-cr037-chapter6-robustness-20260610", "ROBUSTNESS-ADMISSION-SUMMARY.json")),
     },
 )
 
@@ -104,8 +105,8 @@ class Chapter7RunResult:
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="运行 CR-038 第七章因子投资实践")
     parser.add_argument("--run-id", default="")
-    parser.add_argument("--output-root", default="process/research/chapter7_factor_practice")
-    parser.add_argument("--report-root", default="reports/chapter7_factor_practice")
+    parser.add_argument("--output-root", default=str(research_run_path("chapter7_factor_practice")))
+    parser.add_argument("--report-root", default=str(research_report_path("chapter7_factor_practice")))
     parser.add_argument("--input-config", default="", help="可选 JSON，字段为 samples 数组")
     parser.add_argument("--min-cross-section", type=int, default=30)
     parser.add_argument("--top-fraction", type=float, default=0.2)

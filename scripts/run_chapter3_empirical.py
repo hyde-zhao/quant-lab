@@ -1,6 +1,6 @@
 """CR-034 第三章真实因子面板与单因子实证 runner。
 
-该脚本只读取本地 lake canonical parquet，并写本地研究报告。不读取凭据、
+该脚本只读取本地 lake canonical parquet，并写 NAS 研究报告。不读取凭据、
 不触发 provider fetch、不 publish catalog current pointer、不触发 QMT /
 simulation / live。
 """
@@ -41,6 +41,7 @@ from engine.chapter3_factor_replication import (
 from engine.factor_evaluation import build_factor_evaluation_report
 from engine.multifactor_combiner import MultiFactorCombiner, build_multifactor_portfolio_plan
 from engine.factor_statistics import long_short_summary, single_sort_returns
+from engine.research_paths import research_report_path, research_run_path
 from market_data.contracts import SCHEMA_VERSION
 
 
@@ -116,8 +117,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--start", default=TARGET_START)
     parser.add_argument("--end", default=TARGET_END)
     parser.add_argument("--run-id", default="")
-    parser.add_argument("--output-root", default="process/research/chapter3_empirical")
-    parser.add_argument("--panel-root", default="reports/chapter3_factor_panel")
+    parser.add_argument("--output-root", default=str(research_run_path("chapter3_empirical")))
+    parser.add_argument("--panel-root", default=str(research_report_path("chapter3_factor_panel")))
     parser.add_argument("--min-cross-section", type=int, default=30)
     parser.add_argument("--min-period-ratio", type=float, default=2.0 / 3.0)
     parser.add_argument("--execution-mode", choices=("chunked", "full"), default="chunked")
@@ -134,7 +135,7 @@ def main() -> int:
     run_id = args.run_id or f"run-chapter3-empirical-{datetime.now().strftime('%Y%m%d-%H%M%S')}"
     lake_root = Path(args.lake_root)
     if not args.allow_readiness_non_pass:
-        assert_readiness_pass(Path("process/research/chapter3_real_data_readiness/READINESS-REPORT.json"))
+        assert_readiness_pass(research_run_path("chapter3_real_data_readiness", "READINESS-REPORT.json"))
     if args.execution_mode == "full":
         assert_full_mode_window_allowed(args.start, args.end, allow_large=bool(args.allow_large_full_run))
         frames = load_chapter3_lake_frames(lake_root, start=args.start, end=args.end)
@@ -644,7 +645,7 @@ def evaluate_factors(
                 "evaluation_window": {"start": start, "end": end},
                 "quantiles": 10,
                 "permission_counters": dict(FORBIDDEN_OPERATION_COUNTS),
-                "evidence_refs": ["process/research/chapter3_real_data_readiness/READINESS-REPORT.md"],
+                "evidence_refs": [str(research_run_path("chapter3_real_data_readiness", "READINESS-REPORT.md"))],
             },
         )
         reports.append(report)

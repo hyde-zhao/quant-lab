@@ -38,6 +38,8 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
+from engine.research_paths import research_report_path, research_run_path
+
 # ---------------------------------------------------------------------------
 # 常量
 # ---------------------------------------------------------------------------
@@ -61,8 +63,17 @@ FACTOR_ID = "abnormal_turnover_21_252"
 STRATEGY_ID = "strategy-low-turnover-double-sort-v1"
 DEFAULT_RUN_ID = "run-turnover-lowturnover-double-sort-20190101-20251231-v1"
 
-PROCESS_DIR = PROJECT_ROOT / "process" / "research" / "turnover_low_turnover_double_sort"
-REPORTS_BASE = PROJECT_ROOT / "reports" / "factor_research" / "turnover_low_turnover_double_sort"
+PROCESS_DIR = research_run_path("turnover_low_turnover_double_sort")
+REPORTS_BASE = research_report_path("factor_research", "turnover_low_turnover_double_sort")
+
+
+def _artifact_ref(path: Path) -> str:
+    """项目内路径用相对引用，NAS 路径保留绝对引用。"""
+
+    try:
+        return str(path.relative_to(PROJECT_ROOT))
+    except ValueError:
+        return str(path)
 
 # ---------------------------------------------------------------------------
 # 数据模型
@@ -1250,7 +1261,7 @@ def render_report(
     lines.append("| 产物 | 路径 |")
     lines.append("|------|------|")
     for name, p in sorted(output_paths.items()):
-        lines.append(f"| {name} | {p.relative_to(PROJECT_ROOT)} |")
+        lines.append(f"| {name} | {_artifact_ref(p)} |")
     lines.append("")
     lines.append("### B. 图表索引")
     lines.append("")
@@ -1386,7 +1397,7 @@ def write_cr030_artifacts(
     paths["factor_run_spec"] = factor_run_spec_path
 
     # FactorEvaluationReport (JSON)
-    eval_dir = PROJECT_ROOT / "reports" / "factor_evaluation" / "v1" / f"report-{run_id}-{FACTOR_ID}"
+    eval_dir = research_report_path("factor_evaluation", "v1", f"report-{run_id}-{FACTOR_ID}")
     eval_dir.mkdir(parents=True, exist_ok=True)
     eval_report = {
         "report_id": f"report-{run_id}-{FACTOR_ID}",
@@ -1442,14 +1453,14 @@ def write_cr030_artifacts(
         "end_date": args.end_date,
         "created_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "status": "research_completed",
-        "outputs": {name: str(p.relative_to(PROJECT_ROOT)) for name, p in paths.items()},
+        "outputs": {name: _artifact_ref(p) for name, p in paths.items()},
     }
     manifest_path = run_dir / "experiment_manifest.json"
     manifest_path.write_text(json.dumps(manifest, indent=2, ensure_ascii=False), encoding="utf-8")
     paths["experiment_manifest"] = manifest_path
 
     # ResearchReportCatalog
-    catalog_dir = PROJECT_ROOT / "reports" / "research_catalog" / "v1" / f"catalog-{run_id}"
+    catalog_dir = research_report_path("research_catalog", "v1", f"catalog-{run_id}")
     catalog_dir.mkdir(parents=True, exist_ok=True)
     catalog = {
         "catalog_id": f"catalog-{run_id}",
@@ -1458,13 +1469,13 @@ def write_cr030_artifacts(
         "title": "A股低换手率因子双重排序实验",
         "category": "factor_research",
         "status": "research_completed",
-        "report_path": str((run_dir / "turnover_factor_replication_report.md").relative_to(PROJECT_ROOT)),
+        "report_path": _artifact_ref(run_dir / "turnover_factor_replication_report.md"),
     }
     (catalog_dir / "catalog.json").write_text(json.dumps(catalog, indent=2, ensure_ascii=False), encoding="utf-8")
     paths["research_catalog"] = catalog_dir / "catalog.json"
 
     # StrategyAdmissionPackage
-    sap_dir = PROJECT_ROOT / "reports" / "stage6_admission" / f"package-{STRATEGY_ID}-{run_id}"
+    sap_dir = research_report_path("stage6_admission", f"package-{STRATEGY_ID}-{run_id}")
     sap_dir.mkdir(parents=True, exist_ok=True)
     sap = {
         "package_id": f"package-{STRATEGY_ID}-{run_id}",
@@ -1490,8 +1501,8 @@ def write_cr030_artifacts(
             },
         ],
         "evidence": {
-            "factor_evaluation_report": str(eval_json_path.relative_to(PROJECT_ROOT)),
-            "research_report": str((run_dir / "turnover_factor_replication_report.md").relative_to(PROJECT_ROOT)),
+            "factor_evaluation_report": _artifact_ref(eval_json_path),
+            "research_report": _artifact_ref(run_dir / "turnover_factor_replication_report.md"),
         },
         "recommendation": "仅作为因子研究参考，不可直接用于模拟盘或实盘",
     }
@@ -1512,8 +1523,8 @@ def write_cr030_artifacts(
         f"- simulation_ready: 未通过 Stage6 全部 P0 gate\n"
         f"- qmt_ready: 未接入 QMT gateway\n\n"
         f"## 证据\n\n"
-        f"- 因子评价报告: {eval_json_path.relative_to(PROJECT_ROOT)}\n"
-        f"- 研究报告: {run_dir.relative_to(PROJECT_ROOT)}/turnover_factor_replication_report.md\n",
+        f"- 因子评价报告: {_artifact_ref(eval_json_path)}\n"
+        f"- 研究报告: {_artifact_ref(run_dir / 'turnover_factor_replication_report.md')}\n",
         encoding="utf-8",
     )
     paths["strategy_admission_summary"] = summary_md
@@ -1636,7 +1647,7 @@ def write_process_docs(
         "- ❌ 未运行外部项目\n"
         "- ❌ 未修改依赖\n"
         "- ✅ 仅从数据湖 canonical 只读 parquet 文件\n"
-        "- ✅ 仅写入本地 reports/ 和 process/ 目录\n"
+        f"- ✅ 仅写入 NAS 研究产物目录：{REPORTS_BASE} 和 {PROCESS_DIR}\n"
     )
     noop_path = PROCESS_DIR / "NO-REAL-OPERATION.md"
     noop_path.write_text(no_op, encoding="utf-8")
@@ -1930,9 +1941,9 @@ def main() -> None:
         f"    --min-252d-samples {args.min_252d_samples}\n"
         f"```\n\n"
         f"## 输出路径\n\n"
-        f"- 研究报告: {run_dir.relative_to(PROJECT_ROOT)}/turnover_factor_replication_report.md\n"
-        f"- 数据产物: {run_dir.relative_to(PROJECT_ROOT)}/\n"
-        f"- 过程文档: {PROCESS_DIR.relative_to(PROJECT_ROOT)}/\n"
+        f"- 研究报告: {_artifact_ref(run_dir / 'turnover_factor_replication_report.md')}\n"
+        f"- 数据产物: {_artifact_ref(run_dir)}/\n"
+        f"- 过程文档: {_artifact_ref(PROCESS_DIR)}/\n"
     )
     run_log_path = PROCESS_DIR / f"RUN-LOG-{run_id}.md"
     run_log_path.write_text(run_log, encoding="utf-8")

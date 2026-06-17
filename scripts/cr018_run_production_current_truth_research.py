@@ -26,6 +26,7 @@ if str(ROOT) not in sys.path:
 
 from engine.metrics import calculate_metrics
 from engine.portfolio import PortfolioConfig, RebalanceSignal, TradeGate, run_portfolio
+from engine.research_paths import research_report_path
 from market_data.catalog import CatalogEntry, CatalogStore, build_production_readiness_report
 from market_data.contracts import (
     DATASET_EVENTS,
@@ -98,7 +99,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--run-id", default="run-cr018-production-rerun-20150101-20260528-20260529-01")
     parser.add_argument("--start-date", default="2015-01-01")
     parser.add_argument("--end-date", default="2026-05-28")
-    parser.add_argument("--output-root", default="reports/production_current_truth")
+    parser.add_argument("--output-root", default=str(research_report_path("production_current_truth")))
     parser.add_argument("--initial-cash", type=float, default=1_000_000.0)
     parser.add_argument("--rebalance-freq", type=int, default=20)
     parser.add_argument("--top-n", type=int, default=20)

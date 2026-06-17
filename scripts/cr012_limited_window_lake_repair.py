@@ -39,6 +39,7 @@ from experiments.run_data_lake_readiness_audit import (
     _probe_all,
     _read_catalog_entries,
 )
+from engine.research_paths import research_report_path
 from market_data.catalog import CatalogEntry, CatalogStore
 from market_data.connectors.protocol import AdapterConfig, ConnectorRequest
 from market_data.connectors.tushare import TushareAdapter
@@ -60,7 +61,7 @@ from market_data.runtime import RuntimeContext, RuntimePolicy, execute_batches
 DEFAULT_LAKE_ROOT = Path("/mnt/ugreen-data-lake")
 DEFAULT_START_DATE = "2025-02-11"
 DEFAULT_END_DATE = "2026-02-18"
-DEFAULT_REPORT_DIR = Path("reports/data_lake_readiness_limited_2025_2026")
+DEFAULT_REPORT_DIR = research_report_path("data_lake_readiness_limited_2025_2026")
 JQDATA_WEIGHTS_V2 = (
     "canonical/index_weights/1.0/"
     "run_id=cr010-prod-window-20250211-20260218-index-weights-smoke-v2/"

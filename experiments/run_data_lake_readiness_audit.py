@@ -30,6 +30,7 @@ from market_data.catalog import (
     PRODUCTION_STRICT_DATASETS,
     W3_REQUIRED_DATASETS,
 )
+from engine.research_paths import research_report_path
 from market_data.contracts import (
     DATASETS,
     DATASET_ADJ_FACTOR,
@@ -61,7 +62,7 @@ from market_data.source_registry import SOURCE_REGISTRY
 DEFAULT_START_DATE = "2020-01-01"
 DEFAULT_END_DATE = "2024-12-31"
 DEFAULT_POLICY = "production_strict_research"
-DEFAULT_OUTPUT_DIR = "reports/data_lake_readiness_2020_2024"
+DEFAULT_OUTPUT_DIR = str(research_report_path("data_lake_readiness_2020_2024"))
 DEFAULT_MAX_WORKERS = 2
 TARGET_INDEX_CODE = "399300.SZ"
 INDEX_MEMBERS_AUDIT_MODE_SNAPSHOT_ASOF = "snapshot_asof"

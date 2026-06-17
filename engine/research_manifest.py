@@ -22,6 +22,7 @@ from engine.multifactor_contracts import (
     PermissionCounters,
     compute_config_hash,
 )
+from engine.research_paths import research_report_path
 
 
 MANIFEST_SCHEMA_VERSION = "experiment_manifest_v1"
@@ -447,7 +448,7 @@ def query_research_report_catalog(
 
 def resolve_research_catalog_paths(
     catalog_entry_id: str,
-    output_root: str | Path = "reports/research_catalog",
+    output_root: str | Path = research_report_path("research_catalog"),
 ) -> ResearchCatalogArtifactPaths:
     root = Path(output_root)
     if "experiment_" in root.as_posix() or "factor_evaluation" in root.as_posix():

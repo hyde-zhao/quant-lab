@@ -4,18 +4,19 @@
 
 本手册面向希望在本地研究日频股票策略的用户。当前工具定位是“本地离线量化回测层”：数据准备可以联网，回测、参数扫描、候选筛选和偏差审计默认离线读取本地文件。
 
-所有命令默认在 `local_backtest/` 仓库根执行。`local_backtest/` 是本工具项目唯一 canonical 根目录；`README.md` 与 `docs/USER-MANUAL.md` 是当前 production 项目的正式用户文档出口。
+所有命令默认在当前仓库根执行。`quant-lab/` 是本工具项目的 future-facing canonical 根目录；`local_backtest/` 是历史仓库名 / legacy alias，仅用于兼容旧路径、旧过程证据和历史审计语境。`README.md` 与 `docs/USER-MANUAL.md` 是当前 production 项目的正式用户文档出口。
 
 ### 项目根与协作边界
 
 | 对象 | 定位 | 用户应如何处理 |
 |---|---|---|
-| `local_backtest/` | 本地回测工具项目根 | 在这里运行命令、维护工具代码、必要示例、报告占位和用户文档。 |
+| `quant-lab/` | 本地回测工具项目 canonical 根 | 在这里运行命令、维护工具代码、必要示例、报告占位和用户文档。 |
+| `local_backtest/` | 历史仓库名 / legacy alias | 仅用于兼容旧本地目录、历史 CR、过程证据和审计引用；不再作为 future-facing canonical 项目名。 |
 | `llm-wiki` | 外部学习知识库 | 不复制进本项目；学习复盘、长篇学习资料和知识库整理继续留在 `llm-wiki`。 |
 | `work/studies/quant-trading/local_backtest/` | 旧建议路径 / 误创建空骨架 | CR-001 中已确认无文件并清理；不要再把它当作项目根。 |
 | `delivery/` | meta-flow 通用交付包概念，不是本 production 项目出口 | CR-001 中已确认无文件并清理；本项目不向 `delivery/**` 写交付物，不生成安装脚本。 |
 
-不要把学习资料大规模拷贝进 `local_backtest`。本项目只保留工具代码、配置、必要示例、报告占位、过程证据和用户手册；学习笔记任务在 `llm-wiki` 中处理，工具代码任务在 `local_backtest` 中处理。
+不要把学习资料大规模拷贝进 `quant-lab`。本项目只保留工具代码、配置、必要示例、报告占位、过程证据和用户手册；学习笔记任务在 `llm-wiki` 中处理，工具代码任务在 `quant-lab` 中处理。历史文档中的 `local_backtest` 仍按 legacy alias 理解。
 
 Agent 协作边界：`meta-po` 负责编排 CR 与检查点，`meta-dev` 负责目录和过程状态收敛，`meta-doc` 负责 README 与用户手册刷新。上述角色不越权修改代码、测试、真实数据、报告数据或安装脚本。
 
@@ -1382,7 +1383,7 @@ PY
 - 当前过程文档已完成 CR-011 收尾；README、本手册与 TEST-STRATEGY 已完成 CR-011 文档刷新，CP8 已通过并关闭 CR-011。
 - 当前 README、本手册、CR-013 full-history roadmap、TEST-STRATEGY 和 CR-013 报告摘要对 limited-window supported、2020-2024 blocked、真实 VWAP / minute / tick / level2 / order-match blocked、unsupported register excluded denominator 和五类 forbidden counters 的声明已收敛一致。
 - 当前 README、本手册和 full-history roadmap 已补充 CR-014 Batch-A / S09 Batch-B 边界：Parquet/catalog 为事实源，DuckDB 只读且不写 `.duckdb`，validate/parity PASS 不自动 publish，研究消费层只读 published truth / clean reader output / structured claim metadata。
-- CR-001 目录结构收敛已完成：`local_backtest/` 仓库根是唯一 canonical 工具项目根，`work/studies/quant-trading/local_backtest/` 与 `delivery/` 清理前均无文件，已用 `rmdir` 删除空目录树。
+- CR-001 目录结构收敛已完成：历史基线曾以 `local_backtest/` 作为仓库根，`work/studies/quant-trading/local_backtest/` 与 `delivery/` 清理前均无文件，已用 `rmdir` 删除空目录树。CR060 后，future-facing canonical 项目名为 `quant-lab`，`local_backtest` 仅作为 legacy alias / 历史审计名保留。
 - 当前 production 项目不生成 `delivery/**`、安装脚本、真实生产数据或报告样本；正式用户文档出口为 `README.md` + `docs/USER-MANUAL.md`。
 
 仍需注意的非阻塞事项：

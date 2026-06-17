@@ -1,4 +1,4 @@
-# local_backtest
+# quant-lab
 
 > 本地日频量化回测层：用 `pandas` + `parquet` 在本地完成数据准备、离线回测、参数扫描和候选报告。  
 > **核心原则**：数据准备可联网，回测主路径离线优先；已有本地缓存时优先使用缓存，不在回测、扫描或候选筛选中隐式补抓数据。  
@@ -39,7 +39,7 @@
 
 ## 项目定位
 
-`local_backtest` 是一个面向本地研究的轻量日频组合回测层，不是完整交易系统、实盘框架或聚宽 API 兼容层。它服务于这样的研究流程：
+`quant-lab` 是一个面向本地研究的轻量日频组合回测层，不是完整交易系统、实盘框架或聚宽 API 兼容层。`local_backtest` 是本项目历史仓库名 / legacy alias，仅用于兼容旧路径、旧过程证据和历史审计语境。它服务于这样的研究流程：
 
 1. 用独立数据准备流程从 AKShare 等数据源抓取原始数据，按限速、重试、断点续传写入 raw cache 和 manifest。
 2. 从 raw cache 派生标准化 parquet，并生成数据质量报告。
@@ -50,21 +50,22 @@
 
 ## 项目根与目录边界
 
-`local_backtest/` 仓库根是本工具项目唯一 canonical 根目录。README、用户手册、`pyproject.toml`、`config/`、`engine/`、`strategies/`、`tests/`、`data/` 和 `reports/` 均以该仓库根为基准；除非命令另有说明，所有示例都应在 `local_backtest/` 根目录执行。
+`quant-lab/` 是本工具项目的 future-facing canonical 根目录。当前本地工作区或历史过程证据中仍可能出现 `local_backtest/`；该名称只表示 legacy alias / 历史审计名。README、用户手册、`pyproject.toml`、`config/`、`engine/`、`strategies/`、`tests/`、`data/` 和 `reports/` 均以当前仓库根为基准；除非命令另有说明，所有示例都应在仓库根目录执行。
 
 目录边界如下：
 
 | 对象 | 当前定位 | 处理规则 |
 |---|---|---|
-| `local_backtest/` | 本地回测工具项目根 | 保留工具代码、必要示例、报告占位、过程证据和用户手册。 |
+| `quant-lab/` | 本地回测工具项目 canonical 根 | 保留工具代码、必要示例、报告占位、过程证据和用户手册。 |
+| `local_backtest/` | 历史仓库名 / legacy alias | 仅用于兼容旧本地目录、历史 CR、过程证据和审计引用；不再作为 future-facing canonical 项目名。 |
 | `llm-wiki` | 外部学习知识库 | 不复制进本项目；学习资料、学习复盘和笔记任务继续在 `llm-wiki` 中处理。 |
 | `work/studies/quant-trading/local_backtest/` | 旧建议路径 / 误创建空骨架 | CR-001 中已确认无文件，并已用 `rmdir` 清理；不再作为项目根或输出路径。 |
 | `delivery/` | meta-flow 通用交付包概念，不是当前 production 项目的正式出口 | CR-001 中已确认无文件，并已用 `rmdir` 清理；当前项目不生成 `delivery/**`、安装脚本或 meta-flow 交付包。 |
 | `README.md` + `docs/USER-MANUAL.md` | 当前 production 项目正式用户文档出口 | 用户文档只维护在这两个路径。 |
 
-不要把学习资料大规模拷贝进 `local_backtest`。本仓库只保留运行和维护本地回测工具所需的代码、配置、必要示例、报告占位、过程证据和用户文档；学习复盘、长篇资料沉淀和知识库整理应留在 `llm-wiki`。
+不要把学习资料大规模拷贝进 `quant-lab`。本仓库只保留运行和维护本地回测工具所需的代码、配置、必要示例、报告占位、过程证据和用户文档；学习复盘、长篇资料沉淀和知识库整理应留在 `llm-wiki`。历史文档中的 `local_backtest` 仍按 legacy alias 理解。
 
-Agent 协作边界也按该目录组织执行：`meta-po` 负责编排 CR 与检查点，`meta-dev` 负责目录和过程状态收敛，`meta-doc` 负责 README 与用户手册刷新。后续学习笔记任务在 `llm-wiki` 中处理，工具代码、配置、测试和用户文档任务在 `local_backtest` 中处理。
+Agent 协作边界也按该目录组织执行：`meta-po` 负责编排 CR 与检查点，`meta-dev` 负责目录和过程状态收敛，`meta-doc` 负责 README 与用户手册刷新。后续学习笔记任务在 `llm-wiki` 中处理，工具代码、配置、测试和用户文档任务在 `quant-lab` 中处理。
 
 ## 已实现能力
 
@@ -942,7 +943,7 @@ docs/
 - 历史 `FAIL` 已由后续回归 `PASS` 覆盖；`BUG-STORY-003-001` 为 `CLOSED / REGRESSION_PASS`。
 - `QA-IND-REQ-001 / F-004` 日志缺口已由 2026-05-16 回归关闭。
 - 过程文档建议进入 documentation，当前 README 与用户手册即为本阶段输出。
-- CR-001 目录结构收敛已完成：`work/` 与 `delivery/` 清理前均未发现文件，已用 `rmdir` 删除空目录树；`local_backtest/` 仓库根是唯一 canonical 工具项目根。
+- CR-001 目录结构收敛已完成：`work/` 与 `delivery/` 清理前均未发现文件，已用 `rmdir` 删除空目录树；该历史基线曾以 `local_backtest/` 作为仓库根。CR060 后，future-facing canonical 项目名为 `quant-lab`，`local_backtest` 仅作为 legacy alias / 历史审计名保留。
 - 正式用户文档出口为 `README.md` + `docs/USER-MANUAL.md`；当前项目不生成 `delivery/**`、安装脚本、真实生产数据或报告样本。
 
 剩余非阻塞限制：

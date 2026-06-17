@@ -457,6 +457,18 @@ def test_hs300_index_cli_normalize_validate_and_read(tmp_path, capsys):
     assert read_payload["columns"] == ["trade_date", "index_code", "close"]
 
 
+def test_cli_requires_configured_lake_root_without_repo_data_fallback(tmp_path, capsys, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.delenv("MARKET_DATA_LAKE_ROOT", raising=False)
+
+    code, payload, stderr = run_cli(capsys, "normalize", "--dataset", "prices")
+
+    assert code == 2
+    assert payload == {}
+    assert stderr["error_type"] == "lake_root_missing"
+    assert not (tmp_path / "data" / "market_data").exists()
+
+
 def test_hs300_validate_revalidate_run_id_scope_and_replay_idempotency(tmp_path, capsys, monkeypatch):
     def deny_connect(*args, **kwargs):
         raise AssertionError("network must not be used")

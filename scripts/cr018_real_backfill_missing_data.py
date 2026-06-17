@@ -1019,7 +1019,7 @@ def write_summary(ctx: BackfillContext) -> Path:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="CR018 真实补齐生产级数据湖缺口")
-    parser.add_argument("--lake-root", default=os.environ.get("MARKET_DATA_LAKE_ROOT", "data/market_data"))
+    parser.add_argument("--lake-root", default=os.environ.get("MARKET_DATA_LAKE_ROOT", ""))
     parser.add_argument("--start", default="2015-01-01")
     parser.add_argument("--end", default="2026-05-28")
     parser.add_argument("--run-id", default="")
@@ -1036,6 +1036,8 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> int:
     args = parse_args()
+    if not args.lake_root:
+        raise RuntimeError("缺少 --lake-root 或 MARKET_DATA_LAKE_ROOT")
     token = os.environ.get("TUSHARE_TOKEN")
     if not token:
         raise RuntimeError("缺少 TUSHARE_TOKEN")

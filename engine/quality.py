@@ -24,6 +24,7 @@ from engine.contracts import (
     SURVIVORSHIP_BIAS_NOTE,
 )
 from engine.manifest import ManifestError, ManifestFormatError, ManifestStore
+from engine.research_paths import research_report_path
 from engine.source_registry import require_resolved_registry_key, SourceRegistryError
 
 
@@ -338,7 +339,7 @@ def render_quality_reports(
 def run_quality_report(
     parquet_paths: dict[str, str | Path] | None,
     manifest_path: str | Path,
-    report_dir: str | Path = "reports",
+    report_dir: str | Path = research_report_path(),
     requested_range: dict[str, str] | tuple[str, str] | None = None,
     as_of_date: str | date | datetime | None = None,
 ) -> QualityReportResult:

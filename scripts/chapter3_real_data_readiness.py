@@ -18,6 +18,7 @@ from engine.chapter3_real_data_readiness import (
     build_chapter3_readiness_report,
     write_readiness_report,
 )
+from engine.research_paths import research_run_path
 
 
 def parse_args() -> argparse.Namespace:
@@ -27,7 +28,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--end-date", default=CHAPTER3_END_DATE)
     parser.add_argument(
         "--output-dir",
-        default="process/research/chapter3_real_data_readiness",
+        default=str(research_run_path("chapter3_real_data_readiness")),
     )
     return parser.parse_args()
 

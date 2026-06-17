@@ -1,6 +1,6 @@
 """CR-035 第四章多因子模型定价检验 runner。
 
-只读取本地第三章 factor panel 和 label parts，写本地 reports/process
+只读取第三章 factor panel 和 label parts，写 NAS reports/runs
 研究产物；不读取凭据、不触发 provider fetch、不写 data lake、不 publish
 catalog、不触发 QMT / simulation / live。
 """
@@ -34,6 +34,7 @@ from engine.chapter4_factor_models import (
     Chapter4AnalysisResult,
     run_chapter4_analysis,
 )
+from engine.research_paths import research_report_path, research_run_path
 
 
 CHAPTER4_RUN_SCHEMA = "chapter4_factor_models_run_v1"
@@ -41,15 +42,15 @@ CHAPTER4_RUN_SCHEMA = "chapter4_factor_models_run_v1"
 DEFAULT_INPUTS = (
     {
         "sample_id": "in_sample_2000_2019",
-        "panel_path": "reports/chapter3_factor_panel/run-chapter3-empirical-2000-2019-financial-fallback-20260610/factor_panel.parquet",
-        "label_root": "process/research/chapter3_empirical/run-chapter3-empirical-2000-2019-financial-fallback-20260610/label_parts",
-        "report_path": "process/research/chapter3_empirical/run-chapter3-empirical-2000-2019-financial-fallback-20260610/EMPIRICAL-RUN-REPORT.json",
+        "panel_path": str(research_report_path("chapter3_factor_panel", "run-chapter3-empirical-2000-2019-financial-fallback-20260610", "factor_panel.parquet")),
+        "label_root": str(research_run_path("chapter3_empirical", "run-chapter3-empirical-2000-2019-financial-fallback-20260610", "label_parts")),
+        "report_path": str(research_run_path("chapter3_empirical", "run-chapter3-empirical-2000-2019-financial-fallback-20260610", "EMPIRICAL-RUN-REPORT.json")),
     },
     {
         "sample_id": "observation_2020_2026_ytd",
-        "panel_path": "reports/chapter3_factor_panel/run-chapter3-empirical-2020-2026-ytd-financial-fallback-20260610/factor_panel.parquet",
-        "label_root": "process/research/chapter3_empirical/run-chapter3-empirical-2020-2026-ytd-financial-fallback-20260610/label_parts",
-        "report_path": "process/research/chapter3_empirical/run-chapter3-empirical-2020-2026-ytd-financial-fallback-20260610/EMPIRICAL-RUN-REPORT.json",
+        "panel_path": str(research_report_path("chapter3_factor_panel", "run-chapter3-empirical-2020-2026-ytd-financial-fallback-20260610", "factor_panel.parquet")),
+        "label_root": str(research_run_path("chapter3_empirical", "run-chapter3-empirical-2020-2026-ytd-financial-fallback-20260610", "label_parts")),
+        "report_path": str(research_run_path("chapter3_empirical", "run-chapter3-empirical-2020-2026-ytd-financial-fallback-20260610", "EMPIRICAL-RUN-REPORT.json")),
     },
 )
 
@@ -98,8 +99,8 @@ class Chapter4RunResult:
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="运行 CR-035 第四章多因子模型定价检验")
     parser.add_argument("--run-id", default="")
-    parser.add_argument("--output-root", default="process/research/chapter4_factor_models")
-    parser.add_argument("--report-root", default="reports/chapter4_factor_models")
+    parser.add_argument("--output-root", default=str(research_run_path("chapter4_factor_models")))
+    parser.add_argument("--report-root", default=str(research_report_path("chapter4_factor_models")))
     parser.add_argument("--input-config", default="", help="可选 JSON，字段为 samples 数组")
     parser.add_argument("--min-cross-section", type=int, default=30)
     parser.add_argument("--quantiles", type=int, default=5)

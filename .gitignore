@@ -23,15 +23,32 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
+# meta-flow 本地安装产物。
 .agent/
 .agents/
 .codex/
 .claude/
+/AGENTS.md
+/CLAUDE.md
 
-# CR081/CR082：过程台账迁移到仓库外部 sibling process project，
-# 并归档到 /home/hyde/workspace/process/quant-lab。
-# 本项目只保留本地 symlink 入口，不跟踪 process 本体或 symlink。
+# CR081/CR082/CR087/CR088：过程台账和过程文档迁移到仓库外部
+# meta-flow-artifacts project，并归档到
+# /home/hyde/workspace/meta-flow-artifacts/process/quant-lab。
+# 本项目只保留本地 symlink 入口，不跟踪 process 本体或过程文档软链。
 /process
+/checkpoints
+/docs/design
+/docs/features
+/docs/quality
+/docs/release/*-CR*.md
+/docs/release/*-CR*.yaml
+/docs/release/CR*.md
+/docs/release/CR*.yaml
+/docs/release/*-MANIFEST-*.yaml
+/docs/release/*-PLAN-*.md
+/docs/release/*-GATE-*.md
+/docs/release/*-SCOPE-*.md
+/docs/release/*-AUDIT-*.md
 
 # 本地数据湖与报告产物不得入库；真实 lake root 必须通过 --lake-root
 # 或 MARKET_DATA_LAKE_ROOT 指向仓库外部目录。
@@ -65,7 +82,3 @@ credentials/
 # 允许小型脱敏测试 fixture 进入版本控制。
 !tests/fixtures/
 !tests/fixtures/**
-
-# 允许元工作流质量报告进入版本控制；上方 quality/ 仅用于数据湖质量分区。
-!docs/quality/
-!docs/quality/*.md

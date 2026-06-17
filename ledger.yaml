@@ -2,19 +2,39 @@ version: 1
 project: quant-lab
 process_ledger:
   owner: external-process-project
-  container_root: /home/hyde/workspace/process
-  default_root: /home/hyde/workspace/process/quant-lab
+  container_root: /home/hyde/workspace/meta-flow-artifacts
+  process_container_root: /home/hyde/workspace/meta-flow-artifacts/process
+  default_root: /home/hyde/workspace/meta-flow-artifacts/process/quant-lab
   project_namespace: quant-lab
   env_override: PROCESS_LEDGER_ROOT
   local_entry: process
   local_entry_type: symlink
-  local_entry_target: ../process/quant-lab
+  local_entry_target: ../meta-flow-artifacts/process/quant-lab
   managed_by_cr: CR-082
+  docs_archive_managed_by_cr: CR-087
+  artifact_root_realignment_cr: CR-088
   previous_externalization_cr: CR-081
   current_status: active
   tracked_by_current_project_git: false
   bootstrap_script: scripts/link-engineering-ledger.sh
+  route_metadata: process/.meta-flow-process.yaml
+  docs_archive:
+    root: /home/hyde/workspace/meta-flow-artifacts/process/quant-lab/docs
+    local_links:
+      docs/design: ../../meta-flow-artifacts/process/quant-lab/docs/design
+      docs/features: ../../meta-flow-artifacts/process/quant-lab/docs/features
+      docs/quality: ../../meta-flow-artifacts/process/quant-lab/docs/quality
+      checkpoints: ../meta-flow-artifacts/process/quant-lab/checkpoints
+    release_public_files_kept_in_project:
+      - docs/release/RELEASE-NOTES.md
+      - docs/release/DEPLOY-CHECKLIST.md
+      - docs/release/ROLLBACK.md
+      - docs/release/MIGRATION.md
+      - docs/release/FEEDBACK.md
   notes:
-    - "process/** is owned by /home/hyde/workspace/process/quant-lab, not by quant-lab Git."
-    - "The quant-lab repository keeps only this pointer metadata and bootstrap script."
-    - "data/, reports/, credentials, runtime and remote Git operations are outside CR081/CR082 scope."
+    - "process/** is owned by /home/hyde/workspace/meta-flow-artifacts/process/quant-lab, not by quant-lab Git."
+    - "docs/design, docs/features, docs/quality and legacy checkpoints are process artifacts exposed through local symlinks."
+    - "docs/release keeps public entry files in the project and exposes CR-specific/internal release artifacts through local symlinks."
+    - "The quant-lab repository keeps only pointer metadata, public docs and bootstrap script."
+    - "data/, reports/, credentials, runtime and remote Git operations are outside CR081/CR082/CR087/CR088 scope."
+    - "Legacy /home/hyde/workspace/process/quant-lab is retained as an old local copy and is not the current route."

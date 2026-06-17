@@ -1,7 +1,7 @@
 """CR-037 第六章因子稳健性 runner。
 
-只读取本地第三章 factor panel / label parts 和 CR-036 异象面板，写本地
-reports/process/docs 研究产物；不读取凭据、不触发 provider fetch、不写 data
+只读取第三章 factor panel / label parts 和 CR-036 异象面板，写 NAS
+reports/runs 和 docs 研究产物；不读取凭据、不触发 provider fetch、不写 data
 lake、不 publish catalog、不触发 QMT / simulation / live。
 """
 
@@ -33,6 +33,7 @@ from engine.chapter6_factor_robustness import (
     Chapter6RobustnessResult,
     run_chapter6_analysis,
 )
+from engine.research_paths import research_report_path, research_run_path
 from scripts.run_chapter4_factor_models import assert_chapter3_report_pass, read_label_parts
 from scripts.run_chapter5_anomalies import assert_chapter4_report_pass
 
@@ -42,21 +43,21 @@ CHAPTER6_RUN_SCHEMA = "chapter6_factor_robustness_run_v1"
 DEFAULT_INPUTS = (
     {
         "sample_id": "in_sample_2000_2019",
-        "panel_path": "reports/chapter3_factor_panel/run-chapter3-empirical-2000-2019-financial-fallback-20260610/factor_panel.parquet",
-        "label_root": "process/research/chapter3_empirical/run-chapter3-empirical-2000-2019-financial-fallback-20260610/label_parts",
-        "chapter3_report_path": "process/research/chapter3_empirical/run-chapter3-empirical-2000-2019-financial-fallback-20260610/EMPIRICAL-RUN-REPORT.json",
-        "chapter4_report_path": "process/research/chapter4_factor_models/run-cr035-chapter4-factor-models-20260610/CHAPTER4-RUN-REPORT.json",
-        "chapter5_report_path": "process/research/chapter5_anomalies/run-cr036-chapter5-anomalies-20260610/CHAPTER5-RUN-REPORT.json",
-        "chapter5_anomaly_panel_path": "reports/chapter5_anomalies/run-cr036-chapter5-anomalies-20260610/anomaly_panel.parquet",
+        "panel_path": str(research_report_path("chapter3_factor_panel", "run-chapter3-empirical-2000-2019-financial-fallback-20260610", "factor_panel.parquet")),
+        "label_root": str(research_run_path("chapter3_empirical", "run-chapter3-empirical-2000-2019-financial-fallback-20260610", "label_parts")),
+        "chapter3_report_path": str(research_run_path("chapter3_empirical", "run-chapter3-empirical-2000-2019-financial-fallback-20260610", "EMPIRICAL-RUN-REPORT.json")),
+        "chapter4_report_path": str(research_run_path("chapter4_factor_models", "run-cr035-chapter4-factor-models-20260610", "CHAPTER4-RUN-REPORT.json")),
+        "chapter5_report_path": str(research_run_path("chapter5_anomalies", "run-cr036-chapter5-anomalies-20260610", "CHAPTER5-RUN-REPORT.json")),
+        "chapter5_anomaly_panel_path": str(research_report_path("chapter5_anomalies", "run-cr036-chapter5-anomalies-20260610", "anomaly_panel.parquet")),
     },
     {
         "sample_id": "observation_2020_2026_ytd",
-        "panel_path": "reports/chapter3_factor_panel/run-chapter3-empirical-2020-2026-ytd-financial-fallback-20260610/factor_panel.parquet",
-        "label_root": "process/research/chapter3_empirical/run-chapter3-empirical-2020-2026-ytd-financial-fallback-20260610/label_parts",
-        "chapter3_report_path": "process/research/chapter3_empirical/run-chapter3-empirical-2020-2026-ytd-financial-fallback-20260610/EMPIRICAL-RUN-REPORT.json",
-        "chapter4_report_path": "process/research/chapter4_factor_models/run-cr035-chapter4-factor-models-20260610/CHAPTER4-RUN-REPORT.json",
-        "chapter5_report_path": "process/research/chapter5_anomalies/run-cr036-chapter5-anomalies-20260610/CHAPTER5-RUN-REPORT.json",
-        "chapter5_anomaly_panel_path": "reports/chapter5_anomalies/run-cr036-chapter5-anomalies-20260610/anomaly_panel.parquet",
+        "panel_path": str(research_report_path("chapter3_factor_panel", "run-chapter3-empirical-2020-2026-ytd-financial-fallback-20260610", "factor_panel.parquet")),
+        "label_root": str(research_run_path("chapter3_empirical", "run-chapter3-empirical-2020-2026-ytd-financial-fallback-20260610", "label_parts")),
+        "chapter3_report_path": str(research_run_path("chapter3_empirical", "run-chapter3-empirical-2020-2026-ytd-financial-fallback-20260610", "EMPIRICAL-RUN-REPORT.json")),
+        "chapter4_report_path": str(research_run_path("chapter4_factor_models", "run-cr035-chapter4-factor-models-20260610", "CHAPTER4-RUN-REPORT.json")),
+        "chapter5_report_path": str(research_run_path("chapter5_anomalies", "run-cr036-chapter5-anomalies-20260610", "CHAPTER5-RUN-REPORT.json")),
+        "chapter5_anomaly_panel_path": str(research_report_path("chapter5_anomalies", "run-cr036-chapter5-anomalies-20260610", "anomaly_panel.parquet")),
     },
 )
 
@@ -107,8 +108,8 @@ class Chapter6RunResult:
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="运行 CR-037 第六章因子稳健性")
     parser.add_argument("--run-id", default="")
-    parser.add_argument("--output-root", default="process/research/chapter6_factor_robustness")
-    parser.add_argument("--report-root", default="reports/chapter6_factor_robustness")
+    parser.add_argument("--output-root", default=str(research_run_path("chapter6_factor_robustness")))
+    parser.add_argument("--report-root", default=str(research_report_path("chapter6_factor_robustness")))
     parser.add_argument("--guardrails-path", default="docs/quality/FACTOR-RESEARCH-GUARDRAILS.md")
     parser.add_argument("--input-config", default="", help="可选 JSON，字段为 samples 数组")
     parser.add_argument("--min-cross-section", type=int, default=30)

@@ -37,6 +37,7 @@ from engine.research_dataset import (
     merge_capacity_cost_metadata,
     merge_factor_audit_metadata,
 )
+from engine.research_paths import research_report_path
 from experiments.run_experiment_15_factor_framework import (
     FactorFrameworkError,
     build_universe,
@@ -47,8 +48,8 @@ from experiments.run_experiment_15_factor_framework import (
 from market_data.benchmarks import build_benchmark_policy_result
 
 
-DEFAULT_CR011_OUTPUT_DIR = "reports/experiment_17_21_cr011"
-LEGACY_EXPERIMENT_17_21_REPORT = PROJECT_ROOT / "reports" / "experiment_17_21" / "factor_strategy_report.md"
+DEFAULT_CR011_OUTPUT_DIR = str(research_report_path("experiment_17_21_cr011"))
+LEGACY_EXPERIMENT_17_21_REPORT = research_report_path("experiment_17_21", "factor_strategy_report.md")
 DEFAULT_FACTORS = (
     "momentum_20d",
     "reversal_5d",
@@ -127,7 +128,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--realism-mode", default="exploratory", choices=["exploratory", "production_strict"])
     parser.add_argument(
         "--baseline-report-path",
-        default=str(LEGACY_EXPERIMENT_17_21_REPORT.relative_to(PROJECT_ROOT)),
+        default=str(LEGACY_EXPERIMENT_17_21_REPORT),
         help="旧实验 17-21 baseline 报告路径，仅作为字符串引用，禁止覆盖。",
     )
     parser.add_argument("--start-date", default=None)
@@ -437,7 +438,7 @@ def resolve_cr011_validation_output_dir(output_dir: str | Path, run_id: str | No
     report_path = base_dir / "factor_strategy_report.md"
     if base_dir.resolve() == legacy_report or base_dir.resolve() == legacy_report.parent or report_path.resolve() == legacy_report:
         raise FactorFrameworkError(
-            "禁止覆盖旧实验 17-21 baseline 报告；请将 --output-dir 指向 reports/experiment_17_21_cr011 或测试临时目录。"
+            f"禁止覆盖旧实验 17-21 baseline 报告；请将 --output-dir 指向 {DEFAULT_CR011_OUTPUT_DIR} 或测试临时目录。"
         )
     return base_dir
 

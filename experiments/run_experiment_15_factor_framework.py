@@ -28,6 +28,7 @@ from engine.research_dataset import (
     evaluate_allowed_claims,
     metadata_to_dict,
 )
+from engine.research_paths import research_report_path
 from experiments.reporting import attach_research_input_metadata
 from market_data.benchmarks import build_benchmark_field_payload
 
@@ -136,7 +137,7 @@ def main() -> None:
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="运行实验十五因子工程基础框架。")
     parser.add_argument("--data-dir", required=True, default=None, help="必须显式传入的本地标准 parquet 目录。")
-    parser.add_argument("--output-dir", default="reports/experiment_15")
+    parser.add_argument("--output-dir", default=str(research_report_path("experiment_15")))
     parser.add_argument("--start-date", default=None)
     parser.add_argument("--end-date", default=None)
     parser.add_argument("--factors", nargs="+", default=list(DEFAULT_FACTORS), help="因子名，如 momentum_20d volume_ratio_20d。")

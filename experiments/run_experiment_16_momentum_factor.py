@@ -16,6 +16,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
+from engine.research_paths import research_report_path
 from experiments.run_experiment_15_factor_framework import (
     FORWARD_HORIZONS,
     FactorFrameworkError,
@@ -57,7 +58,7 @@ def main() -> None:
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="运行实验十六动量因子有效性检验。")
     parser.add_argument("--data-dir", default="data", help="本地标准 parquet 目录。")
-    parser.add_argument("--output-dir", default="reports/experiment_16")
+    parser.add_argument("--output-dir", default=str(research_report_path("experiment_16")))
     parser.add_argument("--start-date", default=None)
     parser.add_argument("--end-date", default=None)
     parser.add_argument("--factors", nargs="+", default=list(DEFAULT_MOMENTUM_FACTORS))
