@@ -4,7 +4,7 @@ title: "CR030 因子研究快速开始"
 status: "draft-for-cp8-review"
 created_at: "2026-06-03"
 owner: "meta-po"
-source_doc: "docs/CR030-MULTIFACTOR-RESEARCH-LOOP.md"
+source_doc: "process/docs/source-archive/docs/CR030-MULTIFACTOR-RESEARCH-LOOP.md"
 ---
 
 # CR030 因子研究快速开始
@@ -18,8 +18,8 @@ source_doc: "docs/CR030-MULTIFACTOR-RESEARCH-LOOP.md"
 | 目的 | 文件 |
 |---|---|
 | 快速开始 | `docs/CR030-FACTOR-RESEARCH-QUICKSTART.md` |
-| CR-030 边界与证据链 | `docs/CR030-MULTIFACTOR-RESEARCH-LOOP.md` |
-| 外部框架借鉴矩阵 | `docs/CR030-MULTIFACTOR-REFERENCE-MATRIX.md` |
+| CR-030 边界与证据链 | `process/docs/source-archive/docs/CR030-MULTIFACTOR-RESEARCH-LOOP.md` |
+| 外部框架借鉴矩阵 | `process/docs/source-archive/docs/CR030-MULTIFACTOR-REFERENCE-MATRIX.md` |
 | CP8 人工终验 | `checkpoints/CP8-CR030-DELIVERY-READINESS.md` |
 
 ## 2. 先确认本地基线

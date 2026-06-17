@@ -13,6 +13,7 @@ process_ledger:
   managed_by_cr: CR-082
   docs_archive_managed_by_cr: CR-087
   artifact_root_realignment_cr: CR-088
+  docs_public_surface_governance_cr: CR-090
   previous_externalization_cr: CR-081
   current_status: active
   tracked_by_current_project_git: false
@@ -27,14 +28,12 @@ process_ledger:
       checkpoints: ../meta-flow-artifacts/process/quant-lab/checkpoints
     release_public_files_kept_in_project:
       - docs/release/RELEASE-NOTES.md
-      - docs/release/DEPLOY-CHECKLIST.md
-      - docs/release/ROLLBACK.md
-      - docs/release/MIGRATION.md
-      - docs/release/FEEDBACK.md
+    source_archive_root: /home/hyde/workspace/meta-flow-artifacts/process/quant-lab/docs/source-archive/docs
+    retained_project_docs_policy: "Only component user manuals/install-runbooks/quickstarts/reference manuals and docs/release/RELEASE-NOTES.md are tracked by quant-lab Git."
   notes:
     - "process/** is owned by /home/hyde/workspace/meta-flow-artifacts/process/quant-lab, not by quant-lab Git."
     - "docs/design, docs/features, docs/quality and legacy checkpoints are process artifacts exposed through local symlinks."
-    - "docs/release keeps public entry files in the project and exposes CR-specific/internal release artifacts through local symlinks."
-    - "The quant-lab repository keeps only pointer metadata, public docs and bootstrap script."
-    - "data/, reports/, credentials, runtime and remote Git operations are outside CR081/CR082/CR087/CR088 scope."
+    - "docs/release keeps only RELEASE-NOTES.md in the project; deploy checklist, rollback, migration and feedback files are archived under docs/source-archive/docs/release."
+    - "The quant-lab repository keeps only pointer metadata, component user manuals/release notes and bootstrap script."
+    - "data/, reports/, credentials, runtime and remote Git operations are outside CR081/CR082/CR087/CR088/CR090 scope."
     - "Legacy /home/hyde/workspace/process/quant-lab is retained as an old local copy and is not the current route."

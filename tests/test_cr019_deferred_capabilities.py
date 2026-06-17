@@ -5,7 +5,14 @@ from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-REGISTER_PATH = REPO_ROOT / "docs" / "CR019-DEFERRED-CAPABILITIES.md"
+REGISTER_PATH = (
+    REPO_ROOT
+    / "process"
+    / "docs"
+    / "source-archive"
+    / "docs"
+    / "CR019-DEFERRED-CAPABILITIES.md"
+)
 README_PATH = REPO_ROOT / "README.md"
 
 CAPABILITY_IDS = (

@@ -53,7 +53,7 @@ real_operation_permission_claims: 0
 | `CR019-S06` | 完整 QMT endpoint matrix 与 typed blocked result | `trading/qmt_endpoint_matrix.py`、`trading/qmt_gateway_contracts.py`、`trading/qmt_client.py`、`tests/test_cr019_qmt_endpoint_matrix.py` | Endpoint 可见不等于真实 QMT / broker lake 操作许可 | `process/checks/CP7-CR019-S06-qmt-endpoint-matrix-contract-VERIFICATION-DONE.md` |
 | `CR019-S07` | Run gate 与 blocked reason priority | `trading/qmt_gateway_gates.py`、`trading/stage_gate.py`、`trading/pretrade_risk.py`、`trading/kill_switch.py`、`tests/test_cr019_qmt_gateway_run_gates.py` | 不绕过 CR015 / CR016 stage、risk、kill-switch 或 per-run authorization | `process/checks/CP7-CR019-S07-run-gate-blocked-reason-integration-VERIFICATION-DONE.md` |
 | `CR019-S08` | Fallback / incident / signed file fail-closed 边界 | `trading/qmt_gateway_fallback.py`、`docs/QMT-INCIDENT-PLAYBOOK.md`、`tests/test_cr019_qmt_gateway_fallback.py` | Fallback 不自动真实操作，不持久化真实 incident，不写 broker lake | `process/checks/CP7-CR019-S08-fallback-incident-signed-file-boundary-VERIFICATION-DONE.md` |
-| `CR019-S09` | Deferred capability register | `docs/CR019-DEFERRED-CAPABILITIES.md`、`README.md`、`tests/test_cr019_deferred_capabilities.py` | 不新增依赖，不接 Qlib provider，不抓 minute / Level2 数据，不扩大 P0 | `process/checks/CP7-CR019-S09-deferred-capability-register-VERIFICATION-DONE.md` |
+| `CR019-S09` | Deferred capability register | 本 runbook、`README.md`、`process/docs/source-archive/docs/CR019-DEFERRED-CAPABILITIES.md`、`tests/test_cr019_deferred_capabilities.py` | 不新增依赖，不接 Qlib provider，不抓 minute / Level2 数据，不扩大 P0 | `process/checks/CP7-CR019-S09-deferred-capability-register-VERIFICATION-DONE.md` |
 | `CR019-S10` | 文档、runbook 与用户手册边界 | `docs/QMT-C-S-BRIDGE-RUNBOOK.md`、`README.md`、`docs/USER-MANUAL.md`、`docs/QMT-SIMULATION-LIVE-RUNBOOK.md`、`docs/QMT-INCIDENT-PLAYBOOK.md`、`tests/test_cr019_docs_runbook_boundary.py` | 不启动服务，不读凭据，不调用 QMT / provider / lake / publish / simulation / live | `process/checks/CP6-CR019-S10-docs-runbook-user-manual-boundary-CODING-DONE.md` |
 
 ## 4. No-Real-Operation Boundary
@@ -78,7 +78,7 @@ real_operation_permission_claims: 0
 | Endpoint matrix | health / capabilities、validate / dry-run、行情、账户、持仓、委托、成交、simulation/live、reconciliation、kill-switch 等类别均有 typed result。 | Matrix 完整性只保证结果结构，不表示真实转发可用。 |
 | Run gate | 主 blocked reason 优先级为 auth -> endpoint/schema -> admission/stage -> authorization -> risk -> kill_switch -> raw_policy -> operation_not_authorized，并保留 suppressed reasons。 | 任一 gate fail 时 adapter call count 保持 `0`。 |
 | Fallback | gateway 不可达、auth fail、heartbeat fail、deployment not ready 或 run gate blocked 时 fail closed。 | 只返回 blocked result 或人工 dry-run candidate，不自动执行。 |
-| Deferred register | `backtrader_w6`、`qlib_w7`、`minute_spike`、`level2_spike` 均有触发条件和后续 CR / CP 入口。 | Register 是范围合同，不是 runtime flag 或 dependency gate。 |
+| Deferred register | `backtrader_w6`、`qlib_w7`、`minute_spike`、`level2_spike` 均有触发条件和后续 CR / CP 入口；详细 register 已归档到 `process/docs/source-archive/docs/CR019-DEFERRED-CAPABILITIES.md`。 | Register 是范围合同，不是 runtime flag 或 dependency gate。 |
 
 ## 6. User Entry Points
 
@@ -88,7 +88,7 @@ real_operation_permission_claims: 0
 | [USER-MANUAL](USER-MANUAL.md) | 用户手册中的操作边界、真实授权禁区和后续 CR / CP 入口 | 只给出人工检查路径 |
 | [QMT Simulation / Live Activation Runbook](QMT-SIMULATION-LIVE-RUNBOOK.md) | CR016 staged activation 治理入口 | 仍需 later-gated stage 和 per-run authorization |
 | [QMT Incident Playbook](QMT-INCIDENT-PLAYBOOK.md) | incident、fallback、manual dry-run 和 recovery 边界 | 不持久化真实 incident，不写 broker lake |
-| [Deferred Capability Register](CR019-DEFERRED-CAPABILITIES.md) | 后置能力范围合同 | 不新增依赖或数据获取 |
+| Deferred capability summary | 本 runbook §5 与 README 摘要 | 不新增依赖或数据获取；详细 register 只在 `process/docs/source-archive/docs/CR019-DEFERRED-CAPABILITIES.md` 归档 |
 
 ## 7. Stop Conditions
 

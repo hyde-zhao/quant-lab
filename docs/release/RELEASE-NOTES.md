@@ -48,13 +48,13 @@ cr_id: CR-044
 
 | Breaking ID | 是否存在 | 内容 | 迁移引用 |
 |---|---|---|---|
-| BR-CR044-01 | no | 未启用真实 broker runtime；未改变 PaperBrokerAdapter 既有通过路径 | `docs/release/MIGRATION.md` |
+| BR-CR044-01 | no | 未启用真实 broker runtime；未改变 PaperBrokerAdapter 既有通过路径 | 迁移说明已归档到 `process/docs/source-archive/docs/release/MIGRATION.md` |
 
 ## 6. 安装与升级
 
 | 场景 | 方式 | 验证证据 |
 |---|---|---|
-| 本地代码 / 测试交付 | 无安装脚本变更；通过 uv 运行 pytest | `docs/release/DEPLOY-CHECKLIST.md` |
+| 本地代码 / 测试交付 | 无安装脚本变更；通过 uv 运行 pytest | 部署检查清单已归档到 `process/docs/source-archive/docs/release/DEPLOY-CHECKLIST.md` |
 | 质量报告跟踪 | `.gitignore` 允许 `docs/quality/*.md` | `git check-ignore -v docs/quality/*CR044.md` 应不再命中 |
 
 ## 7. 迁移说明
@@ -76,14 +76,14 @@ cr_id: CR-044
 
 | 回滚触发 | 回滚入口 | 说明 |
 |---|---|---|
-| CR044 helper 或测试导致回归 | `docs/release/ROLLBACK.md` | 回滚 `engine/broker_adapter.py` 的 CR044 新增块、`tests/test_cr044_goldminer_admission_guard.py` 和 CR044 过程证据；不涉及数据恢复。 |
+| CR044 helper 或测试导致回归 | `process/docs/source-archive/docs/release/ROLLBACK.md` | 回滚 `engine/broker_adapter.py` 的 CR044 新增块、`tests/test_cr044_goldminer_admission_guard.py` 和 CR044 过程证据；不涉及数据恢复。 |
 
 ## 10. 参考链接
 
 | 类型 | 路径 |
 |---|---|
 | Release Context | `process/release/RELEASE-CONTEXT.yaml` |
-| Verification Report | `docs/quality/VERIFICATION-REPORT-CR044.md` |
-| Test Report | `docs/quality/TEST-REPORT-CR044.md` |
-| Review | `docs/quality/REVIEW-CR044.md` |
+| Verification Report | `process/docs/quality/VERIFICATION-REPORT-CR044.md` |
+| Test Report | `process/docs/quality/TEST-REPORT-CR044.md` |
+| Review | `process/docs/quality/REVIEW-CR044.md` |
 | CP7 | `process/checks/CP7-CR044-FIXTURE-STATIC-VERIFICATION-DONE.md` |

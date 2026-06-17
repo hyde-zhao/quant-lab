@@ -411,7 +411,7 @@ unsupported register 的 9 项必须按以下四类理解：
 | unsupported | `capacity_inputs_turnover_adv_constraints`、`corporate_actions_full`、`non_hs300_benchmark`、`minute_tick_level2_order_match`、`microstructure_impact_cost` |
 | blocked | `real_vwap_execution` 以及 execution / VWAP blocked claims |
 
-所有 `pass_denominator=excluded` 项进入正式 dataset pass denominator 的次数为 0。当前 provider fetch、lake write、credential read、legacy data read、old report overwrite 均为 0；任何真实补数、VWAP / 分钟数据接入或 allowed claim 解除，都必须另起 Story、CP5 和用户显式授权。路线图只在 `docs/DATA-LAKE-FULL-HISTORY-BACKFILL-ROADMAP.md` 中描述后续授权门，不是可执行 runbook。
+所有 `pass_denominator=excluded` 项进入正式 dataset pass denominator 的次数为 0。当前 provider fetch、lake write、credential read、legacy data read、old report overwrite 均为 0；任何真实补数、VWAP / 分钟数据接入或 allowed claim 解除，都必须另起 Story、CP5 和用户显式授权。历史路线图已归档到 `process/docs/source-archive/docs/DATA-LAKE-FULL-HISTORY-BACKFILL-ROADMAP.md`，它不是源码内用户手册，也不是可执行 runbook。
 
 #### CR-014 Batch-A 全 A 数据湖合同与护栏状态
 
@@ -561,7 +561,7 @@ No-real-operation 计数在本阶段必须保持：
 
 #### CR-025 research execution semantic alignment 用户边界
 
-CR-025 的专题入口是 [CR025 Research Execution Semantic Alignment](CR025-RESEARCH-EXECUTION-SEMANTIC-ALIGNMENT.md)。它用于理解 CR025-S01..S06、DQ-CP3-CR025-01..06、semantic diff、`order_intent_draft_v1`、Backtrader optional / no-copy / `migration_candidate=[]`、no-real-operation 表、CR-020..CR-024 独立 QMT 路线，以及 CR-030 多因子研究框架借鉴候选上下文。
+CR-025 的过程专题已归档到 `process/docs/source-archive/docs/CR025-RESEARCH-EXECUTION-SEMANTIC-ALIGNMENT.md`。源码仓库保留的用户入口是 [CR025 Backtrader Module Reference](CR025-BACKTRADER-MODULE-REFERENCE.md)，用于理解 Backtrader optional / no-copy / `migration_candidate=[]`、no-real-operation 表、CR-020..CR-024 独立 QMT 路线，以及 CR-030 多因子研究框架借鉴候选上下文。
 
 用户应按下表理解当前边界：
 

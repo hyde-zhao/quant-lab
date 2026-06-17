@@ -2,9 +2,11 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from engine.research_paths import RESEARCH_REPORT_ROOT
 
-ROADMAP_DOC = Path("docs/DATA-LAKE-FULL-HISTORY-BACKFILL-ROADMAP.md")
-ROADMAP_REPORT = Path("reports/data_lake_readiness_2020_2024_cr013/backfill_roadmap.md")
+
+ROADMAP_DOC = Path("process/docs/source-archive/docs/DATA-LAKE-FULL-HISTORY-BACKFILL-ROADMAP.md")
+ROADMAP_REPORT = RESEARCH_REPORT_ROOT / "data_lake_readiness_2020_2024_cr013" / "backfill_roadmap.md"
 
 FORMAL_DATASETS = (
     "prices",
@@ -27,8 +29,10 @@ def test_backfill_roadmap_lists_full_history_and_vwap_release_criteria() -> None
     for dataset in FORMAL_DATASETS:
         assert f"`{dataset}`" in doc
     assert "2020-01-01..2024-12-31" in doc
-    assert "new readiness audit pass" in doc
-    assert "old_baseline_preserved | `true`" in doc
+    assert "readiness pass" in doc
+    assert "new readiness audit pass" in report
+    assert "old_baseline_preserved=true" in doc
+    assert "old_baseline_preserved | `true`" in report
     assert "vwap_status=available" in doc
     assert "execution audit pass" in doc
     assert "vwap_release_criteria" in report
