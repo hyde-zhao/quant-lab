@@ -1,0 +1,11 @@
+# STORY-001 仅提供静态默认值；读取、校验和覆盖逻辑由后续 Story 实现。
+request_interval_seconds: 2
+batch_size: 50
+max_concurrency: 1
+max_retries: 3
+backoff_policy: exponential_jitter
+backoff_base_seconds: 2
+backoff_max_seconds: 60
+recent_trade_days_backfill: 5
+raw_cache_retention: keep_forever
+raw_cache_path_pattern: "data/raw/{source}/{interface}/{yyyymmdd}/{batch_id}.{ext}"

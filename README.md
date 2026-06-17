@@ -242,7 +242,7 @@ JQData 作为 limited window PIT / W3 历史真实源和对照来源保留，sou
 当前账号已知验证窗口为 `2025-02-11..2026-02-18`。该窗口曾完成真实 smoke：`index_members`、`index_weights`、`stock_basic` 均发布为 `published/pass/available/pit_available`，W3 的 `trade_status`、`prices_limit`、`events` 均发布为 `published/pass/available`；其中 `events` 为 ST 状态变更口径，空事件表在 source/interface 与 `available_at_rule` 冻结时允许通过。CR-012 后该记录只作为 historical smoke 证据；当前 strict readiness 仍需按 `snapshot_asof`、dataset-specific `available_at` 和缺口归因重新审计。
 
 ```bash
-UV_CACHE_DIR=/tmp/uv-cache-local-backtest uv run --env-file .env --group jqdata --python 3.11 python -m market_data.cli jqdata-acquire \
+UV_CACHE_DIR=.cache/uv uv run --env-file .env --group jqdata --python 3.11 python -m market_data.cli jqdata-acquire \
   --dataset index_members \
   --index-code 399300.SZ \
   --start-date 2025-02-11 \
@@ -256,7 +256,7 @@ UV_CACHE_DIR=/tmp/uv-cache-local-backtest uv run --env-file .env --group jqdata 
 真实执行必须显式加 `--enable-real-source`，凭据只来自 `JQDATA_USERNAME` / `JQDATA_PASSWORD` 环境变量，不在命令、raw、manifest、quality、catalog、日志或文档中展开：
 
 ```bash
-UV_CACHE_DIR=/tmp/uv-cache-local-backtest uv run --env-file .env --group jqdata --python 3.11 python -m market_data.cli jqdata-acquire \
+UV_CACHE_DIR=.cache/uv uv run --env-file .env --group jqdata --python 3.11 python -m market_data.cli jqdata-acquire \
   --dataset index_members \
   --index-code 399300.SZ \
   --start-date 2025-02-11 \
@@ -267,11 +267,11 @@ UV_CACHE_DIR=/tmp/uv-cache-local-backtest uv run --env-file .env --group jqdata 
   --enable-real-source \
   --json
 
-UV_CACHE_DIR=/tmp/uv-cache-local-backtest uv run --env-file .env --group jqdata --python 3.11 python -m market_data.cli normalize \
+UV_CACHE_DIR=.cache/uv uv run --env-file .env --group jqdata --python 3.11 python -m market_data.cli normalize \
   --dataset index_members \
   --run-id run-jqdata-index-members-smoke
 
-UV_CACHE_DIR=/tmp/uv-cache-local-backtest uv run --env-file .env --group jqdata --python 3.11 python -m market_data.cli validate \
+UV_CACHE_DIR=.cache/uv uv run --env-file .env --group jqdata --python 3.11 python -m market_data.cli validate \
   --dataset index_members \
   --index-code 399300.SZ \
   --start-date 2025-02-11 \
@@ -287,14 +287,14 @@ set -a
 set +a
 ```
 
-NAS 数据湖由用户在系统层先挂载：SMB 共享路径和本地挂载目标由用户环境决定，项目命令只把 `.env` 中的 `MARKET_DATA_LAKE_ROOT` 或显式 `--lake-root` 当作外置 lake root 使用。NAS 用户名和密码只在系统挂载配置或凭据管理器中处理，不进入文档、对话、日志、manifest、quality、catalog 或测试 fixture，也不提供给 agent。
+外置数据湖由用户在系统层先挂载：外部存储路径和本地挂载目标由用户环境决定，项目命令只把 `.env` 中的 `MARKET_DATA_LAKE_ROOT` 或显式 `--lake-root` 当作外置 lake root 使用。外部存储用户名和密码只在系统挂载配置或凭据管理器中处理，不进入文档、对话、日志、manifest、quality、catalog 或测试 fixture，也不提供给 agent。
 
 截至 `2026-05-18T20:01:26+08:00`，CR-005 已完成 `2024-01-02` 至 `2024-01-05` 小窗口真实 Tushare 链路验证：preflight、dry-run、真实 fetch/write、`hs300_index` normalize、quality、catalog 和 reader 最小链路均为 PASS。该结论只覆盖本次小窗口，不代表更大窗口、2015-2025 长区间或全量回补已完成或已授权。
 
 `hs300_index` 的真实回补入口来自 CR005-S01 数据层 job。dry-run 只规划路径，不联网、不写湖；未显式传 `--lake-root` 时优先使用 `.env` 中的 `MARKET_DATA_LAKE_ROOT`：
 
 ```bash
-UV_CACHE_DIR=/tmp/uv-cache-local-backtest uv run --env-file .env --group tushare --python 3.11 python -m market_data.cli hs300-backfill \
+UV_CACHE_DIR=.cache/uv uv run --env-file .env --group tushare --python 3.11 python -m market_data.cli hs300-backfill \
   --index-code 399300.SZ \
   --start-date 2024-01-02 \
   --end-date 2024-01-05 \
@@ -305,7 +305,7 @@ UV_CACHE_DIR=/tmp/uv-cache-local-backtest uv run --env-file .env --group tushare
 真实执行必须由用户显式授权，并同时具备外置 lake root、`--enable-real-source` 和有效 `TUSHARE_TOKEN`。该命令负责 plan/fetch/write；后续运维 CLI 已支持 `hs300_index` 的 normalize、validate 和 read。comparison 只读取已经落地并通过 quality/catalog 的本地文件，不调用 Tushare、connector、runtime、storage 或网络。
 
 ```bash
-UV_CACHE_DIR=/tmp/uv-cache-local-backtest uv run --env-file .env --group tushare --python 3.11 python -m market_data.cli hs300-backfill \
+UV_CACHE_DIR=.cache/uv uv run --env-file .env --group tushare --python 3.11 python -m market_data.cli hs300-backfill \
   --index-code 399300.SZ \
   --start-date 2024-01-02 \
   --end-date 2024-01-05 \
@@ -313,11 +313,11 @@ UV_CACHE_DIR=/tmp/uv-cache-local-backtest uv run --env-file .env --group tushare
   --dry-run false \
   --enable-real-source
 
-UV_CACHE_DIR=/tmp/uv-cache-local-backtest uv run --env-file .env --group tushare --python 3.11 python -m market_data.cli normalize \
+UV_CACHE_DIR=.cache/uv uv run --env-file .env --group tushare --python 3.11 python -m market_data.cli normalize \
   --dataset hs300_index \
   --run-id run-hs300-small-window
 
-UV_CACHE_DIR=/tmp/uv-cache-local-backtest uv run --env-file .env --group tushare --python 3.11 python -m market_data.cli validate \
+UV_CACHE_DIR=.cache/uv uv run --env-file .env --group tushare --python 3.11 python -m market_data.cli validate \
   --dataset hs300_index \
   --index-code 399300.SZ \
   --start-date 2024-01-02 \
@@ -325,7 +325,7 @@ UV_CACHE_DIR=/tmp/uv-cache-local-backtest uv run --env-file .env --group tushare
   --run-id run-hs300-small-window \
   --open-trade-dates 2024-01-02,2024-01-03,2024-01-04,2024-01-05
 
-UV_CACHE_DIR=/tmp/uv-cache-local-backtest uv run --env-file .env --group tushare --python 3.11 python -m market_data.cli read \
+UV_CACHE_DIR=.cache/uv uv run --env-file .env --group tushare --python 3.11 python -m market_data.cli read \
   --dataset hs300_index \
   --index-code 399300.SZ \
   --start-date 2024-01-02 \
@@ -339,12 +339,12 @@ UV_CACHE_DIR=/tmp/uv-cache-local-backtest uv run --env-file .env --group tushare
 
 `market_data.cli` 提供手动备份和恢复命令：`backup-plan`、`backup-run`、`backup-verify`、`backup-report`、`restore-plan`、`restore-run`、`restore-drill`。这些命令默认 dry-run；只有显式传入 `--execute` 的 `backup-run`、`restore-run` 和 `restore-drill` 才会复制文件。命令不会读取 `TUSHARE_TOKEN`，只使用 `.env` 中的数据湖路径变量或显式 root 参数。
 
-备份 / 恢复报告只输出 root label、相对路径、file count、bytes 与 checksum 状态，不输出 `.env` 内容、token、NAS 凭据或真实私有路径。`restore-root` 与 `lake-root` 指向同一路径时会 fail fast；checksum 相同会 skip，checksum mismatch 会失败并拒绝覆盖。
+备份 / 恢复报告只输出 root label、相对路径、file count、bytes 与 checksum 状态，不输出 `.env` 内容、token、外部存储凭据或真实私有路径。`restore-root` 与 `lake-root` 指向同一路径时会 fail fast；checksum 相同会 skip，checksum mismatch 会失败并拒绝覆盖。
 
 备份计划：
 
 ```bash
-UV_CACHE_DIR=/tmp/uv-cache-local-backtest uv run --env-file .env --group tushare --python 3.11 python -m market_data.cli backup-plan \
+UV_CACHE_DIR=.cache/uv uv run --env-file .env --group tushare --python 3.11 python -m market_data.cli backup-plan \
   --release-id <release-id> \
   --json
 ```
@@ -352,7 +352,7 @@ UV_CACHE_DIR=/tmp/uv-cache-local-backtest uv run --env-file .env --group tushare
 执行备份：
 
 ```bash
-UV_CACHE_DIR=/tmp/uv-cache-local-backtest uv run --env-file .env --group tushare --python 3.11 python -m market_data.cli backup-run \
+UV_CACHE_DIR=.cache/uv uv run --env-file .env --group tushare --python 3.11 python -m market_data.cli backup-run \
   --release-id <release-id> \
   --execute \
   --json
@@ -361,13 +361,13 @@ UV_CACHE_DIR=/tmp/uv-cache-local-backtest uv run --env-file .env --group tushare
 校验与报告：
 
 ```bash
-UV_CACHE_DIR=/tmp/uv-cache-local-backtest uv run --env-file .env --group tushare --python 3.11 python -m market_data.cli backup-verify \
+UV_CACHE_DIR=.cache/uv uv run --env-file .env --group tushare --python 3.11 python -m market_data.cli backup-verify \
   --release-id <release-id> \
   --json
 ```
 
 ```bash
-UV_CACHE_DIR=/tmp/uv-cache-local-backtest uv run --env-file .env --group tushare --python 3.11 python -m market_data.cli backup-report \
+UV_CACHE_DIR=.cache/uv uv run --env-file .env --group tushare --python 3.11 python -m market_data.cli backup-report \
   --release-id <release-id> \
   --json
 ```
@@ -375,20 +375,20 @@ UV_CACHE_DIR=/tmp/uv-cache-local-backtest uv run --env-file .env --group tushare
 恢复计划、执行与演练：
 
 ```bash
-UV_CACHE_DIR=/tmp/uv-cache-local-backtest uv run --env-file .env --group tushare --python 3.11 python -m market_data.cli restore-plan \
+UV_CACHE_DIR=.cache/uv uv run --env-file .env --group tushare --python 3.11 python -m market_data.cli restore-plan \
   --release-id <release-id> \
   --json
 ```
 
 ```bash
-UV_CACHE_DIR=/tmp/uv-cache-local-backtest uv run --env-file .env --group tushare --python 3.11 python -m market_data.cli restore-run \
+UV_CACHE_DIR=.cache/uv uv run --env-file .env --group tushare --python 3.11 python -m market_data.cli restore-run \
   --release-id <release-id> \
   --execute \
   --json
 ```
 
 ```bash
-UV_CACHE_DIR=/tmp/uv-cache-local-backtest uv run --env-file .env --group tushare --python 3.11 python -m market_data.cli restore-drill \
+UV_CACHE_DIR=.cache/uv uv run --env-file .env --group tushare --python 3.11 python -m market_data.cli restore-drill \
   --release-id <release-id> \
   --execute \
   --json
@@ -441,7 +441,7 @@ Batch-A 明确没有授权或执行以下动作：
 |---|---|
 | 真实 provider fetch | `0` |
 | 真实 lake write，包括 raw / manifest / run metadata 写湖 | `0` |
-| credential read，包括 `.env`、token、JQData 密码、NAS 凭据 | `0` |
+| credential read，包括 `.env`、token、JQData 密码、外部存储凭据 | `0` |
 | DuckDB dependency change / DuckDB write / `.duckdb` source-of-truth file | `0` |
 | catalog current pointer 真实 publish | `0` |
 | S09 real execution | `0` |
