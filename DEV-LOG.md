@@ -633,3 +633,18 @@
 - CP5 结果：5 份自动预检均为 `PASS`；阻断项 0，豁免项 0。等待 host-orchestrator 收齐后生成 `process/checkpoints/CP5-CR053-MIGRATION-INVENTORY-BATCH-A-LLD-BATCH.md` 并发起统一人工确认。
 - 不授权边界：未执行 NAS mount / scan / mkdir / copy / delete / migration；未执行真实目录 move / rename；未替换 `MARKET_DATA_LAKE_ROOT` 或移动真实 lake；未读 `.env` / token / account / password / private key；未 provider fetch、lake write、catalog publish、QMT / MiniQMT runtime、git push / tag / history rewrite。
 - 未运行检查：本轮为 CP5 设计证据写作，未运行 pytest、inventory scanner、NAS / lake / provider / QMT / Windows 映射或真实迁移命令。
+
+## 2026-06-18 - CR091 QMT Strategy Runner 离线实现切片完成
+
+- 任务：按用户明确授权，使用 meta-dev 子 agent 实现 CR091 已批准的离线 implementation slice；范围仅限 `trading/strategy_runner` 薄模块、离线 checker、fixtures/tests、fake transport 和脱敏 evidence。
+- 实现文件清单：`trading/strategy_runner/__init__.py`、`trading/strategy_runner/adapters.py`、`trading/strategy_runner/target_portfolio.py`、`trading/strategy_runner/package_loader.py`、`trading/strategy_runner/cache.py`、`trading/strategy_runner/readonly_gateway.py`、`trading/strategy_runner/evidence.py`、`scripts/check_cr091_strategy_runner_package.py`、`tests/test_cr091_strategy_runner_contracts.py`、`tests/fixtures/cr091_strategy_runner/*`、`process/stories/CR091-QMT-STRATEGY-RUNNER-IMPLEMENTATION.md`、`process/checks/CP6-CR091-QMT-STRATEGY-RUNNER-CODING-DONE.md`。
+- 实现摘要：新增 package-driven、multi-factor-first、broker-neutral 的轻量 runner 合同；`AdapterRegistry` 默认支持 `MultifactorAdmissionAdapter`、`LegacyStrategyResultAdapter`、`StrategyPackageAdapter`；所有成功 adapter 输出统一 `TargetPortfolioSnapshot` 并复用 `engine.order_intent_draft.build_order_intent_draft` 生成 `OrderIntentDraftV1`，保持 `qmt_allowed=false`、`not_authorization=true`。
+- Package / cache：新增 manifest/checksum 校验和 immutable local cache / active pointer 只读解析；manifest flags、checksum、active pointer、immutable marker 异常均 fail closed。
+- Readonly / evidence：新增默认 fake transport 的 readonly wrapper，仅允许 `health`、`capabilities`、`query_positions`，交易写 endpoint 返回 `blocked_scope_denied`；evidence 只输出 redacted summary、target/order intent 计数和 forbidden operation counters。
+- 主线程复核补丁：收紧 package wrapper 授权 flags、payload checksum 覆盖、readonly counters / status 纳入 evidence 判定，并补充 3 项 fail-closed 回归测试。
+- 验证命令：`PYTHONDONTWRITEBYTECODE=1 PYTEST_ADDOPTS='-p no:cacheprovider' uv run --python 3.11 pytest -q tests/test_cr091_strategy_runner_contracts.py`，结果 `13 passed in 0.15s`。
+- 验证命令：`PYTHONDONTWRITEBYTECODE=1 uv run --python 3.11 python scripts/check_cr091_strategy_runner_package.py --package-root tests/fixtures/cr091_strategy_runner/cr091_strategy_package --json`，结果 exit code 0，`passed=true`，`target_count=2`，`order_intent_count=2`，forbidden counters 全 0。
+- 静态检查：`git diff --check` 退出码 0，无输出。
+- CP6：`process/checks/CP6-CR091-QMT-STRATEGY-RUNNER-CODING-DONE.md`，结论 `PASS`。
+- 不授权边界：未启动 QMT / MiniQMT / XtQuant / gateway / runner runtime；未访问 NAS；未读取 `.env`、凭据、账号、账户、资金、持仓、委托、成交或日志原文；未执行 submit / cancel、simulation / live、provider / lake / publish；未修改 `AGENTS.md`。
+- 已知限制：本次只证明离线 runner 合同、adapter、package intake、fake readonly gateway 与脱敏 evidence；不证明真实 QMT / MiniQMT / XtQuant / gateway runtime 可用，不构成交易授权。下单 / 撤单仍需 CR092 或等价后续 CR；NAS package distribution 仍需 CR093 或等价后续 CR。

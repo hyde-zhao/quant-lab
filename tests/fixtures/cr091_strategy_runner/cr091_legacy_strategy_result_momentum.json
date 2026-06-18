@@ -1,0 +1,13 @@
+{
+  "schema_version": "legacy_strategy_result_v1",
+  "strategy_name": "momentum",
+  "run_id": "cr091-fixture-legacy-run",
+  "signal_date": "2026-06-18",
+  "target_symbols": ["FIXTURE_MOM_A", "FIXTURE_MOM_B", "FIXTURE_MOM_C"],
+  "scores": {
+    "FIXTURE_MOM_A": 1.9,
+    "FIXTURE_MOM_B": 1.7,
+    "FIXTURE_MOM_C": 1.2
+  },
+  "not_authorization": true
+}

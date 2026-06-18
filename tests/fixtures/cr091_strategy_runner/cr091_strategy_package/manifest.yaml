@@ -1,0 +1,39 @@
+schema_version: cr091-strategy-runner-package-manifest-v1
+package_id: strategy-package-cr091-fixture-0.1.0
+strategy_id: strategy_package_alpha
+version: 0.1.0
+change_id: CR-091
+adapter_type: multifactor_admission
+payload_path: payload/admission.json
+not_authorization: true
+runtime_authorized: false
+nas_operation_authorized: false
+credential_read_authorized: false
+account_query_authorized: false
+trade_write_authorized: false
+forbidden_operations:
+  nas_read: 0
+  nas_write: 0
+  nas_list: 0
+  nas_copy: 0
+  nas_publish: 0
+  nas_pull: 0
+  credential_read: 0
+  env_file_read: 0
+  qmt_start: 0
+  miniqmt_start: 0
+  xtquant_import: 0
+  gateway_start: 0
+  gateway_socket_open: 0
+  account_raw_query: 0
+  raw_positions_emit: 0
+  submit_order: 0
+  cancel_order: 0
+  simulation: 0
+  live: 0
+  provider_fetch: 0
+  lake_write: 0
+  catalog_publish: 0
+checksums:
+  payload/admission.json: d033c336f3376e1251698bc7790b2673b92453fe448d97c103b6ac31c539d046
+  cache/active.json: 124293427fe693e0435d54f12dcbdac871631fbd84650edacda3f99766e7022b

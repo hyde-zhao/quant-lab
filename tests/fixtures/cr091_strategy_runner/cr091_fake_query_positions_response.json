@@ -1,0 +1,14 @@
+{
+  "position_count": 1,
+  "positions_digest": "sha256:fixture-redacted-positions",
+  "items_redacted": [
+    {
+      "position_ref": "pos-ref-fixture",
+      "instrument_ref": "instrument-ref-fixture",
+      "quantity_bucket": "small",
+      "value_bucket": "fixture"
+    }
+  ],
+  "redaction_status": "pass",
+  "raw_payload_emitted": false
+}
