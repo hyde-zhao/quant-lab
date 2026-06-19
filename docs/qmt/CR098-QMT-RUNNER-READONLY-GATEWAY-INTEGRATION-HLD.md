@@ -1,7 +1,7 @@
 ---
 doc_id: "CR098-QMT-RUNNER-READONLY-GATEWAY-INTEGRATION-HLD"
 cr_id: "CR-098"
-status: "draft-pending-cp3-approval"
+status: "approved-cp3-pending-cp5"
 owner: "host-orchestrator"
 created_at: "2026-06-19T12:00:19+08:00"
 source_checkpoint: "process/checkpoints/CP2-CR098-QMT-RUNNER-READONLY-INTEGRATION-SCOPE-REVIEW.md"
@@ -14,6 +14,7 @@ source_checkpoint: "process/checkpoints/CP2-CR098-QMT-RUNNER-READONLY-INTEGRATIO
 | 版本 | 日期 | 修订人 | 变更要点 |
 |---|---|---|---|
 | 0.1 | 2026-06-19 | host-orchestrator | 初版 HLD，覆盖 runner-owned readonly gateway adapter、env contract、evidence、风险和 CP3 决策项。 |
+| 0.2 | 2026-06-19 | host-orchestrator | 用户回复“同意”批准 CP3；状态推进到 CP5 design readiness，仍不授权 runtime。 |
 
 ## 1. 问题定义
 
