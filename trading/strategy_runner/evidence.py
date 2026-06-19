@@ -60,6 +60,14 @@ class EvidenceSummary:
     readonly_reconciliation_status: str
     forbidden_operation_counters: Mapping[str, int] = field(default_factory=zero_cr091_operation_counters)
     redaction_assurance: Mapping[str, bool] = field(default_factory=dict)
+    readonly_health_status: str = "not_run"
+    readonly_capabilities_status: str = "not_run"
+    readonly_position_count: int = 0
+    readonly_positions_digest: str = ""
+    readonly_items_redacted_count: int = 0
+    readonly_transport_kind: str = ""
+    runtime_authorization_ref: str = ""
+    runtime_env_ref: str = ""
     schema_version: str = EVIDENCE_SCHEMA_VERSION
     not_authorization: bool = True
 
@@ -76,6 +84,14 @@ class EvidenceSummary:
             "readonly_reconciliation_status": self.readonly_reconciliation_status,
             "forbidden_operation_counters": dict(self.forbidden_operation_counters),
             "redaction_assurance": dict(self.redaction_assurance),
+            "readonly_health_status": self.readonly_health_status,
+            "readonly_capabilities_status": self.readonly_capabilities_status,
+            "readonly_position_count": self.readonly_position_count,
+            "readonly_positions_digest": self.readonly_positions_digest,
+            "readonly_items_redacted_count": self.readonly_items_redacted_count,
+            "readonly_transport_kind": self.readonly_transport_kind,
+            "runtime_authorization_ref": self.runtime_authorization_ref,
+            "runtime_env_ref": self.runtime_env_ref,
             "not_authorization": self.not_authorization,
         }
 
@@ -87,20 +103,28 @@ def build_evidence_summary(
     adapter_type: str,
     adapter_result: AdapterResult,
     readonly_result: ReadonlyGatewayResult | None = None,
+    readonly_health_result: ReadonlyGatewayResult | None = None,
+    readonly_capabilities_result: ReadonlyGatewayResult | None = None,
 ) -> EvidenceSummary:
     target_count = 0 if adapter_result.target_portfolio is None else len(adapter_result.target_portfolio.target_symbols)
     forbidden = zero_cr091_operation_counters()
     forbidden.update({key: int(value or 0) for key, value in adapter_result.operation_counters.items() if key in forbidden})
     readonly_ok = True
-    if readonly_result is not None:
-        readonly_ok = readonly_result.status == "ok"
-        for key, value in readonly_result.operation_counters.items():
+    readonly_results = tuple(
+        result
+        for result in (readonly_health_result, readonly_capabilities_result, readonly_result)
+        if result is not None
+    )
+    for current_readonly in readonly_results:
+        assert_redacted(dict(current_readonly.payload))
+        readonly_ok = readonly_ok and current_readonly.status == "ok"
+        for key, value in current_readonly.operation_counters.items():
             mapped_key = READONLY_COUNTER_ALIASES.get(str(key), str(key))
             if mapped_key in forbidden:
                 forbidden[mapped_key] = forbidden.get(mapped_key, 0) + int(value or 0)
-        if readonly_result.payload.get("raw_payload_emitted") is True:
+        if current_readonly.payload.get("raw_payload_emitted") is True:
             forbidden["raw_positions_emit"] = forbidden.get("raw_positions_emit", 0) + 1
-        redaction_status = str(readonly_result.payload.get("redaction_status", "pass")).lower()
+        redaction_status = str(current_readonly.payload.get("redaction_status", "pass")).lower()
         if redaction_status not in {"pass", "redacted"}:
             readonly_ok = False
     status = "pass" if adapter_result.passed and readonly_ok and all(value == 0 for value in forbidden.values()) else "blocked"
@@ -122,6 +146,14 @@ def build_evidence_summary(
             "raw_orders_emitted": False,
             "qmt_logs_emitted": False,
         },
+        readonly_health_status="not_run" if readonly_health_result is None else readonly_health_result.status,
+        readonly_capabilities_status="not_run" if readonly_capabilities_result is None else readonly_capabilities_result.status,
+        readonly_position_count=_int_payload(readonly_result, "position_count"),
+        readonly_positions_digest=_str_payload(readonly_result, "positions_digest"),
+        readonly_items_redacted_count=_int_payload(readonly_result, "items_redacted_count"),
+        readonly_transport_kind="" if readonly_result is None else readonly_result.transport_kind,
+        runtime_authorization_ref="" if readonly_result is None else readonly_result.authorization_ref,
+        runtime_env_ref="" if readonly_result is None else readonly_result.runtime_env_ref,
     )
     assert_redacted(summary.to_dict())
     return summary
@@ -159,3 +191,15 @@ def _raise_if_sensitive(text: str) -> None:
     for pattern in SENSITIVE_PATTERNS:
         if pattern.search(text):
             raise EvidenceRedactionError("blocked_redaction_failed")
+
+
+def _int_payload(readonly_result: ReadonlyGatewayResult | None, key: str) -> int:
+    if readonly_result is None:
+        return 0
+    return int(readonly_result.payload.get(key, 0) or 0)
+
+
+def _str_payload(readonly_result: ReadonlyGatewayResult | None, key: str) -> str:
+    if readonly_result is None:
+        return ""
+    return str(readonly_result.payload.get(key, ""))

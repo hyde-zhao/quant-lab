@@ -17,6 +17,7 @@ from trading.strategy_runner.readonly_gateway import (
     FakeReadonlyQmtTransport,
     ReadonlyGatewayClient,
     ReadonlyGatewayResult,
+    ReadonlyGatewayRuntimeConfig,
 )
 from trading.strategy_runner.target_portfolio import TargetPortfolioSnapshot
 
@@ -30,6 +31,7 @@ __all__ = (
     "MultifactorAdmissionAdapter",
     "ReadonlyGatewayClient",
     "ReadonlyGatewayResult",
+    "ReadonlyGatewayRuntimeConfig",
     "StrategyAdapter",
     "StrategyPackage",
     "StrategyPackageAdapter",
