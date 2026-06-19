@@ -3,33 +3,43 @@ status: ready
 version: "1.0"
 release_artifact_profile: compact
 release_decision: READY_WITH_RISK
-cr_id: CR-092
+cr_id: CR-099
 ---
 
-# CR092 Feedback
+# CR099 Feedback
 
 ## 1. 反馈回流入口
 
 | Feedback ID | 类型 | 来源 | 内容摘要 | 分流目标 | follow-up tracking 候选 | 状态 |
 |---|---|---|---|---|---|---|
-| FB-CR092-01 | scenario-gap | user / runtime evidence | 用户提供实际模拟账户 evidence 文件后，需要只读取该文件并运行 checker | verification / follow-up | yes | candidate |
-| FB-CR092-02 | new-requirement | user | 用户要求执行真实只读 runtime smoke | runtime authorization gate | yes | candidate |
-| FB-CR092-03 | new-requirement | user | 用户要求 NAS package exchange | CR091-FU-02 | yes | candidate |
-| FB-CR092-04 | new-requirement | user | 用户要求 submit/cancel、order-write、simulation/live | CR091-FU-03 | yes | candidate |
-| FB-CR092-05 | tech-debt | cr-tracking | CR019 / CR025 历史账本旧账仍导致 consistency check exit 1 | CR091-FU-04 | yes | candidate |
+| FB-CR099-01 | scenario-gap | runtime evidence | 当前 run 是 zero-position path；非空持仓脱敏未证明 | CR097-FU-01 | yes | candidate |
+| FB-CR099-02 | scenario-gap | runtime evidence | 当前 run 不证明交易日路径 | CR097-FU-01 | yes | candidate |
+| FB-CR099-03 | reliability | runtime attempt | 首次 run 因 `session_expired` 阻断，重启 gateway session 后通过 | CR099-FU-01 | yes | candidate |
+| FB-CR099-04 | new-requirement | user | 用户要求 NAS package exchange | CR091-FU-02 | yes | candidate |
+| FB-CR099-05 | new-requirement | user | 用户要求 submit/cancel、order-write、simulation/live | ORDER-WRITE-FU | yes | candidate |
 
 ## 2. 发布后观察计划
 
 | Signal ID | 观察信号 | 观察方式 | 触发阈值 | 分流 |
 |---|---|---|---|---|
-| OBS-CR092-01 | checker 拒收用户 evidence | checker JSON / user feedback | >=1 confirmed false positive | CR092-FU-01 |
-| OBS-CR092-02 | checker 放过敏感字段 | review / user feedback | >=1 confirmed false negative | security fix CR |
-| OBS-CR092-03 | 用户要求真实 runtime smoke | user request | explicit authorization intent | per-run runtime gate |
-| OBS-CR092-04 | NAS 需求出现 | user request | explicit NAS intent | CR091-FU-02 |
-| OBS-CR092-05 | cr-tracking 旧账影响后续门禁 | `meta-flow check cr-tracking` | blocks active CR | CR091-FU-04 |
+| OBS-CR099-01 | non-empty positions 需要证明 | user request / trading day evidence | explicit authorization intent | CR097-FU-01 |
+| OBS-CR099-02 | session_expired 复发 | runtime evidence / user report | >=1 recurrence | CR099-FU-01 |
+| OBS-CR099-03 | collector / checker false positive | checker JSON / user feedback | >=1 confirmed false positive | checker fix CR |
+| OBS-CR099-04 | NAS 需求出现 | user request | explicit NAS intent | CR091-FU-02 |
+| OBS-CR099-05 | order-write / live 需求出现 | user request | explicit trading intent | ORDER-WRITE-FU |
 
 ## 3. 台账边界
 
-`FEEDBACK.md` 是反馈回流入口，不是正式 follow-up tracking 台账。`follow-up tracking 候选=yes` 的条目必须由 CP8 分流写入 `process/changes/CR-*-FOLLOW-UP-TRACKING-YYYY-MM-DD.md`，并同步 `STATE.md.cr_tracking` 后，才可作为后续 CR 候选推进。
+`FEEDBACK.md` 是反馈回流入口，不是正式 follow-up tracking 台账。`follow-up tracking 候选=yes` 的条目必须由 CP8 分流写入 `process/changes/CR-098-FOLLOW-UP-TRACKING-2026-06-19.md` 或后续专门 tracking，并同步 `STATE.md.cr_tracking` 后，才可作为后续 CR 候选推进。
 
 默认不生成独立 `POST-RELEASE-OBSERVATION.md`；本轮 `release_artifact_profile=compact`。
+
+## CR100 Addendum - Feedback
+
+| Feedback ID | 类型 | 来源 | 内容摘要 | 分流目标 | follow-up tracking 候选 | 状态 |
+|---|---|---|---|---|---|---|
+| FB-CR100-01 | risk | CP8 | 真实 NAS path/mount/permission/publish/pull/copy/check 未验证 | future NAS validation gate | yes | candidate |
+| FB-CR100-02 | usability | review | forbidden filename 规则可能误拒合法说明文件 | CR100 fix candidate | yes | candidate |
+| FB-CR100-03 | authorization | user | 若需要真实 NAS 验证，必须另起独立 gate | future NAS authorization | yes | candidate |
+
+CR100 feedback 不授权自动启动真实 NAS gate；只有用户明确选择并授权后才可推进。
