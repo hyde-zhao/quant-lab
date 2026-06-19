@@ -189,6 +189,50 @@ CR046_CLOSED_STATUSES = {
     "closed-blocked-by-runtime-authorization",
     "closed-not-recommended",
 }
+ACTIVE_STATUSES = (
+    CR025_ACTIVE_STATUSES
+    | CR030_ACTIVE_STATUSES
+    | CR020_ACTIVE_STATUSES
+    | CR040_ACTIVE_STATUSES
+    | CR041_ACTIVE_STATUSES
+    | CR043_ACTIVE_STATUSES
+    | CR044_ACTIVE_STATUSES
+    | CR045_ACTIVE_STATUSES
+    | CR046_ACTIVE_STATUSES
+    | {"active", "active-formal-cr"}
+)
+CLOSED_STATUSES = (
+    CR025_CLOSED_STATUSES
+    | CR030_CLOSED_STATUSES
+    | CR020_CLOSED_STATUSES
+    | CR040_CLOSED_STATUSES
+    | CR041_CLOSED_STATUSES
+    | CR043_CLOSED_STATUSES
+    | CR044_CLOSED_STATUSES
+    | CR045_CLOSED_STATUSES
+    | CR046_CLOSED_STATUSES
+)
+CANCELLED_STATUSES = CR020_CANCELLED_STATUSES | {
+    "cancelled-user-deleted",
+    "deleted-by-user",
+}
+FORMAL_CR_FILES = {
+    "CR-019": "process/changes/CR-019-STAGE6-MULTIFACTOR-SIMULATION-ARCHITECTURE-2026-05-30.md",
+    "CR-020": "process/changes/CR-020-QMT-WINDOWS-GATEWAY-SERVER-LOGIN-READONLY-QUERY-ADMISSION-2026-06-04.md",
+    "CR-025": "process/changes/CR-025-BACKTRADER-OPTIONAL-EXECUTION-BACKEND-HARDENING-2026-05-31.md",
+    "CR-029": "process/changes/CR-029-STAGE6-DATA-LAKE-ADMISSION-BENCHMARK-REAL-RUN-2026-05-31.md",
+    "CR-030": "process/changes/CR-030-MULTIFACTOR-RESEARCH-FRAMEWORK-REFERENCE-AND-RESEARCH-LOOP-STANDARDIZATION-2026-06-02.md",
+    "CR-040": "process/changes/CR-040-QMT-ROUTE-DELETION-BACKTRADER-PAPER-SIM-GOLDMINER-ADAPTER-2026-06-10.md",
+    "CR-041": "process/changes/CR-041-API-LESS-PAPER-SIMULATION-RUNNER-2026-06-10.md",
+    "CR-043": "process/changes/CR-043-GOLDMINER-ADAPTER-SPIKE-2026-06-11.md",
+    "CR-044": "process/changes/CR-044-GOLDMINER-SIMULATION-ADMISSION-2026-06-11.md",
+    "CR-045": "process/changes/CR-045-GOLDMINER-WINDOWS-BRIDGE-READONLY-PROBE-2026-06-11.md",
+    "CR-046": "process/changes/CR-046-TERMINAL-NATIVE-SIMULATION-STRATEGY-EXPORT-2026-06-13.md",
+    "CR-093": "process/changes/CR-093-LEDGER-HYGIENE-CR019-CR025-TRACKING-CLEANUP-2026-06-18.md",
+    "CR-094": "process/changes/CR-094-WARNING-CLEANUP-STRICT-WARNINGS-READINESS-2026-06-19.md",
+    "CR-095": "process/changes/CR-095-STANDALONE-CHECKER-CLI-OUTPUT-CONVERGENCE-2026-06-19.md",
+    "CR-096": "process/changes/CR-096-USER-PROVIDED-SIMULATED-EVIDENCE-CHECKER-RUN-2026-06-19.md",
+}
 
 
 def read_text(path: Path) -> str:
@@ -200,7 +244,179 @@ def read_text(path: Path) -> str:
 
 def frontmatter_value(text: str, key: str) -> str:
     match = re.search(rf"^{re.escape(key)}:\s*\"?([^\"\n]+)\"?\s*$", text, re.MULTILINE)
-    return match.group(1).strip() if match else ""
+    return match.group(1).strip().strip("'\"") if match else ""
+
+
+def normalize_status(raw_status: str) -> str:
+    status = raw_status.strip().strip("`").strip("'\"").lower()
+    if not status or status in {"n/a", "na", "none"}:
+        return ""
+    if status in ACTIVE_STATUSES or status.startswith("active-"):
+        return "active"
+    if status in CLOSED_STATUSES or status.startswith("closed"):
+        return "closed"
+    if status in CANCELLED_STATUSES or status.startswith("cancelled"):
+        return "cancelled"
+    if status in {"candidate", "follow-up-candidate"}:
+        return "candidate"
+    if status in {"spike_candidate", "spike-candidate", "converted-to-spike"}:
+        return "spike"
+    if status.startswith("blocked"):
+        return "blocked"
+    if status in {"deferred", "superseded"}:
+        return status
+    return status
+
+
+def tracking_status_for(tracking_text: str, cr_id: str) -> str:
+    for line in tracking_text.splitlines():
+        stripped = line.strip()
+        if not stripped.startswith("|") or cr_id not in stripped:
+            continue
+        cells = [cell.strip().strip("`") for cell in stripped.strip("|").split("|")]
+        if len(cells) >= 2 and cells[0] == cr_id:
+            return cells[1]
+    return ""
+
+
+def require_tracking_status(
+    tracking_text: str,
+    cr_id: str,
+    allowed_normalized_statuses: set[str],
+    message: str,
+    failures: list[str],
+) -> None:
+    raw_status = tracking_status_for(tracking_text, cr_id)
+    normalized = normalize_status(raw_status)
+    if normalized not in allowed_normalized_statuses:
+        failures.append(f"{message}; actual={raw_status!r}, normalized={normalized!r}")
+
+
+def require_allowed_status(
+    cr_id: str,
+    raw_status: str,
+    allowed_normalized_statuses: set[str],
+    failures: list[str],
+) -> None:
+    normalized = normalize_status(raw_status)
+    if normalized not in allowed_normalized_statuses:
+        failures.append(
+            f"{cr_id} 正式 CR 状态不在允许语义集合: "
+            f"allowed={sorted(allowed_normalized_statuses)}; actual={raw_status!r}, normalized={normalized!r}"
+        )
+
+
+def has_current_tracking_entry(text: str, cr_id: str, normalized_status: str) -> bool:
+    return cr_id in text and f"status: {normalized_status}-formal-cr" in text or (
+        cr_id in text and f'status: "{normalized_status}-formal-cr"' in text
+    )
+
+
+def split_table_row(line: str) -> list[str]:
+    stripped = line.strip()
+    if stripped.startswith("|"):
+        stripped = stripped[1:]
+    if stripped.endswith("|"):
+        stripped = stripped[:-1]
+    return [cell.strip().strip("`") for cell in stripped.split("|")]
+
+
+def normalize_header(header: str) -> str:
+    aliases = {
+        "候选 CR": "候选编号",
+        "候选 CR / Spike": "候选编号",
+        "候选CR": "候选编号",
+        "编号": "候选编号",
+        "CR": "候选编号",
+        "名称": "标题",
+        "CR 路径": "正式 CR 路径",
+        "正式路径": "正式 CR 路径",
+    }
+    return aliases.get(header.strip().strip("`"), header.strip().strip("`"))
+
+
+def is_separator_row(line: str) -> bool:
+    cells = split_table_row(line)
+    return bool(cells) and all(re.fullmatch(r":?-{3,}:?", cell.replace(" ", "")) for cell in cells)
+
+
+def formal_cr_statuses(project_root: Path) -> dict[str, str]:
+    statuses: dict[str, str] = {}
+    change_root = project_root / "process/changes"
+    if not change_root.is_dir():
+        return statuses
+    for path in sorted(change_root.glob("CR-*.md")):
+        if "FOLLOW-UP" in path.name:
+            continue
+        text = read_text(path)
+        cr_id = frontmatter_value(text, "cr_id")
+        if not cr_id:
+            match = re.search(r"CR-\d+", path.name)
+            cr_id = match.group(0) if match else ""
+        if cr_id:
+            statuses[cr_id] = normalize_status(frontmatter_value(text, "status"))
+    return statuses
+
+
+def follow_up_row_statuses(project_root: Path) -> dict[str, str]:
+    statuses: dict[str, str] = {}
+    change_root = project_root / "process/changes"
+    if not change_root.is_dir():
+        return statuses
+    for path in sorted(change_root.glob("CR-*-FOLLOW-UP-TRACKING-*.md")):
+        lines = read_text(path).splitlines()
+        index = 0
+        while index < len(lines):
+            line = lines[index]
+            if not line.strip().startswith("|") or "状态" not in line:
+                index += 1
+                continue
+            headers = [normalize_header(header) for header in split_table_row(line)]
+            header_map = {header: pos for pos, header in enumerate(headers)}
+            if "候选编号" not in header_map or "状态" not in header_map:
+                index += 1
+                continue
+            data_index = index + 1
+            if data_index < len(lines) and is_separator_row(lines[data_index]):
+                data_index += 1
+            while data_index < len(lines) and lines[data_index].strip().startswith("|"):
+                if is_separator_row(lines[data_index]):
+                    data_index += 1
+                    continue
+                cells = split_table_row(lines[data_index])
+                if len(cells) < len(headers):
+                    cells.extend([""] * (len(headers) - len(cells)))
+                item_id = cells[header_map["候选编号"]].strip()
+                if re.fullmatch(r"CR-\d+", item_id):
+                    statuses[item_id] = normalize_status(cells[header_map["状态"]])
+                data_index += 1
+            index = data_index
+    return statuses
+
+
+def tracking_summary_lines(project_root: Path) -> list[str]:
+    formal_statuses = formal_cr_statuses(project_root)
+    row_statuses = follow_up_row_statuses(project_root)
+    active = sorted(cr_id for cr_id, status in formal_statuses.items() if status == "active")
+    blocked = sorted(cr_id for cr_id, status in formal_statuses.items() if status == "blocked")
+    candidates = sorted(cr_id for cr_id, status in row_statuses.items() if status == "candidate")
+    spike_candidates = sorted(cr_id for cr_id, status in row_statuses.items() if status == "spike")
+    return [
+        "CR tracking summary",
+        f"- active formal CRs: {', '.join(active) if active else 'none'}",
+        f"- blocked formal CRs: {', '.join(blocked) if blocked else 'none'}",
+        f"- follow-up candidates: {', '.join(candidates) if candidates else 'none'}",
+        f"- spike candidates: {', '.join(spike_candidates) if spike_candidates else 'none'}",
+    ]
+
+
+def audit_history_active_changes(state_text: str, current_active_change: str) -> list[str]:
+    warnings: list[str] = []
+    for match in re.finditer(r"^\s*-?\s*active_change:\s*['\"]?(CR-\d+)['\"]?\s*$", state_text, re.MULTILINE):
+        cr_id = match.group(1)
+        if cr_id != current_active_change:
+            warnings.append(f"audit-history active_change={cr_id} ignored as non-current text")
+    return warnings
 
 
 def require(condition: bool, message: str, failures: list[str]) -> None:
@@ -224,6 +440,10 @@ def check_project(project_root: Path) -> list[str]:
     cr044_path = project_root / "process/changes/CR-044-GOLDMINER-SIMULATION-ADMISSION-2026-06-11.md"
     cr045_path = project_root / "process/changes/CR-045-GOLDMINER-WINDOWS-BRIDGE-READONLY-PROBE-2026-06-11.md"
     cr046_path = project_root / "process/changes/CR-046-TERMINAL-NATIVE-SIMULATION-STRATEGY-EXPORT-2026-06-13.md"
+    cr093_path = project_root / FORMAL_CR_FILES["CR-093"]
+    cr094_path = project_root / FORMAL_CR_FILES["CR-094"]
+    cr095_path = project_root / FORMAL_CR_FILES["CR-095"]
+    cr096_path = project_root / FORMAL_CR_FILES["CR-096"]
 
     state_text = read_text(state_path)
     index_text = read_text(index_path)
@@ -239,6 +459,10 @@ def check_project(project_root: Path) -> list[str]:
     cr044_text = read_text(cr044_path)
     cr045_text = read_text(cr045_path)
     cr046_text = read_text(cr046_path)
+    cr093_text = read_text(cr093_path)
+    cr094_text = read_text(cr094_path)
+    cr095_text = read_text(cr095_path)
+    cr096_text = read_text(cr096_path)
 
     require(bool(state_text), f"缺少状态文件: {state_path}", failures)
     require(bool(index_text), f"缺少 CR 索引: {index_path}", failures)
@@ -254,6 +478,15 @@ def check_project(project_root: Path) -> list[str]:
     require(bool(cr044_text), f"缺少 CR-044 正式 CR: {cr044_path}", failures)
     require(bool(cr045_text), f"缺少 CR-045 正式 CR: {cr045_path}", failures)
     require(bool(cr046_text), f"缺少 CR-046 正式 CR: {cr046_path}", failures)
+    active_change = frontmatter_value(state_text, "active_change")
+    if active_change == "CR-093":
+        require(bool(cr093_text), f"缺少 CR-093 正式 CR: {cr093_path}", failures)
+    if active_change == "CR-094":
+        require(bool(cr094_text), f"缺少 CR-094 正式 CR: {cr094_path}", failures)
+    if active_change == "CR-095":
+        require(bool(cr095_text), f"缺少 CR-095 正式 CR: {cr095_path}", failures)
+    if active_change == "CR-096":
+        require(bool(cr096_text), f"缺少 CR-096 正式 CR: {cr096_path}", failures)
 
     if not all((state_text, index_text, tracking_text, cr019_text, cr025_text, cr029_text, cr030_text, cr020_text, cr040_text, cr041_text, cr043_text, cr044_text, cr045_text, cr046_text)):
         return failures
@@ -266,16 +499,9 @@ def check_project(project_root: Path) -> list[str]:
 
     require(frontmatter_value(cr019_text, "status") == "closed", "CR-019 正式 CR 未标记 closed", failures)
     cr025_status = frontmatter_value(cr025_text, "status")
-    cr025_is_active = cr025_status in CR025_ACTIVE_STATUSES
-    cr025_is_closed = cr025_status in CR025_CLOSED_STATUSES
-    require(
-        cr025_is_active or cr025_is_closed,
-        (
-            "CR-025 正式 CR 状态不在允许集合: "
-            f"active={sorted(CR025_ACTIVE_STATUSES)}, closed={sorted(CR025_CLOSED_STATUSES)}; actual={cr025_status!r}"
-        ),
-        failures,
-    )
+    cr025_is_active = normalize_status(cr025_status) == "active"
+    cr025_is_closed = normalize_status(cr025_status) == "closed"
+    require_allowed_status("CR-025", cr025_status, {"active", "closed"}, failures)
     require(frontmatter_value(cr025_text, "parent_cr") == "CR-019", "CR-025 缺少 parent_cr=CR-019", failures)
     require(
         frontmatter_value(cr025_text, "source_decision_id") == "D-CP8-CR019-05",
@@ -290,16 +516,9 @@ def check_project(project_root: Path) -> list[str]:
         failures,
     )
     cr030_status = frontmatter_value(cr030_text, "status")
-    cr030_is_active = cr030_status in CR030_ACTIVE_STATUSES
-    cr030_is_closed = cr030_status in CR030_CLOSED_STATUSES
-    require(
-        cr030_is_active or cr030_is_closed,
-        (
-            "CR-030 正式 CR 状态不在允许集合: "
-            f"active={sorted(CR030_ACTIVE_STATUSES)}, closed={sorted(CR030_CLOSED_STATUSES)}; actual={cr030_status!r}"
-        ),
-        failures,
-    )
+    cr030_is_active = normalize_status(cr030_status) == "active"
+    cr030_is_closed = normalize_status(cr030_status) == "closed"
+    require_allowed_status("CR-030", cr030_status, {"active", "closed"}, failures)
     require(frontmatter_value(cr030_text, "parent_cr") == "CR-019", "CR-030 缺少 parent_cr=CR-019", failures)
     require(
         frontmatter_value(cr030_text, "source_decision_id") == "D-CP8-CR019-05",
@@ -308,18 +527,10 @@ def check_project(project_root: Path) -> list[str]:
     )
     require("predecessor_cr: \"CR-025\"" in cr030_text, "CR-030 缺少 predecessor_cr=CR-025", failures)
     cr020_status = frontmatter_value(cr020_text, "status")
-    cr020_is_active = cr020_status in CR020_ACTIVE_STATUSES
-    cr020_is_closed = cr020_status in CR020_CLOSED_STATUSES
-    cr020_is_cancelled = cr020_status in CR020_CANCELLED_STATUSES
-    require(
-        cr020_is_active or cr020_is_closed or cr020_is_cancelled,
-        (
-            "CR-020 正式 CR 状态不在允许集合: "
-            f"active={sorted(CR020_ACTIVE_STATUSES)}, closed={sorted(CR020_CLOSED_STATUSES)}, "
-            f"cancelled={sorted(CR020_CANCELLED_STATUSES)}; actual={cr020_status!r}"
-        ),
-        failures,
-    )
+    cr020_is_active = normalize_status(cr020_status) == "active"
+    cr020_is_closed = normalize_status(cr020_status) == "closed"
+    cr020_is_cancelled = normalize_status(cr020_status) == "cancelled"
+    require_allowed_status("CR-020", cr020_status, {"active", "closed", "cancelled"}, failures)
     require(frontmatter_value(cr020_text, "parent_cr") == "CR-019", "CR-020 缺少 parent_cr=CR-019", failures)
     require(
         frontmatter_value(cr020_text, "source_decision_id") == "D-CP8-CR019-02",
@@ -327,16 +538,9 @@ def check_project(project_root: Path) -> list[str]:
         failures,
     )
     cr040_status = frontmatter_value(cr040_text, "status")
-    cr040_is_active = cr040_status in CR040_ACTIVE_STATUSES
-    cr040_is_closed = cr040_status in CR040_CLOSED_STATUSES
-    require(
-        cr040_is_active or cr040_is_closed,
-        (
-            "CR-040 正式 CR 状态不在允许集合: "
-            f"active={sorted(CR040_ACTIVE_STATUSES)}, closed={sorted(CR040_CLOSED_STATUSES)}; actual={cr040_status!r}"
-        ),
-        failures,
-    )
+    cr040_is_active = normalize_status(cr040_status) == "active"
+    cr040_is_closed = normalize_status(cr040_status) == "closed"
+    require_allowed_status("CR-040", cr040_status, {"active", "closed"}, failures)
     require(frontmatter_value(cr040_text, "parent_cr") == "CR-019", "CR-040 缺少 parent_cr=CR-019", failures)
     require(
         frontmatter_value(cr040_text, "source_decision_id") == "USER-20260610-NO-MINIQMT-GOLDMINER-ROUTE",
@@ -344,16 +548,9 @@ def check_project(project_root: Path) -> list[str]:
         failures,
     )
     cr041_status = frontmatter_value(cr041_text, "status")
-    cr041_is_active = cr041_status in CR041_ACTIVE_STATUSES
-    cr041_is_closed = cr041_status in CR041_CLOSED_STATUSES
-    require(
-        cr041_is_active or cr041_is_closed,
-        (
-            "CR-041 正式 CR 状态不在允许集合: "
-            f"active={sorted(CR041_ACTIVE_STATUSES)}, closed={sorted(CR041_CLOSED_STATUSES)}; actual={cr041_status!r}"
-        ),
-        failures,
-    )
+    cr041_is_active = normalize_status(cr041_status) == "active"
+    cr041_is_closed = normalize_status(cr041_status) == "closed"
+    require_allowed_status("CR-041", cr041_status, {"active", "closed"}, failures)
     require(frontmatter_value(cr041_text, "parent_cr") == "CR-040", "CR-041 缺少 parent_cr=CR-040", failures)
     require(
         frontmatter_value(cr041_text, "source_decision_id") == "USER-20260610-ACCEPT-CR039-START-CR041",
@@ -361,16 +558,9 @@ def check_project(project_root: Path) -> list[str]:
         failures,
     )
     cr043_status = frontmatter_value(cr043_text, "status")
-    cr043_is_active = cr043_status in CR043_ACTIVE_STATUSES
-    cr043_is_closed = cr043_status in CR043_CLOSED_STATUSES
-    require(
-        cr043_is_active or cr043_is_closed,
-        (
-            "CR-043 正式 CR 状态不在允许集合: "
-            f"active={sorted(CR043_ACTIVE_STATUSES)}, closed={sorted(CR043_CLOSED_STATUSES)}; actual={cr043_status!r}"
-        ),
-        failures,
-    )
+    cr043_is_active = normalize_status(cr043_status) == "active"
+    cr043_is_closed = normalize_status(cr043_status) == "closed"
+    require_allowed_status("CR-043", cr043_status, {"active", "closed"}, failures)
     require(frontmatter_value(cr043_text, "parent_cr") == "CR-042", "CR-043 缺少 parent_cr=CR-042", failures)
     require(
         frontmatter_value(cr043_text, "source_decision_id") == "USER-20260611-START-CR043",
@@ -378,16 +568,9 @@ def check_project(project_root: Path) -> list[str]:
         failures,
     )
     cr044_status = frontmatter_value(cr044_text, "status")
-    cr044_is_active = cr044_status in CR044_ACTIVE_STATUSES
-    cr044_is_closed = cr044_status in CR044_CLOSED_STATUSES
-    require(
-        cr044_is_active or cr044_is_closed,
-        (
-            "CR-044 正式 CR 状态不在允许集合: "
-            f"active={sorted(CR044_ACTIVE_STATUSES)}, closed={sorted(CR044_CLOSED_STATUSES)}; actual={cr044_status!r}"
-        ),
-        failures,
-    )
+    cr044_is_active = normalize_status(cr044_status) == "active"
+    cr044_is_closed = normalize_status(cr044_status) == "closed"
+    require_allowed_status("CR-044", cr044_status, {"active", "closed"}, failures)
     require(frontmatter_value(cr044_text, "parent_cr") == "CR-043", "CR-044 缺少 parent_cr=CR-043", failures)
     require(
         frontmatter_value(cr044_text, "source_decision_id") == "USER-20260611-START-CR044",
@@ -395,16 +578,9 @@ def check_project(project_root: Path) -> list[str]:
         failures,
     )
     cr045_status = frontmatter_value(cr045_text, "status")
-    cr045_is_active = cr045_status in CR045_ACTIVE_STATUSES
-    cr045_is_closed = cr045_status in CR045_CLOSED_STATUSES
-    require(
-        cr045_is_active or cr045_is_closed,
-        (
-            "CR-045 正式 CR 状态不在允许集合: "
-            f"active={sorted(CR045_ACTIVE_STATUSES)}, closed={sorted(CR045_CLOSED_STATUSES)}; actual={cr045_status!r}"
-        ),
-        failures,
-    )
+    cr045_is_active = normalize_status(cr045_status) == "active"
+    cr045_is_closed = normalize_status(cr045_status) == "closed"
+    require_allowed_status("CR-045", cr045_status, {"active", "closed"}, failures)
     require(frontmatter_value(cr045_text, "parent_cr") == "CR-044", "CR-045 缺少 parent_cr=CR-044", failures)
     require(
         frontmatter_value(cr045_text, "source_decision_id") == "USER-20260611-START-CR045",
@@ -412,16 +588,50 @@ def check_project(project_root: Path) -> list[str]:
         failures,
     )
     cr046_status = frontmatter_value(cr046_text, "status")
-    cr046_is_active = cr046_status in CR046_ACTIVE_STATUSES
-    cr046_is_closed = cr046_status in CR046_CLOSED_STATUSES
-    require(
-        cr046_is_active or cr046_is_closed,
-        (
-            "CR-046 正式 CR 状态不在允许集合: "
-            f"active={sorted(CR046_ACTIVE_STATUSES)}, closed={sorted(CR046_CLOSED_STATUSES)}; actual={cr046_status!r}"
-        ),
-        failures,
-    )
+    cr046_is_active = normalize_status(cr046_status) == "active"
+    cr046_is_closed = normalize_status(cr046_status) == "closed"
+    require_allowed_status("CR-046", cr046_status, {"active", "closed"}, failures)
+    cr093_status = frontmatter_value(cr093_text, "status") if cr093_text else ""
+    cr093_is_active = normalize_status(cr093_status) == "active"
+    cr094_status = frontmatter_value(cr094_text, "status") if cr094_text else ""
+    cr094_is_active = normalize_status(cr094_status) == "active"
+    cr095_status = frontmatter_value(cr095_text, "status") if cr095_text else ""
+    cr095_is_active = normalize_status(cr095_status) == "active"
+    cr096_status = frontmatter_value(cr096_text, "status") if cr096_text else ""
+    cr096_is_active = normalize_status(cr096_status) == "active"
+
+    known_formal_statuses = {
+        "CR-020": cr020_status,
+        "CR-025": cr025_status,
+        "CR-030": cr030_status,
+        "CR-040": cr040_status,
+        "CR-041": cr041_status,
+        "CR-043": cr043_status,
+        "CR-044": cr044_status,
+        "CR-045": cr045_status,
+        "CR-046": cr046_status,
+        "CR-093": cr093_status,
+        "CR-094": cr094_status,
+        "CR-095": cr095_status,
+        "CR-096": cr096_status,
+    }
+    if active_change:
+        active_status = normalize_status(known_formal_statuses.get(active_change, ""))
+        require(
+            active_status == "active",
+            f"STATE.md 顶层 active_change 指向非 active formal CR: {active_change} status={known_formal_statuses.get(active_change, '')!r}",
+            failures,
+        )
+        require(
+            has_current_tracking_entry(state_text, active_change, "active"),
+            f"STATE.md cr_tracking.active_crs 缺少当前 active formal CR: {active_change}",
+            failures,
+        )
+        require(
+            has_current_tracking_entry(index_text, active_change, "active"),
+            f"CR-INDEX.yaml active_crs 缺少当前 active formal CR: {active_change}",
+            failures,
+        )
 
     for item_id in ("CR-025", "CR-029", "CR-030", "CR-040", "CR-041", "CR-043", "CR-044", "CR-045", "CR-046", "CR-020", *REQUIRED_CANDIDATES, *REQUIRED_CANCELLED_QMT_CRS, *REQUIRED_SPIKES):
         require(item_id in index_text, f"CR-INDEX.yaml 缺少 {item_id}", failures)
@@ -434,7 +644,15 @@ def check_project(project_root: Path) -> list[str]:
     if cr025_is_closed:
         require("closed_crs:" in state_text, "STATE.md cr_tracking 缺少 closed_crs", failures)
         require("closed_crs:" in index_text, "CR-INDEX.yaml 缺少 closed_crs", failures)
-        if cr046_is_active:
+        if cr096_is_active:
+            require('active_change: "CR-096"' in state_text or "active_change: 'CR-096'" in state_text or "active_change: CR-096" in state_text, "STATE.md 顶层 active_change 未切换到 CR-096", failures)
+        elif cr095_is_active:
+            require('active_change: "CR-095"' in state_text or "active_change: 'CR-095'" in state_text or "active_change: CR-095" in state_text, "STATE.md 顶层 active_change 未切换到 CR-095", failures)
+        elif cr094_is_active:
+            require('active_change: "CR-094"' in state_text or "active_change: 'CR-094'" in state_text or "active_change: CR-094" in state_text, "STATE.md 顶层 active_change 未切换到 CR-094", failures)
+        elif cr093_is_active:
+            require('active_change: "CR-093"' in state_text or "active_change: 'CR-093'" in state_text or "active_change: CR-093" in state_text, "STATE.md 顶层 active_change 未切换到 CR-093", failures)
+        elif cr046_is_active:
             require('active_change: "CR-046"' in state_text, "STATE.md 顶层 active_change 未切换到 CR-046", failures)
         elif cr045_is_active:
             require('active_change: "CR-045"' in state_text, "STATE.md 顶层 active_change 未切换到 CR-045", failures)
@@ -451,8 +669,14 @@ def check_project(project_root: Path) -> list[str]:
         elif cr020_is_active:
             require('active_change: "CR-020"' in state_text, "STATE.md 顶层 active_change 未切换到 CR-020", failures)
         else:
-            require('active_change: ""' in state_text or 'active_change: "none"' in state_text, "STATE.md 顶层 active_change 未在 CR-025 关闭后清空", failures)
-        require("| CR-025 | closed |" in tracking_text, "CR-019 follow-up 台账未将 CR-025 标记为 closed", failures)
+            require(
+                'active_change: ""' in state_text
+                or "active_change: ''" in state_text
+                or 'active_change: "none"' in state_text,
+                "STATE.md 顶层 active_change 未在 CR-025 关闭后清空",
+                failures,
+            )
+        require_tracking_status(tracking_text, "CR-025", {"closed"}, "CR-019 follow-up 台账未将 CR-025 标记为 closed 等价状态", failures)
     if cr030_is_active:
         require('active_change: "CR-030"' in state_text, "STATE.md 顶层 active_change 未切换到 CR-030", failures)
         require('status: "active-formal-cr"' in index_text, "CR-INDEX.yaml 顶层未标记 active-formal-cr", failures)
@@ -462,7 +686,7 @@ def check_project(project_root: Path) -> list[str]:
         require(cr030_status in tracking_text, f"CR-019 follow-up 台账未记录 CR-030 当前 active 状态: {cr030_status}", failures)
         require("| CR-030 | active |" in tracking_text, "CR-019 follow-up 台账未将 CR-030 标记为 active formal CR", failures)
     if cr030_is_closed:
-        require("| CR-030 | closed |" in tracking_text, "CR-019 follow-up 台账未将 CR-030 标记为 closed", failures)
+        require_tracking_status(tracking_text, "CR-030", {"closed"}, "CR-019 follow-up 台账未将 CR-030 标记为 closed 等价状态", failures)
     if cr040_is_active:
         require('active_change: "CR-040"' in state_text, "STATE.md 顶层 active_change 未切换到 CR-040", failures)
         require('status: "active-formal-cr"' in index_text, "CR-INDEX.yaml 顶层未标记 active-formal-cr", failures)
@@ -472,7 +696,7 @@ def check_project(project_root: Path) -> list[str]:
         require(cr040_status in tracking_text, f"CR-019 follow-up 台账未记录 CR-040 当前 active 状态: {cr040_status}", failures)
         require("| CR-040 | active |" in tracking_text, "CR-019 follow-up 台账未将 CR-040 标记为 active formal CR", failures)
     if cr040_is_closed:
-        require("| CR-040 | closed |" in tracking_text, "CR-019 follow-up 台账未将 CR-040 标记为 closed", failures)
+        require_tracking_status(tracking_text, "CR-040", {"closed"}, "CR-019 follow-up 台账未将 CR-040 标记为 closed 等价状态", failures)
     if cr041_is_active:
         require('active_change: "CR-041"' in state_text, "STATE.md 顶层 active_change 未切换到 CR-041", failures)
         require('status: "active-formal-cr"' in index_text, "CR-INDEX.yaml 顶层未标记 active-formal-cr", failures)
@@ -482,7 +706,7 @@ def check_project(project_root: Path) -> list[str]:
         require(cr041_status in tracking_text, f"CR-019 follow-up 台账未记录 CR-041 当前 active 状态: {cr041_status}", failures)
         require("| CR-041 | active |" in tracking_text, "CR-019 follow-up 台账未将 CR-041 标记为 active formal CR", failures)
     if cr041_is_closed:
-        require("| CR-041 | closed |" in tracking_text, "CR-019 follow-up 台账未将 CR-041 标记为 closed", failures)
+        require_tracking_status(tracking_text, "CR-041", {"closed"}, "CR-019 follow-up 台账未将 CR-041 标记为 closed 等价状态", failures)
     if cr043_is_active:
         require('active_change: "CR-043"' in state_text, "STATE.md 顶层 active_change 未切换到 CR-043", failures)
         require('status: active-formal-cr' in index_text or 'status: "active-formal-cr"' in index_text, "CR-INDEX.yaml 顶层未标记 active-formal-cr", failures)
@@ -492,7 +716,7 @@ def check_project(project_root: Path) -> list[str]:
         require(cr043_status in tracking_text, f"CR-019 follow-up 台账未记录 CR-043 当前 active 状态: {cr043_status}", failures)
         require("| CR-043 |" in tracking_text and "| active |" in tracking_text, "CR-019 follow-up 台账未将 CR-043 标记为 active formal Spike", failures)
     if cr043_is_closed:
-        require("| CR-043 | closed |" in tracking_text, "CR-019 follow-up 台账未将 CR-043 标记为 closed", failures)
+        require_tracking_status(tracking_text, "CR-043", {"closed"}, "CR-019 follow-up 台账未将 CR-043 标记为 closed 等价状态", failures)
     if cr044_is_active:
         require('active_change: "CR-044"' in state_text, "STATE.md 顶层 active_change 未切换到 CR-044", failures)
         require('status: "active-formal-cr"' in index_text, "CR-INDEX.yaml 顶层未标记 active-formal-cr", failures)
@@ -502,7 +726,7 @@ def check_project(project_root: Path) -> list[str]:
         require(cr044_status in tracking_text, f"CR-019 follow-up 台账未记录 CR-044 当前 active 状态: {cr044_status}", failures)
         require("| CR-044 | active |" in tracking_text, "CR-019 follow-up 台账未将 CR-044 标记为 active formal CR", failures)
     if cr044_is_closed:
-        require("| CR-044 | closed |" in tracking_text, "CR-019 follow-up 台账未将 CR-044 标记为 closed", failures)
+        require_tracking_status(tracking_text, "CR-044", {"closed"}, "CR-019 follow-up 台账未将 CR-044 标记为 closed 等价状态", failures)
     if cr045_is_active:
         require('active_change: "CR-045"' in state_text, "STATE.md 顶层 active_change 未切换到 CR-045", failures)
         require('status: "active-formal-cr"' in index_text, "CR-INDEX.yaml 顶层未标记 active-formal-cr", failures)
@@ -512,7 +736,7 @@ def check_project(project_root: Path) -> list[str]:
         require(cr045_status in tracking_text, f"CR-019 follow-up 台账未记录 CR-045 当前 active 状态: {cr045_status}", failures)
         require("| CR-045 | active |" in tracking_text, "CR-019 follow-up 台账未将 CR-045 标记为 active formal CR", failures)
     if cr045_is_closed:
-        require("| CR-045 | closed |" in tracking_text, "CR-019 follow-up 台账未将 CR-045 标记为 closed", failures)
+        require_tracking_status(tracking_text, "CR-045", {"closed"}, "CR-019 follow-up 台账未将 CR-045 标记为 closed 等价状态", failures)
     if cr046_is_active:
         require('active_change: "CR-046"' in state_text, "STATE.md 顶层 active_change 未切换到 CR-046", failures)
         require('status: "active-formal-cr"' in index_text, "CR-INDEX.yaml 顶层未标记 active-formal-cr", failures)
@@ -534,11 +758,11 @@ def check_project(project_root: Path) -> list[str]:
         require(cr020_status in tracking_text, f"CR-019 follow-up 台账未记录 CR-020 当前 active 状态: {cr020_status}", failures)
         require("| CR-020 | active |" in tracking_text, "CR-019 follow-up 台账未将 CR-020 标记为 active formal CR", failures)
     if cr020_is_closed:
-        require("| CR-020 | closed |" in tracking_text, "CR-019 follow-up 台账未将 CR-020 标记为 closed", failures)
+        require_tracking_status(tracking_text, "CR-020", {"closed"}, "CR-019 follow-up 台账未将 CR-020 标记为 closed 等价状态", failures)
     if cr020_is_cancelled:
         require("cancelled_crs:" in state_text, "STATE.md cr_tracking 缺少 cancelled_crs", failures)
         require("cancelled_crs:" in index_text, "CR-INDEX.yaml 缺少 cancelled_crs", failures)
-        require("| CR-020 | deleted-by-user |" in tracking_text, "CR-019 follow-up 台账未将 CR-020 标记为 deleted-by-user", failures)
+        require_tracking_status(tracking_text, "CR-020", {"cancelled"}, "CR-019 follow-up 台账未将 CR-020 标记为 cancelled 等价状态", failures)
 
     for item_id in REQUIRED_CANDIDATES:
         require(f'id: "{item_id}"' in index_text, f"CR-INDEX.yaml 缺少 candidate 标准项 {item_id}", failures)
@@ -572,6 +796,8 @@ def main(argv: list[str] | None = None) -> int:
 
     project_root = Path(args.project_root).resolve()
     failures = check_project(project_root)
+    for line in tracking_summary_lines(project_root):
+        print(line)
     if failures:
         print("CR tracking consistency: FAIL")
         for failure in failures:

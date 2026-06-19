@@ -1,0 +1,28 @@
+schema_version: cr092-simulated-account-evidence-v1
+change_id: CR-092
+source_gate: CP5-CR092-READONLY-RUNTIME-SMOKE-READINESS
+runtime_authorization_status: not_authorized_by_template
+not_authorization: true
+run_id: cr092-smoke-YYYYMMDD-HHMM
+account_mode: simulated
+evidence_source: user_explicitly_provided_file_or_content
+scope:
+  - health
+  - capabilities
+  - query_positions_readonly
+health_status: N/A
+capabilities_status: N/A
+query_positions_status: N/A
+redaction_status: PASS
+simulated_account_summary:
+  position_count_bucket: ""
+  positions_digest: ""
+  notes_redacted: ""
+forbidden_counters:
+  nas_access: 0
+  credential_read: 0
+  real_account_read: 0
+  submit_cancel: 0
+  simulation_live: 0
+  provider_lake_publish: 0
+operator_notes_redacted: ""
