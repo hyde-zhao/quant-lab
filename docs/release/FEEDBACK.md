@@ -3,7 +3,7 @@ status: ready
 version: "1.0"
 release_artifact_profile: compact
 release_decision: READY_WITH_RISK
-cr_id: CR-099
+cr_id: CR-101
 ---
 
 # CR099 Feedback
@@ -16,7 +16,7 @@ cr_id: CR-099
 | FB-CR099-02 | scenario-gap | runtime evidence | 当前 run 不证明交易日路径 | CR097-FU-01 | yes | candidate |
 | FB-CR099-03 | reliability | runtime attempt | 首次 run 因 `session_expired` 阻断，重启 gateway session 后通过 | CR099-FU-01 | yes | candidate |
 | FB-CR099-04 | new-requirement | user | 用户要求 NAS package exchange | CR091-FU-02 | yes | candidate |
-| FB-CR099-05 | new-requirement | user | 用户要求 submit/cancel、order-write、simulation/live | ORDER-WRITE-FU | yes | candidate |
+| FB-CR099-05 | new-requirement | user | 用户要求 submit/cancel、order-write、simulation/live | FU-CR101-001 | yes | candidate |
 
 ## 2. 发布后观察计划
 
@@ -26,7 +26,7 @@ cr_id: CR-099
 | OBS-CR099-02 | session_expired 复发 | runtime evidence / user report | >=1 recurrence | CR099-FU-01 |
 | OBS-CR099-03 | collector / checker false positive | checker JSON / user feedback | >=1 confirmed false positive | checker fix CR |
 | OBS-CR099-04 | NAS 需求出现 | user request | explicit NAS intent | CR091-FU-02 |
-| OBS-CR099-05 | order-write / live 需求出现 | user request | explicit trading intent | ORDER-WRITE-FU |
+| OBS-CR099-05 | order-write / live 需求出现 | user request | explicit trading intent | FU-CR101-001 |
 
 ## 3. 台账边界
 
@@ -43,3 +43,14 @@ cr_id: CR-099
 | FB-CR100-03 | authorization | user | 若需要真实 NAS 验证，必须另起独立 gate | future NAS authorization | yes | candidate |
 
 CR100 feedback 不授权自动启动真实 NAS gate；只有用户明确选择并授权后才可推进。
+
+## CR101 Addendum - Feedback
+
+| Feedback ID | 类型 | 来源 | 内容摘要 | 分流目标 | follow-up tracking 候选 | 状态 |
+|---|---|---|---|---|---|---|
+| FB-CR101-01 | validation-gap | CP8 | QMT direct-run 真实加载未证明 | RA-CR101-001 | yes | candidate |
+| FB-CR101-02 | validation-gap | CP8 | MiniQMT gateway adapter 真实只读链路未证明 | RA-CR101-002 | yes | candidate |
+| FB-CR101-03 | validation-gap | CP8 | 真实 NAS package exchange 未证明 | RA-CR101-003 | yes | candidate |
+| FB-CR101-04 | authorization | CP8 | order-write / simulation / live 仍需高风险设计门禁 | FU-CR101-001 | yes | candidate |
+
+CR101 feedback 不授权自动启动任何真实验证 gate；只有用户明确选择并授权后才可推进。

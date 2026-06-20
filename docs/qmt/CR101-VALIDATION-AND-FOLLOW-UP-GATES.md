@@ -5,6 +5,7 @@
 | 版本 | 日期 | 修订人 | 变更要点 |
 |---|---|---|---|
 | v0.1 | 2026-06-20 | host-orchestrator | 首版 S04 收口文档，记录 CR101 离线验证矩阵、READY_WITH_RISK 条件和后续授权 gate。 |
+| v0.2 | 2026-06-20 | host-orchestrator | 按 CR 管理 schema v2 将后续 gate 规范为 `RA-CR101-*` / `FU-CR101-001`，旧自由文本 ID 降为 legacy。 |
 
 ## 1. 当前支持范围
 
@@ -42,12 +43,12 @@
 
 ## 4. 后续 Gate
 
-| Gate ID | 决策类型 | 候选目标 | 启动前置 | 当前状态 |
-|---|---|---|---|---|
-| QMT-DIRECT-RUN-VALIDATION-FU | runtime_authorization | 用户手工或单独授权证明 QMT terminal 可加载 CR101 package target | 独立 CP2/CP3/CP5，明确 runtime path、证据脱敏和禁止账号原文 | candidate-not-started |
-| MINIQMT-GATEWAY-ADAPTER-VALIDATION-FU | runtime_authorization | 证明 quant-lab runner 通过 MiniQMT gateway adapter 完成 readonly health/capabilities/query_positions | 独立 per-run authorization；只读 endpoint allowlist；redacted evidence schema | candidate-not-started |
-| NAS-REAL-EXCHANGE-FU | runtime_authorization | 证明真实 NAS package exchange path、权限和交换流程 | 独立 NAS gate；明确 read/write/publish/pull/copy/delete 是否允许 | candidate-not-started |
-| ORDER-WRITE-SIMULATION-LIVE-FU | risk_acceptance | 设计 submit/cancel/order-write/simulation/live 的安全门 | S01-S04 完成；用户明确接受高风险设计门禁；默认不执行真实交易 | candidate-not-started |
+| Candidate ID | Legacy ID | 决策类型 | 候选目标 | 启动前置 | 当前状态 |
+|---|---|---|---|---|---|
+| RA-CR101-001 | QMT-DIRECT-RUN-VALIDATION-FU | runtime_authorization | 用户手工或单独授权证明 QMT terminal 可加载 CR101 package target | 独立 CP2/CP3/CP5，明确 runtime path、证据脱敏和禁止账号原文 | candidate-not-started |
+| RA-CR101-002 | MINIQMT-GATEWAY-ADAPTER-VALIDATION-FU | runtime_authorization | 证明 quant-lab runner 通过 MiniQMT gateway adapter 完成 readonly health/capabilities/query_positions | 独立 per-run authorization；只读 endpoint allowlist；redacted evidence schema | candidate-not-started |
+| RA-CR101-003 | NAS-REAL-EXCHANGE-FU | runtime_authorization | 证明真实 NAS package exchange path、权限和交换流程 | 独立 NAS gate；明确 read/write/publish/pull/copy/delete 是否允许 | candidate-not-started |
+| FU-CR101-001 | ORDER-WRITE-SIMULATION-LIVE-FU | risk_acceptance | 设计 submit/cancel/order-write/simulation/live 的安全门 | S01-S04 完成；用户明确接受高风险设计门禁；默认不执行真实交易 | candidate-not-started |
 
 这些 gate 不会因 CR101 CP8 approve 自动启动。每个 gate 都必须重新生成 Decision Brief，并独立打印授权项与不授权项。
 
@@ -69,10 +70,10 @@ CP7 / CP8 文档必须包含以下语义：
 
 - `not-authorized`
 - `READY_WITH_RISK`
-- `QMT-DIRECT-RUN-VALIDATION-FU`
-- `MINIQMT-GATEWAY-ADAPTER-VALIDATION-FU`
-- `NAS-REAL-EXCHANGE-FU`
-- `ORDER-WRITE-SIMULATION-LIVE-FU`
+- `RA-CR101-001`
+- `RA-CR101-002`
+- `RA-CR101-003`
+- `FU-CR101-001`
 
 CP7 / CP8 文档不得声明：
 

@@ -3,7 +3,7 @@ status: ready
 version: "1.0"
 release_artifact_profile: compact
 release_decision: READY_WITH_RISK
-cr_id: CR-099
+cr_id: CR-101
 ---
 
 # CR099 Migration
@@ -54,3 +54,13 @@ cr_id: CR-099
 | 命令参数 | yes，新 CLI | additive | no | CLI/AST/pytest | 删除 `scripts/cr100_package_exchange.py` |
 | 数据存储 | local fake exchange/cache only | compatible | no | tmp_path fixture | 删除本地 fake fixture |
 | 真实 NAS | no | N/A | no | 未授权未执行 | N/A |
+
+## CR101 Addendum - Migration
+
+| 对象 | 是否变化 | 兼容性 | 需要迁移 | 验证方式 | 回滚方式 |
+|---|---|---|---|---|---|
+| 策略交付 target taxonomy | yes，当前 implemented target 收敛为 QMT direct-run | additive / reframing | no | CR101 S01 / HLD / package manifest tests | 后续 CR 标记 superseded 或兼容映射 |
+| runner adapter boundary | yes，明确 quant-lab runner -> adapter protocol，MiniQMT 为 gateway adapter | compatible | no | CR101 S03 tests / evidence summary | 保留旧 evidence，后续 CR 追加 adapter |
+| MiniQMT runner 解释 | yes，从 runner 宿主改为 API gateway adapter | reframing | no | baseline / HLD / follow-up tracking | 不回写历史 CR 正文，只在 baseline 和索引记录 reframe |
+| release context | yes，当前入口切到 CR101 | compatible | no | `process/release/RELEASE-CONTEXT.yaml` | 恢复上一版 release context |
+| 真实 runtime / NAS / 交易 | no | N/A | no | 未授权未执行 | N/A |

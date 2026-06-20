@@ -211,11 +211,11 @@ Offline Evidence
 
 S04 的收口文档为 `docs/qmt/CR101-VALIDATION-AND-FOLLOW-UP-GATES.md`。该文档是 CR101 CP7 / CP8 的默认验证摘要输入，必须与本 HLD、`process/changes/CR-091-FOLLOW-UP-TRACKING-2026-06-18.md` 和 `process/changes/CR-INDEX.yaml` 保持一致。
 
-| Gate | 状态 | 启动条件 | 不授权边界 |
-|---|---|---|---|
-| QMT-DIRECT-RUN-VALIDATION-FU | candidate-not-started | 用户明确发起 runtime_authorization gate，并提供可脱敏 evidence 方案。 | 当前 CR101 不授权 agent 代跑 QMT terminal、读取账号/日志或声明真实 ready。 |
-| MINIQMT-GATEWAY-ADAPTER-VALIDATION-FU | candidate-not-started | 用户明确发起 readonly gateway validation gate，限定 health / capabilities / query_positions。 | 当前 CR101 不授权 gateway connect、账户原文、订单写入或 runtime 启动。 |
-| NAS-REAL-EXCHANGE-FU | candidate-not-started | 用户明确发起 NAS exchange gate，单独列出 path、权限、读写范围和脱敏 evidence。 | 当前 CR101 不授权 NAS list/read/write/copy/publish/pull/delete 或 mount。 |
-| ORDER-WRITE-SIMULATION-LIVE-FU | candidate-not-started | S01-S04 完成且用户明确接受高风险 order-write design gate。 | 当前 CR101 不授权 submit/cancel、buy/sell、simulation/live 或资金放大。 |
+| Candidate ID | Legacy ID | 状态 | 启动条件 | 不授权边界 |
+|---|---|---|---|---|
+| RA-CR101-001 | QMT-DIRECT-RUN-VALIDATION-FU | candidate-not-started | 用户明确发起 runtime_authorization gate，并提供可脱敏 evidence 方案。 | 当前 CR101 不授权 agent 代跑 QMT terminal、读取账号/日志或声明真实 ready。 |
+| RA-CR101-002 | MINIQMT-GATEWAY-ADAPTER-VALIDATION-FU | candidate-not-started | 用户明确发起 readonly gateway validation gate，限定 health / capabilities / query_positions。 | 当前 CR101 不授权 gateway connect、账户原文、订单写入或 runtime 启动。 |
+| RA-CR101-003 | NAS-REAL-EXCHANGE-FU | candidate-not-started | 用户明确发起 NAS exchange gate，单独列出 path、权限、读写范围和脱敏 evidence。 | 当前 CR101 不授权 NAS list/read/write/copy/publish/pull/delete 或 mount。 |
+| FU-CR101-001 | ORDER-WRITE-SIMULATION-LIVE-FU | candidate-not-started | S01-S04 完成且用户明确接受高风险 order-write design gate。 | 当前 CR101 不授权 submit/cancel、buy/sell、simulation/live 或资金放大。 |
 
 CR101 的 CP8 推荐结论若不执行真实验证，应为 `READY_WITH_RISK`：ready 仅指离线 contract / checker / evidence / docs readiness，risk 指真实 QMT、MiniQMT gateway、NAS exchange 和 order-write 均未验证且未授权。

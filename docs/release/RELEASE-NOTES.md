@@ -3,7 +3,7 @@ status: ready
 version: "1.0"
 release_artifact_profile: compact
 release_decision: READY_WITH_RISK
-cr_id: CR-099
+cr_id: CR-101
 ---
 
 # CR099 Release Notes
@@ -98,3 +98,16 @@ cr_id: CR-099
 | 已知风险 | 真实 NAS mount、权限、路径、publish/pull/copy/check 未验证 |
 | 不授权项 | 真实 NAS access/list/read/copy/write/publish/delete、凭据/env/account 读取、QMT/MiniQMT/XtQuant/gateway/runner runtime、交易和 provider/lake/catalog publish |
 | 后续 | 真实 NAS 恢复后必须另起独立授权 gate，参考 `docs/qmt/CR100-NAS-PACKAGE-EXCHANGE-RECOVERY-RUNBOOK.md` |
+
+## CR101 Addendum - Cross-Platform Strategy Delivery and Adapter Realignment
+
+| 项目 | 内容 |
+|---|---|
+| release_decision | READY_WITH_RISK |
+| 新增能力 | 策略交付 target taxonomy、QMT direct-run 当前 target、quant-lab runner adapter boundary、MiniQMT gateway 当前 adapter、CR101 manifest/checker/evidence contract |
+| 当前架构真相 | 策略在 QMT 可直接运行的 target 是当前唯一支持目标；quant-lab runner 是运行主体；MiniQMT 仅作为 API gateway adapter，不是 runner 宿主 |
+| 代码 / 文档入口 | `docs/qmt/CR101-CROSS-PLATFORM-STRATEGY-DELIVERY-ADAPTER-REALIGNMENT-HLD.md`、`docs/qmt/CR101-VALIDATION-AND-FOLLOW-UP-GATES.md`、`trading/strategy_runner/*` |
+| 验证 | CR101 S01-S04 CP6 / CP7 均 PASS；`meta-flow workspace check` 显示 process link 健康；CR tracking 需在本轮文档同步后复跑 |
+| 已知风险 | 真实 QMT direct-run、MiniQMT gateway、NAS exchange、order-write / simulation / live 均未授权、未执行、未证明 |
+| 不授权项 | 真实 NAS access/list/read/copy/write/publish/delete、凭据/env/account 读取、QMT/MiniQMT/XtQuant/gateway runtime、submit/cancel/buy/sell、simulation/live、provider/lake/catalog publish |
+| 后续候选 | `RA-CR101-001` QMT direct-run、`RA-CR101-002` MiniQMT gateway adapter、`RA-CR101-003` NAS real exchange、`FU-CR101-001` order-write / simulation / live |

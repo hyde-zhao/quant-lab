@@ -3,7 +3,7 @@ status: ready
 version: "1.0"
 release_artifact_profile: compact
 release_decision: READY_WITH_RISK
-cr_id: CR-099
+cr_id: CR-101
 ---
 
 # CR099 Deploy Checklist
@@ -79,3 +79,16 @@ cr_id: CR-099
 | DEP-CR100-005 | NAS 恢复 runbook 已生成 | PASS | `docs/qmt/CR100-NAS-PACKAGE-EXCHANGE-RECOVERY-RUNBOOK.md` | REQUIRED |
 
 CR100 的 deploy 结论是 `READY_WITH_RISK`，不是 `RELEASED`；真实 NAS 验证需要独立授权。
+
+## CR101 Addendum - Offline Delivery Deploy Checklist
+
+| Check ID | 检查项 | 状态 | 证据 / 说明 | 阻断等级 |
+|---|---|---|---|---|
+| DEP-CR101-001 | 当前 release context 指向 CR101 | PASS | `process/release/RELEASE-CONTEXT-CR101.yaml` 与 `process/release/RELEASE-CONTEXT.yaml` | REQUIRED |
+| DEP-CR101-002 | 当前需求基线包含 CR101 | PASS | `process/baseline/CURRENT-REQUIREMENT-BASELINE.yaml` | REQUIRED |
+| DEP-CR101-003 | 后续 gate ID 使用 schema v2 | PASS | `RA-CR101-001..003` / `FU-CR101-001`，旧 ID 只保留为 legacy | REQUIRED |
+| DEP-CR101-004 | 真实 runtime 未授权 | PASS | 当前只允许离线文档、fixture、checker 和本地测试证据 | BLOCKING |
+| DEP-CR101-005 | 真实 NAS 未授权 | PASS | NAS 真实验证已拆为 `RA-CR101-003`，未启动 | BLOCKING |
+| DEP-CR101-006 | 交易写未授权 | PASS | order-write / simulation / live 已拆为 `FU-CR101-001`，未启动 | BLOCKING |
+
+CR101 的 deploy 结论是 `READY_WITH_RISK`，不是 `RELEASED` 或真实运行 ready；真实验证必须通过独立 gate。

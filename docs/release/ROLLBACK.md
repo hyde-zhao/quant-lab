@@ -3,7 +3,7 @@ status: ready
 version: "1.0"
 release_artifact_profile: compact
 release_decision: READY_WITH_RISK
-cr_id: CR-099
+cr_id: CR-101
 ---
 
 # CR099 Rollback
@@ -59,3 +59,13 @@ cr_id: CR-099
 | RB-CR100-03 | 后续真实 NAS gate 采用不同 manifest | 标记 CR100 superseded 或追加兼容层 | 保留 CR100 离线证据 |
 
 CR100 未访问真实 NAS、未读取凭据、未启动 runtime，也未执行交易或 provider/lake/catalog publish，因此没有外部系统回滚动作。
+
+## CR101 Addendum - Rollback
+
+| Trigger ID | 条件 | 回滚入口 | 说明 |
+|---|---|---|---|
+| RB-CR101-01 | target taxonomy 或 adapter boundary 被后续设计取代 | 文件级回滚 CR101 相关 HLD、台账、checker/schema 文档和测试改动 | 保留 CR101 审计事实，后续 CR 应标记 superseded/reframed |
+| RB-CR101-02 | 后续真实 QMT / MiniQMT / NAS gate 采用不同 evidence schema | 新 CR 中追加兼容层或标记 CR101 evidence contract superseded | 不需要回滚外部系统，因为 CR101 未连接真实系统 |
+| RB-CR101-03 | release 文档误导为真实 runtime ready | 修订 release docs、baseline、CR-INDEX 和 handoff | 必须继续保留不授权边界 |
+
+CR101 未访问真实 NAS、未读取凭据、未启动 QMT/MiniQMT/XtQuant/gateway runtime，也未执行交易或 provider/lake/catalog publish，因此没有外部系统回滚动作。
