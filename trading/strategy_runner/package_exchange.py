@@ -15,9 +15,19 @@ from typing import Any, Mapping
 
 import yaml
 
+from trading.strategy_runner.package_loader import (
+    CR101_MANIFEST_SCHEMA_VERSION,
+    DELIVERY_TARGET_QMT_TERMINAL_DIRECT,
+    EXECUTION_ADAPTER_MINIQMT_GATEWAY_READONLY,
+    PackageLoaderError,
+    select_delivery_target,
+    validate_manifest as validate_runner_manifest,
+)
 
 EXCHANGE_SCHEMA_VERSION = "cr100-package-exchange-v1"
-MANIFEST_SCHEMA_VERSION = "cr100-strategy-package-manifest-v1"
+CR100_MANIFEST_SCHEMA_VERSION = "cr100-strategy-package-manifest-v1"
+MANIFEST_SCHEMA_VERSION = CR100_MANIFEST_SCHEMA_VERSION
+SUPPORTED_MANIFEST_SCHEMA_VERSIONS = (CR100_MANIFEST_SCHEMA_VERSION, CR101_MANIFEST_SCHEMA_VERSION)
 FAKE_EXCHANGE_MARKER = ".cr100_fake_exchange_root"
 INDEX_FILE_NAME = "index.yaml"
 ACTIVE_POINTER_NAME = "active.json"
@@ -30,7 +40,17 @@ REQUIRED_PERMISSION_FALSE_FLAGS = (
     "nas_write",
 )
 FORBIDDEN_FILE_NAMES = {".env", ".env.local", ".env.production"}
-FORBIDDEN_NAME_FRAGMENTS = ("secret", "credential", "token", "account")
+FORBIDDEN_NAME_FRAGMENTS = (
+    "secret",
+    "credential",
+    "token",
+    "account",
+    "raw_order",
+    "raw_orders",
+    "raw_position",
+    "raw_positions",
+    "qmt_log",
+)
 
 
 class PackageExchangeError(ValueError):
@@ -228,11 +248,32 @@ def check_exchange(exchange_root: str | Path) -> ExchangeOperationResult:
 
 
 def _validate_manifest_shape(root: Path, manifest: Mapping[str, Any]) -> None:
-    if manifest.get("schema_version") != MANIFEST_SCHEMA_VERSION:
+    schema_version = manifest.get("schema_version")
+    if schema_version not in SUPPORTED_MANIFEST_SCHEMA_VERSIONS:
         raise PackageExchangeError("blocked_schema_mismatch")
     for key in ("package_id", "package_version", "created_at"):
         if not str(manifest.get(key) or ""):
             raise PackageExchangeError(f"blocked_{key}_missing")
+    if schema_version == CR101_MANIFEST_SCHEMA_VERSION:
+        _validate_cr101_manifest_shape(root, manifest)
+    else:
+        _validate_cr100_manifest_shape(root, manifest)
+    approval = _as_mapping(manifest.get("approval"), "approval")
+    if approval.get("status") != "approved":
+        raise PackageExchangeError("blocked_approval_not_approved")
+    permissions = _as_mapping(manifest.get("permissions"), "permissions")
+    for flag in REQUIRED_PERMISSION_FALSE_FLAGS:
+        if permissions.get(flag) is not False:
+            raise PackageExchangeError(f"blocked_permission_nonfalse:{flag}")
+    forbidden = manifest.get("forbidden_operation_counters")
+    if isinstance(forbidden, Mapping) and any(int(value or 0) != 0 for value in forbidden.values()):
+        raise PackageExchangeError("blocked_forbidden_operation_nonzero")
+    hashes = manifest.get("hashes")
+    if not isinstance(hashes, Mapping) or not hashes:
+        raise PackageExchangeError("blocked_hashes_missing")
+
+
+def _validate_cr100_manifest_shape(root: Path, manifest: Mapping[str, Any]) -> None:
     target_platforms = manifest.get("target_platforms")
     if not isinstance(target_platforms, list) or not {"qmt_terminal", "miniqmt_runner"}.issubset(
         set(target_platforms)
@@ -244,16 +285,23 @@ def _validate_manifest_shape(root: Path, manifest: Mapping[str, Any]) -> None:
         if not entrypoint:
             raise PackageExchangeError(f"blocked_entrypoint_missing:{target}")
         _require_file_under(root, entrypoint)
-    approval = _as_mapping(manifest.get("approval"), "approval")
-    if approval.get("status") != "approved":
-        raise PackageExchangeError("blocked_approval_not_approved")
-    permissions = _as_mapping(manifest.get("permissions"), "permissions")
-    for flag in REQUIRED_PERMISSION_FALSE_FLAGS:
-        if permissions.get(flag) is not False:
-            raise PackageExchangeError(f"blocked_permission_nonfalse:{flag}")
-    hashes = manifest.get("hashes")
-    if not isinstance(hashes, Mapping) or not hashes:
-        raise PackageExchangeError("blocked_hashes_missing")
+
+
+def _validate_cr101_manifest_shape(root: Path, manifest: Mapping[str, Any]) -> None:
+    try:
+        validate_runner_manifest(manifest)
+    except PackageLoaderError as exc:
+        raise PackageExchangeError(str(exc)) from exc
+    delivery_target = select_delivery_target(manifest)
+    if delivery_target.get("target_id") != DELIVERY_TARGET_QMT_TERMINAL_DIRECT:
+        raise PackageExchangeError("blocked_delivery_target_not_qmt_terminal_direct")
+    _require_file_under(root, str(delivery_target.get("entrypoint") or ""))
+    adapters = manifest.get("execution_adapters")
+    if not isinstance(adapters, list) or not any(
+        isinstance(adapter, Mapping) and adapter.get("adapter_id") == EXECUTION_ADAPTER_MINIQMT_GATEWAY_READONLY
+        for adapter in adapters
+    ):
+        raise PackageExchangeError("blocked_execution_adapter_missing:miniqmt_gateway_readonly")
 
 
 def _verify_manifest_hashes(root: Path, manifest: Mapping[str, Any]) -> tuple[str, ...]:

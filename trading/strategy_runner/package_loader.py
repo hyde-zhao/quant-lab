@@ -13,7 +13,16 @@ import yaml
 from trading.strategy_runner.adapters import zero_cr091_operation_counters
 
 
-MANIFEST_SCHEMA_VERSION = "cr091-strategy-runner-package-manifest-v1"
+CR091_MANIFEST_SCHEMA_VERSION = "cr091-strategy-runner-package-manifest-v1"
+CR101_MANIFEST_SCHEMA_VERSION = "cr101-strategy-runner-package-manifest-v1"
+MANIFEST_SCHEMA_VERSION = CR091_MANIFEST_SCHEMA_VERSION
+SUPPORTED_MANIFEST_SCHEMA_VERSIONS = (CR091_MANIFEST_SCHEMA_VERSION, CR101_MANIFEST_SCHEMA_VERSION)
+DELIVERY_TARGET_QMT_TERMINAL_DIRECT = "qmt_terminal_direct"
+LEGACY_MINIQMT_RUNNER_TARGET = "miniqmt_runner"
+FUTURE_DELIVERY_TARGETS = frozenset({"goldminer_future", "generic_python_future"})
+EXECUTION_ADAPTER_MINIQMT_GATEWAY_READONLY = "miniqmt_gateway_readonly"
+READONLY_EXECUTION_CAPABILITIES = frozenset({"readonly", "health", "capabilities", "query_positions"})
+ORDER_WRITE_CAPABILITIES = frozenset({"submit_order", "cancel_order", "buy", "sell", "order_write", "simulation", "live"})
 REQUIRED_FALSE_FLAGS = (
     "runtime_authorized",
     "nas_operation_authorized",
@@ -40,9 +49,14 @@ class StrategyPackage:
         return str(self.manifest.get("package_id", ""))
 
     def to_adapter_payload(self) -> dict[str, Any]:
+        delivery_target = select_delivery_target(self.manifest)
+        execution_adapter = select_execution_adapter(self.manifest)
         return {
             "schema_version": "cr091-strategy-package-payload-v1",
             "adapter_type": self.manifest.get("adapter_type"),
+            "delivery_target_id": delivery_target.get("target_id"),
+            "execution_adapter_id": execution_adapter.get("adapter_id"),
+            "execution_adapter_capabilities": tuple(execution_adapter.get("capabilities", ())),
             "manifest_checksum_verified": not self.checksum_errors,
             "runtime_authorized": self.manifest.get("runtime_authorized"),
             "nas_operation_authorized": self.manifest.get("nas_operation_authorized"),
@@ -73,7 +87,8 @@ def load_strategy_package(package_root: str | Path) -> StrategyPackage:
 
 
 def validate_manifest(manifest: Mapping[str, Any]) -> None:
-    if manifest.get("schema_version") != MANIFEST_SCHEMA_VERSION:
+    schema_version = manifest.get("schema_version")
+    if schema_version not in SUPPORTED_MANIFEST_SCHEMA_VERSIONS:
         raise PackageLoaderError("blocked_schema_mismatch")
     if not manifest.get("package_id"):
         raise PackageLoaderError("blocked_package_id_missing")
@@ -89,6 +104,65 @@ def validate_manifest(manifest: Mapping[str, Any]) -> None:
     forbidden = manifest.get("forbidden_operations")
     if not isinstance(forbidden, dict) or any(int(value or 0) != 0 for value in forbidden.values()):
         raise PackageLoaderError("blocked_forbidden_operation_nonzero")
+    if schema_version == CR101_MANIFEST_SCHEMA_VERSION:
+        validate_cr101_target_adapter_contract(manifest)
+
+
+def validate_cr101_target_adapter_contract(manifest: Mapping[str, Any]) -> None:
+    delivery_target = select_delivery_target(manifest)
+    _validate_relative_path(str(delivery_target.get("entrypoint") or ""), "blocked_delivery_target_entrypoint_missing")
+    select_execution_adapter(manifest)
+
+
+def select_delivery_target(manifest: Mapping[str, Any]) -> Mapping[str, Any]:
+    if manifest.get("schema_version") != CR101_MANIFEST_SCHEMA_VERSION:
+        return {
+            "target_id": str(manifest.get("delivery_target_id") or DELIVERY_TARGET_QMT_TERMINAL_DIRECT),
+            "implemented": True,
+            "entrypoint": str(manifest.get("entrypoint") or ""),
+        }
+    targets = manifest.get("delivery_targets")
+    if not isinstance(targets, list) or not targets:
+        raise PackageLoaderError("blocked_delivery_targets_missing")
+    normalized = [_as_mapping(item, "delivery_target") for item in targets]
+    for target in normalized:
+        target_id = str(target.get("target_id") or "")
+        if target_id == LEGACY_MINIQMT_RUNNER_TARGET:
+            raise PackageLoaderError("blocked_legacy_miniqmt_runner_delivery_target")
+        if target_id in FUTURE_DELIVERY_TARGETS and target.get("implemented") is True:
+            raise PackageLoaderError(f"blocked_future_target_implemented:{target_id}")
+    implemented = [target for target in normalized if target.get("implemented") is True]
+    if len(implemented) != 1:
+        raise PackageLoaderError("blocked_delivery_target_implemented_count")
+    target = implemented[0]
+    if target.get("target_id") != DELIVERY_TARGET_QMT_TERMINAL_DIRECT:
+        raise PackageLoaderError("blocked_delivery_target_not_qmt_terminal_direct")
+    return target
+
+
+def select_execution_adapter(manifest: Mapping[str, Any]) -> Mapping[str, Any]:
+    if manifest.get("schema_version") != CR101_MANIFEST_SCHEMA_VERSION:
+        return {
+            "adapter_id": str(manifest.get("execution_adapter_id") or EXECUTION_ADAPTER_MINIQMT_GATEWAY_READONLY),
+            "capabilities": ("readonly",),
+        }
+    adapters = manifest.get("execution_adapters")
+    if not isinstance(adapters, list) or not adapters:
+        raise PackageLoaderError("blocked_execution_adapters_missing")
+    normalized = [_as_mapping(item, "execution_adapter") for item in adapters]
+    for adapter in normalized:
+        capabilities = tuple(str(item) for item in _as_list(adapter.get("capabilities")))
+        if any(capability in ORDER_WRITE_CAPABILITIES for capability in capabilities):
+            raise PackageLoaderError("blocked_execution_adapter_order_write_capability")
+        if any(capability not in READONLY_EXECUTION_CAPABILITIES for capability in capabilities):
+            raise PackageLoaderError("blocked_execution_adapter_unknown_capability")
+    for adapter in normalized:
+        if adapter.get("adapter_id") == EXECUTION_ADAPTER_MINIQMT_GATEWAY_READONLY:
+            capabilities = set(str(item) for item in _as_list(adapter.get("capabilities")))
+            if not capabilities or not capabilities <= READONLY_EXECUTION_CAPABILITIES:
+                raise PackageLoaderError("blocked_execution_adapter_capabilities_invalid")
+            return adapter
+    raise PackageLoaderError("blocked_execution_adapter_missing:miniqmt_gateway_readonly")
 
 
 def verify_checksums(package_root: Path, manifest: Mapping[str, Any]) -> tuple[str, ...]:
@@ -111,12 +185,18 @@ def verify_checksums(package_root: Path, manifest: Mapping[str, Any]) -> tuple[s
 
 
 def _resolve_under(root: Path, rel_path: str) -> Path:
-    if rel_path.startswith("/") or ".." in Path(rel_path).parts:
-        raise PackageLoaderError("blocked_path_escape")
+    _validate_relative_path(rel_path, "blocked_path_escape")
     path = (root / rel_path).resolve()
     if root.resolve() not in path.parents and path != root.resolve():
         raise PackageLoaderError("blocked_path_escape")
     return path
+
+
+def _validate_relative_path(rel_path: str, missing_code: str) -> None:
+    if not rel_path:
+        raise PackageLoaderError(missing_code)
+    if rel_path.startswith("/") or ".." in Path(rel_path).parts:
+        raise PackageLoaderError("blocked_path_escape")
 
 
 def _load_yaml(path: Path) -> Any:
@@ -131,3 +211,7 @@ def _as_mapping(value: Any, label: str) -> dict[str, Any]:
     if not isinstance(value, dict):
         raise PackageLoaderError(f"blocked_{label}_not_mapping")
     return value
+
+
+def _as_list(value: Any) -> list[Any]:
+    return value if isinstance(value, list) else []

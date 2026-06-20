@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import ast
+import hashlib
 import json
 from pathlib import Path
 
@@ -17,11 +19,19 @@ from trading.strategy_runner import (
 from trading.strategy_runner.adapters import zero_cr091_operation_counters
 from trading.strategy_runner.cache import StrategyCacheError
 from trading.strategy_runner.evidence import EvidenceRedactionError, assert_redacted
-from trading.strategy_runner.package_loader import PackageLoaderError
+from trading.strategy_runner.package_loader import (
+    CR101_MANIFEST_SCHEMA_VERSION,
+    DELIVERY_TARGET_QMT_TERMINAL_DIRECT,
+    EXECUTION_ADAPTER_MINIQMT_GATEWAY_READONLY,
+    LEGACY_MINIQMT_RUNNER_TARGET,
+    PackageLoaderError,
+    validate_manifest,
+)
 
 
 FIXTURE_ROOT = Path(__file__).parent / "fixtures" / "cr091_strategy_runner"
 PACKAGE_ROOT = FIXTURE_ROOT / "cr091_strategy_package"
+PROJECT_ROOT = Path(__file__).parents[1]
 
 
 def load_json(name: str) -> dict[str, object]:
@@ -83,6 +93,111 @@ def test_package_manifest_checksum_and_active_pointer_contracts() -> None:
     assert adapter_payload["trade_write_authorized"] is False
 
 
+def test_package_loader_has_no_real_qmt_sdk_imports() -> None:
+    source_path = PROJECT_ROOT / "trading" / "strategy_runner" / "package_loader.py"
+    tree = ast.parse(source_path.read_text(encoding="utf-8"))
+    blocked_roots = {"xtquant", "qmt", "miniqmt"}
+    imported_roots: set[str] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            imported_roots.update(alias.name.split(".", maxsplit=1)[0] for alias in node.names)
+        if isinstance(node, ast.ImportFrom) and node.module:
+            imported_roots.add(node.module.split(".", maxsplit=1)[0])
+
+    assert imported_roots.isdisjoint(blocked_roots)
+
+
+def test_cr101_manifest_accepts_qmt_direct_target_and_miniqmt_readonly_adapter(tmp_path: Path) -> None:
+    package_copy = tmp_path / "package"
+    package_copy.mkdir()
+    payload_text = (PACKAGE_ROOT / "payload" / "admission.json").read_text(encoding="utf-8")
+    (package_copy / "payload").mkdir()
+    (package_copy / "payload" / "admission.json").write_text(payload_text, encoding="utf-8")
+    (package_copy / "cache").mkdir()
+    (package_copy / "cache" / "active.json").write_text(
+        (PACKAGE_ROOT / "cache" / "active.json").read_text(encoding="utf-8"),
+        encoding="utf-8",
+    )
+    manifest = yaml.safe_load((PACKAGE_ROOT / "manifest.yaml").read_text(encoding="utf-8"))
+    manifest["schema_version"] = CR101_MANIFEST_SCHEMA_VERSION
+    manifest["delivery_targets"] = [
+        {
+            "target_id": DELIVERY_TARGET_QMT_TERMINAL_DIRECT,
+            "implemented": True,
+            "entrypoint": "targets/qmt_terminal_direct/entry.py",
+        },
+        {
+            "target_id": "goldminer_future",
+            "implemented": False,
+            "entrypoint": "targets/goldminer_future/entry.py",
+        },
+    ]
+    manifest["execution_adapters"] = [
+        {
+            "adapter_id": EXECUTION_ADAPTER_MINIQMT_GATEWAY_READONLY,
+            "capabilities": ["readonly", "health", "capabilities", "query_positions"],
+        }
+    ]
+    manifest["checksums"] = {
+        "payload/admission.json": hashlib.sha256(payload_text.encode("utf-8")).hexdigest(),
+        "cache/active.json": hashlib.sha256((package_copy / "cache" / "active.json").read_bytes()).hexdigest(),
+    }
+    (package_copy / "manifest.yaml").write_text(yaml.safe_dump(manifest, sort_keys=False), encoding="utf-8")
+
+    package = load_strategy_package(package_copy)
+    adapter_payload = package.to_adapter_payload()
+
+    assert adapter_payload["delivery_target_id"] == DELIVERY_TARGET_QMT_TERMINAL_DIRECT
+    assert adapter_payload["execution_adapter_id"] == EXECUTION_ADAPTER_MINIQMT_GATEWAY_READONLY
+    assert adapter_payload["execution_adapter_capabilities"] == (
+        "readonly",
+        "health",
+        "capabilities",
+        "query_positions",
+    )
+
+
+def test_cr101_manifest_rejects_legacy_miniqmt_runner_delivery_target() -> None:
+    manifest = yaml.safe_load((PACKAGE_ROOT / "manifest.yaml").read_text(encoding="utf-8"))
+    manifest["schema_version"] = CR101_MANIFEST_SCHEMA_VERSION
+    manifest["delivery_targets"] = [
+        {
+            "target_id": LEGACY_MINIQMT_RUNNER_TARGET,
+            "implemented": True,
+            "entrypoint": "targets/miniqmt_runner/entry.py",
+        }
+    ]
+    manifest["execution_adapters"] = [
+        {"adapter_id": EXECUTION_ADAPTER_MINIQMT_GATEWAY_READONLY, "capabilities": ["readonly"]}
+    ]
+
+    with pytest.raises(PackageLoaderError, match="blocked_legacy_miniqmt_runner_delivery_target"):
+        validate_manifest(manifest)
+
+
+def test_cr101_manifest_rejects_future_delivery_target_marked_implemented() -> None:
+    manifest = yaml.safe_load((PACKAGE_ROOT / "manifest.yaml").read_text(encoding="utf-8"))
+    manifest["schema_version"] = CR101_MANIFEST_SCHEMA_VERSION
+    manifest["delivery_targets"] = [
+        {
+            "target_id": DELIVERY_TARGET_QMT_TERMINAL_DIRECT,
+            "implemented": True,
+            "entrypoint": "targets/qmt_terminal_direct/entry.py",
+        },
+        {
+            "target_id": "goldminer_future",
+            "implemented": True,
+            "entrypoint": "targets/goldminer_future/entry.py",
+        },
+    ]
+    manifest["execution_adapters"] = [
+        {"adapter_id": EXECUTION_ADAPTER_MINIQMT_GATEWAY_READONLY, "capabilities": ["readonly"]}
+    ]
+
+    with pytest.raises(PackageLoaderError, match="blocked_future_target_implemented:goldminer_future"):
+        validate_manifest(manifest)
+
+
 def test_package_loader_requires_payload_checksum(tmp_path: Path) -> None:
     package_copy = tmp_path / "package"
     package_copy.mkdir()
@@ -134,13 +249,39 @@ def test_active_pointer_fail_closed_when_not_immutable(tmp_path: Path) -> None:
 
 def test_strategy_package_adapter_dispatches_loaded_payload() -> None:
     package = load_strategy_package(PACKAGE_ROOT)
+    adapter_payload = package.to_adapter_payload()
 
-    result = adapt_strategy_payload(package.to_adapter_payload(), run_id="cr091-test-package")
+    result = adapt_strategy_payload(adapter_payload, run_id="cr091-test-package")
 
     assert result.passed
     assert result.target_portfolio is not None
     assert result.target_portfolio.strategy_id == "strategy_package_alpha"
     assert len(result.order_intents) == 2
+    assert result.delivery_target_id == DELIVERY_TARGET_QMT_TERMINAL_DIRECT
+    assert result.execution_adapter_id == EXECUTION_ADAPTER_MINIQMT_GATEWAY_READONLY
+    assert result.execution_adapter_capabilities == ("readonly",)
+
+
+def test_strategy_package_adapter_rejects_unknown_execution_adapter() -> None:
+    package = load_strategy_package(PACKAGE_ROOT)
+    payload = package.to_adapter_payload()
+    payload["execution_adapter_id"] = "unknown_gateway"
+
+    result = adapt_strategy_payload(payload, run_id="cr101-test-package-unknown-adapter")
+
+    assert result.status == "blocked"
+    assert "blocked_execution_adapter_contract" in result.blocked_reasons
+
+
+def test_strategy_package_adapter_rejects_order_write_capability() -> None:
+    package = load_strategy_package(PACKAGE_ROOT)
+    payload = package.to_adapter_payload()
+    payload["execution_adapter_capabilities"] = ("readonly", "submit_order")
+
+    result = adapt_strategy_payload(payload, run_id="cr101-test-package-order-write")
+
+    assert result.status == "blocked"
+    assert "blocked_execution_adapter_order_write_capability" in result.blocked_reasons
 
 
 def test_strategy_package_adapter_requires_all_authorization_flags_false() -> None:
@@ -185,7 +326,26 @@ def test_evidence_redacts_sensitive_material_and_counts_forbidden_operations() -
     assert evidence.forbidden_operation_counters == zero_cr091_operation_counters()
     assert evidence.redaction_assurance["token_emitted"] is False
     assert evidence.redaction_assurance["raw_positions_emitted"] is False
+    assert evidence.sensitive_field_hits == 0
     assert evidence.not_authorization is True
+
+
+def test_evidence_records_cr101_target_and_adapter_boundary() -> None:
+    package = load_strategy_package(PACKAGE_ROOT)
+    adapter_result = adapt_strategy_payload(package.to_adapter_payload(), run_id="cr101-test-evidence-boundary")
+
+    evidence = build_evidence_summary(
+        run_id="cr101-test-evidence-boundary",
+        package_id=package.package_id,
+        adapter_type="strategy_package",
+        adapter_result=adapter_result,
+    )
+
+    assert evidence.status == "pass"
+    assert evidence.delivery_target_id == DELIVERY_TARGET_QMT_TERMINAL_DIRECT
+    assert evidence.execution_adapter_id == EXECUTION_ADAPTER_MINIQMT_GATEWAY_READONLY
+    assert evidence.execution_adapter_capabilities == ("readonly",)
+    assert evidence.sensitive_field_hits == 0
 
 
 def test_evidence_blocks_readonly_forbidden_counter_or_blocked_status() -> None:

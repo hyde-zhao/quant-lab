@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import Any, Mapping, Protocol
 
 from engine.order_intent_draft import (
@@ -19,6 +19,12 @@ from trading.strategy_runner.target_portfolio import (
 MULTIFACTOR_SCHEMA = "multifactor_strategy_admission_package_v1"
 LEGACY_SCHEMA = "legacy_strategy_result_v1"
 PACKAGE_PAYLOAD_SCHEMA = "cr091-strategy-package-payload-v1"
+DELIVERY_TARGET_QMT_TERMINAL_DIRECT = "qmt_terminal_direct"
+EXECUTION_ADAPTER_MINIQMT_GATEWAY_READONLY = "miniqmt_gateway_readonly"
+READONLY_EXECUTION_CAPABILITIES = frozenset({"readonly", "health", "capabilities", "query_positions"})
+ORDER_WRITE_EXECUTION_CAPABILITIES = frozenset(
+    {"submit_order", "cancel_order", "buy", "sell", "order_write", "simulation", "live"}
+)
 PACKAGE_AUTHORIZATION_FALSE_FLAGS: tuple[str, ...] = (
     "runtime_authorized",
     "nas_operation_authorized",
@@ -66,6 +72,9 @@ class AdapterResult:
     order_intents: tuple[OrderIntentDraftResult, ...] = ()
     blocked_reasons: tuple[str, ...] = ()
     operation_counters: Mapping[str, int] = field(default_factory=zero_cr091_operation_counters)
+    delivery_target_id: str = ""
+    execution_adapter_id: str = ""
+    execution_adapter_capabilities: tuple[str, ...] = ()
     not_authorization: bool = True
 
     @property
@@ -80,6 +89,9 @@ class AdapterResult:
             "order_intents": [item.to_dict() for item in self.order_intents],
             "blocked_reasons": list(self.blocked_reasons),
             "operation_counters": dict(self.operation_counters),
+            "delivery_target_id": self.delivery_target_id,
+            "execution_adapter_id": self.execution_adapter_id,
+            "execution_adapter_capabilities": list(self.execution_adapter_capabilities),
             "not_authorization": self.not_authorization,
         }
 
@@ -199,17 +211,45 @@ class StrategyPackageAdapter:
         reasons = common_payload_blocks(payload)
         if not payload.get("adapter_type"):
             reasons.append("blocked_missing_adapter_type")
+        delivery_target_id = str(payload.get("delivery_target_id") or "")
+        execution_adapter_id = str(payload.get("execution_adapter_id") or "")
+        execution_adapter_capabilities = tuple(str(item) for item in _as_list(payload.get("execution_adapter_capabilities")))
+        if delivery_target_id != DELIVERY_TARGET_QMT_TERMINAL_DIRECT:
+            reasons.append("blocked_delivery_target_contract")
+        if execution_adapter_id != EXECUTION_ADAPTER_MINIQMT_GATEWAY_READONLY:
+            reasons.append("blocked_execution_adapter_contract")
+        if not execution_adapter_capabilities:
+            reasons.append("blocked_execution_adapter_capabilities_missing")
+        if any(capability in ORDER_WRITE_EXECUTION_CAPABILITIES for capability in execution_adapter_capabilities):
+            reasons.append("blocked_execution_adapter_order_write_capability")
+        if any(capability not in READONLY_EXECUTION_CAPABILITIES for capability in execution_adapter_capabilities):
+            reasons.append("blocked_execution_adapter_unknown_capability")
         if payload.get("manifest_checksum_verified") is not True:
             reasons.append("blocked_checksum_mismatch")
         if any(payload.get(flag) is not False for flag in PACKAGE_AUTHORIZATION_FALSE_FLAGS):
             reasons.append("blocked_manifest_flags_nonfalse")
         if reasons:
-            return blocked_result(self.adapter_type, tuple(reasons))
+            return _with_execution_boundary(
+                blocked_result(self.adapter_type, tuple(reasons)),
+                delivery_target_id=delivery_target_id,
+                execution_adapter_id=execution_adapter_id,
+                execution_adapter_capabilities=execution_adapter_capabilities,
+            )
         inner = _as_mapping(payload.get("strategy_payload"))
         if not inner:
-            return blocked_result(self.adapter_type, ("blocked_missing_strategy_payload",))
+            return _with_execution_boundary(
+                blocked_result(self.adapter_type, ("blocked_missing_strategy_payload",)),
+                delivery_target_id=delivery_target_id,
+                execution_adapter_id=execution_adapter_id,
+                execution_adapter_capabilities=execution_adapter_capabilities,
+            )
         registry = AdapterRegistry((MultifactorAdmissionAdapter(), LegacyStrategyResultAdapter()))
-        return registry.dispatch(inner, run_id=run_id)
+        return _with_execution_boundary(
+            registry.dispatch(inner, run_id=run_id),
+            delivery_target_id=delivery_target_id,
+            execution_adapter_id=execution_adapter_id,
+            execution_adapter_capabilities=execution_adapter_capabilities,
+        )
 
 
 def default_adapters() -> tuple[StrategyAdapter, ...]:
@@ -273,6 +313,21 @@ def blocked_result(
     )
 
 
+def _with_execution_boundary(
+    result: AdapterResult,
+    *,
+    delivery_target_id: str,
+    execution_adapter_id: str,
+    execution_adapter_capabilities: tuple[str, ...],
+) -> AdapterResult:
+    return replace(
+        result,
+        delivery_target_id=delivery_target_id,
+        execution_adapter_id=execution_adapter_id,
+        execution_adapter_capabilities=execution_adapter_capabilities,
+    )
+
+
 def common_payload_blocks(payload: Mapping[str, object]) -> list[str]:
     reasons: list[str] = []
     if payload.get("not_authorization") is not True:
@@ -316,7 +371,7 @@ def _candidate_symbols(payload: Mapping[str, object], candidate: Mapping[str, ob
 
 
 def _as_list(value: object) -> list[object]:
-    return value if isinstance(value, list) else []
+    return list(value) if isinstance(value, list | tuple) else []
 
 
 def _as_mapping(value: object) -> dict[str, Any]:

@@ -54,12 +54,16 @@ class EvidenceSummary:
     run_id: str
     package_id: str
     adapter_type: str
+    delivery_target_id: str
+    execution_adapter_id: str
+    execution_adapter_capabilities: tuple[str, ...]
     strategy_id: str
     target_count: int
     order_intent_count: int
     readonly_reconciliation_status: str
     forbidden_operation_counters: Mapping[str, int] = field(default_factory=zero_cr091_operation_counters)
     redaction_assurance: Mapping[str, bool] = field(default_factory=dict)
+    sensitive_field_hits: int = 0
     readonly_health_status: str = "not_run"
     readonly_capabilities_status: str = "not_run"
     readonly_position_count: int = 0
@@ -78,12 +82,16 @@ class EvidenceSummary:
             "run_id": self.run_id,
             "package_id": self.package_id,
             "adapter_type": self.adapter_type,
+            "delivery_target_id": self.delivery_target_id,
+            "execution_adapter_id": self.execution_adapter_id,
+            "execution_adapter_capabilities": list(self.execution_adapter_capabilities),
             "strategy_id": self.strategy_id,
             "target_count": self.target_count,
             "order_intent_count": self.order_intent_count,
             "readonly_reconciliation_status": self.readonly_reconciliation_status,
             "forbidden_operation_counters": dict(self.forbidden_operation_counters),
             "redaction_assurance": dict(self.redaction_assurance),
+            "sensitive_field_hits": self.sensitive_field_hits,
             "readonly_health_status": self.readonly_health_status,
             "readonly_capabilities_status": self.readonly_capabilities_status,
             "readonly_position_count": self.readonly_position_count,
@@ -133,6 +141,9 @@ def build_evidence_summary(
         run_id=run_id,
         package_id=package_id,
         adapter_type=adapter_type,
+        delivery_target_id=adapter_result.delivery_target_id,
+        execution_adapter_id=adapter_result.execution_adapter_id,
+        execution_adapter_capabilities=adapter_result.execution_adapter_capabilities,
         strategy_id=adapter_result.strategy_id,
         target_count=target_count,
         order_intent_count=len(adapter_result.order_intents),
@@ -146,6 +157,7 @@ def build_evidence_summary(
             "raw_orders_emitted": False,
             "qmt_logs_emitted": False,
         },
+        sensitive_field_hits=0,
         readonly_health_status="not_run" if readonly_health_result is None else readonly_health_result.status,
         readonly_capabilities_status="not_run" if readonly_capabilities_result is None else readonly_capabilities_result.status,
         readonly_position_count=_int_payload(readonly_result, "position_count"),
