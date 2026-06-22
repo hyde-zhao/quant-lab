@@ -28,6 +28,7 @@ from engine.contracts import (
 from engine.diagnostics import start_diagnostic
 from engine.quality import QualityError, calculate_quality
 from engine.research_dataset import ResearchDatasetRequest, build_research_dataset
+from engine.research_paths import research_report_path
 from engine.source_registry import require_resolved_registry_key, SourceRegistryError
 from market_data.readers import LightweightInputRequest, read_lightweight_input
 
@@ -48,7 +49,7 @@ class DataQualityGateError(DataContractError):
 class LoaderConfig:
     data_dir: str | Path = "data"
     manifest_path: str | Path = "data/manifests/data_prep_manifest.jsonl"
-    quality_report_path: str | Path = "reports/data_quality_report.csv"
+    quality_report_path: str | Path = research_report_path("data_quality_report.csv")
     input_mode: str = "legacy_flat"
     market_data_lake_root: str | Path | None = None
     dataset: str = "prices"

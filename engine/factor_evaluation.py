@@ -19,6 +19,7 @@ from typing import Any, Mapping, Sequence
 
 from engine.factor_panel_contracts import PanelGateResult, to_blocked_claims
 from engine.multifactor_contracts import FORBIDDEN_OPERATION_COUNTERS
+from engine.research_paths import research_report_path
 
 
 FACTOR_EVALUATION_SCHEMA = "factor_evaluation_report_v1"
@@ -362,7 +363,7 @@ def classify_factor_report_claims(report: FactorEvaluationReport | Mapping[str, 
 
 def resolve_factor_evaluation_report_paths(
     report_id: str,
-    output_root: str | Path = "reports/factor_evaluation",
+    output_root: str | Path = research_report_path("factor_evaluation"),
 ) -> ArtifactPaths:
     root = Path(output_root)
     root_parts = root.parts

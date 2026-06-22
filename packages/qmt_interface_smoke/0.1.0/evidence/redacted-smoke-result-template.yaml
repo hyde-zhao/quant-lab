@@ -1,0 +1,45 @@
+schema_version: cr089-redacted-smoke-result-template-v1
+change_id: CR-089
+package_id: strategy-package-qmt_interface_smoke-0.1.0
+strategy_id: qmt_interface_smoke
+version: 0.1.0
+runtime_authorization_status: not_authorized_by_package
+runtime_authorization_ref: ""
+executed_by: user_manual_only
+executed_at: ""
+execution_environment:
+  host_role: trading_pc
+  qmt_runtime: user_local_only
+  package_source: local_cache_after_checksum_pass
+readonly_smoke:
+  endpoint_id: query_positions
+  path: /qmt/account/positions
+  required_scope: qmt:positions:read
+  status: not_run
+  blocked_reason: runtime_authorization_required
+  position_count_bucket: ""
+  positions_digest: ""
+  redaction_status: not_run
+  raw_payload_included: false
+  raw_account_output_included: false
+  trade_write_attempted: false
+forbidden_operation_counters:
+  nas_read: 0
+  nas_write: 0
+  nas_list: 0
+  nas_copy: 0
+  nas_publish: 0
+  nas_pull: 0
+  credential_read: 0
+  env_file_read: 0
+  qmt_start: 0
+  miniqmt_start: 0
+  xtquant_import: 0
+  gateway_start: 0
+  account_raw_query: 0
+  raw_positions_emit: 0
+  submit_order: 0
+  cancel_order: 0
+  simulation: 0
+  live: 0
+operator_notes_redacted: ""

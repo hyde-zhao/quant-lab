@@ -15,6 +15,7 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from engine.research_dataset import ResearchInputMetadata, build_research_input_metadata
+from engine.research_paths import research_report_path
 from experiments.reporting import attach_research_input_metadata, legacy_report_limitation
 from market_data.benchmarks import BenchmarkPolicy, resolve_hs300_benchmark
 
@@ -57,9 +58,9 @@ def main() -> None:
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="运行实验十四数据与 benchmark 口径审计。")
     parser.add_argument("--data-dir", required=True, default=None, help="必须显式传入的本地标准 parquet 目录。")
-    parser.add_argument("--quality-report", default="reports/data_quality_report.csv")
-    parser.add_argument("--phase-two-report", default="reports/experiment_13/backtest_report.md")
-    parser.add_argument("--output-dir", default="reports/experiment_14")
+    parser.add_argument("--quality-report", default=str(research_report_path("data_quality_report.csv")))
+    parser.add_argument("--phase-two-report", default=str(research_report_path("experiment_13", "backtest_report.md")))
+    parser.add_argument("--output-dir", default=str(research_report_path("experiment_14")))
     parser.add_argument("--forward-return-horizon", type=int, default=20)
     parser.add_argument("--market-data-lake-root", default=None)
     parser.add_argument("--benchmark-kind", default="price_index")

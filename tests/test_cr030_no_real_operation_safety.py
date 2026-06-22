@@ -6,13 +6,27 @@ from pathlib import Path, PurePosixPath
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-MAIN_DOC = PROJECT_ROOT / "docs" / "CR030-MULTIFACTOR-RESEARCH-LOOP.md"
-REFERENCE_MATRIX = PROJECT_ROOT / "docs" / "CR030-MULTIFACTOR-REFERENCE-MATRIX.md"
+MAIN_DOC = (
+    PROJECT_ROOT
+    / "process"
+    / "docs"
+    / "source-archive"
+    / "docs"
+    / "CR030-MULTIFACTOR-RESEARCH-LOOP.md"
+)
+REFERENCE_MATRIX = (
+    PROJECT_ROOT
+    / "process"
+    / "docs"
+    / "source-archive"
+    / "docs"
+    / "CR030-MULTIFACTOR-REFERENCE-MATRIX.md"
+)
 TEST_PATH = PROJECT_ROOT / "tests" / "test_cr030_no_real_operation_safety.py"
 
 ALLOWED_TEXT_TARGETS = {
-    "docs/CR030-MULTIFACTOR-RESEARCH-LOOP.md",
-    "docs/CR030-MULTIFACTOR-REFERENCE-MATRIX.md",
+    "process/docs/source-archive/docs/CR030-MULTIFACTOR-RESEARCH-LOOP.md",
+    "process/docs/source-archive/docs/CR030-MULTIFACTOR-REFERENCE-MATRIX.md",
     "tests/test_cr030_no_real_operation_safety.py",
 }
 
@@ -136,16 +150,16 @@ def _read_allowed_text(relative_path: str) -> str:
 
 
 def _main_doc() -> str:
-    return _read_allowed_text("docs/CR030-MULTIFACTOR-RESEARCH-LOOP.md")
+    return _read_allowed_text("process/docs/source-archive/docs/CR030-MULTIFACTOR-RESEARCH-LOOP.md")
 
 
 def _all_target_texts() -> dict[str, str]:
     return {
-        "docs/CR030-MULTIFACTOR-RESEARCH-LOOP.md": _read_allowed_text(
-            "docs/CR030-MULTIFACTOR-RESEARCH-LOOP.md"
+        "process/docs/source-archive/docs/CR030-MULTIFACTOR-RESEARCH-LOOP.md": _read_allowed_text(
+            "process/docs/source-archive/docs/CR030-MULTIFACTOR-RESEARCH-LOOP.md"
         ),
-        "docs/CR030-MULTIFACTOR-REFERENCE-MATRIX.md": _read_allowed_text(
-            "docs/CR030-MULTIFACTOR-REFERENCE-MATRIX.md"
+        "process/docs/source-archive/docs/CR030-MULTIFACTOR-REFERENCE-MATRIX.md": _read_allowed_text(
+            "process/docs/source-archive/docs/CR030-MULTIFACTOR-REFERENCE-MATRIX.md"
         ),
     }
 
@@ -350,7 +364,7 @@ def test_safety_test_is_static_and_does_not_import_external_runtime_or_secret_pa
     calls = _call_names(TEST_PATH)
     assert calls.isdisjoint(forbidden_call_names)
     assert ALLOWED_TEXT_TARGETS == {
-        "docs/CR030-MULTIFACTOR-RESEARCH-LOOP.md",
-        "docs/CR030-MULTIFACTOR-REFERENCE-MATRIX.md",
+        "process/docs/source-archive/docs/CR030-MULTIFACTOR-RESEARCH-LOOP.md",
+        "process/docs/source-archive/docs/CR030-MULTIFACTOR-REFERENCE-MATRIX.md",
         "tests/test_cr030_no_real_operation_safety.py",
     }

@@ -343,6 +343,7 @@ class QmtClient:
         run_id: str = "qmt-health-check",
         stage: str | None = None,
         request_id: str = "",
+        authorization_ref: str = "",
         timeout_seconds: int = REST_GATEWAY_DEFAULT_TIMEOUT_SECONDS,
     ) -> QmtResponse:
         request = self._request(
@@ -350,6 +351,7 @@ class QmtClient:
             run_id=run_id,
             stage=stage,
             request_id=request_id,
+            authorization_ref=authorization_ref,
             timeout_seconds=timeout_seconds,
         )
         return self._send_rest_request(request)
@@ -360,6 +362,7 @@ class QmtClient:
         run_id: str = "qmt-capabilities-check",
         stage: str | None = None,
         request_id: str = "",
+        authorization_ref: str = "",
         timeout_seconds: int = REST_GATEWAY_DEFAULT_TIMEOUT_SECONDS,
     ) -> QmtResponse:
         request = self._request(
@@ -367,6 +370,7 @@ class QmtClient:
             run_id=run_id,
             stage=stage,
             request_id=request_id,
+            authorization_ref=authorization_ref,
             timeout_seconds=timeout_seconds,
         )
         return self._send_rest_request(

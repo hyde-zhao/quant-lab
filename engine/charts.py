@@ -14,6 +14,8 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import pandas as pd
 
+from engine.research_paths import research_report_path
+
 
 class ChartGenerationError(Exception):
     """图表生成错误。"""
@@ -27,7 +29,7 @@ class ChartArtifact:
     source_path: str
 
 
-def generate_report_charts(report_dir: str | Path = "reports") -> list[ChartArtifact]:
+def generate_report_charts(report_dir: str | Path = research_report_path()) -> list[ChartArtifact]:
     """从标准报告目录读取已存在结果，生成可嵌入 Markdown 的 PNG 图表。"""
 
     root = Path(report_dir)
@@ -179,7 +181,7 @@ def write_chart_index(artifacts: list[ChartArtifact], output_path: str | Path) -
     lines = [
         "# 回测图表索引",
         "",
-        "本文件由 `engine.charts.generate_report_charts` 生成，图片文件位于 `reports/charts/`。",
+        "本文件由 `engine.charts.generate_report_charts` 生成，图片文件位于报告目录的 `charts/` 子目录。",
         "",
     ]
     for artifact in artifacts:

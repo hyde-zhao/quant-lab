@@ -6,11 +6,18 @@ from pathlib import Path, PurePosixPath
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-DOC_PATH = PROJECT_ROOT / "docs" / "CR030-MULTIFACTOR-REFERENCE-MATRIX.md"
+DOC_PATH = (
+    PROJECT_ROOT
+    / "process"
+    / "docs"
+    / "source-archive"
+    / "docs"
+    / "CR030-MULTIFACTOR-REFERENCE-MATRIX.md"
+)
 TEST_PATH = PROJECT_ROOT / "tests" / "test_cr030_external_reference_guardrails.py"
 
 ALLOWED_TEXT_TARGETS = {
-    "docs/CR030-MULTIFACTOR-REFERENCE-MATRIX.md",
+    "process/docs/source-archive/docs/CR030-MULTIFACTOR-REFERENCE-MATRIX.md",
     "tests/test_cr030_external_reference_guardrails.py",
 }
 
@@ -177,7 +184,7 @@ def _call_names(path: Path) -> set[str]:
 
 
 def test_reference_matrix_covers_required_external_projects() -> None:
-    doc = _read_allowed_text("docs/CR030-MULTIFACTOR-REFERENCE-MATRIX.md")
+    doc = _read_allowed_text("process/docs/source-archive/docs/CR030-MULTIFACTOR-REFERENCE-MATRIX.md")
     rows = _markdown_table_rows(doc, "| 项目 | 分类 | License / 依赖风险 | 可借鉴点 | 不可做事项 | 后续 Spike 条件 | 与自有多因子研究闭环的关系 |")
 
     projects = [row[0] for row in rows]
@@ -189,7 +196,7 @@ def test_reference_matrix_covers_required_external_projects() -> None:
 
 
 def test_reference_matrix_uses_allowed_classifications_and_covers_all_categories() -> None:
-    doc = _read_allowed_text("docs/CR030-MULTIFACTOR-REFERENCE-MATRIX.md")
+    doc = _read_allowed_text("process/docs/source-archive/docs/CR030-MULTIFACTOR-REFERENCE-MATRIX.md")
     rows = _markdown_table_rows(doc, "| 项目 | 分类 | License / 依赖风险 | 可借鉴点 | 不可做事项 | 后续 Spike 条件 | 与自有多因子研究闭环的关系 |")
 
     seen: set[str] = set()
@@ -203,7 +210,7 @@ def test_reference_matrix_uses_allowed_classifications_and_covers_all_categories
 
 
 def test_forbidden_operation_categories_are_covered_as_zero_count_contracts() -> None:
-    doc = _read_allowed_text("docs/CR030-MULTIFACTOR-REFERENCE-MATRIX.md")
+    doc = _read_allowed_text("process/docs/source-archive/docs/CR030-MULTIFACTOR-REFERENCE-MATRIX.md")
     rows = _markdown_table_rows(doc, "| 操作类别 | 本轮计数 | 状态 | 说明 |")
     counters = {row[0]: row[1:] for row in rows}
 
@@ -216,7 +223,7 @@ def test_forbidden_operation_categories_are_covered_as_zero_count_contracts() ->
 
 
 def test_cr026_remains_deferred_spike_only() -> None:
-    doc = _read_allowed_text("docs/CR030-MULTIFACTOR-REFERENCE-MATRIX.md")
+    doc = _read_allowed_text("process/docs/source-archive/docs/CR030-MULTIFACTOR-REFERENCE-MATRIX.md")
 
     assert "CR-026 保持后续 Spike candidate" in doc
     assert "不并入 CR-030 P0" in doc
@@ -227,7 +234,7 @@ def test_cr026_remains_deferred_spike_only() -> None:
 
 
 def test_positive_authorization_and_readiness_claims_are_absent() -> None:
-    doc = _read_allowed_text("docs/CR030-MULTIFACTOR-REFERENCE-MATRIX.md")
+    doc = _read_allowed_text("process/docs/source-archive/docs/CR030-MULTIFACTOR-REFERENCE-MATRIX.md")
 
     findings = [phrase for phrase in FORBIDDEN_POSITIVE_PHRASES if phrase in doc]
     assert findings == []
@@ -265,6 +272,6 @@ def test_guardrail_test_is_static_and_does_not_import_external_runtime_or_secret
     calls = _call_names(TEST_PATH)
     assert calls.isdisjoint(forbidden_call_names)
     assert ALLOWED_TEXT_TARGETS == {
-        "docs/CR030-MULTIFACTOR-REFERENCE-MATRIX.md",
+        "process/docs/source-archive/docs/CR030-MULTIFACTOR-REFERENCE-MATRIX.md",
         "tests/test_cr030_external_reference_guardrails.py",
     }

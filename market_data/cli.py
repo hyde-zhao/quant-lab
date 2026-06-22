@@ -176,16 +176,15 @@ def _parse_bool(value: str | bool) -> bool:
 
 
 def _resolve_lake_root(explicit: str | None, *, required: bool = False) -> str:
+    del required
     if explicit:
         return explicit
     env_value = os.environ.get("MARKET_DATA_LAKE_ROOT")
     if env_value:
         return env_value
-    if required:
-        raise LakeRootMissingError(
-            "lake root 未配置；请传 --lake-root 或设置 MARKET_DATA_LAKE_ROOT"
-        )
-    return "data/market_data"
+    raise LakeRootMissingError(
+        "lake root 未配置；请传 --lake-root 或设置 MARKET_DATA_LAKE_ROOT"
+    )
 
 
 def _plan_payload(args: argparse.Namespace) -> dict[str, Any]:
@@ -1751,7 +1750,8 @@ def cmd_fetch(args: argparse.Namespace) -> dict[str, Any]:
     from .connectors.fake import FakeConnector
     from .runtime import RuntimeContext, RuntimePolicy, execute_batches
 
-    layout = LakeLayout(args.lake_root)
+    lake_root = _resolve_lake_root(args.lake_root)
+    layout = LakeLayout(lake_root)
     request = _fake_request(args)
     results = execute_batches(
         [request],
@@ -2793,7 +2793,7 @@ def cmd_read(args: argparse.Namespace) -> dict[str, Any]:
 
 
 def _canonical_frame(args: argparse.Namespace) -> pd.DataFrame:
-    layout = LakeLayout(args.lake_root)
+    layout = LakeLayout(_resolve_lake_root(args.lake_root, required=True))
     paths = sorted(layout.canonical_dataset_root(args.dataset).rglob("*.parquet"))
     if not paths:
         raise CliExecutionError("canonical parquet 不存在，无法 compare")
@@ -2851,7 +2851,7 @@ def build_parser() -> argparse.ArgumentParser:
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     def common_plan(subparser: argparse.ArgumentParser) -> None:
-        subparser.add_argument("--lake-root", default="data/market_data")
+        subparser.add_argument("--lake-root")
         subparser.add_argument("--dataset", default=DATASET_PRICES)
         subparser.add_argument("--source", default=SOURCE_FAKE)
         subparser.add_argument("--interface", default=INTERFACE_PRICES_DAILY)
@@ -3206,7 +3206,7 @@ def build_parser() -> argparse.ArgumentParser:
     restore_drill_parser.set_defaults(handler=cmd_restore_drill)
 
     compare = subparsers.add_parser("compare")
-    compare.add_argument("--lake-root", default="data/market_data")
+    compare.add_argument("--lake-root")
     compare.add_argument("--dataset", default=DATASET_PRICES)
     compare.add_argument("--left-path")
     compare.add_argument("--right-path")

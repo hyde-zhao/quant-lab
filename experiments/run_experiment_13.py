@@ -19,6 +19,7 @@ if str(PROJECT_ROOT) not in sys.path:
 from engine.backtest import BacktestConfig, BacktestResult, run_backtest
 from engine.diagnostics import LOGGER_NAME
 from engine.portfolio import PortfolioConfig
+from engine.research_paths import research_report_path
 from engine.reporting import write_rows_csv
 from experiments.run_experiment_06_07 import (
     SIMPLIFIED_SYMBOLS,
@@ -175,12 +176,12 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="运行实验十三三策略横向对比。")
     add_market_data_input_args(parser)
     parser.add_argument("--quality-report", default=None, help="兼容旧参数；当前不读取旧质量报告内容。")
-    parser.add_argument("--output-dir", default="reports/experiment_13")
+    parser.add_argument("--output-dir", default=str(research_report_path("experiment_13")))
     parser.add_argument("--start-date", default=None)
     parser.add_argument("--end-date", default=None)
     parser.add_argument("--initial-cash", type=float, default=1_000_000.0)
-    parser.add_argument("--experiment-10-comparison", default="reports/experiment_10/out_of_sample_comparison.csv")
-    parser.add_argument("--experiment-12-summary", default="reports/experiment_12/segment_summary.csv")
+    parser.add_argument("--experiment-10-comparison", default=str(research_report_path("experiment_10", "out_of_sample_comparison.csv")))
+    parser.add_argument("--experiment-12-summary", default=str(research_report_path("experiment_12", "segment_summary.csv")))
     parser.add_argument("--benchmark-kind", default="policy_unconfirmed", choices=["price_index", "total_return_index", "adjusted_index", "policy_unconfirmed"])
     parser.add_argument("--require-benchmark", action="store_true", help="缺少 hs300_index 时返回 required_missing metadata。")
     parser.add_argument("--allow-benchmark-warn", action="store_true", help="允许 quality warn 的 hs300_index 进入 benchmark metadata。")

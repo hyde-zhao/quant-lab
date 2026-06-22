@@ -69,7 +69,7 @@ def test_migration_summary_preserves_legacy_qfq() -> None:
 
 
 def test_migration_document_contains_required_statement() -> None:
-    text = Path("docs/ADJUSTMENT-POLICY-MIGRATION.md").read_text(encoding="utf-8")
+    text = Path("process/docs/source-archive/docs/ADJUSTMENT-POLICY-MIGRATION.md").read_text(encoding="utf-8")
 
     assert "`legacy_qfq_baseline_preserved` | `true`" in text
     assert "legacy_qfq_readonly" in text

@@ -24,6 +24,7 @@ if str(PROJECT_ROOT) not in sys.path:
 
 from engine.metrics import calculate_metrics
 from engine.diagnostics import LOGGER_NAME
+from engine.research_paths import research_report_path
 from experiments.run_experiment_15_factor_framework import FactorFrameworkError, load_local_frames, markdown_table
 from experiments.run_experiment_17_21_factor_suite import (
     MarketMatrices,
@@ -66,13 +67,13 @@ ENGINEERED_FEATURES = (
     "rsi_14_delta_60",
 )
 DEFAULT_OUTPUT_DIRS = {
-    23: "reports/experiment_23_volatility_audit",
-    24: "reports/experiment_24_ml_dataset_and_labels",
-    25: "reports/experiment_25_ml_baselines",
-    26: "reports/experiment_26_tree_model_features",
-    27: "reports/experiment_27_feature_importance",
-    28: "reports/experiment_28_walk_forward",
-    29: "reports/experiment_29_ml_strategy_and_summary",
+    23: "experiment_23_volatility_audit",
+    24: "experiment_24_ml_dataset_and_labels",
+    25: "experiment_25_ml_baselines",
+    26: "experiment_26_tree_model_features",
+    27: "experiment_27_feature_importance",
+    28: "experiment_28_walk_forward",
+    29: "experiment_29_ml_strategy_and_summary",
 }
 STAGE3_MULTIFACTOR_TOP10_ANNUAL = 0.0596
 STAGE3_MULTIFACTOR_TOP20_ANNUAL = 0.0612
@@ -131,7 +132,7 @@ def main() -> None:
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="运行实验二十三至二十九 ML 因子套件。")
     parser.add_argument("--data-dir", required=True, help="显式传入本地标准 parquet 目录。")
-    parser.add_argument("--output-root", default="reports")
+    parser.add_argument("--output-root", default=str(research_report_path()))
     parser.add_argument("--start-date", default=None)
     parser.add_argument("--end-date", default=None)
     parser.add_argument("--horizon", type=int, default=20)
@@ -253,7 +254,7 @@ def make_output_dirs(output_root: Path) -> dict[int, Path]:
     result: dict[int, Path] = {}
     for experiment_id, default_path in DEFAULT_OUTPUT_DIRS.items():
         relative = Path(default_path)
-        path = output_root / relative.relative_to("reports") if relative.parts and relative.parts[0] == "reports" else relative
+        path = output_root / relative.relative_to("reports") if relative.parts and relative.parts[0] == "reports" else output_root / relative
         path.mkdir(parents=True, exist_ok=True)
         result[experiment_id] = path
     return result

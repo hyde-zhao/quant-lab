@@ -75,14 +75,14 @@ def test_migration_contract_preserves_legacy_qfq_and_old_reports() -> None:
     assert migration_contract["old_report_overwrite_allowed"] is False
     assert migration_contract["new_prices_qfq_replaces_legacy_qfq"] is False
 
-    migration_doc = _read_text("docs/ADJUSTMENT-POLICY-MIGRATION.md")
+    migration_doc = _read_text("process/docs/source-archive/docs/ADJUSTMENT-POLICY-MIGRATION.md")
     assert "legacy qfq baseline remains read-only" in migration_doc
     assert "old report overwrite" in migration_doc
     assert "legacy qfq overwrite" in migration_doc
 
 
 def test_docs_expose_consumer_boundary_without_unsupported_execution_claims() -> None:
-    migration_doc = _read_text("docs/ADJUSTMENT-POLICY-MIGRATION.md")
+    migration_doc = _read_text("process/docs/source-archive/docs/ADJUSTMENT-POLICY-MIGRATION.md")
     readme_section = _section(
         _read_text("README.md"),
         "### CR-017 复权双视图与 QMT 消费边界",

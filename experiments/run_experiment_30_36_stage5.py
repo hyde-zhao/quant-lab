@@ -20,6 +20,7 @@ if str(PROJECT_ROOT) not in sys.path:
 
 from engine.metrics import calculate_metrics
 from engine.portfolio import PortfolioConfig, PortfolioResult, RebalanceSignal, run_portfolio
+from engine.research_paths import research_report_path
 from experiments.run_experiment_15_factor_framework import FactorFrameworkError, load_local_frames, markdown_table
 from experiments.run_experiment_17_21_factor_suite import (
     DEFAULT_FACTORS,
@@ -36,18 +37,18 @@ from experiments.run_experiment_23_29_ml_factor_suite import MAIN_FACTORS, score
 
 
 DEFAULT_OUTPUT_DIRS = {
-    30: "reports/experiment_30_stage5_baseline_risk",
-    31: "reports/experiment_31_drawdown_regime",
-    32: "reports/experiment_32_portfolio_constraints",
-    33: "reports/experiment_33_turnover_cost_control",
-    34: "reports/experiment_34_tradability_data_gap",
-    35: "reports/experiment_35_low_vol_enhancement",
-    36: "reports/experiment_36_stage5_summary",
+    30: "experiment_30_stage5_baseline_risk",
+    31: "experiment_31_drawdown_regime",
+    32: "experiment_32_portfolio_constraints",
+    33: "experiment_33_turnover_cost_control",
+    34: "experiment_34_tradability_data_gap",
+    35: "experiment_35_low_vol_enhancement",
+    36: "experiment_36_stage5_summary",
 }
 DEFAULT_TOP_FRACTIONS = (0.1, 0.2)
 DEFAULT_COST_GRID_BPS = (0, 5, 10, 20, 50, 100)
 DEFAULT_AUM_GRID = (1_000_000, 5_000_000, 10_000_000, 50_000_000, 100_000_000)
-DEFAULT_ML_PREDICTIONS_PATH = PROJECT_ROOT / "reports" / "experiment_28_walk_forward" / "walk_forward_predictions.parquet"
+DEFAULT_ML_PREDICTIONS_PATH = research_report_path("experiment_28_walk_forward", "walk_forward_predictions.parquet")
 TRADING_DAYS_PER_YEAR = 252
 
 
@@ -80,7 +81,7 @@ def main() -> None:
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="运行阶段五风控、可交易性与集成回测套件。")
     parser.add_argument("--data-dir", required=True, help="显式传入本地标准 parquet 目录。")
-    parser.add_argument("--output-root", default="reports")
+    parser.add_argument("--output-root", default=str(research_report_path()))
     parser.add_argument("--start-date", default=None)
     parser.add_argument("--end-date", default=None)
     parser.add_argument("--min-cross-section", type=int, default=5)
@@ -149,7 +150,7 @@ def make_output_dirs(output_root: Path) -> dict[int, Path]:
     result: dict[int, Path] = {}
     for experiment_id, default_path in DEFAULT_OUTPUT_DIRS.items():
         relative = Path(default_path)
-        path = output_root / relative.relative_to("reports") if relative.parts and relative.parts[0] == "reports" else relative
+        path = output_root / relative.relative_to("reports") if relative.parts and relative.parts[0] == "reports" else output_root / relative
         path.mkdir(parents=True, exist_ok=True)
         result[experiment_id] = path
     return result

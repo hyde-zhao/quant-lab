@@ -1,6 +1,6 @@
 """CR-039 多因子策略候选研究 runner。
 
-只读取 CR-038 本地组合研究 artifact，写本地 reports/process 研究产物；
+只读取 CR-038 组合研究 artifact，写 NAS reports/runs 研究产物；
 不读取凭据、不访问网络、不写 data lake、不 publish catalog、不触发 QMT /
 simulation / live。
 """
@@ -33,6 +33,7 @@ from engine.multifactor_strategy_candidates import (
     StrategyResearchResult,
     run_strategy_research,
 )
+from engine.research_paths import research_report_path, research_run_path
 
 
 CR039_RUN_SCHEMA = "multifactor_strategy_candidates_run_v1"
@@ -82,15 +83,15 @@ class StrategyCandidateRunResult:
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="运行 CR-039 多因子策略候选研究")
     parser.add_argument("--run-id", default="")
-    parser.add_argument("--output-root", default="process/research/multifactor_strategy_candidates")
-    parser.add_argument("--report-root", default="reports/multifactor_strategy_candidates")
+    parser.add_argument("--output-root", default=str(research_run_path("multifactor_strategy_candidates")))
+    parser.add_argument("--report-root", default=str(research_report_path("multifactor_strategy_candidates")))
     parser.add_argument("--cr038-run-id", default=DEFAULT_CR038_RUN_ID)
     parser.add_argument("--portfolio-admission-summary", default="")
-    parser.add_argument("--cr035-model-admission-summary", default="process/research/chapter4_factor_models/run-cr035-chapter4-factor-models-20260610/MODEL-ADMISSION-SUMMARY.json")
-    parser.add_argument("--cr036-anomaly-admission-summary", default="process/research/chapter5_anomalies/run-cr036-chapter5-anomalies-20260610/ANOMALY-ADMISSION-SUMMARY.json")
-    parser.add_argument("--cr037-robustness-admission-summary", default="process/research/chapter6_factor_robustness/run-cr037-chapter6-robustness-20260610/ROBUSTNESS-ADMISSION-SUMMARY.json")
-    parser.add_argument("--chapter7-report-root", default="reports/chapter7_factor_practice")
-    parser.add_argument("--chapter7-process-root", default="process/research/chapter7_factor_practice")
+    parser.add_argument("--cr035-model-admission-summary", default=str(research_run_path("chapter4_factor_models", "run-cr035-chapter4-factor-models-20260610", "MODEL-ADMISSION-SUMMARY.json")))
+    parser.add_argument("--cr036-anomaly-admission-summary", default=str(research_run_path("chapter5_anomalies", "run-cr036-chapter5-anomalies-20260610", "ANOMALY-ADMISSION-SUMMARY.json")))
+    parser.add_argument("--cr037-robustness-admission-summary", default=str(research_run_path("chapter6_factor_robustness", "run-cr037-chapter6-robustness-20260610", "ROBUSTNESS-ADMISSION-SUMMARY.json")))
+    parser.add_argument("--chapter7-report-root", default=str(research_report_path("chapter7_factor_practice")))
+    parser.add_argument("--chapter7-process-root", default=str(research_run_path("chapter7_factor_practice")))
     parser.add_argument("--max-memory-gb", type=float, default=16.0)
     return parser.parse_args()
 
@@ -128,11 +129,11 @@ def run_strategy_candidates_from_paths(
     report_root: Path,
     cr038_run_id: str = DEFAULT_CR038_RUN_ID,
     portfolio_admission_summary: Path | None = None,
-    cr035_model_admission_summary: Path = Path("process/research/chapter4_factor_models/run-cr035-chapter4-factor-models-20260610/MODEL-ADMISSION-SUMMARY.json"),
-    cr036_anomaly_admission_summary: Path = Path("process/research/chapter5_anomalies/run-cr036-chapter5-anomalies-20260610/ANOMALY-ADMISSION-SUMMARY.json"),
-    cr037_robustness_admission_summary: Path = Path("process/research/chapter6_factor_robustness/run-cr037-chapter6-robustness-20260610/ROBUSTNESS-ADMISSION-SUMMARY.json"),
-    chapter7_report_root: Path = Path("reports/chapter7_factor_practice"),
-    chapter7_process_root: Path = Path("process/research/chapter7_factor_practice"),
+    cr035_model_admission_summary: Path = research_run_path("chapter4_factor_models", "run-cr035-chapter4-factor-models-20260610", "MODEL-ADMISSION-SUMMARY.json"),
+    cr036_anomaly_admission_summary: Path = research_run_path("chapter5_anomalies", "run-cr036-chapter5-anomalies-20260610", "ANOMALY-ADMISSION-SUMMARY.json"),
+    cr037_robustness_admission_summary: Path = research_run_path("chapter6_factor_robustness", "run-cr037-chapter6-robustness-20260610", "ROBUSTNESS-ADMISSION-SUMMARY.json"),
+    chapter7_report_root: Path = research_report_path("chapter7_factor_practice"),
+    chapter7_process_root: Path = research_run_path("chapter7_factor_practice"),
     max_memory_gb: float = 16.0,
 ) -> StrategyCandidateRunResult:
     artifacts = strategy_candidate_artifacts(run_id, output_root=output_root, report_root=report_root)

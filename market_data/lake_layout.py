@@ -48,7 +48,7 @@ def _contains_glob(path: PathLike) -> bool:
 class LakeLayout:
     """只负责解析路径，不隐式创建目录或写入数据。"""
 
-    lake_root: PathLike = Path("data/market_data")
+    lake_root: PathLike
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "lake_root", Path(self.lake_root))

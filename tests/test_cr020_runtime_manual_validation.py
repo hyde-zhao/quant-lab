@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+import sys
 from types import SimpleNamespace
 
 from trading.qmt_client import QmtRestRequest
@@ -30,6 +31,7 @@ def test_runtime_env_loader_and_public_config_redact_secret_values(tmp_path: Pat
                 "QMT_GATEWAY_ALLOWED_SOURCE=127.0.0.1/32",
                 "QMT_CLIENT_ID=client-fixture",
                 "QMT_CLIENT_SECRET=secret-fixture",
+                "QMT_XTQUANT_SITE_PACKAGES=C:/qmt/bin.x64/Lib/site-packages",
                 "QMT_MINIQMT_PATH=C:/qmt/userdata_mini",
                 "QMT_ACCOUNT_REF=account-fixture",
                 "QMT_ACCOUNT_TYPE=STOCK",
@@ -47,9 +49,11 @@ def test_runtime_env_loader_and_public_config_redact_secret_values(tmp_path: Pat
     assert public["host"] == "127.0.0.1"
     assert public["port"] == 18765
     assert public["client_secret_ref"] == "[REDACTED]"
+    assert public["xtquant_site_packages_configured"] is True
     assert public["miniqmt_path_configured"] is True
     assert "secret-fixture" not in rendered
     assert "account-fixture" not in rendered
+    assert "C:/qmt/bin.x64/Lib/site-packages" not in rendered
 
 
 def test_runtime_auth_provider_signs_qmt_rest_request_body() -> None:
@@ -161,6 +165,38 @@ def test_runtime_adapter_uses_subscribe_when_xtquant_login_is_absent() -> None:
 
     assert snapshot.ready is True
     assert trader.subscribe_call_count == 1
+
+
+def test_runtime_adapter_adds_xtquant_site_packages_from_env(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    site_packages = tmp_path / "site-packages"
+    site_packages.mkdir()
+    config = build_runtime_config(
+        {
+            "QMT_XTQUANT_SITE_PACKAGES": str(site_packages),
+            "QMT_MINIQMT_PATH": "C:/qmt/userdata_mini",
+            "QMT_ACCOUNT_REF": "account-fixture",
+            "QMT_ACCOUNT_TYPE": "STOCK",
+        }
+    )
+    trader = _FakeSubscribeOnlyTrader()
+
+    def loader(name: str) -> object:
+        assert str(site_packages) in sys.path
+        if name == "xtquant.xttrader":
+            return SimpleNamespace(XtQuantTrader=lambda path, session_id: trader)
+        if name == "xtquant.xttype":
+            return SimpleNamespace(StockAccount=_FakeAccount)
+        raise ImportError(name)
+
+    monkeypatch.setattr(sys, "path", [item for item in sys.path if item != str(site_packages)])
+    adapter = XtQuantRuntimeAdapter(config, module_loader=loader)
+    snapshot = adapter.login()
+
+    assert snapshot.ready is True
+    assert sys.path[0] == str(site_packages)
 
 
 def test_stdlib_rest_transport_normalizes_json_response_without_real_socket() -> None:

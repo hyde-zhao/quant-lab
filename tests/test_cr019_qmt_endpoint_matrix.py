@@ -178,7 +178,11 @@ def test_client_methods_consume_matrix_and_default_later_gated_endpoints_blocked
     for category in LATER_GATED_ENDPOINTS:
         response = _call_contract_method(client, category)
         assert response.blocked is True
-        assert response.reason_code == QmtBlockedReason.PER_RUN_AUTHORIZATION_MISSING.value
+        if category is QmtEndpointCategory.POSITIONS:
+            assert response.reason_code == QmtBlockedReason.TRANSPORT_UNAVAILABLE.value
+            assert response.status is QmtResponseStatus.TRANSPORT_ERROR
+        else:
+            assert response.reason_code == QmtBlockedReason.PER_RUN_AUTHORIZATION_MISSING.value
         assert response.payload["operation_authorized"] is False
         _assert_zero_counters(response.counters)
         if category in ACCOUNT_LIKE_ENDPOINTS:

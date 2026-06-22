@@ -12,6 +12,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import importlib
 import json
 from pathlib import Path
+import sys
 import time
 from typing import Callable, Mapping
 from urllib.error import HTTPError, URLError
@@ -58,6 +59,7 @@ class QmtRuntimeConfig:
     allowed_source: str = "127.0.0.1/32"
     client_id: str = ""
     client_secret: str = ""
+    xtquant_site_packages: str = ""
     miniqmt_path: str = ""
     account_id: str = ""
     account_type: str = "STOCK"
@@ -78,6 +80,7 @@ class QmtRuntimeConfig:
             "allowed_source": self.allowed_source,
             "client_id_hash": stable_qmt_auth_hash(self.client_id) if self.client_id else "",
             "client_secret_ref": "[REDACTED]" if self.client_secret else "",
+            "xtquant_site_packages_configured": bool(self.xtquant_site_packages),
             "miniqmt_path_configured": bool(self.miniqmt_path),
             "account_ref": _redacted_ref(self.account_id, "account"),
             "account_type": self.account_type,
@@ -174,6 +177,7 @@ class XtQuantRuntimeAdapter:
             )
             return self._session_snapshot
         try:
+            _ensure_runtime_import_path(self.config)
             xttrader = self._load_module("xtquant.xttrader")
             xttype = self._load_module("xtquant.xttype")
             trader_cls = getattr(xttrader, "XtQuantTrader")
@@ -347,6 +351,7 @@ def build_runtime_config(
         allowed_source=env.get("QMT_GATEWAY_ALLOWED_SOURCE", "127.0.0.1/32"),
         client_id=env.get("QMT_CLIENT_ID", ""),
         client_secret=env.get("QMT_CLIENT_SECRET", ""),
+        xtquant_site_packages=env.get("QMT_XTQUANT_SITE_PACKAGES", ""),
         miniqmt_path=env.get("QMT_MINIQMT_PATH", ""),
         account_id=env.get("QMT_ACCOUNT_REF") or env.get("QMT_LOGIN_ACCOUNT", ""),
         account_type=env.get("QMT_ACCOUNT_TYPE", "STOCK"),
@@ -395,6 +400,16 @@ def create_gateway_runtime(config: QmtRuntimeConfig) -> QmtGatewayRuntime:
     runtime = QmtGatewayRuntime(config, adapter)
     runtime.login()
     return runtime
+
+
+def _ensure_runtime_import_path(config: QmtRuntimeConfig) -> None:
+    """把 `.env` 中声明的 XtQuant site-packages 加入当前进程导入路径。"""
+
+    if not config.xtquant_site_packages:
+        return
+    path = str(Path(config.xtquant_site_packages))
+    if path not in sys.path:
+        sys.path.insert(0, path)
 
 
 def serve_gateway_runtime(runtime: QmtGatewayRuntime) -> None:

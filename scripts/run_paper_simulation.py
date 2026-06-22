@@ -1,6 +1,6 @@
 """CR-041 本地 paper simulation CLI。
 
-该入口只接受本地文件输入，只写用户指定的本地报告目录；不提供
+该入口只接受本地文件输入，默认写 NAS 研究报告目录；不提供
 provider fetch、lake write、catalog publish、broker 或 simulation/live 参数。
 """
 
@@ -18,6 +18,8 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
+from engine.research_paths import research_report_path
+
 try:
     from engine.paper_simulation import run_paper_simulation
 except ImportError as exc:  # pragma: no cover - 并行 worker 可能尚未落 engine。
@@ -27,7 +29,7 @@ else:
     _ENGINE_IMPORT_ERROR = None
 
 
-DEFAULT_OUTPUT_ROOT = Path("reports/paper_simulation")
+DEFAULT_OUTPUT_ROOT = research_report_path("paper_simulation")
 SECTION_ARTIFACTS = {
     "order_intents": "order_intents.json",
     "fills": "fills.json",

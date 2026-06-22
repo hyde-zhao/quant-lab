@@ -18,6 +18,7 @@ if str(PROJECT_ROOT) not in sys.path:
 from engine.backtest import BacktestConfig, run_backtest
 from engine.diagnostics import LOGGER_NAME
 from engine.portfolio import PortfolioConfig
+from engine.research_paths import research_report_path
 from engine.reporting import write_rows_csv
 from experiments.run_experiment_06_07 import (
     SIMPLIFIED_SYMBOLS,
@@ -92,8 +93,8 @@ def main() -> None:
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="运行实验九参数敏感性分析。")
     add_market_data_input_args(parser)
-    parser.add_argument("--quality-report", default="reports/data_quality_report.csv")
-    parser.add_argument("--output-dir", default="reports/experiment_09")
+    parser.add_argument("--quality-report", default=str(research_report_path("data_quality_report.csv")))
+    parser.add_argument("--output-dir", default=str(research_report_path("experiment_09")))
     parser.add_argument("--start-date", default=None)
     parser.add_argument("--end-date", default=None)
     parser.add_argument("--initial-cash", type=float, default=1_000_000.0)

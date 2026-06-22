@@ -11,9 +11,6 @@ dependencies = [
     "matplotlib>=3.8,<4.0",
 ]
 
-[project.scripts]
-quant_lab = "quant_lab.cli:main"
-
 [dependency-groups]
 backtrader = [
     "backtrader==1.9.78.123",

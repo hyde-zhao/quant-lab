@@ -19,6 +19,7 @@ if str(PROJECT_ROOT) not in sys.path:
 from engine.backtest import BacktestConfig, run_backtest
 from engine.diagnostics import LOGGER_NAME
 from engine.portfolio import PortfolioConfig
+from engine.research_paths import research_report_path
 from engine.reporting import write_rows_csv
 from experiments.run_experiment_06_07 import SIMPLIFIED_SYMBOLS, _select_available_symbols, load_experiment_backtest_data
 from market_data.benchmarks import BenchmarkPolicy, BenchmarkResult, resolve_hs300_benchmark
@@ -114,8 +115,8 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="运行实验十二市场环境分段测试。")
     parser.add_argument("--input-mode", choices=["canonical-gold", "legacy-flat"], default="canonical-gold")
     parser.add_argument("--data-dir", default=None, help="仅在 --input-mode legacy-flat 时显式传入的外置兼容目录。")
-    parser.add_argument("--quality-report", default="reports/data_quality_report.csv")
-    parser.add_argument("--output-dir", default="reports/experiment_12")
+    parser.add_argument("--quality-report", default=str(research_report_path("data_quality_report.csv")))
+    parser.add_argument("--output-dir", default=str(research_report_path("experiment_12")))
     parser.add_argument("--initial-cash", type=float, default=1_000_000.0)
     parser.add_argument("--market-data-root", "--market-data-lake-root", dest="market_data_lake_root", default=None, help="显式启用 market_data 只读 reader / benchmark resolver。")
     parser.add_argument("--benchmark-path", default=None, help="显式本地 hs300_index benchmark fixture 路径；只读读取。")

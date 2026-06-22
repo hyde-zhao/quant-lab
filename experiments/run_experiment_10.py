@@ -16,6 +16,7 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from engine.diagnostics import LOGGER_NAME
+from engine.research_paths import research_report_path
 from engine.reporting import write_rows_csv
 from experiments.run_experiment_06_07 import SIMPLIFIED_SYMBOLS, _select_available_symbols, load_experiment_backtest_data
 from experiments.run_experiment_09 import build_scan_tasks, run_queue_scan
@@ -121,8 +122,8 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="运行实验十样本外测试。")
     parser.add_argument("--input-mode", choices=["canonical-gold", "legacy-flat"], default="canonical-gold")
     parser.add_argument("--data-dir", default=None, help="仅在 --input-mode legacy-flat 时显式传入的外置兼容目录。")
-    parser.add_argument("--quality-report", default="reports/data_quality_report.csv")
-    parser.add_argument("--output-dir", default="reports/experiment_10")
+    parser.add_argument("--quality-report", default=str(research_report_path("data_quality_report.csv")))
+    parser.add_argument("--output-dir", default=str(research_report_path("experiment_10")))
     parser.add_argument("--initial-cash", type=float, default=1_000_000.0)
     parser.add_argument("--train-start", default="2015-01-01")
     parser.add_argument("--train-end", default="2020-12-31")

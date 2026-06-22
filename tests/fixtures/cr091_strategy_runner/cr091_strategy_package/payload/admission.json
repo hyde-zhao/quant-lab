@@ -1,0 +1,54 @@
+{
+  "schema_version": "multifactor_strategy_admission_package_v1",
+  "run_id": "cr091-package-fixture-run",
+  "status": "PASS",
+  "overall_admission": "watch",
+  "not_authorization": true,
+  "not_qmt_authorization": true,
+  "not_simulation_authorization": true,
+  "not_live_authorization": true,
+  "not_broker_order": true,
+  "target_trade_date": "2026-06-18",
+  "strategy_candidates": [
+    {
+      "strategy_id": "strategy_package_alpha",
+      "source_portfolio_id": "portfolio_package_alpha",
+      "admission": "watch",
+      "simulation_candidate": false,
+      "evidence_status": "fixture_watch",
+      "target_symbols": ["FIXTURE_PKG_A", "FIXTURE_PKG_B"],
+      "reason": "offline package fixture"
+    }
+  ],
+  "risk_cost_refs": {
+    "risk_cost_summary_ref": "fixture:package-risk-cost",
+    "factor_contribution_ref": "fixture:package-factor-contribution"
+  },
+  "input_refs": {
+    "manifest": "fixture:manifest"
+  },
+  "operation_counts": {
+    "nas_read": 0,
+    "nas_write": 0,
+    "nas_list": 0,
+    "nas_copy": 0,
+    "nas_publish": 0,
+    "nas_pull": 0,
+    "credential_read": 0,
+    "env_file_read": 0,
+    "qmt_start": 0,
+    "miniqmt_start": 0,
+    "xtquant_import": 0,
+    "gateway_start": 0,
+    "gateway_socket_open": 0,
+    "account_raw_query": 0,
+    "raw_positions_emit": 0,
+    "submit_order": 0,
+    "cancel_order": 0,
+    "simulation": 0,
+    "live": 0,
+    "provider_fetch": 0,
+    "lake_write": 0,
+    "catalog_publish": 0
+  }
+}

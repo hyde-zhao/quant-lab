@@ -22,6 +22,7 @@ from engine.data_loader import LoaderConfig, load_backtest_data
 from engine.diagnostics import LOGGER_NAME
 from engine.metrics import validate_nav_integrity
 from engine.portfolio import PortfolioConfig
+from engine.research_paths import research_report_path
 from engine.reporting import write_rows_csv
 
 
@@ -148,8 +149,8 @@ def main() -> None:
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="运行实验六动量策略与实验七 RSI 策略。")
     add_market_data_input_args(parser)
-    parser.add_argument("--quality-report", default="reports/data_quality_report.csv")
-    parser.add_argument("--output-dir", default="reports/experiments_06_07")
+    parser.add_argument("--quality-report", default=str(research_report_path("data_quality_report.csv")))
+    parser.add_argument("--output-dir", default=str(research_report_path("experiments_06_07")))
     parser.add_argument("--start-date", default=None)
     parser.add_argument("--end-date", default=None)
     parser.add_argument("--initial-cash", type=float, default=1_000_000.0)
