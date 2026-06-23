@@ -93,6 +93,11 @@ def test_cr132_cr136_start_assets_are_classified_non_blocking() -> None:
         StatusEntry(repo="process", status="??", path="checkpoints/CP8-CR136-DELIVERY-READINESS.md"),
         StatusEntry(repo="process", status="??", path="docs/release/RELEASE-NOTES-CR136.md"),
         StatusEntry(repo="process", status="??", path="release/RELEASE-CONTEXT-CR136.yaml"),
+        StatusEntry(
+            repo="process",
+            status="??",
+            path="context/CR136-CLOSURE-TO-CR137-CONTEXT-RESET-HANDOFF-2026-06-23.md",
+        ),
         StatusEntry(repo="process", status="M", path="docs/features/strategy-runner-core/DESIGN.md"),
     ]
 

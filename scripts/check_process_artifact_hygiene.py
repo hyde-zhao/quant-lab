@@ -151,6 +151,7 @@ CURRENT_CR136_PROCESS_ASSETS = frozenset(
         "checks/CP7-CR136-RUNNER-BUNDLE-VALIDATION-VERIFICATION-DONE.md",
         "checks/CP8-CR136-DELIVERY-READINESS.md",
         "context/CP6-CR136.context.json",
+        "context/CR136-CLOSURE-TO-CR137-CONTEXT-RESET-HANDOFF-2026-06-23.md",
         "docs/release/DEPLOY-CHECKLIST-CR136.md",
         "docs/release/FEEDBACK-CR136.md",
         "docs/release/MIGRATION-CR136.md",
