@@ -11,44 +11,41 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from trading.strategy_runner import (
-    ReadonlyGatewayClient,
-    adapt_strategy_payload,
-    build_evidence_summary,
-    load_strategy_package,
+    RunSpec,
     resolve_active_package,
+    run_strategy_package,
 )
 
 
 def check_package(package_root: Path) -> dict[str, Any]:
-    package = load_strategy_package(package_root)
+    run_id = "cr091-offline-check"
+    result = run_strategy_package(RunSpec.from_package_root(package_root, run_id=run_id))
     cache_root = package_root / "cache"
-    active = resolve_active_package(cache_root, cache_root / "active.json")
-    adapter_result = adapt_strategy_payload(package.to_adapter_payload(), run_id="cr091-offline-check")
-    readonly = ReadonlyGatewayClient().query_positions(run_id="cr091-offline-check")
-    evidence = build_evidence_summary(
-        run_id="cr091-offline-check",
-        package_id=package.package_id,
-        adapter_type=str(package.manifest.get("adapter_type")),
-        adapter_result=adapter_result,
-        readonly_result=readonly,
-    )
+    active_package_id = ""
+    active_error = ""
+    try:
+        active = resolve_active_package(cache_root, cache_root / "active.json")
+        active_package_id = active.package_id
+    except Exception as exc:
+        active_error = str(exc)
+    counters = dict(result.forbidden_operation_counters)
     passed = (
-        package.package_id == active.package_id
-        and adapter_result.passed
-        and readonly.passed
-        and evidence.status == "pass"
-        and all(value == 0 for value in evidence.forbidden_operation_counters.values())
+        result.passed
+        and result.package_id == active_package_id
+        and all(value == 0 for value in counters.values())
     )
     return {
         "schema_version": "cr091-strategy-runner-package-check-v1",
         "passed": passed,
-        "package_id": package.package_id,
-        "active_package_id": active.package_id,
-        "adapter_status": adapter_result.status,
-        "target_count": 0 if adapter_result.target_portfolio is None else len(adapter_result.target_portfolio.target_symbols),
-        "order_intent_count": len(adapter_result.order_intents),
-        "readonly_reconciliation_status": readonly.status,
-        "forbidden_operation_counters": dict(evidence.forbidden_operation_counters),
+        "package_id": result.package_id,
+        "active_package_id": active_package_id,
+        "active_pointer_error": active_error,
+        "adapter_status": result.adapter_status,
+        "evidence_status": result.evidence_status,
+        "target_count": result.target_count,
+        "order_intent_count": result.order_intent_count,
+        "blocked_reasons": list(result.blocked_reasons),
+        "forbidden_operation_counters": counters,
         "not_authorization": True,
     }
 

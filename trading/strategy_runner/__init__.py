@@ -28,6 +28,9 @@ from trading.strategy_runner.readonly_gateway import (
     ReadonlyGatewayResult,
     ReadonlyGatewayRuntimeConfig,
 )
+from trading.strategy_runner.result import RunResult, write_run_result
+from trading.strategy_runner.run_spec import RunSpec, RunSpecError
+from trading.strategy_runner.runner import run_strategy_package, run_strategy_package_from_path
 from trading.strategy_runner.target_portfolio import TargetPortfolioSnapshot
 
 __all__ = (
@@ -42,6 +45,9 @@ __all__ = (
     "ReadonlyGatewayClient",
     "ReadonlyGatewayResult",
     "ReadonlyGatewayRuntimeConfig",
+    "RunResult",
+    "RunSpec",
+    "RunSpecError",
     "PackageExchangeError",
     "StrategyAdapter",
     "StrategyPackage",
@@ -55,7 +61,10 @@ __all__ = (
     "fake_pull_package",
     "load_strategy_package",
     "resolve_active_package",
+    "run_strategy_package",
+    "run_strategy_package_from_path",
     "validate_package",
     "write_evidence_summary",
+    "write_run_result",
     "zero_cr091_operation_counters",
 )
