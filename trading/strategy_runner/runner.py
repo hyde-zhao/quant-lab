@@ -56,3 +56,7 @@ def run_strategy_package_from_path(
     return run_strategy_package(
         RunSpec.from_package_root(package_root, run_id=run_id, output_path=output_path)
     )
+
+
+def run_strategy_package_from_spec_file(spec_path: str | Path) -> RunResult:
+    return run_strategy_package(RunSpec.from_file(spec_path))

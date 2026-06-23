@@ -93,7 +93,9 @@ class RunResult:
 
 
 def write_run_result(path: str | Path, result: RunResult) -> None:
-    Path(path).write_text(json.dumps(result.to_dict(), ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    output_path = Path(path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(json.dumps(result.to_dict(), ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
 
 def _evidence_blocks(evidence: EvidenceSummary) -> tuple[str, ...]:

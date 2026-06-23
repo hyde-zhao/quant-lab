@@ -27,7 +27,17 @@ REQUIRED_LAUNCH_SNIPPETS = [
     "不授权项：",
 ]
 
+REQUIRED_LAUNCH_SNIPPET_GROUPS = [
+    ("上下文胶囊 / Context Capsule Summary", ["上下文胶囊：", "Context Capsule Summary"]),
+    ("决策收集覆盖 / Decision Collection Coverage", ["决策收集覆盖：", "Decision Collection Coverage"]),
+]
+
 EXACT_REPLY_LINES = ["approve", "修改: <具体修改点>", "reject"]
+LEGACY_DESIGN_PATH_RE = re.compile(r"(?<!process/)docs/design/[A-Za-z0-9._/\-]+")
+
+
+def _normalize_markdown_path(raw_path: str) -> str:
+    return raw_path.strip().strip("`'\".,;:，。；：）)]}").rstrip("/")
 
 
 def read_text(path: Path) -> str:
@@ -42,6 +52,29 @@ def count_decisions(text: str) -> int:
         return len(dq_ids)
     ids = set(re.findall(r"\bD-CP[2358]-[A-Z0-9-]+-\d+\b", text))
     return len(ids)
+
+
+def validate_path_alias_references(text: str, errors: list[str]) -> None:
+    legacy_paths = {
+        _normalize_markdown_path(match.group(0))
+        for match in LEGACY_DESIGN_PATH_RE.finditer(text)
+    }
+    if not legacy_paths:
+        return
+
+    process_paths = {
+        _normalize_markdown_path(path)
+        for path in re.findall(r"process/docs/design/[A-Za-z0-9._/\-]+", text)
+    }
+    missing_aliases = sorted(
+        path for path in legacy_paths if f"process/{path}" not in process_paths
+    )
+    if missing_aliases:
+        errors.append(
+            "checkpoint 存在仅以 docs/design/* 作为设计证据入口的路径，"
+            "需同时提供对应 process/docs/design/* 入口: "
+            + ", ".join(missing_aliases)
+        )
 
 
 def validate_checkpoint(text: str, errors: list[str]) -> int:
@@ -67,6 +100,8 @@ def validate_checkpoint(text: str, errors: list[str]) -> int:
     if "auto_final_authorization: false" not in text and "自动终验授权" not in text:
         errors.append("checkpoint 缺少自动终验不授权说明")
 
+    validate_path_alias_references(text, errors)
+
     return count_decisions(text)
 
 
@@ -79,6 +114,10 @@ def validate_launch_message(
     for snippet in REQUIRED_LAUNCH_SNIPPETS:
         if snippet not in text:
             errors.append(f"launch message 缺少必要内容: {snippet}")
+
+    for label, alternatives in REQUIRED_LAUNCH_SNIPPET_GROUPS:
+        if not any(snippet in text for snippet in alternatives):
+            errors.append(f"launch message 缺少必要内容: {label}")
 
     if str(checkpoint_path) not in text:
         errors.append(f"launch message 未包含 checklist 路径: {checkpoint_path}")
