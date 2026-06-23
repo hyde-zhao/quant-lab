@@ -10,8 +10,16 @@ from trading.strategy_runner.adapters import (
     adapt_strategy_payload,
     zero_cr091_operation_counters,
 )
+from trading.strategy_runner.artifact_bundle import (
+    RunArtifactBundle,
+    inspect_run_artifact_bundle,
+    replay_run_artifact_bundle,
+    validate_run_artifact_bundle,
+    write_run_artifact_bundle,
+)
 from trading.strategy_runner.cache import ActivePackagePointer, resolve_active_package
 from trading.strategy_runner.evidence import EvidenceSummary, build_evidence_summary, write_evidence_summary
+from trading.strategy_runner.evidence_index import RunEvidenceIndex, write_run_evidence_index
 from trading.strategy_runner.package_exchange import (
     ExchangeOperationResult,
     PackageExchangeError,
@@ -46,6 +54,8 @@ __all__ = (
     "ReadonlyGatewayResult",
     "ReadonlyGatewayRuntimeConfig",
     "RunResult",
+    "RunEvidenceIndex",
+    "RunArtifactBundle",
     "RunSpec",
     "RunSpecError",
     "PackageExchangeError",
@@ -64,8 +74,13 @@ __all__ = (
     "run_strategy_package",
     "run_strategy_package_from_path",
     "run_strategy_package_from_spec_file",
+    "inspect_run_artifact_bundle",
+    "replay_run_artifact_bundle",
+    "validate_run_artifact_bundle",
     "validate_package",
     "write_evidence_summary",
+    "write_run_artifact_bundle",
+    "write_run_evidence_index",
     "write_run_result",
     "zero_cr091_operation_counters",
 )

@@ -66,6 +66,125 @@ CURRENT_CR133_PROCESS_ASSETS = frozenset(
     }
 )
 
+CURRENT_CR134_SOURCE_ASSETS = frozenset(
+    {
+        "scripts/check_process_artifact_hygiene.py",
+        "tests/test_cr132_process_artifact_hygiene.py",
+        "tests/test_cr134_runner_evidence_index.py",
+        "trading/strategy_runner/__init__.py",
+        "trading/strategy_runner/cli.py",
+        "trading/strategy_runner/evidence_index.py",
+        "trading/strategy_runner/run_spec.py",
+        "trading/strategy_runner/runner.py",
+    }
+)
+
+CURRENT_CR134_PROCESS_ASSETS = frozenset(
+    {
+        "archive/CR-134/evidence-index.json",
+        "changes/CR-134-RUNNER-EVIDENCE-INDEX-INTEGRATION-2026-06-23.md",
+        "changes/CR-INDEX.json",
+        "changes/CR-INDEX.yaml",
+        "changes/summaries/CR-134.summary.json",
+        "checks/CP6-CR134-RUNNER-EVIDENCE-INDEX-IMPLEMENTATION-DONE.md",
+        "checks/CP7-CR134-RUNNER-EVIDENCE-INDEX-VERIFICATION-DONE.md",
+        "context/CP6-CR134.context.json",
+        "docs/features/strategy-runner-core/DESIGN.md",
+        "docs/features/strategy-runner-core/TASKS.md",
+        "docs/features/strategy-runner-core/TEST-PLAN.md",
+        "state/CR-LEDGER.ndjson",
+        "state/STATE.current.json",
+    }
+)
+
+CURRENT_CR135_PROCESS_ASSETS = frozenset(
+    {
+        "changes/CR-135-RUNNER-EXECUTION-ARTIFACT-BUNDLE-REPLAY-WORKFLOW-2026-06-23.md",
+        "archive/CR-135/evidence-index.json",
+        "changes/CR-INDEX.json",
+        "changes/CR-INDEX.yaml",
+        "changes/summaries/CR-135.summary.json",
+        "checkpoints/CP8-CR135-DELIVERY-READINESS.md",
+        "checkpoints/CP8-CR135-LAUNCH-MESSAGE.md",
+        "checks/CP8-CR135-DELIVERY-READINESS.md",
+        "checks/CP6-CR135-RUNNER-ARTIFACT-BUNDLE-IMPLEMENTATION-DONE.md",
+        "checks/CP7-CR135-RUNNER-ARTIFACT-BUNDLE-VERIFICATION-DONE.md",
+        "context/CP6-CR135.context.json",
+        "docs/release/DEPLOY-CHECKLIST-CR135.md",
+        "docs/release/FEEDBACK-CR135.md",
+        "docs/release/MIGRATION-CR135.md",
+        "docs/release/RELEASE-NOTES-CR135.md",
+        "docs/release/ROLLBACK-CR135.md",
+        "docs/features/strategy-runner-core/DESIGN.md",
+        "docs/features/strategy-runner-core/TASKS.md",
+        "docs/features/strategy-runner-core/TEST-PLAN.md",
+        "release/RELEASE-CONTEXT-CR135.yaml",
+        "state/CR-LEDGER.ndjson",
+        "state/STATE.current.json",
+    }
+)
+
+CURRENT_CR135_SOURCE_ASSETS = frozenset(
+    {
+        "scripts/check_process_artifact_hygiene.py",
+        "tests/test_cr132_process_artifact_hygiene.py",
+        "tests/test_cr135_runner_artifact_bundle.py",
+        "trading/strategy_runner/__init__.py",
+        "trading/strategy_runner/artifact_bundle.py",
+        "trading/strategy_runner/cli.py",
+        "trading/strategy_runner/result.py",
+        "trading/strategy_runner/run_spec.py",
+        "trading/strategy_runner/runner.py",
+    }
+)
+
+CURRENT_CR136_PROCESS_ASSETS = frozenset(
+    {
+        "archive/CR-136/evidence-index.json",
+        "changes/CR-136-RUNNER-BUNDLE-SCHEMA-COMPATIBILITY-VALIDATION-2026-06-23.md",
+        "changes/CR-INDEX.json",
+        "changes/CR-INDEX.yaml",
+        "changes/summaries/CR-136.summary.json",
+        "checkpoints/CP8-CR136-DELIVERY-READINESS.md",
+        "checkpoints/CP8-CR136-LAUNCH-MESSAGE.md",
+        "checks/CP6-CR136-RUNNER-BUNDLE-VALIDATION-IMPLEMENTATION-DONE.md",
+        "checks/CP7-CR136-RUNNER-BUNDLE-VALIDATION-VERIFICATION-DONE.md",
+        "checks/CP8-CR136-DELIVERY-READINESS.md",
+        "context/CP6-CR136.context.json",
+        "docs/release/DEPLOY-CHECKLIST-CR136.md",
+        "docs/release/FEEDBACK-CR136.md",
+        "docs/release/MIGRATION-CR136.md",
+        "docs/release/RELEASE-NOTES-CR136.md",
+        "docs/release/ROLLBACK-CR136.md",
+        "docs/features/strategy-runner-core/DESIGN.md",
+        "docs/features/strategy-runner-core/TASKS.md",
+        "docs/features/strategy-runner-core/TEST-PLAN.md",
+        "release/RELEASE-CONTEXT-CR136.yaml",
+        "state/CR-LEDGER.ndjson",
+        "state/STATE.current.json",
+    }
+)
+
+CURRENT_CR136_SOURCE_ASSETS = frozenset(
+    {
+        "scripts/check_process_artifact_hygiene.py",
+        "tests/test_cr132_process_artifact_hygiene.py",
+        "tests/test_cr136_runner_bundle_validation.py",
+        "trading/strategy_runner/__init__.py",
+        "trading/strategy_runner/artifact_bundle.py",
+        "trading/strategy_runner/cli.py",
+    }
+)
+
+CURRENT_CR089_CLOSURE_PROCESS_ASSETS = frozenset(
+    {
+        "archive/CR-089/evidence-index.json",
+        "changes/CR-089-QMT-INTERFACE-VALIDATION-GATE-2026-06-17.md",
+        "changes/summaries/CR-089.summary.json",
+        "context/CR089-CLOSURE-TO-CR135-CONTEXT-RESET-HANDOFF-2026-06-23.md",
+    }
+)
+
 PROCESS_HISTORY_CR_MIN = 113
 PROCESS_HISTORY_CR_MAX = 126
 
@@ -90,6 +209,10 @@ def check_process_artifact_hygiene(
         "artifact_history_residual": [],
         "current_cr132_asset": [],
         "current_cr133_asset": [],
+        "current_cr134_asset": [],
+        "current_cr135_asset": [],
+        "current_cr136_asset": [],
+        "current_cr089_closure_asset": [],
         "source_human_gate_residual": [],
         "ignored": [],
         "unclassified": [],
@@ -124,6 +247,12 @@ def check_process_artifact_hygiene(
 
 def classify_entry(entry: StatusEntry) -> str:
     if entry.repo == "source":
+        if entry.path in CURRENT_CR136_SOURCE_ASSETS:
+            return "current_cr136_asset"
+        if entry.path in CURRENT_CR135_SOURCE_ASSETS:
+            return "current_cr135_asset"
+        if entry.path in CURRENT_CR134_SOURCE_ASSETS:
+            return "current_cr134_asset"
         if entry.path in CURRENT_CR133_SOURCE_ASSETS:
             return "current_cr133_asset"
         if entry.path in CURRENT_CR132_SOURCE_ASSETS:
@@ -133,6 +262,14 @@ def classify_entry(entry: StatusEntry) -> str:
         return "unclassified"
 
     if entry.repo == "process":
+        if entry.path in CURRENT_CR089_CLOSURE_PROCESS_ASSETS:
+            return "current_cr089_closure_asset"
+        if entry.path in CURRENT_CR136_PROCESS_ASSETS:
+            return "current_cr136_asset"
+        if entry.path in CURRENT_CR135_PROCESS_ASSETS:
+            return "current_cr135_asset"
+        if entry.path in CURRENT_CR134_PROCESS_ASSETS:
+            return "current_cr134_asset"
         if entry.path in CURRENT_CR133_PROCESS_ASSETS:
             return "current_cr133_asset"
         if entry.path in CURRENT_CR132_PROCESS_ASSETS:

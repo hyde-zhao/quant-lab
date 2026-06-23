@@ -32,6 +32,8 @@ RUN_SPEC_ALLOWED_FIELDS = frozenset(
         "package_root",
         "run_id",
         "output_path",
+        "evidence_index_output_path",
+        "bundle_output_path",
         "mode",
         *RUN_SPEC_BOOL_FIELDS,
     }
@@ -47,6 +49,8 @@ class RunSpec:
     package_root: Path
     run_id: str
     output_path: Path | None = None
+    evidence_index_output_path: Path | None = None
+    bundle_output_path: Path | None = None
     mode: str = OFFLINE_MODE
     include_fake_readonly: bool = True
     runtime_authorized: bool = False
@@ -66,11 +70,17 @@ class RunSpec:
         *,
         run_id: str,
         output_path: str | Path | None = None,
+        evidence_index_output_path: str | Path | None = None,
+        bundle_output_path: str | Path | None = None,
     ) -> "RunSpec":
         return cls(
             package_root=Path(package_root),
             run_id=run_id,
             output_path=None if output_path is None else Path(output_path),
+            evidence_index_output_path=(
+                None if evidence_index_output_path is None else Path(evidence_index_output_path)
+            ),
+            bundle_output_path=None if bundle_output_path is None else Path(bundle_output_path),
         )
 
     @classmethod
@@ -96,10 +106,24 @@ class RunSpec:
         output_path = payload.get("output_path")
         if output_path is not None and not isinstance(output_path, str):
             raise RunSpecError("blocked_output_path_invalid")
+        evidence_index_output_path = payload.get("evidence_index_output_path")
+        if evidence_index_output_path is not None and not isinstance(evidence_index_output_path, str):
+            raise RunSpecError("blocked_evidence_index_output_path_invalid")
+        bundle_output_path = payload.get("bundle_output_path")
+        if bundle_output_path is not None and not isinstance(bundle_output_path, str):
+            raise RunSpecError("blocked_bundle_output_path_invalid")
         spec = cls(
             package_root=_resolve_spec_path(package_root, base_dir),
             run_id=run_id,
             output_path=None if output_path is None else _resolve_spec_path(output_path, base_dir),
+            evidence_index_output_path=(
+                None
+                if evidence_index_output_path is None
+                else _resolve_spec_path(evidence_index_output_path, base_dir)
+            ),
+            bundle_output_path=(
+                None if bundle_output_path is None else _resolve_spec_path(bundle_output_path, base_dir)
+            ),
             mode=str(payload.get("mode", OFFLINE_MODE)),
             include_fake_readonly=payload.get("include_fake_readonly", True),
             runtime_authorized=payload.get("runtime_authorized", False),
@@ -139,6 +163,13 @@ class RunSpec:
         _validate_runner_path(self.package_root, "blocked_package_root_sensitive")
         if self.output_path is not None:
             _validate_runner_path(self.output_path, "blocked_output_path_sensitive")
+        if self.evidence_index_output_path is not None:
+            _validate_runner_path(
+                self.evidence_index_output_path,
+                "blocked_evidence_index_output_path_sensitive",
+            )
+        if self.bundle_output_path is not None:
+            _validate_runner_path(self.bundle_output_path, "blocked_bundle_output_path_sensitive")
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -146,6 +177,14 @@ class RunSpec:
             "package_root": self.package_root.as_posix(),
             "run_id": self.run_id,
             "output_path": None if self.output_path is None else self.output_path.as_posix(),
+            "evidence_index_output_path": (
+                None
+                if self.evidence_index_output_path is None
+                else self.evidence_index_output_path.as_posix()
+            ),
+            "bundle_output_path": (
+                None if self.bundle_output_path is None else self.bundle_output_path.as_posix()
+            ),
             "mode": self.mode,
             "include_fake_readonly": self.include_fake_readonly,
             "runtime_authorized": self.runtime_authorized,
