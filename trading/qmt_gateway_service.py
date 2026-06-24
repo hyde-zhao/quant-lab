@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Mapping, Protocol
+from typing import Mapping, Protocol, Sequence
 
 from trading.qmt_auth import QmtAuthAdmissionDecision
 from trading.qmt_endpoint_matrix import (
@@ -18,25 +18,48 @@ from trading.qmt_endpoint_matrix import (
 from trading.qmt_gateway_config import (
     CR020_GATEWAY_RUNTIME_SCHEMA_VERSION,
     GatewayConfig,
+    GatewayChangePlan,
     GatewayConfigValidation,
     GatewayRuntimeFlags,
+    build_gateway_change_plan,
     build_gateway_config,
     build_gateway_runtime_flags,
     collect_gateway_runtime_counters,
     collect_gateway_safety_counters,
+    validate_gateway_change_plan,
     validate_gateway_security,
 )
 from trading.qmt_gateway_contracts import (
     CR020_QUERY_POSITIONS_ENDPOINT_ID,
     CR020_QUERY_POSITIONS_SCOPE,
+    CapabilitySnapshot,
+    CommissionSchedule,
+    CostEstimate,
+    ExecutionReport,
+    GatewayCommand,
+    GatewayCommandDecision,
+    GatewayEvent,
+    GatewayHealth,
+    MarketSubscription,
+    PnLSnapshot,
     QmtBlockedReason,
     QmtGatewayResult,
     QmtQueryPositionsRequest,
+    RecoveryPlan,
+    RestRouteSpec,
+    ReturnSummary,
+    TradingCalendar,
+    TradingSession,
     build_query_positions_blocked_result,
     build_query_positions_request,
     build_query_positions_success_result,
     collect_query_positions_safety_counters,
     redact_query_positions_payload,
+)
+from trading.runner_control_contracts import (
+    AuthorizationRecord,
+    build_authorization_record,
+    stable_id,
 )
 from trading.qmt_gateway_session import (
     QmtSessionBlockedReason,
@@ -760,3 +783,264 @@ def _redaction_preflight_blocked(decision: object | None) -> bool:
         return not bool(accepted)
     status = str(getattr(decision, "redaction_status", "pass"))
     return status == "failed"
+
+
+class GatewayService:
+    """CR138 in-process Gateway service layer。
+
+    该类只返回合同对象，不启动 HTTP server、不绑定端口、不读取凭据、
+    不调用 QMT / MiniQMT / XtQuant。
+    """
+
+    def __init__(self, *, calendar_source: Mapping[str, object] | None = None) -> None:
+        self.calendar_source = dict(calendar_source or {})
+        self._events: dict[str, tuple[GatewayEvent, ...]] = {}
+        self._seen_commands: set[str] = set()
+
+    def route_registry(self) -> tuple[RestRouteSpec, ...]:
+        return (
+            RestRouteSpec("health", "GET", "/health", "lifecycle"),
+            RestRouteSpec("capabilities", "GET", "/capabilities", "lifecycle"),
+            RestRouteSpec("session_status", "GET", "/session/status", "lifecycle", "account_readonly"),
+            RestRouteSpec("trading_calendar", "GET", "/query/calendar", "query", "calendar:read"),
+            RestRouteSpec("commission", "GET", "/query/commission", "query", "commission:read"),
+            RestRouteSpec("pnl", "GET", "/query/pnl", "query", "account_readonly"),
+            RestRouteSpec("subscription", "POST", "/subscriptions", "subscription", "market_readonly"),
+            RestRouteSpec("subscription_events", "GET", "/subscriptions/{id}/events", "subscription", "market_readonly"),
+            RestRouteSpec("gateway_command", "POST", "/commands", "order", "submit_cancel"),
+            RestRouteSpec("execution_report", "POST", "/reports/execution", "order_report"),
+            RestRouteSpec("recovery_plan", "GET", "/recovery", "recovery"),
+            RestRouteSpec("change_plan", "POST", "/change-plan", "change"),
+        )
+
+    def get_health(self, *, request_id: str = "") -> GatewayHealth:
+        return GatewayHealth(status="healthy", request_id=request_id, runtime_authorized=False)
+
+    def get_capabilities(self, *, request_id: str = "") -> CapabilitySnapshot:
+        _ = request_id
+        return CapabilitySnapshot(protocols=("REST",), runtime_authorized=False)
+
+    def get_session_status(
+        self,
+        *,
+        auth: AuthorizationRecord | Mapping[str, object] | None = None,
+    ) -> TradingSession:
+        current = build_authorization_record(auth, scope="account_readonly")
+        if not current.authorized or current.scope != "account_readonly":
+            return TradingSession(
+                session_state="blocked",
+                blocked_reason="authorization_missing",
+                adapter_calls=0,
+            )
+        return TradingSession(
+            session_state="fixture_ready",
+            account_label="<redacted-account-ref>",
+            expires_at=current.expires_at,
+            adapter_calls=0,
+        )
+
+    def build_gateway_change_plan(
+        self,
+        config_diff_ref: str,
+        *,
+        rollback_target: str = "",
+        compatibility_status: str = "compatible",
+    ) -> GatewayChangePlan:
+        plan = build_gateway_change_plan(
+            config_diff_ref,
+            rollback_target=rollback_target,
+            compatibility_status=compatibility_status,
+        )
+        return validate_gateway_change_plan(plan)
+
+    def query_trading_calendar(
+        self,
+        market: str,
+        date_range: str,
+    ) -> TradingCalendar:
+        key = f"{market}:{date_range}"
+        raw_days = self.calendar_source.get(key)
+        if raw_days is None:
+            raw_days = self.calendar_source.get(market)
+        if raw_days is None:
+            return TradingCalendar(
+                market=market,
+                date_range=date_range,
+                trading_days=(),
+                source="unavailable",
+                freshness="unknown",
+                status="unavailable",
+                unavailable_reason="local_calendar_missing",
+            )
+        days = tuple(str(day) for day in raw_days) if isinstance(raw_days, (list, tuple)) else (str(raw_days),)
+        return TradingCalendar(
+            market=market,
+            date_range=date_range,
+            trading_days=days,
+            source="local_reference",
+            freshness="fixture",
+        )
+
+    def query_commission_schedule(
+        self,
+        *,
+        instrument_type: str,
+        configured_rate: float = 0.0003,
+        min_fee: float = 5.0,
+        auth: AuthorizationRecord | Mapping[str, object] | None = None,
+        broker_confirmed: bool = False,
+    ) -> CommissionSchedule:
+        current = build_authorization_record(auth, scope="account_readonly")
+        if broker_confirmed and current.authorized and current.scope == "account_readonly":
+            source = "broker_confirmed"
+        elif configured_rate > 0:
+            source = "configured"
+        else:
+            source = "estimated"
+        return CommissionSchedule(
+            instrument_type=instrument_type,
+            rate=float(configured_rate),
+            min_fee=float(min_fee),
+            source=source,
+            authorization_ref=current.authorization_ref if source == "broker_confirmed" else "",
+            freshness="fixture",
+        )
+
+    def estimate_cost(
+        self,
+        *,
+        order_intent_ref: str,
+        notional: float,
+        schedule: CommissionSchedule,
+    ) -> CostEstimate:
+        fee = max(float(schedule.min_fee), float(notional) * float(schedule.rate))
+        return CostEstimate(
+            order_intent_ref=order_intent_ref,
+            estimated_fee=round(fee, 6),
+            source="estimated",
+            schedule_source=schedule.source,
+            broker_fact=False,
+        )
+
+    def query_pnl_snapshot(
+        self,
+        *,
+        period: str,
+        auth: AuthorizationRecord | Mapping[str, object] | None = None,
+        supported: bool = True,
+    ) -> PnLSnapshot:
+        current = build_authorization_record(auth, scope="account_readonly")
+        if not current.authorized or current.scope != "account_readonly":
+            return PnLSnapshot(
+                period=period,
+                source="blocked",
+                status="blocked",
+                blocked_reason="authorization_missing",
+                adapter_calls=0,
+            )
+        if not supported:
+            return PnLSnapshot(
+                period=period,
+                source="unavailable",
+                status="unavailable_with_reason",
+                blocked_reason="unsupported_by_adapter",
+                authorization_ref=current.authorization_ref,
+                adapter_calls=0,
+            )
+        return PnLSnapshot(
+            period=period,
+            source="authorized_redacted_snapshot_ref",
+            realized_summary="realized:redacted",
+            unrealized_summary="unrealized:redacted",
+            authorization_ref=current.authorization_ref,
+            adapter_calls=0,
+        )
+
+    def query_return_summary(self, *, period: str, pnl: PnLSnapshot) -> ReturnSummary:
+        if pnl.blocked or pnl.status.startswith("unavailable"):
+            return ReturnSummary(
+                period=period,
+                return_pct=None,
+                source=pnl.source,
+                status="unavailable",
+                unavailable_reason=pnl.blocked_reason,
+            )
+        return ReturnSummary(period=period, return_pct=0.0, source="estimated")
+
+    def register_subscription(
+        self,
+        *,
+        symbols: Sequence[str],
+        period: str,
+        auth: AuthorizationRecord | Mapping[str, object] | None = None,
+    ) -> MarketSubscription:
+        current = build_authorization_record(auth, scope="market_readonly")
+        subscription_id = stable_id("subscription", period, ",".join(str(item) for item in symbols))
+        if not current.authorized or current.scope != "market_readonly":
+            return MarketSubscription(
+                subscription_id=subscription_id,
+                symbols=tuple(str(item) for item in symbols),
+                period=period,
+                state="blocked",
+                blocked_reason="authorization_missing",
+                adapter_calls=0,
+            )
+        self._events[subscription_id] = (
+            GatewayEvent(
+                event_id=stable_id("gateway-event", subscription_id, "fixture"),
+                event_type="market_tick_ref",
+                state="fixture_available",
+                payload_ref="market-event-ref:redacted",
+            ),
+        )
+        return MarketSubscription(
+            subscription_id=subscription_id,
+            symbols=tuple(str(item) for item in symbols),
+            period=period,
+            state="registered_fixture_only",
+            adapter_calls=0,
+        )
+
+    def pull_subscription_events(self, subscription_id: str, *, limit: int = 100) -> tuple[GatewayEvent, ...]:
+        return self._events.get(subscription_id, ())[: max(0, int(limit))]
+
+    def validate_gateway_command(
+        self,
+        command: GatewayCommand,
+        *,
+        auth: AuthorizationRecord | Mapping[str, object] | None = None,
+    ) -> GatewayCommandDecision:
+        if command.idempotency_key and command.idempotency_key in self._seen_commands:
+            return GatewayCommandDecision(command_id=command.command_id, status="duplicate", local_reject=True)
+        current = build_authorization_record(auth, scope=command.scope)
+        if command.command_type in {"submit", "cancel", "buy", "sell"}:
+            if not current.authorized or current.scope != command.scope:
+                return GatewayCommandDecision(
+                    command_id=command.command_id,
+                    status="hard_rejected",
+                    blocked_reason="authorization_missing",
+                    local_reject=True,
+                    broker_reject=False,
+                    adapter_calls=0,
+                )
+        if command.idempotency_key:
+            self._seen_commands.add(command.idempotency_key)
+        return GatewayCommandDecision(command_id=command.command_id, status="accepted_for_fixture_only", adapter_calls=0)
+
+    def ingest_execution_report(self, report: ExecutionReport) -> ExecutionReport:
+        return report
+
+    def build_recovery_plan(self, health: GatewayHealth | Mapping[str, object]) -> RecoveryPlan:
+        reason = _health_value(health, "degraded_reason") or _health_value(health, "status")
+        return RecoveryPlan(
+            degraded_reason=reason or "unknown",
+            manual_action="manual_review",
+            auto_retry_allowed=False,
+            auto_unlock_allowed=False,
+        )
+
+
+def _health_value(health: GatewayHealth | Mapping[str, object], key: str) -> str:
+    if isinstance(health, Mapping):
+        return str(health.get(key) or "")
+    return str(getattr(health, key, "") or "")

@@ -21,12 +21,16 @@ from trading.qmt_endpoint_matrix import (
     resolve_endpoint_spec,
 )
 from trading.qmt_gateway_contracts import (
+    GatewayCommand,
+    GatewayCommandDecision,
+    MarketSubscription,
     QmtBlockedReason,
     QmtGatewayResult,
     build_allowed_result,
     build_blocked_result,
     collect_qmt_gateway_contract_counters,
 )
+from trading.runner_control_contracts import AuthorizationRecord, build_authorization_record, stable_id
 from trading.stage_gate import read_admission_gate_result, read_stage_gate_result
 
 
@@ -666,3 +670,58 @@ def _enum_value(value: object) -> str:
     if isinstance(value, Enum):
         return str(value.value)
     return str(value)
+
+
+def gate_market_subscription(
+    *,
+    symbols: tuple[str, ...],
+    period: str,
+    auth: AuthorizationRecord | Mapping[str, object] | None = None,
+) -> MarketSubscription:
+    """CR138 market subscription gate；未授权时不触发 adapter。"""
+
+    current = build_authorization_record(auth, scope="market_readonly")
+    subscription_id = stable_id("subscription", period, ",".join(symbols))
+    if not current.authorized or current.scope != "market_readonly":
+        return MarketSubscription(
+            subscription_id=subscription_id,
+            symbols=symbols,
+            period=period,
+            state="blocked",
+            blocked_reason="authorization_missing",
+            adapter_calls=0,
+        )
+    return MarketSubscription(
+        subscription_id=subscription_id,
+        symbols=symbols,
+        period=period,
+        state="registered_fixture_only",
+        adapter_calls=0,
+    )
+
+
+def hard_reject_gateway_command(
+    command: GatewayCommand,
+    *,
+    auth: AuthorizationRecord | Mapping[str, object] | None = None,
+) -> GatewayCommandDecision:
+    """CR138 submit/cancel gate；未授权只返回本地 hard_rejected。"""
+
+    current = build_authorization_record(auth, scope=command.scope)
+    if command.command_type in {"submit", "cancel", "buy", "sell"}:
+        if not current.authorized or current.scope != command.scope:
+            return GatewayCommandDecision(
+                command_id=command.command_id,
+                status="hard_rejected",
+                blocked_reason="authorization_missing",
+                local_reject=True,
+                broker_reject=False,
+                adapter_calls=0,
+            )
+    return GatewayCommandDecision(
+        command_id=command.command_id,
+        status="accepted_for_fixture_only",
+        local_reject=True,
+        broker_reject=False,
+        adapter_calls=0,
+    )

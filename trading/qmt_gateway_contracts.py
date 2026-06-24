@@ -50,6 +50,8 @@ QMT_QUERY_POSITIONS_COUNTER_FIELDS: tuple[str, ...] = (
     "redaction_fallback_to_raw",
 )
 
+CR138_GATEWAY_SERVICE_SCHEMA_VERSION = "cr138-qmt-gateway-service-layer-v1"
+
 
 class QmtGatewayResultStatus(str, Enum):
     """Gateway 合同结果状态。"""
@@ -625,3 +627,371 @@ def _as_float(value: object) -> float | None:
 def _stable_hash(value: object) -> str:
     rendered = json.dumps(value, ensure_ascii=False, sort_keys=True, default=str)
     return hashlib.sha256(rendered.encode("utf-8")).hexdigest()
+
+
+@dataclass(frozen=True, slots=True)
+class GatewayHealth:
+    """CR138 Gateway health；health 不等于账户、行情或交易授权。"""
+
+    status: str
+    request_id: str = ""
+    last_heartbeat: str = ""
+    degraded_reason: str = ""
+    capabilities_ref: str = "capabilities:rest-only"
+    runtime_authorized: bool = False
+    schema_version: str = CR138_GATEWAY_SERVICE_SCHEMA_VERSION
+
+    @property
+    def healthy(self) -> bool:
+        return self.status == "healthy"
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "schema_version": self.schema_version,
+            "status": self.status,
+            "healthy": self.healthy,
+            "request_id": self.request_id,
+            "last_heartbeat": self.last_heartbeat,
+            "degraded_reason": self.degraded_reason,
+            "capabilities_ref": self.capabilities_ref,
+            "runtime_authorized": self.runtime_authorized,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class CapabilitySnapshot:
+    """CR138 REST-only P0 capability snapshot。"""
+
+    protocols: tuple[str, ...] = ("REST",)
+    deferred_protocols: tuple[str, ...] = ("SSE", "WebSocket", "gRPC", "FIX")
+    query_scopes: tuple[str, ...] = ("calendar:read", "commission:read", "pnl:read")
+    market_scopes: tuple[str, ...] = ("market_readonly",)
+    order_scopes: tuple[str, ...] = ("order_write", "submit_cancel")
+    runtime_authorized: bool = False
+    schema_version: str = CR138_GATEWAY_SERVICE_SCHEMA_VERSION
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "schema_version": self.schema_version,
+            "protocols": list(self.protocols),
+            "deferred_protocols": list(self.deferred_protocols),
+            "query_scopes": list(self.query_scopes),
+            "market_scopes": list(self.market_scopes),
+            "order_scopes": list(self.order_scopes),
+            "runtime_authorized": self.runtime_authorized,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class TradingSession:
+    session_state: str
+    account_label: str = "<redacted-account-ref>"
+    scope: str = "account_readonly"
+    expires_at: str = ""
+    blocked_reason: str = ""
+    redaction_status: str = "redacted"
+    adapter_calls: int = 0
+    schema_version: str = CR138_GATEWAY_SERVICE_SCHEMA_VERSION
+
+    @property
+    def blocked(self) -> bool:
+        return bool(self.blocked_reason)
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "schema_version": self.schema_version,
+            "session_state": self.session_state,
+            "account_label": self.account_label,
+            "scope": self.scope,
+            "expires_at": self.expires_at,
+            "blocked": self.blocked,
+            "blocked_reason": self.blocked_reason,
+            "redaction_status": self.redaction_status,
+            "adapter_calls": self.adapter_calls,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class RestRouteSpec:
+    endpoint_id: str
+    method: str
+    path: str
+    group: str
+    required_scope: str = ""
+    runtime_authorized: bool = False
+    schema_version: str = CR138_GATEWAY_SERVICE_SCHEMA_VERSION
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "schema_version": self.schema_version,
+            "endpoint_id": self.endpoint_id,
+            "method": self.method,
+            "path": self.path,
+            "group": self.group,
+            "required_scope": self.required_scope,
+            "runtime_authorized": self.runtime_authorized,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class TradingCalendar:
+    market: str
+    date_range: str
+    trading_days: tuple[str, ...]
+    source: str
+    freshness: str
+    status: str = "available"
+    unavailable_reason: str = ""
+    schema_version: str = CR138_GATEWAY_SERVICE_SCHEMA_VERSION
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "schema_version": self.schema_version,
+            "market": self.market,
+            "date_range": self.date_range,
+            "trading_days": list(self.trading_days),
+            "source": self.source,
+            "freshness": self.freshness,
+            "status": self.status,
+            "unavailable_reason": self.unavailable_reason,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class CommissionSchedule:
+    instrument_type: str
+    rate: float
+    min_fee: float
+    source: str
+    authorization_ref: str = ""
+    freshness: str = ""
+    schema_version: str = CR138_GATEWAY_SERVICE_SCHEMA_VERSION
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "schema_version": self.schema_version,
+            "instrument_type": self.instrument_type,
+            "rate": self.rate,
+            "min_fee": self.min_fee,
+            "source": self.source,
+            "authorization_ref": self.authorization_ref,
+            "freshness": self.freshness,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class CostEstimate:
+    order_intent_ref: str
+    estimated_fee: float
+    source: str
+    schedule_source: str
+    broker_fact: bool = False
+    schema_version: str = CR138_GATEWAY_SERVICE_SCHEMA_VERSION
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "schema_version": self.schema_version,
+            "order_intent_ref": self.order_intent_ref,
+            "estimated_fee": self.estimated_fee,
+            "source": self.source,
+            "schedule_source": self.schedule_source,
+            "broker_fact": self.broker_fact,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class PnLSnapshot:
+    period: str
+    source: str
+    realized_summary: str = ""
+    unrealized_summary: str = ""
+    authorization_ref: str = ""
+    redaction_status: str = "redacted"
+    status: str = "available"
+    blocked_reason: str = ""
+    adapter_calls: int = 0
+    schema_version: str = CR138_GATEWAY_SERVICE_SCHEMA_VERSION
+
+    @property
+    def blocked(self) -> bool:
+        return bool(self.blocked_reason)
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "schema_version": self.schema_version,
+            "period": self.period,
+            "source": self.source,
+            "realized_summary": self.realized_summary,
+            "unrealized_summary": self.unrealized_summary,
+            "authorization_ref": self.authorization_ref,
+            "redaction_status": self.redaction_status,
+            "status": self.status,
+            "blocked": self.blocked,
+            "blocked_reason": self.blocked_reason,
+            "adapter_calls": self.adapter_calls,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class ReturnSummary:
+    period: str
+    return_pct: float | None
+    source: str
+    status: str = "available"
+    unavailable_reason: str = ""
+    schema_version: str = CR138_GATEWAY_SERVICE_SCHEMA_VERSION
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "schema_version": self.schema_version,
+            "period": self.period,
+            "return_pct": self.return_pct,
+            "source": self.source,
+            "status": self.status,
+            "unavailable_reason": self.unavailable_reason,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class MarketSubscription:
+    subscription_id: str
+    symbols: tuple[str, ...]
+    period: str
+    state: str
+    scope_required: str = "market_readonly"
+    blocked_reason: str = ""
+    adapter_calls: int = 0
+    schema_version: str = CR138_GATEWAY_SERVICE_SCHEMA_VERSION
+
+    @property
+    def blocked(self) -> bool:
+        return bool(self.blocked_reason)
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "schema_version": self.schema_version,
+            "subscription_id": self.subscription_id,
+            "symbols": list(self.symbols),
+            "period": self.period,
+            "state": self.state,
+            "scope_required": self.scope_required,
+            "blocked": self.blocked,
+            "blocked_reason": self.blocked_reason,
+            "adapter_calls": self.adapter_calls,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class GatewayCommand:
+    command_id: str
+    command_type: str
+    scope: str
+    order_intent_id: str = ""
+    idempotency_key: str = ""
+    audit_id: str = ""
+    schema_version: str = CR138_GATEWAY_SERVICE_SCHEMA_VERSION
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "schema_version": self.schema_version,
+            "command_id": self.command_id,
+            "command_type": self.command_type,
+            "scope": self.scope,
+            "order_intent_id": self.order_intent_id,
+            "idempotency_key": self.idempotency_key,
+            "audit_id": self.audit_id,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class GatewayCommandDecision:
+    command_id: str
+    status: str
+    blocked_reason: str = ""
+    local_reject: bool = True
+    broker_reject: bool = False
+    adapter_calls: int = 0
+    schema_version: str = CR138_GATEWAY_SERVICE_SCHEMA_VERSION
+
+    @property
+    def hard_rejected(self) -> bool:
+        return self.status == "hard_rejected"
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "schema_version": self.schema_version,
+            "command_id": self.command_id,
+            "status": self.status,
+            "blocked_reason": self.blocked_reason,
+            "local_reject": self.local_reject,
+            "broker_reject": self.broker_reject,
+            "hard_rejected": self.hard_rejected,
+            "adapter_calls": self.adapter_calls,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class GatewayEvent:
+    event_id: str
+    event_type: str
+    state: str
+    payload_ref: str = ""
+    audit_id: str = ""
+    schema_version: str = CR138_GATEWAY_SERVICE_SCHEMA_VERSION
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "schema_version": self.schema_version,
+            "event_id": self.event_id,
+            "event_type": self.event_type,
+            "state": self.state,
+            "payload_ref": self.payload_ref,
+            "audit_id": self.audit_id,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class ExecutionReport:
+    report_id: str
+    state: str
+    filled_qty: int = 0
+    broker_order_ref: str = "<redacted-broker-order-ref>"
+    audit_id: str = ""
+    redaction_status: str = "redacted"
+    schema_version: str = CR138_GATEWAY_SERVICE_SCHEMA_VERSION
+
+    @property
+    def manual_takeover_required(self) -> bool:
+        return self.state in {"unknown", "stale"}
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "schema_version": self.schema_version,
+            "report_id": self.report_id,
+            "state": self.state,
+            "filled_qty": self.filled_qty,
+            "broker_order_ref": self.broker_order_ref,
+            "audit_id": self.audit_id,
+            "redaction_status": self.redaction_status,
+            "manual_takeover_required": self.manual_takeover_required,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class RecoveryPlan:
+    degraded_reason: str
+    manual_action: str
+    cooldown_until: str = ""
+    auto_retry_allowed: bool = False
+    auto_unlock_allowed: bool = False
+    schema_version: str = CR138_GATEWAY_SERVICE_SCHEMA_VERSION
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "schema_version": self.schema_version,
+            "degraded_reason": self.degraded_reason,
+            "manual_action": self.manual_action,
+            "cooldown_until": self.cooldown_until,
+            "auto_retry_allowed": self.auto_retry_allowed,
+            "auto_unlock_allowed": self.auto_unlock_allowed,
+        }

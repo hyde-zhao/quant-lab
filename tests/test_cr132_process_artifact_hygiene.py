@@ -38,6 +38,136 @@ def test_cr132_source_human_gate_residuals_are_classified_non_blocking() -> None
     assert {classify_entry(entry) for entry in entries} == {"source_human_gate_residual"}
 
 
+def test_cr132_current_guardrail_assets_are_classified_non_blocking() -> None:
+    entries = [
+        StatusEntry(repo="source", status="M", path="scripts/check_process_artifact_hygiene.py"),
+        StatusEntry(repo="source", status="M", path="tests/test_cr132_process_artifact_hygiene.py"),
+    ]
+
+    assert {classify_entry(entry) for entry in entries} == {"current_guardrail_asset"}
+
+
+def test_cr132_cr138_current_assets_are_rule_classified_non_blocking() -> None:
+    entries = [
+        StatusEntry(
+            repo="process",
+            status="??",
+            path="changes/CR-138-RUNNER-QMT-GATEWAY-OPERATIONAL-USE-CASE-BASELINE-2026-06-24.md",
+        ),
+        StatusEntry(repo="process", status="??", path="changes/summaries/CR-138.summary.json"),
+        StatusEntry(
+            repo="process",
+            status="??",
+            path="checkpoints/CP3-CR138-RUNNER-QMT-HLD-REVIEW.md",
+        ),
+        StatusEntry(
+            repo="process",
+            status="??",
+            path="checks/CP3-CR138-HLD-CONSISTENCY.md",
+        ),
+        StatusEntry(
+            repo="process",
+            status="??",
+            path="context/CP3-CR138-RUNNER-QMT-HLD-CONTEXT.yaml",
+        ),
+    ]
+
+    assert {
+        classify_entry(entry, active_cr_numbers=frozenset({"138"}))
+        for entry in entries
+    } == {"current_cr_asset"}
+
+
+def test_cr132_cr138_source_assets_are_classified_non_blocking() -> None:
+    entries = [
+        StatusEntry(repo="source", status="??", path="trading/runner_control_contracts.py"),
+        StatusEntry(repo="source", status="??", path="trading/runner_control_plane.py"),
+        StatusEntry(repo="source", status="??", path="trading/runner_control_cli.py"),
+        StatusEntry(repo="source", status="M", path="trading/qmt_gateway_service.py"),
+        StatusEntry(repo="source", status="M", path="trading/qmt_gateway_contracts.py"),
+        StatusEntry(repo="source", status="M", path="trading/qmt_gateway_config.py"),
+        StatusEntry(repo="source", status="M", path="trading/qmt_gateway_gates.py"),
+        StatusEntry(repo="source", status="??", path="docs/CR138-RUNNER-QMT-AUTHORIZATION-RUNBOOK.md"),
+        StatusEntry(repo="source", status="??", path="docs/QMT-GATEWAY-INSTALL.md"),
+        StatusEntry(repo="source", status="??", path="tests/test_cr138_shared_contracts_authorization_audit.py"),
+        StatusEntry(repo="source", status="??", path="tests/test_cr138_gateway_query_calendar_commission_pnl.py"),
+    ]
+
+    assert {
+        classify_entry(entry, active_cr_numbers=frozenset({"138"}))
+        for entry in entries
+    } == {"current_cr_asset"}
+
+
+def test_cr132_cr138_function_named_design_assets_use_active_index_refs() -> None:
+    entries = [
+        StatusEntry(
+            repo="process",
+            status="??",
+            path="docs/design/HLD-RUNNER-QMT-OPERATIONAL-CONTROL-PLANE.md",
+        ),
+        StatusEntry(
+            repo="process",
+            status="??",
+            path="docs/design/ARCHITECTURE-DECISION-RUNNER-QMT-OPERATIONAL-CONTROL-PLANE.md",
+        ),
+        StatusEntry(repo="process", status="??", path="checks/CP2-DISCUSSION-CHECKPOINT.json"),
+    ]
+    active_paths = frozenset(entry.path for entry in entries)
+
+    assert {
+        classify_entry(
+            entry,
+            active_cr_numbers=frozenset({"138"}),
+            active_cr_process_paths=active_paths,
+        )
+        for entry in entries
+    } == {"current_cr_asset"}
+
+
+def test_cr132_cr138_closed_delivery_assets_are_classified_non_blocking() -> None:
+    entries = [
+        StatusEntry(repo="process", status="M", path="STORY-STATUS.md"),
+        StatusEntry(repo="process", status="??", path="STORY-STATUS-CR138.md"),
+        StatusEntry(repo="process", status="??", path="checkpoints/CP8-CR138-DELIVERY-READINESS.md"),
+        StatusEntry(repo="process", status="??", path="checks/CP8-CR138-DELIVERY-READINESS.md"),
+        StatusEntry(repo="process", status="??", path="docs/release/RELEASE-NOTES-CR138.md"),
+        StatusEntry(repo="process", status="??", path="release/RELEASE-CONTEXT-CR138.yaml"),
+        StatusEntry(repo="process", status="??", path="evidence/CR138-BATCH.CP7.index.json"),
+        StatusEntry(repo="process", status="??", path="returns/CR138-BATCH.CP7.return.json"),
+    ]
+
+    assert {classify_entry(entry) for entry in entries} == {"current_cr_asset"}
+
+
+def test_cr132_shared_workflow_assets_are_classified_non_blocking() -> None:
+    entries = [
+        StatusEntry(repo="source", status="M", path="AGENTS.md"),
+        StatusEntry(repo="process", status="M", path="STATE.md"),
+        StatusEntry(repo="process", status="M", path="USE-CASES.md"),
+        StatusEntry(repo="process", status="M", path="changes/CR-INDEX.json"),
+        StatusEntry(repo="process", status="M", path="changes/CR-INDEX.yaml"),
+        StatusEntry(
+            repo="process",
+            status="M",
+            path="changes/CR-091-FOLLOW-UP-TRACKING-2026-06-18.md",
+        ),
+        StatusEntry(
+            repo="process",
+            status="M",
+            path="changes/CR-098-FOLLOW-UP-TRACKING-2026-06-19.md",
+        ),
+        StatusEntry(repo="process", status="M", path="docs/design/BLUEPRINT.md"),
+        StatusEntry(repo="process", status="M", path="docs/design/HLD.md"),
+        StatusEntry(repo="process", status="M", path="state/STATE.current.json"),
+        StatusEntry(repo="process", status="M", path="state/CR-LEDGER.ndjson"),
+        StatusEntry(repo="process", status="M", path="state/CHECKPOINT-LEDGER.ndjson"),
+        StatusEntry(repo="process", status="M", path="state/READ-EXPANSION-LEDGER.ndjson"),
+    ]
+
+    assert {classify_entry(entry) for entry in entries} == {"current_workflow_shared_asset"}
+
+
 def test_cr132_cr134_current_assets_are_classified_non_blocking() -> None:
     entries = [
         StatusEntry(repo="source", status="??", path="trading/strategy_runner/evidence_index.py"),

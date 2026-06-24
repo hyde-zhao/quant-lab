@@ -6,6 +6,8 @@
 
 from __future__ import annotations
 
+import hashlib
+import json
 from dataclasses import dataclass, field, replace
 from enum import Enum
 from ipaddress import ip_address, ip_network
@@ -14,6 +16,7 @@ from typing import Mapping, Sequence
 
 GATEWAY_CONFIG_SCHEMA_VERSION = "cr019-s04-gateway-config-v1"
 CR020_GATEWAY_RUNTIME_SCHEMA_VERSION = "cr020-s01-gateway-runtime-admission-v1"
+CR138_GATEWAY_CHANGE_PLAN_SCHEMA_VERSION = "cr138-gateway-change-plan-v1"
 DEFAULT_GATEWAY_PORT = 18765
 DEFAULT_CONFIG_PATH = "<config-path>"
 DEFAULT_AUTH_MODE = "pairing_hmac"
@@ -720,3 +723,93 @@ def _as_bool(value: object) -> bool:
     if isinstance(value, str):
         return value.strip().lower() in {"1", "true", "yes", "on"}
     return bool(value)
+
+
+@dataclass(frozen=True, slots=True)
+class GatewayChangePlan:
+    """CR138 gateway 配置变更 dry-run 合同；不执行 apply / restart。"""
+
+    change_id: str
+    config_diff_ref: str
+    compatibility_status: str
+    rollback_target: str
+    status: str
+    apply_allowed: bool = False
+    restart_allowed: bool = False
+    blocked_reason: str = ""
+    redaction_status: str = "redacted"
+    schema_version: str = CR138_GATEWAY_CHANGE_PLAN_SCHEMA_VERSION
+
+    @property
+    def blocked(self) -> bool:
+        return self.status == "rejected"
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "schema_version": self.schema_version,
+            "change_id": self.change_id,
+            "config_diff_ref": self.config_diff_ref,
+            "compatibility_status": self.compatibility_status,
+            "rollback_target": self.rollback_target,
+            "status": self.status,
+            "apply_allowed": self.apply_allowed,
+            "restart_allowed": self.restart_allowed,
+            "blocked": self.blocked,
+            "blocked_reason": self.blocked_reason,
+            "redaction_status": self.redaction_status,
+        }
+
+
+def build_gateway_change_plan(
+    config_diff_ref: str,
+    *,
+    rollback_target: str = "",
+    compatibility_status: str = "compatible",
+) -> GatewayChangePlan:
+    """构造 gateway change dry-run 计划；rollback 缺失必须拒绝。"""
+
+    change_id = _stable_change_id(config_diff_ref, rollback_target, compatibility_status)
+    if not rollback_target:
+        return GatewayChangePlan(
+            change_id=change_id,
+            config_diff_ref=config_diff_ref,
+            compatibility_status=compatibility_status,
+            rollback_target="",
+            status="rejected",
+            blocked_reason="rollback_target_missing",
+            apply_allowed=False,
+            restart_allowed=False,
+        )
+    status = "dry_run_pass" if compatibility_status == "compatible" else "dry_run_blocked"
+    return GatewayChangePlan(
+        change_id=change_id,
+        config_diff_ref=config_diff_ref,
+        compatibility_status=compatibility_status,
+        rollback_target=rollback_target,
+        status=status,
+        apply_allowed=False,
+        restart_allowed=False,
+        blocked_reason="" if status == "dry_run_pass" else "compatibility_blocked",
+    )
+
+
+def validate_gateway_change_plan(plan: GatewayChangePlan) -> GatewayChangePlan:
+    """返回原计划并强制确认 apply / restart 仍不允许。"""
+
+    if plan.apply_allowed or plan.restart_allowed:
+        return GatewayChangePlan(
+            change_id=plan.change_id,
+            config_diff_ref=plan.config_diff_ref,
+            compatibility_status=plan.compatibility_status,
+            rollback_target=plan.rollback_target,
+            status="rejected",
+            blocked_reason="apply_or_restart_not_authorized",
+            apply_allowed=False,
+            restart_allowed=False,
+        )
+    return plan
+
+
+def _stable_change_id(*parts: object) -> str:
+    rendered = json.dumps([str(part) for part in parts], sort_keys=True, separators=(",", ":"))
+    return "gateway-change:" + hashlib.sha256(rendered.encode("utf-8")).hexdigest()[:16]
