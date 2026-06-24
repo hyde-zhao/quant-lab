@@ -135,6 +135,11 @@ def test_cr132_cr138_closed_delivery_assets_are_classified_non_blocking() -> Non
         StatusEntry(repo="process", status="??", path="release/RELEASE-CONTEXT-CR138.yaml"),
         StatusEntry(repo="process", status="??", path="evidence/CR138-BATCH.CP7.index.json"),
         StatusEntry(repo="process", status="??", path="returns/CR138-BATCH.CP7.return.json"),
+        StatusEntry(
+            repo="process",
+            status="??",
+            path="context/CR138-CLOSURE-TO-RUNNER-QMT-NEXT-WORK-CONTEXT-RESET-HANDOFF-2026-06-24.md",
+        ),
     ]
 
     assert {classify_entry(entry) for entry in entries} == {"current_cr_asset"}
@@ -142,6 +147,7 @@ def test_cr132_cr138_closed_delivery_assets_are_classified_non_blocking() -> Non
 
 def test_cr132_shared_workflow_assets_are_classified_non_blocking() -> None:
     entries = [
+        StatusEntry(repo="source", status="M", path=".gitignore"),
         StatusEntry(repo="source", status="M", path="AGENTS.md"),
         StatusEntry(repo="process", status="M", path="STATE.md"),
         StatusEntry(repo="process", status="M", path="USE-CASES.md"),
@@ -162,10 +168,42 @@ def test_cr132_shared_workflow_assets_are_classified_non_blocking() -> None:
         StatusEntry(repo="process", status="M", path="state/STATE.current.json"),
         StatusEntry(repo="process", status="M", path="state/CR-LEDGER.ndjson"),
         StatusEntry(repo="process", status="M", path="state/CHECKPOINT-LEDGER.ndjson"),
+        StatusEntry(repo="process", status="M", path="state/HANDOFF-LEDGER.ndjson"),
         StatusEntry(repo="process", status="M", path="state/READ-EXPANSION-LEDGER.ndjson"),
     ]
 
     assert {classify_entry(entry) for entry in entries} == {"current_workflow_shared_asset"}
+
+
+def test_cr132_runner_simulation_entry_assets_are_classified_non_blocking() -> None:
+    entries = [
+        StatusEntry(repo="source", status="M", path="trading/qmt_client.py"),
+        StatusEntry(repo="source", status="M", path="trading/qmt_runtime.py"),
+        StatusEntry(repo="source", status="M", path="trading/strategy_runner/__init__.py"),
+        StatusEntry(repo="source", status="??", path="trading/strategy_runner/simulation_activation.py"),
+        StatusEntry(repo="source", status="M", path="tests/test_cr020_linux_client_rest_transport.py"),
+        StatusEntry(repo="source", status="M", path="tests/test_cr020_runtime_manual_validation.py"),
+        StatusEntry(repo="source", status="??", path="tests/test_runner_simulation_activation.py"),
+        StatusEntry(
+            repo="process",
+            status="??",
+            path="context/RUNNER-MODEL-SIMULATION-LIVE-ENTRY-WORK-PACKAGE-2026-06-24.md",
+        ),
+        StatusEntry(
+            repo="process",
+            status="??",
+            path="checks/RUNNER-MODEL-SIMULATION-LIVE-ENTRY-VERIFICATION-2026-06-24.md",
+        ),
+        StatusEntry(
+            repo="process",
+            status="??",
+            path="context/RUNNER-SIMULATION-TRADING-MACHINE-SMOKE-HANDOFF-2026-06-24.md",
+        ),
+    ]
+
+    assert {classify_entry(entry) for entry in entries} == {
+        "current_runner_simulation_entry_asset"
+    }
 
 
 def test_cr132_cr134_current_assets_are_classified_non_blocking() -> None:

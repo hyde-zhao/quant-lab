@@ -106,6 +106,7 @@ class QmtClientConfig:
     default_stage: str = "shadow"
     default_mode: str = "dry_run"
     redaction_label: str = DEFAULT_REDACTION_LABEL
+    allow_simulation_transport: bool = False
 
     @property
     def normalized_base_url(self) -> str:
@@ -558,6 +559,8 @@ class QmtClient:
         validation_error = self._validate_required_fields(current)
         if validation_error is not None:
             return validation_error
+        if self.config.allow_simulation_transport:
+            return self._send_rest_request(current)
         return self._later_gated_block(current)
 
     def cancel_simulation(
@@ -574,6 +577,8 @@ class QmtClient:
         validation_error = self._validate_required_fields(current)
         if validation_error is not None:
             return validation_error
+        if self.config.allow_simulation_transport:
+            return self._send_rest_request(current)
         return self._later_gated_block(current)
 
     def live_readonly_snapshot(

@@ -33,6 +33,7 @@ CURRENT_GUARDRAIL_SOURCE_ASSETS = frozenset(
 
 CURRENT_WORKFLOW_SHARED_SOURCE_ASSETS = frozenset(
     {
+        ".gitignore",
         "AGENTS.md",
     }
 )
@@ -55,6 +56,7 @@ CURRENT_WORKFLOW_SHARED_PROCESS_ASSETS = frozenset(
         "docs/design/FEATURE-DESIGN-MATRIX.md",
         "state/CHECKPOINT-LEDGER.ndjson",
         "state/CR-LEDGER.ndjson",
+        "state/HANDOFF-LEDGER.ndjson",
         "state/READ-EXPANSION-LEDGER.ndjson",
         "state/STATE.current.json",
     }
@@ -315,6 +317,7 @@ CURRENT_CR138_PROCESS_ASSETS = frozenset(
         "context/CP2-CR138-RUNNER-QMT-OPERATIONAL-USE-CASE-CONTEXT.yaml",
         "context/CP3-CR138-RUNNER-QMT-HLD-CONTEXT.yaml",
         "context/CP5-CR138-RUNNER-QMT-OPERATIONAL-CONTROL-CONTEXT.yaml",
+        "context/CR138-CLOSURE-TO-RUNNER-QMT-NEXT-WORK-CONTEXT-RESET-HANDOFF-2026-06-24.md",
         "discussions/CP2-SCENARIO-DISCUSSION-LOG.md",
         "discussions/CP3-HLD-DISCUSSION-LOG.md",
         "docs/design/ARCHITECTURE-DECISION-RUNNER-QMT-OPERATIONAL-CONTROL-PLANE.md",
@@ -363,6 +366,27 @@ CURRENT_CR138_PROCESS_ASSETS = frozenset(
     }
 )
 
+CURRENT_RUNNER_SIMULATION_ENTRY_SOURCE_ASSETS = frozenset(
+    {
+        "tests/test_cr020_linux_client_rest_transport.py",
+        "tests/test_cr020_runtime_manual_validation.py",
+        "tests/test_runner_simulation_activation.py",
+        "trading/qmt_client.py",
+        "trading/qmt_gateway_contracts.py",
+        "trading/qmt_runtime.py",
+        "trading/strategy_runner/__init__.py",
+        "trading/strategy_runner/simulation_activation.py",
+    }
+)
+
+CURRENT_RUNNER_SIMULATION_ENTRY_PROCESS_ASSETS = frozenset(
+    {
+        "checks/RUNNER-MODEL-SIMULATION-LIVE-ENTRY-VERIFICATION-2026-06-24.md",
+        "context/RUNNER-MODEL-SIMULATION-LIVE-ENTRY-WORK-PACKAGE-2026-06-24.md",
+        "context/RUNNER-SIMULATION-TRADING-MACHINE-SMOKE-HANDOFF-2026-06-24.md",
+    }
+)
+
 CURRENT_CR089_CLOSURE_PROCESS_ASSETS = frozenset(
     {
         "archive/CR-089/evidence-index.json",
@@ -403,6 +427,7 @@ def check_process_artifact_hygiene(
         "current_cr135_asset": [],
         "current_cr136_asset": [],
         "current_cr137_asset": [],
+        "current_runner_simulation_entry_asset": [],
         "current_guardrail_asset": [],
         "current_workflow_shared_asset": [],
         "current_cr089_closure_asset": [],
@@ -438,6 +463,7 @@ def check_process_artifact_hygiene(
             "known_non_blocking_buckets": [
                 "artifact_history_residual",
                 "current_cr_asset",
+                "current_runner_simulation_entry_asset",
                 "current_guardrail_asset",
                 "current_workflow_shared_asset",
                 "source_human_gate_residual",
@@ -462,6 +488,8 @@ def classify_entry(
             return "current_guardrail_asset"
         if entry.path in CURRENT_CR138_SOURCE_ASSETS:
             return "current_cr_asset"
+        if entry.path in CURRENT_RUNNER_SIMULATION_ENTRY_SOURCE_ASSETS:
+            return "current_runner_simulation_entry_asset"
         if entry.path in CURRENT_CR137_SOURCE_ASSETS:
             return "current_cr137_asset"
         if entry.path in CURRENT_CR136_SOURCE_ASSETS:
@@ -485,6 +513,8 @@ def classify_entry(
             return "current_cr_asset"
         if entry.path in CURRENT_CR138_PROCESS_ASSETS:
             return "current_cr_asset"
+        if entry.path in CURRENT_RUNNER_SIMULATION_ENTRY_PROCESS_ASSETS:
+            return "current_runner_simulation_entry_asset"
         if entry.path in CURRENT_CR089_CLOSURE_PROCESS_ASSETS:
             return "current_cr089_closure_asset"
         if entry.path in CURRENT_CR137_PROCESS_ASSETS:

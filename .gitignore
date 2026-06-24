@@ -28,8 +28,8 @@ pnpm-debug.log*
 .agents/
 .codex/
 .claude/
-/AGENTS.md
-/CLAUDE.md
+AGENTS.md
+CLAUDE.md
 
 # CR081/CR082/CR087/CR088：过程台账和过程文档迁移到仓库外部
 # meta-flow-artifacts project，并归档到

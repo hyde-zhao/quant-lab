@@ -98,9 +98,13 @@ def _client(
     *,
     auth_provider: _FakeAuthProvider | None = None,
     retry_policy: QmtRetryPolicy | None = None,
+    allow_simulation_transport: bool = False,
 ) -> QmtClient:
     return QmtClient(
-        config=QmtClientConfig(base_url="http://127.0.0.1:18080/"),
+        config=QmtClientConfig(
+            base_url="http://127.0.0.1:18080/",
+            allow_simulation_transport=allow_simulation_transport,
+        ),
         transport=transport,
         auth_header_provider=auth_provider or _FakeAuthProvider(),
         retry_policy=retry_policy,
@@ -190,6 +194,69 @@ def test_account_like_endpoints_other_than_query_positions_remain_blocked() -> N
     assert response.reason_code == QmtBlockedReason.PER_RUN_AUTHORIZATION_MISSING.value
     assert transport.calls == []
     _assert_zero_counters(response.counters)
+
+
+def test_simulation_submit_uses_rest_transport_only_when_explicitly_enabled() -> None:
+    body = {
+        "status": "allowed",
+        "allowed": True,
+        "allowed_payload": {
+            "endpoint_id": "submit_simulation",
+            "data": {"simulation_operation": {"operation": "submit", "accepted": True}},
+            "operation_authorized": True,
+            "fixture_only": False,
+            "real_operation": True,
+        },
+        "counters": {
+            "qmt_operation": 1,
+            "qmt_api_call": 1,
+            "real_order": 1,
+            "simulation_or_live_run": 1,
+        },
+    }
+    blocked_transport = _FakeTransport([QmtTransportResult(status="allowed", body=body)])
+    blocked_client = _client(blocked_transport)
+
+    blocked = blocked_client.submit_simulation(
+        run_id="run-simulation-client",
+        request_id="request-simulation-client",
+        intent_id="intent-simulation-client",
+        authorization_ref="auth-simulation-client",
+        payload={"symbol": "000001.SZ", "side": "buy", "quantity": 100, "price": 10.0},
+    )
+
+    assert blocked.status is QmtResponseStatus.AUTH_ERROR
+    assert blocked.reason_code == QmtBlockedReason.PER_RUN_AUTHORIZATION_MISSING.value
+    assert blocked_transport.calls == []
+    _assert_zero_counters(blocked.counters)
+
+    transport = _FakeTransport(
+        [
+            QmtTransportResult(
+                status="allowed",
+                status_code=200,
+                body=body,
+                counters=body["counters"],  # type: ignore[arg-type]
+            )
+        ]
+    )
+    client = _client(transport, allow_simulation_transport=True)
+
+    response = client.submit_simulation(
+        run_id="run-simulation-client",
+        request_id="request-simulation-client",
+        intent_id="intent-simulation-client",
+        authorization_ref="auth-simulation-client",
+        payload={"symbol": "000001.SZ", "side": "buy", "quantity": 100, "price": 10.0},
+    )
+
+    assert response.status is QmtResponseStatus.OK
+    assert response.payload["operation_authorized"] is True
+    assert response.payload["real_operation"] is True
+    assert response.payload["simulation_operation"] == {"operation": "submit", "accepted": True}
+    assert response.counters["real_order"] == 1
+    assert transport.calls[0].path == "/qmt/simulation/orders"
+    assert transport.calls[0].required_scope == "qmt:simulation:submit"
 
 
 def test_auth_provider_missing_or_failing_blocks_before_transport_send() -> None:

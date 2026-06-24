@@ -47,6 +47,14 @@ from trading.strategy_runner.run_registry import (
 from trading.strategy_runner.result import RunResult, write_run_result
 from trading.strategy_runner.run_spec import RunSpec, RunSpecError
 from trading.strategy_runner.runner import run_strategy_package, run_strategy_package_from_path, run_strategy_package_from_spec_file
+from trading.strategy_runner.simulation_activation import (
+    FunctionSimulationGateway,
+    SimulationActivationRequest,
+    SimulationActivationResult,
+    SimulationGateway,
+    activate_simulation_orders,
+    blocked_simulation_gateway,
+)
 from trading.strategy_runner.target_portfolio import TargetPortfolioSnapshot
 
 __all__ = (
@@ -67,6 +75,9 @@ __all__ = (
     "RunRegistryEntry",
     "RunSpec",
     "RunSpecError",
+    "SimulationActivationRequest",
+    "SimulationActivationResult",
+    "SimulationGateway",
     "PackageExchangeError",
     "StrategyAdapter",
     "StrategyPackage",
@@ -83,6 +94,8 @@ __all__ = (
     "run_strategy_package",
     "run_strategy_package_from_path",
     "run_strategy_package_from_spec_file",
+    "FunctionSimulationGateway",
+    "activate_simulation_orders",
     "append_run_registry_entry",
     "append_run_registry_from_bundle",
     "append_run_registry_from_result",
@@ -96,5 +109,6 @@ __all__ = (
     "write_run_artifact_bundle",
     "write_run_evidence_index",
     "write_run_result",
+    "blocked_simulation_gateway",
     "zero_cr091_operation_counters",
 )

@@ -34,15 +34,29 @@ from trading.qmt_gateway_contracts import (
     CR020_QUERY_POSITIONS_ENDPOINT_ID,
     CR020_QUERY_POSITIONS_PATH,
     CR020_QUERY_POSITIONS_SCOPE,
+    QMT_SIMULATION_CANCEL_ENDPOINT_ID,
+    QMT_SIMULATION_CANCEL_PATH,
+    QMT_SIMULATION_CANCEL_SCOPE,
+    QMT_SIMULATION_SUBMIT_ENDPOINT_ID,
+    QMT_SIMULATION_SUBMIT_PATH,
+    QMT_SIMULATION_SUBMIT_SCOPE,
     QmtBlockedReason,
     QmtQueryPositionsRequest,
+    QmtSimulationCancelRequest,
+    QmtSimulationOperationPayload,
+    QmtSimulationOrderRequest,
+    build_blocked_result,
     build_query_positions_blocked_result,
+    build_simulation_cancel_request,
+    build_simulation_operation_result,
+    build_simulation_order_request,
 )
 from trading.qmt_gateway_service import dispatch_qmt_gateway_endpoint
 from trading.qmt_gateway_session import (
     QmtSessionBlockedReason,
     QmtSessionSnapshot,
     QmtSessionState,
+    require_qmt_session_ready,
 )
 
 
@@ -240,6 +254,76 @@ class XtQuantRuntimeAdapter:
             "runtime_status": "xtquant-query-positions",
         }
 
+    def submit_simulation_order(
+        self,
+        request: QmtSimulationOrderRequest,
+        session_snapshot: QmtSessionSnapshot,
+    ) -> Mapping[str, object]:
+        """向已登录的 MiniQMT 模拟账户提交委托。"""
+
+        if self._trader is None or self._account is None or not session_snapshot.ready:
+            raise RuntimeError("qmt session is not ready")
+        xtconstant = _load_optional_xtconstant(self._load_module)
+        order_type = _order_type_value(xtconstant, request.side)
+        price_type = _price_type_value(xtconstant, request.price_type)
+        broker_order_ref = _call_if_exists(
+            self._trader,
+            "order_stock",
+            self._account,
+            request.symbol,
+            order_type,
+            int(request.quantity),
+            price_type,
+            float(request.price),
+            "quant-lab-simulation",
+            request.order_intent_id,
+        )
+        if broker_order_ref is None:
+            raise RuntimeError("xtquant order_stock unavailable")
+        return {
+            "operation": "submit",
+            "run_id": request.run_id,
+            "order_intent_id": request.order_intent_id,
+            "accepted": True,
+            "broker_order_ref": str(broker_order_ref),
+            "adapter_status": "xtquant-simulation-submit-accepted",
+        }
+
+    def cancel_simulation_order(
+        self,
+        request: QmtSimulationCancelRequest,
+        session_snapshot: QmtSessionSnapshot,
+    ) -> Mapping[str, object]:
+        """向已登录的 MiniQMT 模拟账户提交撤单请求。"""
+
+        if self._trader is None or self._account is None or not session_snapshot.ready:
+            raise RuntimeError("qmt session is not ready")
+        cancel_result = _call_if_exists(
+            self._trader,
+            "cancel_order_stock",
+            self._account,
+            request.broker_order_ref,
+        )
+        if cancel_result is None:
+            cancel_result = _call_if_exists(
+                self._trader,
+                "cancel_order_stock_sysid",
+                self._account,
+                request.broker_order_ref,
+            )
+        if cancel_result is None:
+            raise RuntimeError("xtquant cancel_order_stock unavailable")
+        return {
+            "operation": "cancel",
+            "run_id": request.run_id,
+            "order_intent_id": request.order_intent_id,
+            "accepted": _looks_successful(cancel_result),
+            "broker_order_ref": request.broker_order_ref,
+            "adapter_status": "xtquant-simulation-cancel-accepted"
+            if _looks_successful(cancel_result)
+            else "xtquant-simulation-cancel-rejected",
+        }
+
 
 class QmtGatewayRuntime:
     """S 端 HTTP gateway runtime；由 CLI 显式创建和启动。"""
@@ -319,6 +403,107 @@ class QmtGatewayRuntime:
         )
         return result.to_dict()
 
+    def submit_simulation_order(
+        self,
+        *,
+        body: bytes,
+        headers: Mapping[str, object],
+        source_ip: str,
+    ) -> dict[str, object]:
+        return self._dispatch_simulation_operation(
+            endpoint_id=QMT_SIMULATION_SUBMIT_ENDPOINT_ID,
+            path=QMT_SIMULATION_SUBMIT_PATH,
+            scope=QMT_SIMULATION_SUBMIT_SCOPE,
+            body=body,
+            headers=headers,
+            source_ip=source_ip,
+        )
+
+    def cancel_simulation_order(
+        self,
+        *,
+        body: bytes,
+        headers: Mapping[str, object],
+        source_ip: str,
+    ) -> dict[str, object]:
+        return self._dispatch_simulation_operation(
+            endpoint_id=QMT_SIMULATION_CANCEL_ENDPOINT_ID,
+            path=QMT_SIMULATION_CANCEL_PATH,
+            scope=QMT_SIMULATION_CANCEL_SCOPE,
+            body=body,
+            headers=headers,
+            source_ip=source_ip,
+        )
+
+    def _dispatch_simulation_operation(
+        self,
+        *,
+        endpoint_id: str,
+        path: str,
+        scope: str,
+        body: bytes,
+        headers: Mapping[str, object],
+        source_ip: str,
+    ) -> dict[str, object]:
+        auth = evaluate_qmt_auth_admission(
+            request_source=build_qmt_request_source_context({"source_ip": source_ip}),
+            method="POST",
+            path=path,
+            body=body,
+            headers=headers,
+            config=self.auth_config,
+            allowlist=self.allowlist,
+            endpoint_id=endpoint_id,
+            required_scope=scope,
+            nonce_store=self.nonce_store,
+        )
+        if not auth.accepted:
+            return build_blocked_result(
+                endpoint_id,
+                QmtBlockedReason.AUTH_BLOCKED,
+                detail={"auth_reason": _runtime_auth_blocked_reason(auth)},
+            ).to_dict()
+        session_gate = require_qmt_session_ready(self.session_snapshot, endpoint_id=endpoint_id)
+        if session_gate.blocked:
+            return build_blocked_result(
+                endpoint_id,
+                QmtBlockedReason.QMT_OPERATION_NOT_AUTHORIZED,
+                detail={"session_reason": session_gate.blocked_reason},
+            ).to_dict()
+        payload = _json_body(body)
+        try:
+            if endpoint_id == QMT_SIMULATION_SUBMIT_ENDPOINT_ID:
+                request = build_simulation_order_request(payload)
+                _validate_simulation_submit_request(request)
+                raw_result = self.adapter.submit_simulation_order(request, self.session_snapshot)
+                operation_payload = QmtSimulationOperationPayload(**raw_result)
+                counters = {
+                    "qmt_operation": 1,
+                    "qmt_api_call": 1,
+                    "real_order": 1,
+                    "simulation_or_live_run": 1,
+                    "adapter_call": 1,
+                }
+            else:
+                cancel_request = build_simulation_cancel_request(payload)
+                _validate_simulation_cancel_request(cancel_request)
+                raw_result = self.adapter.cancel_simulation_order(cancel_request, self.session_snapshot)
+                operation_payload = QmtSimulationOperationPayload(**raw_result)
+                counters = {
+                    "qmt_operation": 1,
+                    "qmt_api_call": 1,
+                    "real_cancel": 1,
+                    "simulation_or_live_run": 1,
+                    "adapter_call": 1,
+                }
+        except (RuntimeError, ValueError) as exc:
+            return build_blocked_result(
+                endpoint_id,
+                QmtBlockedReason.VALIDATION_BLOCKED,
+                detail={"error": type(exc).__name__, "message": str(exc)},
+            ).to_dict()
+        return build_simulation_operation_result(endpoint_id, operation_payload, counters=counters).to_dict()
+
 
 def load_runtime_env(env_file: str | Path = ".env") -> dict[str, str]:
     """显式读取 dotenv 文件；仅由 runtime CLI 调用。"""
@@ -373,7 +558,11 @@ def build_runtime_auth_config(config: QmtRuntimeConfig) -> QmtAuthConfig:
         client_id=config.client_id,
         client_id_hash=stable_qmt_auth_hash(config.client_id),
         secret_ref="[REDACTED]",
-        scopes=(CR020_QUERY_POSITIONS_SCOPE,),
+        scopes=(
+            CR020_QUERY_POSITIONS_SCOPE,
+            QMT_SIMULATION_SUBMIT_SCOPE,
+            QMT_SIMULATION_CANCEL_SCOPE,
+        ),
         approved_at=now,
         code_expires_at=now + timedelta(days=365),
         pairing_code_hash=stable_qmt_auth_hash("runtime-env-pairing"),
@@ -390,7 +579,11 @@ def build_runtime_hmac_provider(config: QmtRuntimeConfig) -> QmtHmacHeaderProvid
     return QmtHmacHeaderProvider(
         client_id=config.client_id,
         secret=config.client_secret,
-        scopes=(CR020_QUERY_POSITIONS_SCOPE,),
+        scopes=(
+            CR020_QUERY_POSITIONS_SCOPE,
+            QMT_SIMULATION_SUBMIT_SCOPE,
+            QMT_SIMULATION_CANCEL_SCOPE,
+        ),
         nonce_provider=lambda: stable_qmt_auth_hash(f"{time.time_ns()}|{config.client_id}")[:32],
     )
 
@@ -440,7 +633,34 @@ def _handler_factory(runtime: QmtGatewayRuntime) -> type[BaseHTTPRequestHandler]
 
         def do_POST(self) -> None:  # noqa: N802
             body = self.rfile.read(int(self.headers.get("Content-Length", "0") or 0))
-            if self.path != CR020_QUERY_POSITIONS_PATH:
+            if self.path == CR020_QUERY_POSITIONS_PATH:
+                payload = runtime.query_positions(
+                    body=body,
+                    headers={key: value for key, value in self.headers.items()},
+                    source_ip=str(self.client_address[0]),
+                )
+                status = 200 if payload.get("allowed") is True else 403
+                _write_json(self, status, payload)
+                return
+            if self.path == QMT_SIMULATION_SUBMIT_PATH:
+                payload = runtime.submit_simulation_order(
+                    body=body,
+                    headers={key: value for key, value in self.headers.items()},
+                    source_ip=str(self.client_address[0]),
+                )
+                status = 200 if payload.get("allowed") is True else 403
+                _write_json(self, status, payload)
+                return
+            if self.path == QMT_SIMULATION_CANCEL_PATH:
+                payload = runtime.cancel_simulation_order(
+                    body=body,
+                    headers={key: value for key, value in self.headers.items()},
+                    source_ip=str(self.client_address[0]),
+                )
+                status = 200 if payload.get("allowed") is True else 403
+                _write_json(self, status, payload)
+                return
+            else:
                 _write_json(
                     self,
                     404,
@@ -450,13 +670,6 @@ def _handler_factory(runtime: QmtGatewayRuntime) -> type[BaseHTTPRequestHandler]
                     ).to_dict(),
                 )
                 return
-            payload = runtime.query_positions(
-                body=body,
-                headers={key: value for key, value in self.headers.items()},
-                source_ip=str(self.client_address[0]),
-            )
-            status = 200 if payload.get("allowed") is True else 403
-            _write_json(self, status, payload)
 
         def log_message(self, format: str, *args: object) -> None:
             return
@@ -518,6 +731,80 @@ def _activate_xtquant_account(trader: object, account: object) -> object:
     if subscribe_method is not None:
         return subscribe_method(account)
     return None
+
+
+def _runtime_auth_blocked_reason(admission: object | None) -> str:
+    if admission is None:
+        return QmtBlockedReason.AUTH_REQUIRED.value
+    accepted = getattr(admission, "accepted", False)
+    if accepted:
+        return ""
+    blocked_reason = getattr(admission, "blocked_reason", None)
+    if blocked_reason is not None and hasattr(blocked_reason, "value"):
+        return str(blocked_reason.value)
+    if blocked_reason is not None:
+        return str(blocked_reason)
+    return QmtBlockedReason.AUTH_FAILED.value
+
+
+def _load_optional_xtconstant(module_loader: Callable[[str], object]) -> object:
+    try:
+        return module_loader("xtquant.xtconstant")
+    except Exception:
+        return object()
+
+
+def _order_type_value(xtconstant: object, side: str) -> object:
+    normalized = side.strip().lower()
+    if normalized in {"buy", "b"}:
+        return getattr(xtconstant, "STOCK_BUY", 23)
+    if normalized in {"sell", "s"}:
+        return getattr(xtconstant, "STOCK_SELL", 24)
+    raise ValueError("unsupported_simulation_order_side")
+
+
+def _price_type_value(xtconstant: object, price_type: str) -> object:
+    normalized = price_type.strip().upper() or "FIX_PRICE"
+    if normalized in {"FIX_PRICE", "LIMIT", "LIMIT_PRICE"}:
+        return getattr(xtconstant, "FIX_PRICE", 11)
+    return getattr(xtconstant, normalized, normalized)
+
+
+def _validate_simulation_submit_request(request: QmtSimulationOrderRequest) -> None:
+    missing = [
+        name
+        for name, value in (
+            ("run_id", request.run_id),
+            ("order_intent_id", request.order_intent_id),
+            ("symbol", request.symbol),
+            ("side", request.side),
+            ("authorization_ref", request.authorization_ref),
+            ("idempotency_key", request.idempotency_key),
+        )
+        if not value
+    ]
+    if missing:
+        raise ValueError("missing_simulation_submit_fields:" + ",".join(missing))
+    if request.quantity <= 0:
+        raise ValueError("invalid_simulation_submit_quantity")
+    if request.price <= 0:
+        raise ValueError("invalid_simulation_submit_price")
+
+
+def _validate_simulation_cancel_request(request: QmtSimulationCancelRequest) -> None:
+    missing = [
+        name
+        for name, value in (
+            ("run_id", request.run_id),
+            ("order_intent_id", request.order_intent_id),
+            ("broker_order_ref", request.broker_order_ref),
+            ("authorization_ref", request.authorization_ref),
+            ("idempotency_key", request.idempotency_key),
+        )
+        if not value
+    ]
+    if missing:
+        raise ValueError("missing_simulation_cancel_fields:" + ",".join(missing))
 
 
 def _looks_successful(value: object) -> bool:

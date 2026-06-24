@@ -18,6 +18,12 @@ CR020_QUERY_POSITIONS_SCHEMA_VERSION = "cr020-s05-query-positions-readonly-v1"
 CR020_QUERY_POSITIONS_ENDPOINT_ID = "query_positions"
 CR020_QUERY_POSITIONS_PATH = "/qmt/account/positions"
 CR020_QUERY_POSITIONS_SCOPE = "qmt:positions:read"
+QMT_SIMULATION_SUBMIT_ENDPOINT_ID = "submit_simulation"
+QMT_SIMULATION_SUBMIT_PATH = "/qmt/simulation/orders"
+QMT_SIMULATION_SUBMIT_SCOPE = "qmt:simulation:submit"
+QMT_SIMULATION_CANCEL_ENDPOINT_ID = "cancel_simulation"
+QMT_SIMULATION_CANCEL_PATH = "/qmt/simulation/orders/cancel"
+QMT_SIMULATION_CANCEL_SCOPE = "qmt:simulation:cancel"
 
 QMT_GATEWAY_FORBIDDEN_COUNTER_FIELDS: tuple[str, ...] = (
     "dependency_change",
@@ -51,6 +57,7 @@ QMT_QUERY_POSITIONS_COUNTER_FIELDS: tuple[str, ...] = (
 )
 
 CR138_GATEWAY_SERVICE_SCHEMA_VERSION = "cr138-qmt-gateway-service-layer-v1"
+QMT_SIMULATION_ORDER_SCHEMA_VERSION = "qmt-simulation-order-runtime-v1"
 
 
 class QmtGatewayResultStatus(str, Enum):
@@ -144,6 +151,96 @@ class QmtQueryPositionsRequest:
             "max_positions": self.max_positions,
             "filter_ref": self.filter_ref,
             "payload": dict(self.payload),
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class QmtSimulationOrderRequest:
+    """模拟账户真实委托请求；只允许脱敏字段进入 gateway。"""
+
+    run_id: str
+    request_id: str
+    order_intent_id: str
+    symbol: str
+    side: str
+    quantity: int
+    price: float
+    price_type: str = "FIX_PRICE"
+    authorization_ref: str = ""
+    idempotency_key: str = ""
+    redaction_label: str = "qmt-simulation-order-redacted"
+    schema_version: str = QMT_SIMULATION_ORDER_SCHEMA_VERSION
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "schema_version": self.schema_version,
+            "run_id": self.run_id,
+            "request_id": self.request_id,
+            "order_intent_id": self.order_intent_id,
+            "symbol_ref": _stable_ref(self.symbol, "symbol"),
+            "side": self.side,
+            "quantity": self.quantity,
+            "price_ref": _stable_ref(str(self.price), "price"),
+            "price_type": self.price_type,
+            "authorization_ref": self.authorization_ref,
+            "idempotency_key": self.idempotency_key,
+            "redaction_label": self.redaction_label,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class QmtSimulationCancelRequest:
+    """模拟账户真实撤单请求；broker order ref 只以脱敏引用输出。"""
+
+    run_id: str
+    request_id: str
+    order_intent_id: str
+    broker_order_ref: str
+    authorization_ref: str = ""
+    idempotency_key: str = ""
+    redaction_label: str = "qmt-simulation-cancel-redacted"
+    schema_version: str = QMT_SIMULATION_ORDER_SCHEMA_VERSION
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "schema_version": self.schema_version,
+            "run_id": self.run_id,
+            "request_id": self.request_id,
+            "order_intent_id": self.order_intent_id,
+            "broker_order_ref": _stable_ref(self.broker_order_ref, "broker-order"),
+            "authorization_ref": self.authorization_ref,
+            "idempotency_key": self.idempotency_key,
+            "redaction_label": self.redaction_label,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class QmtSimulationOperationPayload:
+    """模拟账户 submit/cancel 的脱敏执行结果。"""
+
+    operation: str
+    run_id: str
+    order_intent_id: str
+    accepted: bool
+    broker_order_ref: str = ""
+    adapter_status: str = ""
+    redaction_status: str = "redacted"
+    schema_version: str = QMT_SIMULATION_ORDER_SCHEMA_VERSION
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "schema_version": self.schema_version,
+            "operation": self.operation,
+            "run_id": self.run_id,
+            "order_intent_id": self.order_intent_id,
+            "accepted": self.accepted,
+            "broker_order_ref": (
+                _stable_ref(self.broker_order_ref, "broker-order")
+                if self.broker_order_ref
+                else ""
+            ),
+            "adapter_status": self.adapter_status,
+            "redaction_status": self.redaction_status,
         }
 
 
@@ -418,6 +515,94 @@ def build_query_positions_request(
         filter_ref=str(raw.get("filter_ref") or filter_ref),
         payload=dict(raw.get("payload") or payload or {}),
     )
+
+
+def build_simulation_order_request(
+    source: Mapping[str, object] | QmtSimulationOrderRequest | None = None,
+) -> QmtSimulationOrderRequest:
+    """构造模拟账户委托请求；缺失关键字段由调用方 gate 阻断。"""
+
+    if isinstance(source, QmtSimulationOrderRequest):
+        return source
+    raw = dict(source or {})
+    payload = raw.get("payload")
+    nested = payload if isinstance(payload, Mapping) else {}
+    merged = {**nested, **raw}
+    return QmtSimulationOrderRequest(
+        run_id=str(merged.get("run_id") or ""),
+        request_id=str(merged.get("request_id") or ""),
+        order_intent_id=str(merged.get("order_intent_id") or merged.get("intent_id") or ""),
+        symbol=str(merged.get("symbol") or ""),
+        side=str(merged.get("side") or ""),
+        quantity=_as_int(merged.get("quantity") or merged.get("qty")),
+        price=_as_float(merged.get("price") or merged.get("order_price")),
+        price_type=str(merged.get("price_type") or "FIX_PRICE"),
+        authorization_ref=str(merged.get("authorization_ref") or ""),
+        idempotency_key=str(merged.get("idempotency_key") or ""),
+        redaction_label=str(merged.get("redaction_label") or "qmt-simulation-order-redacted"),
+    )
+
+
+def build_simulation_cancel_request(
+    source: Mapping[str, object] | QmtSimulationCancelRequest | None = None,
+) -> QmtSimulationCancelRequest:
+    """构造模拟账户撤单请求；缺失关键字段由调用方 gate 阻断。"""
+
+    if isinstance(source, QmtSimulationCancelRequest):
+        return source
+    raw = dict(source or {})
+    payload = raw.get("payload")
+    nested = payload if isinstance(payload, Mapping) else {}
+    merged = {**nested, **raw}
+    return QmtSimulationCancelRequest(
+        run_id=str(merged.get("run_id") or ""),
+        request_id=str(merged.get("request_id") or ""),
+        order_intent_id=str(merged.get("order_intent_id") or merged.get("intent_id") or ""),
+        broker_order_ref=str(merged.get("broker_order_ref") or ""),
+        authorization_ref=str(merged.get("authorization_ref") or ""),
+        idempotency_key=str(merged.get("idempotency_key") or ""),
+        redaction_label=str(merged.get("redaction_label") or "qmt-simulation-cancel-redacted"),
+    )
+
+
+def build_simulation_operation_result(
+    endpoint_id: str,
+    payload: QmtSimulationOperationPayload,
+    *,
+    counters: Mapping[str, int] | None = None,
+) -> QmtGatewayResult:
+    """构造模拟账户真实操作的脱敏 allowed result。"""
+
+    return build_allowed_result(
+        endpoint_id,
+        QmtAllowedPayload(
+            endpoint_id=endpoint_id,
+            data={"simulation_operation": payload.to_dict()},
+            operation_authorized=True,
+            fixture_only=False,
+            real_operation=True,
+        ),
+        counters=counters,
+    )
+
+
+def _as_int(value: object) -> int:
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return 0
+
+
+def _as_float(value: object) -> float:
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return 0.0
+
+
+def _stable_ref(value: str, prefix: str) -> str:
+    digest = hashlib.sha256(value.encode("utf-8")).hexdigest()[:16]
+    return f"{prefix}:{digest}"
 
 
 def redact_query_positions_payload(
