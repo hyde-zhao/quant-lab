@@ -10,6 +10,7 @@ from trading.strategy_runner.evidence import EvidenceRedactionError, build_evide
 from trading.strategy_runner.evidence_index import write_run_evidence_index
 from trading.strategy_runner.package_loader import PackageLoaderError, load_strategy_package
 from trading.strategy_runner.readonly_gateway import ReadonlyGatewayClient
+from trading.strategy_runner.run_registry import append_run_registry_from_result
 from trading.strategy_runner.result import RunResult, write_run_result
 from trading.strategy_runner.run_spec import RunSpec, RunSpecError
 
@@ -54,6 +55,12 @@ def run_strategy_package(spec: RunSpec) -> RunResult:
         )
     if output_validated and result.passed and spec.bundle_output_path is not None:
         write_run_artifact_bundle(spec.bundle_output_path, spec=spec, result=result)
+    if output_validated and spec.run_registry_output_path is not None:
+        append_run_registry_from_result(
+            spec.run_registry_output_path,
+            result,
+            bundle_dir=spec.bundle_output_path if result.passed else None,
+        )
     return result
 
 
@@ -64,6 +71,7 @@ def run_strategy_package_from_path(
     output_path: str | Path | None = None,
     evidence_index_output_path: str | Path | None = None,
     bundle_output_path: str | Path | None = None,
+    run_registry_output_path: str | Path | None = None,
 ) -> RunResult:
     return run_strategy_package(
         RunSpec.from_package_root(
@@ -72,6 +80,7 @@ def run_strategy_package_from_path(
             output_path=output_path,
             evidence_index_output_path=evidence_index_output_path,
             bundle_output_path=bundle_output_path,
+            run_registry_output_path=run_registry_output_path,
         )
     )
 

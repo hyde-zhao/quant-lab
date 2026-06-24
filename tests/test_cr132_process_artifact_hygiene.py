@@ -77,7 +77,6 @@ def test_cr132_cr135_start_assets_are_classified_non_blocking() -> None:
 def test_cr132_cr136_start_assets_are_classified_non_blocking() -> None:
     entries = [
         StatusEntry(repo="source", status="M", path="trading/strategy_runner/artifact_bundle.py"),
-        StatusEntry(repo="source", status="M", path="trading/strategy_runner/cli.py"),
         StatusEntry(repo="source", status="??", path="tests/test_cr136_runner_bundle_validation.py"),
         StatusEntry(
             repo="process",
@@ -98,10 +97,41 @@ def test_cr132_cr136_start_assets_are_classified_non_blocking() -> None:
             status="??",
             path="context/CR136-CLOSURE-TO-CR137-CONTEXT-RESET-HANDOFF-2026-06-23.md",
         ),
-        StatusEntry(repo="process", status="M", path="docs/features/strategy-runner-core/DESIGN.md"),
     ]
 
     assert {classify_entry(entry) for entry in entries} == {"current_cr136_asset"}
+
+
+def test_cr132_cr137_start_assets_are_classified_non_blocking() -> None:
+    entries = [
+        StatusEntry(repo="source", status="M", path="trading/strategy_runner/run_spec.py"),
+        StatusEntry(repo="source", status="M", path="trading/strategy_runner/runner.py"),
+        StatusEntry(repo="source", status="??", path="trading/strategy_runner/run_registry.py"),
+        StatusEntry(repo="source", status="??", path="tests/test_cr137_runner_run_registry.py"),
+        StatusEntry(
+            repo="process",
+            status="??",
+            path="changes/CR-137-OFFLINE-RUNNER-RUN-REGISTRY-2026-06-23.md",
+        ),
+        StatusEntry(repo="process", status="??", path="changes/summaries/CR-137.summary.json"),
+        StatusEntry(
+            repo="process",
+            status="??",
+            path="checks/CP7-CR137-RUNNER-RUN-REGISTRY-VERIFICATION-DONE.md",
+        ),
+        StatusEntry(repo="process", status="??", path="checkpoints/CP8-CR137-DELIVERY-READINESS.md"),
+        StatusEntry(repo="process", status="??", path="docs/release/RELEASE-NOTES-CR137.md"),
+        StatusEntry(repo="process", status="??", path="release/RELEASE-CONTEXT-CR137.yaml"),
+        StatusEntry(repo="process", status="??", path="archive/CR-137/evidence-index.json"),
+        StatusEntry(repo="process", status="M", path="docs/features/strategy-runner-core/DESIGN.md"),
+        StatusEntry(
+            repo="process",
+            status="??",
+            path="context/CR137-CLOSURE-TO-RUNNER-QMT-USE-CASE-CONTEXT-RESET-HANDOFF-2026-06-24.md",
+        ),
+    ]
+
+    assert {classify_entry(entry) for entry in entries} == {"current_cr137_asset"}
 
 
 def test_cr132_cr089_closure_assets_are_classified_non_blocking() -> None:

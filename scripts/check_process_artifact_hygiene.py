@@ -177,6 +177,47 @@ CURRENT_CR136_SOURCE_ASSETS = frozenset(
     }
 )
 
+CURRENT_CR137_PROCESS_ASSETS = frozenset(
+    {
+        "archive/CR-137/evidence-index.json",
+        "changes/CR-137-OFFLINE-RUNNER-RUN-REGISTRY-2026-06-23.md",
+        "changes/CR-INDEX.json",
+        "changes/CR-INDEX.yaml",
+        "changes/summaries/CR-137.summary.json",
+        "checkpoints/CP8-CR137-DELIVERY-READINESS.md",
+        "checkpoints/CP8-CR137-LAUNCH-MESSAGE.md",
+        "checks/CP6-CR137-RUNNER-RUN-REGISTRY-IMPLEMENTATION-DONE.md",
+        "checks/CP7-CR137-RUNNER-RUN-REGISTRY-VERIFICATION-DONE.md",
+        "checks/CP8-CR137-DELIVERY-READINESS.md",
+        "context/CP6-CR137.context.json",
+        "context/CR137-CLOSURE-TO-RUNNER-QMT-USE-CASE-CONTEXT-RESET-HANDOFF-2026-06-24.md",
+        "docs/features/strategy-runner-core/DESIGN.md",
+        "docs/features/strategy-runner-core/TASKS.md",
+        "docs/features/strategy-runner-core/TEST-PLAN.md",
+        "docs/release/DEPLOY-CHECKLIST-CR137.md",
+        "docs/release/FEEDBACK-CR137.md",
+        "docs/release/MIGRATION-CR137.md",
+        "docs/release/RELEASE-NOTES-CR137.md",
+        "docs/release/ROLLBACK-CR137.md",
+        "release/RELEASE-CONTEXT-CR137.yaml",
+        "state/CR-LEDGER.ndjson",
+        "state/STATE.current.json",
+    }
+)
+
+CURRENT_CR137_SOURCE_ASSETS = frozenset(
+    {
+        "scripts/check_process_artifact_hygiene.py",
+        "tests/test_cr132_process_artifact_hygiene.py",
+        "tests/test_cr137_runner_run_registry.py",
+        "trading/strategy_runner/__init__.py",
+        "trading/strategy_runner/cli.py",
+        "trading/strategy_runner/run_registry.py",
+        "trading/strategy_runner/run_spec.py",
+        "trading/strategy_runner/runner.py",
+    }
+)
+
 CURRENT_CR089_CLOSURE_PROCESS_ASSETS = frozenset(
     {
         "archive/CR-089/evidence-index.json",
@@ -213,6 +254,7 @@ def check_process_artifact_hygiene(
         "current_cr134_asset": [],
         "current_cr135_asset": [],
         "current_cr136_asset": [],
+        "current_cr137_asset": [],
         "current_cr089_closure_asset": [],
         "source_human_gate_residual": [],
         "ignored": [],
@@ -248,6 +290,8 @@ def check_process_artifact_hygiene(
 
 def classify_entry(entry: StatusEntry) -> str:
     if entry.repo == "source":
+        if entry.path in CURRENT_CR137_SOURCE_ASSETS:
+            return "current_cr137_asset"
         if entry.path in CURRENT_CR136_SOURCE_ASSETS:
             return "current_cr136_asset"
         if entry.path in CURRENT_CR135_SOURCE_ASSETS:
@@ -265,6 +309,8 @@ def classify_entry(entry: StatusEntry) -> str:
     if entry.repo == "process":
         if entry.path in CURRENT_CR089_CLOSURE_PROCESS_ASSETS:
             return "current_cr089_closure_asset"
+        if entry.path in CURRENT_CR137_PROCESS_ASSETS:
+            return "current_cr137_asset"
         if entry.path in CURRENT_CR136_PROCESS_ASSETS:
             return "current_cr136_asset"
         if entry.path in CURRENT_CR135_PROCESS_ASSETS:

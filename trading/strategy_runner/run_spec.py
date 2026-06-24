@@ -34,6 +34,7 @@ RUN_SPEC_ALLOWED_FIELDS = frozenset(
         "output_path",
         "evidence_index_output_path",
         "bundle_output_path",
+        "run_registry_output_path",
         "mode",
         *RUN_SPEC_BOOL_FIELDS,
     }
@@ -51,6 +52,7 @@ class RunSpec:
     output_path: Path | None = None
     evidence_index_output_path: Path | None = None
     bundle_output_path: Path | None = None
+    run_registry_output_path: Path | None = None
     mode: str = OFFLINE_MODE
     include_fake_readonly: bool = True
     runtime_authorized: bool = False
@@ -72,6 +74,7 @@ class RunSpec:
         output_path: str | Path | None = None,
         evidence_index_output_path: str | Path | None = None,
         bundle_output_path: str | Path | None = None,
+        run_registry_output_path: str | Path | None = None,
     ) -> "RunSpec":
         return cls(
             package_root=Path(package_root),
@@ -81,6 +84,9 @@ class RunSpec:
                 None if evidence_index_output_path is None else Path(evidence_index_output_path)
             ),
             bundle_output_path=None if bundle_output_path is None else Path(bundle_output_path),
+            run_registry_output_path=(
+                None if run_registry_output_path is None else Path(run_registry_output_path)
+            ),
         )
 
     @classmethod
@@ -112,6 +118,9 @@ class RunSpec:
         bundle_output_path = payload.get("bundle_output_path")
         if bundle_output_path is not None and not isinstance(bundle_output_path, str):
             raise RunSpecError("blocked_bundle_output_path_invalid")
+        run_registry_output_path = payload.get("run_registry_output_path")
+        if run_registry_output_path is not None and not isinstance(run_registry_output_path, str):
+            raise RunSpecError("blocked_run_registry_output_path_invalid")
         spec = cls(
             package_root=_resolve_spec_path(package_root, base_dir),
             run_id=run_id,
@@ -123,6 +132,11 @@ class RunSpec:
             ),
             bundle_output_path=(
                 None if bundle_output_path is None else _resolve_spec_path(bundle_output_path, base_dir)
+            ),
+            run_registry_output_path=(
+                None
+                if run_registry_output_path is None
+                else _resolve_spec_path(run_registry_output_path, base_dir)
             ),
             mode=str(payload.get("mode", OFFLINE_MODE)),
             include_fake_readonly=payload.get("include_fake_readonly", True),
@@ -170,6 +184,13 @@ class RunSpec:
             )
         if self.bundle_output_path is not None:
             _validate_runner_path(self.bundle_output_path, "blocked_bundle_output_path_sensitive")
+        if self.run_registry_output_path is not None:
+            if self.bundle_output_path is None:
+                raise RunSpecError("blocked_run_registry_requires_bundle_output")
+            _validate_runner_path(
+                self.run_registry_output_path,
+                "blocked_run_registry_output_path_sensitive",
+            )
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -184,6 +205,11 @@ class RunSpec:
             ),
             "bundle_output_path": (
                 None if self.bundle_output_path is None else self.bundle_output_path.as_posix()
+            ),
+            "run_registry_output_path": (
+                None
+                if self.run_registry_output_path is None
+                else self.run_registry_output_path.as_posix()
             ),
             "mode": self.mode,
             "include_fake_readonly": self.include_fake_readonly,

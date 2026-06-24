@@ -36,6 +36,14 @@ from trading.strategy_runner.readonly_gateway import (
     ReadonlyGatewayResult,
     ReadonlyGatewayRuntimeConfig,
 )
+from trading.strategy_runner.run_registry import (
+    RunRegistryEntry,
+    append_run_registry_entry,
+    append_run_registry_from_bundle,
+    append_run_registry_from_result,
+    inspect_run_registry_entry,
+    read_run_registry,
+)
 from trading.strategy_runner.result import RunResult, write_run_result
 from trading.strategy_runner.run_spec import RunSpec, RunSpecError
 from trading.strategy_runner.runner import run_strategy_package, run_strategy_package_from_path, run_strategy_package_from_spec_file
@@ -56,6 +64,7 @@ __all__ = (
     "RunResult",
     "RunEvidenceIndex",
     "RunArtifactBundle",
+    "RunRegistryEntry",
     "RunSpec",
     "RunSpecError",
     "PackageExchangeError",
@@ -74,7 +83,12 @@ __all__ = (
     "run_strategy_package",
     "run_strategy_package_from_path",
     "run_strategy_package_from_spec_file",
+    "append_run_registry_entry",
+    "append_run_registry_from_bundle",
+    "append_run_registry_from_result",
     "inspect_run_artifact_bundle",
+    "inspect_run_registry_entry",
+    "read_run_registry",
     "replay_run_artifact_bundle",
     "validate_run_artifact_bundle",
     "validate_package",
