@@ -196,6 +196,7 @@ class QmtSimulationCancelRequest:
     request_id: str
     order_intent_id: str
     broker_order_ref: str
+    symbol: str = ""
     authorization_ref: str = ""
     idempotency_key: str = ""
     redaction_label: str = "qmt-simulation-cancel-redacted"
@@ -208,6 +209,7 @@ class QmtSimulationCancelRequest:
             "request_id": self.request_id,
             "order_intent_id": self.order_intent_id,
             "broker_order_ref": _stable_ref(self.broker_order_ref, "broker-order"),
+            "symbol_ref": _stable_ref(self.symbol, "symbol") if self.symbol else "",
             "authorization_ref": self.authorization_ref,
             "idempotency_key": self.idempotency_key,
             "redaction_label": self.redaction_label,
@@ -223,6 +225,7 @@ class QmtSimulationOperationPayload:
     order_intent_id: str
     accepted: bool
     broker_order_ref: str = ""
+    cancel_ref: str = ""
     adapter_status: str = ""
     redaction_status: str = "redacted"
     schema_version: str = QMT_SIMULATION_ORDER_SCHEMA_VERSION
@@ -239,6 +242,7 @@ class QmtSimulationOperationPayload:
                 if self.broker_order_ref
                 else ""
             ),
+            "cancel_ref": self.cancel_ref,
             "adapter_status": self.adapter_status,
             "redaction_status": self.redaction_status,
         }
@@ -559,6 +563,7 @@ def build_simulation_cancel_request(
         request_id=str(merged.get("request_id") or ""),
         order_intent_id=str(merged.get("order_intent_id") or merged.get("intent_id") or ""),
         broker_order_ref=str(merged.get("broker_order_ref") or ""),
+        symbol=str(merged.get("symbol") or ""),
         authorization_ref=str(merged.get("authorization_ref") or ""),
         idempotency_key=str(merged.get("idempotency_key") or ""),
         redaction_label=str(merged.get("redaction_label") or "qmt-simulation-cancel-redacted"),

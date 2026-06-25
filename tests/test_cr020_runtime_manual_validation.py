@@ -210,6 +210,7 @@ def test_runtime_gateway_simulation_submit_and_cancel_use_fake_xtquant_with_reda
     assert submit_result["allowed_payload"]["real_operation"] is True
     assert submit_payload["operation"] == "submit"
     assert submit_payload["accepted"] is True
+    assert str(submit_payload["cancel_ref"]).startswith("cancel-ref:")
     assert submit_result["counters"]["real_order"] == 1
     assert trader.submitted_orders[0]["stock_code"] == "000001.SZ"
     assert "000001.SZ" not in submit_rendered
@@ -221,7 +222,7 @@ def test_runtime_gateway_simulation_submit_and_cancel_use_fake_xtquant_with_reda
             "run_id": "run-simulation-fixture",
             "request_id": "request-cancel-fixture",
             "order_intent_id": "intent-submit-fixture",
-            "broker_order_ref": "broker-order-123",
+            "broker_order_ref": submit_payload["cancel_ref"],
             "authorization_ref": "auth-simulation-fixture",
             "idempotency_key": "idem-cancel-fixture",
         }
@@ -255,6 +256,97 @@ def test_runtime_gateway_simulation_submit_and_cancel_use_fake_xtquant_with_reda
     assert trader.cancelled_orders == ["broker-order-123"]
     assert "broker-order-123" not in cancel_rendered
     assert "account-fixture" not in cancel_rendered
+
+
+def test_runtime_gateway_simulation_cancel_accepts_numeric_xtquant_order_id() -> None:
+    config = build_runtime_config(
+        {
+            "QMT_GATEWAY_ALLOWED_SOURCE": "127.0.0.1/32",
+            "QMT_CLIENT_ID": "client-fixture",
+            "QMT_CLIENT_SECRET": "secret-fixture",
+            "QMT_MINIQMT_PATH": "C:/qmt/userdata_mini",
+            "QMT_ACCOUNT_REF": "account-fixture",
+            "QMT_ACCOUNT_TYPE": "STOCK",
+        }
+    )
+    trader = _FakeNumericOrderTrader()
+
+    def loader(name: str) -> object:
+        if name == "xtquant.xttrader":
+            return SimpleNamespace(XtQuantTrader=lambda path, session_id: trader)
+        if name == "xtquant.xttype":
+            return SimpleNamespace(StockAccount=_FakeAccount)
+        if name == "xtquant.xtconstant":
+            return SimpleNamespace(STOCK_BUY=23, STOCK_SELL=24, FIX_PRICE=11)
+        raise ImportError(name)
+
+    runtime = QmtGatewayRuntime(config, XtQuantRuntimeAdapter(config, module_loader=loader))
+    assert runtime.login().ready is True
+
+    submit_body = _json_bytes(
+        {
+            "run_id": "run-numeric-order-id-fixture",
+            "request_id": "request-submit-numeric-fixture",
+            "order_intent_id": "intent-submit-numeric-fixture",
+            "symbol": "000001.SZ",
+            "side": "buy",
+            "quantity": 100,
+            "price": 1.0,
+            "authorization_ref": "auth-simulation-fixture",
+            "idempotency_key": "idem-submit-numeric-fixture",
+        }
+    )
+    submit_headers = build_runtime_hmac_provider(config).build_headers(
+        QmtRestRequest(
+            endpoint="submit_simulation",
+            method="POST",
+            path=QMT_SIMULATION_SUBMIT_PATH,
+            base_url=config.base_url,
+            run_id="run-numeric-order-id-fixture",
+            stage="simulation",
+            mode="simulation",
+            required_scope=QMT_SIMULATION_SUBMIT_SCOPE,
+            body=submit_body,
+        )
+    )
+    submit_result = runtime.submit_simulation_order(
+        body=submit_body,
+        headers=submit_headers,
+        source_ip="127.0.0.1",
+    )
+    submit_payload = submit_result["allowed_payload"]["data"]["simulation_operation"]  # type: ignore[index]
+
+    cancel_body = _json_bytes(
+        {
+            "run_id": "run-numeric-order-id-fixture",
+            "request_id": "request-cancel-numeric-fixture",
+            "order_intent_id": "intent-submit-numeric-fixture",
+            "broker_order_ref": submit_payload["cancel_ref"],
+            "authorization_ref": "auth-simulation-fixture",
+            "idempotency_key": "idem-cancel-numeric-fixture",
+        }
+    )
+    cancel_headers = build_runtime_hmac_provider(config).build_headers(
+        QmtRestRequest(
+            endpoint="cancel_simulation",
+            method="POST",
+            path=QMT_SIMULATION_CANCEL_PATH,
+            base_url=config.base_url,
+            run_id="run-numeric-order-id-fixture",
+            stage="simulation",
+            mode="simulation",
+            required_scope=QMT_SIMULATION_CANCEL_SCOPE,
+            body=cancel_body,
+        )
+    )
+    cancel_result = runtime.cancel_simulation_order(
+        body=cancel_body,
+        headers=cancel_headers,
+        source_ip="127.0.0.1",
+    )
+
+    assert cancel_result["allowed"] is True
+    assert trader.cancelled_orders == [123456]
 
 
 def test_runtime_gateway_simulation_submit_requires_authorized_hmac_scope() -> None:
@@ -471,6 +563,41 @@ class _FakeOrderTrader(_FakeSubscribeOnlyTrader):
         return "broker-order-123"
 
     def cancel_order_stock(self, account: object, order_id: str) -> int:
+        self.cancelled_orders.append(order_id)
+        return 0
+
+
+class _FakeNumericOrderTrader(_FakeOrderTrader):
+    def __init__(self) -> None:
+        super().__init__()
+        self.cancelled_orders: list[int] = []
+
+    def order_stock(
+        self,
+        account: object,
+        stock_code: str,
+        order_type: int,
+        order_volume: int,
+        price_type: int,
+        price: float,
+        strategy_name: str,
+        order_remark: str,
+    ) -> int:
+        super().order_stock(
+            account,
+            stock_code,
+            order_type,
+            order_volume,
+            price_type,
+            price,
+            strategy_name,
+            order_remark,
+        )
+        return 123456
+
+    def cancel_order_stock(self, account: object, order_id: int) -> int:
+        if not isinstance(order_id, int):
+            raise TypeError("order_id must be int")
         self.cancelled_orders.append(order_id)
         return 0
 

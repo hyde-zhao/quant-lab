@@ -6,7 +6,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import datetime, timedelta, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import importlib
@@ -62,6 +62,7 @@ from trading.qmt_gateway_session import (
 
 RUNTIME_SCHEMA_VERSION = "cr020-runtime-manual-validation-v1"
 DEFAULT_RUNTIME_AUTHORIZATION_REF = "manual-cr020-runtime-validation"
+_SIMULATION_CANCEL_REF_STORE: dict[str, dict[str, str]] = {}
 
 
 @dataclass(frozen=True, slots=True)
@@ -298,17 +299,19 @@ class XtQuantRuntimeAdapter:
 
         if self._trader is None or self._account is None or not session_snapshot.ready:
             raise RuntimeError("qmt session is not ready")
-        cancel_result = _call_if_exists(
+        cancel_result = _call_xtquant_cancel(
             self._trader,
             "cancel_order_stock",
             self._account,
+            request.symbol,
             request.broker_order_ref,
         )
         if cancel_result is None:
-            cancel_result = _call_if_exists(
+            cancel_result = _call_xtquant_cancel(
                 self._trader,
                 "cancel_order_stock_sysid",
                 self._account,
+                request.symbol,
                 request.broker_order_ref,
             )
         if cancel_result is None:
@@ -338,6 +341,7 @@ class QmtGatewayRuntime:
         self.auth_config = build_runtime_auth_config(config)
         self.allowlist = GatewayAllowlist(sources=(config.allowed_source,), required=True)
         self.nonce_store = QmtNonceReplayStore()
+        self._simulation_cancel_refs: dict[str, dict[str, str]] = {}
 
     @property
     def session_snapshot(self) -> QmtSessionSnapshot:
@@ -475,7 +479,15 @@ class QmtGatewayRuntime:
             if endpoint_id == QMT_SIMULATION_SUBMIT_ENDPOINT_ID:
                 request = build_simulation_order_request(payload)
                 _validate_simulation_submit_request(request)
-                raw_result = self.adapter.submit_simulation_order(request, self.session_snapshot)
+                raw_result = dict(
+                    self.adapter.submit_simulation_order(request, self.session_snapshot)
+                )
+                cancel_ref = self._remember_simulation_cancel_ref(
+                    request,
+                    str(raw_result.get("broker_order_ref") or ""),
+                )
+                if cancel_ref:
+                    raw_result["cancel_ref"] = cancel_ref
                 operation_payload = QmtSimulationOperationPayload(**raw_result)
                 counters = {
                     "qmt_operation": 1,
@@ -487,7 +499,10 @@ class QmtGatewayRuntime:
             else:
                 cancel_request = build_simulation_cancel_request(payload)
                 _validate_simulation_cancel_request(cancel_request)
-                raw_result = self.adapter.cancel_simulation_order(cancel_request, self.session_snapshot)
+                cancel_request = self._resolve_simulation_cancel_request(cancel_request)
+                raw_result = dict(
+                    self.adapter.cancel_simulation_order(cancel_request, self.session_snapshot)
+                )
                 operation_payload = QmtSimulationOperationPayload(**raw_result)
                 counters = {
                     "qmt_operation": 1,
@@ -503,6 +518,51 @@ class QmtGatewayRuntime:
                 detail={"error": type(exc).__name__, "message": str(exc)},
             ).to_dict()
         return build_simulation_operation_result(endpoint_id, operation_payload, counters=counters).to_dict()
+
+    def _remember_simulation_cancel_ref(
+        self,
+        request: QmtSimulationOrderRequest,
+        broker_order_ref: str,
+    ) -> str:
+        """为 submit 结果生成短期内存 cancel 引用，避免向 client 暴露原始订单号。"""
+
+        if not broker_order_ref:
+            return ""
+        seed = "|".join(
+            (
+                request.run_id,
+                request.order_intent_id,
+                request.idempotency_key,
+                broker_order_ref,
+            )
+        )
+        cancel_ref = f"cancel-ref:{stable_qmt_auth_hash(seed)[:24]}"
+        self._simulation_cancel_refs[cancel_ref] = {
+            "broker_order_ref": broker_order_ref,
+            "symbol": request.symbol,
+        }
+        _SIMULATION_CANCEL_REF_STORE[cancel_ref] = self._simulation_cancel_refs[cancel_ref]
+        return cancel_ref
+
+    def _resolve_simulation_cancel_request(
+        self,
+        request: QmtSimulationCancelRequest,
+    ) -> QmtSimulationCancelRequest:
+        """把 cancel token 解析为仅 gateway 内存可见的原始 broker order ref。"""
+
+        broker_order_ref = request.broker_order_ref
+        if not broker_order_ref.startswith("cancel-ref:"):
+            return request
+        mapped = self._simulation_cancel_refs.get(
+            broker_order_ref,
+        ) or _SIMULATION_CANCEL_REF_STORE.get(broker_order_ref)
+        if not mapped:
+            raise ValueError("unknown_simulation_cancel_ref")
+        return replace(
+            request,
+            broker_order_ref=mapped["broker_order_ref"],
+            symbol=mapped.get("symbol", ""),
+        )
 
 
 def load_runtime_env(env_file: str | Path = ".env") -> dict[str, str]:
@@ -719,6 +779,49 @@ def _call_if_exists(target: object, name: str, *args: object) -> object:
     if method is None:
         return None
     return method(*args)
+
+
+def _call_xtquant_cancel(
+    target: object,
+    name: str,
+    account: object,
+    symbol: str,
+    broker_order_ref: str,
+) -> object:
+    method = getattr(target, name, None)
+    if method is None:
+        return None
+    order_refs = _xtquant_cancel_ref_candidates(broker_order_ref)
+    attempts: list[tuple[object, ...]] = [(account, order_ref) for order_ref in order_refs]
+    if symbol:
+        attempts.extend((account, symbol, order_ref) for order_ref in order_refs)
+    last_type_error: TypeError | None = None
+    for args in attempts:
+        try:
+            return method(*args)
+        except TypeError as exc:
+            last_type_error = exc
+            continue
+        except Exception as exc:
+            raise RuntimeError(f"xtquant-cancel-error:{type(exc).__name__}") from exc
+    if last_type_error is not None:
+        raise RuntimeError("xtquant-cancel-signature-mismatch") from last_type_error
+    return None
+
+
+def _xtquant_cancel_ref_candidates(broker_order_ref: str) -> list[object]:
+    """兼容 XtQuant 版本差异：部分版本撤单要求数字 order_id。"""
+
+    refs: list[object] = []
+    stripped = str(broker_order_ref).strip()
+    if stripped.isdigit():
+        refs.append(int(stripped))
+    refs.append(broker_order_ref)
+    deduped: list[object] = []
+    for ref in refs:
+        if ref not in deduped:
+            deduped.append(ref)
+    return deduped
 
 
 def _activate_xtquant_account(trader: object, account: object) -> object:
