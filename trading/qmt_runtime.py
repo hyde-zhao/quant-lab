@@ -45,6 +45,7 @@ from trading.qmt_gateway_contracts import (
     QmtSimulationCancelRequest,
     QmtSimulationOperationPayload,
     QmtSimulationOrderRequest,
+    build_runtime_identity_expectation,
     build_blocked_result,
     build_query_positions_blocked_result,
     build_simulation_cancel_request,
@@ -78,6 +79,9 @@ class QmtRuntimeConfig:
     miniqmt_path: str = ""
     account_id: str = ""
     account_type: str = "STOCK"
+    runtime_mode: str = ""
+    account_kind: str = ""
+    runtime_profile: str = ""
     runtime_authorization_ref: str = DEFAULT_RUNTIME_AUTHORIZATION_REF
     session_ttl_seconds: int = 3600
     schema_version: str = RUNTIME_SCHEMA_VERSION
@@ -99,6 +103,9 @@ class QmtRuntimeConfig:
             "miniqmt_path_configured": bool(self.miniqmt_path),
             "account_ref": _redacted_ref(self.account_id, "account"),
             "account_type": self.account_type,
+            "runtime_mode": self.runtime_mode,
+            "account_kind": self.account_kind,
+            "runtime_profile": self.runtime_profile,
             "runtime_authorization_ref": self.runtime_authorization_ref,
             "session_ttl_seconds": self.session_ttl_seconds,
         }
@@ -475,6 +482,13 @@ class QmtGatewayRuntime:
                 detail={"session_reason": session_gate.blocked_reason},
             ).to_dict()
         payload = _json_body(body)
+        runtime_identity_error = _validate_simulation_runtime_identity(
+            payload,
+            self.config,
+            endpoint_id=endpoint_id,
+        )
+        if runtime_identity_error is not None:
+            return runtime_identity_error
         try:
             if endpoint_id == QMT_SIMULATION_SUBMIT_ENDPOINT_ID:
                 request = build_simulation_order_request(payload)
@@ -600,6 +614,9 @@ def build_runtime_config(
         miniqmt_path=env.get("QMT_MINIQMT_PATH", ""),
         account_id=env.get("QMT_ACCOUNT_REF") or env.get("QMT_LOGIN_ACCOUNT", ""),
         account_type=env.get("QMT_ACCOUNT_TYPE", "STOCK"),
+        runtime_mode=env.get("QMT_RUNTIME_MODE", ""),
+        account_kind=env.get("QMT_ACCOUNT_KIND", ""),
+        runtime_profile=env.get("QMT_RUNTIME_PROFILE", ""),
         runtime_authorization_ref=(
             runtime_authorization_ref
             or env.get("QMT_RUNTIME_REF")
@@ -908,6 +925,42 @@ def _validate_simulation_cancel_request(request: QmtSimulationCancelRequest) -> 
     ]
     if missing:
         raise ValueError("missing_simulation_cancel_fields:" + ",".join(missing))
+
+
+def _validate_simulation_runtime_identity(
+    payload: Mapping[str, object],
+    config: QmtRuntimeConfig,
+    *,
+    endpoint_id: str,
+) -> dict[str, object] | None:
+    expectation = build_runtime_identity_expectation(payload)
+    mismatches: list[str] = []
+    if config.runtime_mode != "simulation":
+        mismatches.append("gateway_runtime_mode_not_simulation")
+    if config.account_kind != "simulation":
+        mismatches.append("gateway_account_kind_not_simulation")
+    if not config.runtime_profile:
+        mismatches.append("gateway_runtime_profile_missing")
+    if expectation.expected_runtime_mode != config.runtime_mode:
+        mismatches.append("expected_runtime_mode_mismatch")
+    if expectation.expected_runtime_profile != config.runtime_profile:
+        mismatches.append("expected_runtime_profile_mismatch")
+    if not expectation.complete:
+        mismatches.append("request_runtime_identity_missing")
+    if not mismatches:
+        return None
+    return build_blocked_result(
+        endpoint_id,
+        QmtBlockedReason.RUNTIME_PROFILE_MISMATCH,
+        detail={
+            "mismatches": tuple(mismatches),
+            "gateway_runtime_mode": config.runtime_mode or "missing",
+            "gateway_account_kind": config.account_kind or "missing",
+            "gateway_runtime_profile": config.runtime_profile or "missing",
+            "expected_runtime_mode": expectation.expected_runtime_mode or "missing",
+            "expected_runtime_profile": expectation.expected_runtime_profile or "missing",
+        },
+    ).to_dict()
 
 
 def _looks_successful(value: object) -> bool:

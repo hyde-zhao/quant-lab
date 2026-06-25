@@ -7,6 +7,7 @@
 ## 目录
 
 - [项目定位](#项目定位)
+- [当前 QMT 模拟盘入口](#当前-qmt-模拟盘入口)
 - [项目根与目录边界](#项目根与目录边界)
 - [已实现能力](#已实现能力)
 - [架构概览](#架构概览)
@@ -47,6 +48,32 @@
 4. 本地完成参数扫描，只输出少量候选参数供用户手动回填聚宽或其他平台做真实性验证。
 
 当前实现以 Python 模块/API 为主，没有生成安装脚本，也没有 console script 入口。命令示例统一使用 `uv run --python 3.11`。
+
+## 当前 QMT 模拟盘入口
+
+当前文档总入口是 [docs/README.md](docs/README.md)。它按组件和场景组织 quant-lab 文档，避免继续把 CR 编号文档作为用户首选入口。
+
+当前 QMT 多因子策略 runner 的正式用户入口是 [docs/USER-MANUAL.md](docs/USER-MANUAL.md) 中的 “RUNNER-QMT simulation multifactor 手动运行指南”，完整场景案例见 [docs/scenarios/MULTIFACTOR-SIMULATION-RUNNER-OPERATION.md](docs/scenarios/MULTIFACTOR-SIMULATION-RUNNER-OPERATION.md)。它说明如何在逐次授权后手动启动 Windows gateway、检查 health / capabilities / positions、运行 simulation operator、停止 gateway、处理 `session_expired`、检查 evidence 和执行 manual takeover。
+
+相关文档：
+
+| 文档 | 用途 |
+|---|---|
+| [docs/README.md](docs/README.md) | 文档导航，按组件、场景、参考边界和 legacy 兼容入口组织。 |
+| [docs/components/ENGINE.md](docs/components/ENGINE.md) | 数据准备、标准化、质量、loader、回测和指标。 |
+| [docs/components/EXPERIMENTS.md](docs/components/EXPERIMENTS.md) | 实验、参数扫描、候选筛选和报告。 |
+| [docs/components/MULTIFACTOR-RESEARCH.md](docs/components/MULTIFACTOR-RESEARCH.md) | 多因子研究组件说明。 |
+| [docs/components/QMT-GATEWAY.md](docs/components/QMT-GATEWAY.md) | QMT gateway 组件说明。 |
+| [docs/components/RUNNER.md](docs/components/RUNNER.md) | Runner 组件说明。 |
+| [docs/scenarios/MULTIFACTOR-RESEARCH-TO-STRATEGY.md](docs/scenarios/MULTIFACTOR-RESEARCH-TO-STRATEGY.md) | 多因子策略研究案例，从数据准备到输出策略。 |
+| [docs/scenarios/MULTIFACTOR-SIMULATION-RUNNER-OPERATION.md](docs/scenarios/MULTIFACTOR-SIMULATION-RUNNER-OPERATION.md) | 多因子策略模拟盘运行案例。 |
+| [docs/scenarios/DAILY-OPERATIONS.md](docs/scenarios/DAILY-OPERATIONS.md) | 日常运维案例。 |
+| [docs/USER-MANUAL.md](docs/USER-MANUAL.md) | 操作者手册、手动运行步骤、停止 / 检查流程和典型用户案例。 |
+| [docs/QMT-GATEWAY-INSTALL.md](docs/QMT-GATEWAY-INSTALL.md) | Windows S 端 gateway 环境文件、启动、检查、停止和故障处理。 |
+| [docs/QMT-C-S-BRIDGE-RUNBOOK.md](docs/QMT-C-S-BRIDGE-RUNBOOK.md) | C/S bridge、endpoint、HMAC scope 和只读证据边界。 |
+| [docs/reference/RUNNER-QMT-AUTHORIZATION.md](docs/reference/RUNNER-QMT-AUTHORIZATION.md) | runtime 授权模板、scope separation 和 evidence redaction 规则。 |
+
+边界：该入口只覆盖 `simulation`，不授权 `small_live`、`live`、scale-up、真实生产交易、未脱敏账户 / 订单回执落盘、provider fetch、lake write、broker lake write 或 publish。真实 operator 最近一次审计见 `process/checks/RUNNER-QMT-SIMULATION-MULTIFACTOR-STRATEGY-RUNTIME-REAL-OPERATOR-2026-06-25.md`；若状态为 `session_expired`，必须先刷新 Windows gateway session 后再复跑。
 
 ## 项目根与目录边界
 
@@ -90,6 +117,7 @@ Agent 协作边界也按该目录组织执行：`meta-po` 负责编排 CR 与检
 | CR-018 S01 production current truth 合同 | ready-for-verification | `market_data.release_scope` 冻结 `2015-01-05..latest_closed_trade_date` scoped release，`market_data.dataset_groups` 冻结 P0 dataset group / P1 dataset group、required_for_publish 和 blocked claims；本项只定义合同与离线测试，不抓取 provider、不写 lake、不 publish current pointer、不读取凭据、不操作 QMT。 |
 | CR-019 S09 deferred capability register | verified | Deferred capability 摘要保留在 [docs/QMT-C-S-BRIDGE-RUNBOOK.md](docs/QMT-C-S-BRIDGE-RUNBOOK.md)；原静态 register 已归档到 `process/docs/source-archive/docs/CR019-DEFERRED-CAPABILITIES.md`。`backtrader_w6`、`qlib_w7`、`minute_spike`、`level2_spike` 均为 non-P0 / later-gated 范围；本项不新增依赖、不接入外部 provider、不抓取 minute / Level2 数据、不读取凭据、不改变 Stage 6 admission 或 QMT C/S bridge 的当前实现范围。 |
 | CR-019 QMT C/S bridge delivery | closed | `CR019-S01` 至 `CR019-S10` 已完成 CP7 验证并通过 CP8 人工终验；新增 [docs/QMT-C-S-BRIDGE-RUNBOOK.md](docs/QMT-C-S-BRIDGE-RUNBOOK.md) 作为 QMT C/S bridge 用户边界入口，汇总 Stage 6 admission、pairing/HMAC、endpoint matrix、run gate、fallback、deferred register 和 no-real-operation 计数；后续真实 QMT 运行与 deferred capabilities 按 `process/changes/CR-019-FOLLOW-UP-TRACKING-2026-05-31.md` 独立跟踪，本文档、README、USER-MANUAL、CP5/CP6/CP7、CP8 或 Story verified 都不提供真实操作许可。 |
+| RUNNER-QMT simulation multifactor | operator-ready-with-runtime-gate | 当前具备逐次授权后的 simulation operator 入口：P1 多因子目标组合、P2 模拟盘订单计划、P3 simulation submit/cancel、P4 对账。正式操作步骤见 [docs/USER-MANUAL.md](docs/USER-MANUAL.md)；仅限 `simulation`，不进入 `small_live` / `live`。最近真实 gateway 尝试曾因 `session_expired` 阻断，复跑前必须刷新 Windows gateway session。 |
 | 因子审计与稳健性验证 | closed | 新版研究报告、factor panel 和 robust validation 默认隔离到 `reports/experiment_17_21_cr011/**`；旧 `reports/experiment_17_21/factor_strategy_report.md` 只作为 baseline 引用，不得覆盖。 |
 | 偏差审计 | verified | `engine.bias_audit` 支持 baseline/enhanced 对比，输出收益、回撤、Sharpe、换手、候选排名变化及降级 warning。 |
 | 策略扩展 | verified | `strategies.base`、`strategies.rsi`、`strategies.macd` 提供策略接口和 RSI/MACD 示例。 |
@@ -512,7 +540,7 @@ CR-019 S09 的详细 register 已归档到 `process/docs/source-archive/docs/CR0
 
 ### CR-025 research execution semantic alignment
 
-CR-025 的过程专题文档已归档到 `process/docs/source-archive/docs/CR025-RESEARCH-EXECUTION-SEMANTIC-ALIGNMENT.md`。源码仓库保留的用户入口是 [docs/CR025-BACKTRADER-MODULE-REFERENCE.md](docs/CR025-BACKTRADER-MODULE-REFERENCE.md)，用于说明 Backtrader optional / no-copy / `migration_candidate=[]` 边界。原专题汇总 CR025-S01..S06、DQ-CP3-CR025-01..06、semantic diff、`order_intent_draft_v1`、no-real-operation safety、CR-020..CR-024 独立 QMT 后续路线，以及 CR-030 多因子研究框架借鉴候选上下文。
+CR-025 的过程专题文档已归档到 `process/docs/source-archive/docs/CR025-RESEARCH-EXECUTION-SEMANTIC-ALIGNMENT.md`。源码仓库保留的用户入口是 [docs/reference/BACKTRADER-MODULE-REFERENCE.md](docs/reference/BACKTRADER-MODULE-REFERENCE.md)，用于说明 Backtrader optional / no-copy / `migration_candidate=[]` 边界。原专题汇总 CR025-S01..S06、DQ-CP3-CR025-01..06、semantic diff、`order_intent_draft_v1`、no-real-operation safety、CR-020..CR-024 独立 QMT 后续路线，以及 CR-030 多因子研究框架借鉴候选上下文。
 
 该专题文档只说明 research execution semantic alignment，不是运行开关。CR-025 的 LLD、CP5、CP6、CP7、Story `verified`、README 入口或 USER-MANUAL 说明，都不授权依赖安装、Backtrader run、Backtrader source copy、gateway 启动、真实 broker、QMT / MiniQMT / XtQuant、provider fetch、lake write、broker lake write、publish、simulation/live、credential read、FactorSpec / FactorRunSpec、IC / RankIC、分层收益、多因子组合、实验追踪、策略准入包、Qlib / Alphalens / vectorbt / vnpy.alpha 集成。
 
@@ -520,11 +548,11 @@ CR-025 的过程专题文档已归档到 `process/docs/source-archive/docs/CR025
 
 ### CR-030 多因子策略研究入口
 
-CR-030 的快速开始入口是 [docs/CR030-FACTOR-RESEARCH-QUICKSTART.md](docs/CR030-FACTOR-RESEARCH-QUICKSTART.md)。该手册说明如何从 `FactorSpec` / `FactorRunSpec` 开始，构建本地离线 factor panel 与 label window，生成 `FactorEvaluationReport`、`MultiFactorPortfolioPlan`、`ExperimentManifest` / `ResearchReportCatalog` 和 `StrategyAdmissionPackage`。
+CR-030 的用户入口已并入 [docs/components/MULTIFACTOR-RESEARCH.md](docs/components/MULTIFACTOR-RESEARCH.md) 和 [docs/scenarios/MULTIFACTOR-RESEARCH-TO-STRATEGY.md](docs/scenarios/MULTIFACTOR-RESEARCH-TO-STRATEGY.md)。这些文档说明如何从 `FactorSpec` / `FactorRunSpec` 开始，构建本地离线 factor panel 与 label window，生成 `FactorEvaluationReport`、`MultiFactorPortfolioPlan`、`ExperimentManifest` / `ResearchReportCatalog` 和 `StrategyAdmissionPackage`。
 
 CR-030 的出口语义是完成多因子策略研究与实验闭环，达到策略侧模拟盘入口审查输入。它不表示 QMT-ready、simulation-ready、live-ready、production truth 或真实可交易授权；QMT 接口 ready、simulation 账号、gateway、账户 / 订单和运行授权仍需 CR-020 / CR-021 等后续 CR 单独通过。
 
-边界与证据链、外部项目借鉴矩阵已归档到 `process/docs/source-archive/docs/CR030-MULTIFACTOR-RESEARCH-LOOP.md` 和 `process/docs/source-archive/docs/CR030-MULTIFACTOR-REFERENCE-MATRIX.md`；源码仓库只保留 [docs/CR030-FACTOR-RESEARCH-QUICKSTART.md](docs/CR030-FACTOR-RESEARCH-QUICKSTART.md) 作为组件用户手册。
+边界与证据链、外部项目借鉴矩阵已归档到 `process/docs/source-archive/docs/CR030-MULTIFACTOR-RESEARCH-LOOP.md` 和 `process/docs/source-archive/docs/CR030-MULTIFACTOR-REFERENCE-MATRIX.md`；源码仓库只保留非 CR 命名的组件文档和场景文档作为用户手册入口。
 
 ### CR-015 QMT foundation runbook 边界
 

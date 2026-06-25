@@ -6,7 +6,7 @@ from pathlib import Path, PurePosixPath
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
-DOC_PATH = "docs/CR025-BACKTRADER-MODULE-REFERENCE.md"
+DOC_PATH = "docs/reference/BACKTRADER-MODULE-REFERENCE.md"
 TEST_PATH = "tests/test_cr025_forbidden_source_copy.py"
 
 BOUNDED_SOURCE_COPY_SCAN_PATHS = (

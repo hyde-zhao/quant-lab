@@ -107,6 +107,8 @@ class QmtClientConfig:
     default_mode: str = "dry_run"
     redaction_label: str = DEFAULT_REDACTION_LABEL
     allow_simulation_transport: bool = False
+    expected_runtime_mode: str = ""
+    expected_runtime_profile: str = ""
 
     @property
     def normalized_base_url(self) -> str:
@@ -146,6 +148,8 @@ class QmtRestRequest:
     request_id: str = ""
     intent_id: str = ""
     authorization_ref: str = ""
+    expected_runtime_mode: str = ""
+    expected_runtime_profile: str = ""
     redaction_label: str = DEFAULT_REDACTION_LABEL
     required_scope: str = ""
     payload: Mapping[str, object] = field(default_factory=dict)
@@ -166,6 +170,8 @@ class QmtRestRequest:
             "request_id": self.request_id,
             "intent_id": self.intent_id,
             "authorization_ref": self.authorization_ref,
+            "expected_runtime_mode": self.expected_runtime_mode,
+            "expected_runtime_profile": self.expected_runtime_profile,
             "schema_version": self.schema_version,
             "timeout_seconds": self.timeout_seconds,
         }
@@ -218,6 +224,8 @@ class QmtRequest:
     request_id: str = ""
     strategy_id: str = ""
     operator_ref: str = ""
+    expected_runtime_mode: str = ""
+    expected_runtime_profile: str = ""
     payload: Mapping[str, object] = field(default_factory=dict)
     timeout_seconds: int = REST_GATEWAY_DEFAULT_TIMEOUT_SECONDS
     schema_version: str = CLIENT_SCHEMA_VERSION
@@ -233,6 +241,8 @@ class QmtRequest:
             "request_id": self.request_id,
             "intent_id": self.intent_id,
             "authorization_ref": self.authorization_ref,
+            "expected_runtime_mode": self.expected_runtime_mode,
+            "expected_runtime_profile": self.expected_runtime_profile,
             "schema_version": self.schema_version,
             "timeout_seconds": self.timeout_seconds,
         }
@@ -560,6 +570,9 @@ class QmtClient:
         if validation_error is not None:
             return validation_error
         if self.config.allow_simulation_transport:
+            simulation_identity_error = self._validate_simulation_runtime_expectation(current)
+            if simulation_identity_error is not None:
+                return simulation_identity_error
             return self._send_rest_request(current)
         return self._later_gated_block(current)
 
@@ -578,6 +591,9 @@ class QmtClient:
         if validation_error is not None:
             return validation_error
         if self.config.allow_simulation_transport:
+            simulation_identity_error = self._validate_simulation_runtime_expectation(current)
+            if simulation_identity_error is not None:
+                return simulation_identity_error
             return self._send_rest_request(current)
         return self._later_gated_block(current)
 
@@ -651,6 +667,8 @@ class QmtClient:
         strategy_id: str = "",
         operator_ref: str = "",
         payload: Mapping[str, object] | None = None,
+        expected_runtime_mode: str = "",
+        expected_runtime_profile: str = "",
         timeout_seconds: int = REST_GATEWAY_DEFAULT_TIMEOUT_SECONDS,
     ) -> QmtRequest:
         return QmtRequest(
@@ -664,6 +682,10 @@ class QmtClient:
             request_id=request_id,
             strategy_id=strategy_id,
             operator_ref=operator_ref,
+            expected_runtime_mode=expected_runtime_mode or self.config.expected_runtime_mode,
+            expected_runtime_profile=(
+                expected_runtime_profile or self.config.expected_runtime_profile
+            ),
             payload=payload or {},
             timeout_seconds=timeout_seconds,
         )
@@ -684,6 +706,8 @@ class QmtClient:
             request_id=request.request_id,
             strategy_id=request.strategy_id,
             operator_ref=request.operator_ref,
+            expected_runtime_mode=request.expected_runtime_mode,
+            expected_runtime_profile=request.expected_runtime_profile,
             payload=request.payload,
             timeout_seconds=request.timeout_seconds,
             schema_version=request.schema_version,
@@ -712,6 +736,24 @@ class QmtClient:
                     if build_result.ack.error_code is not None
                     else TransportErrorCode.MALFORMED_PAYLOAD.value
                 ),
+            )
+        return None
+
+    def _validate_simulation_runtime_expectation(
+        self,
+        request: QmtRequest,
+    ) -> QmtResponse | None:
+        if request.expected_runtime_mode != "simulation":
+            return self._validation_error(
+                request,
+                "simulation transport requires expected_runtime_mode=simulation",
+                "expected_runtime_mode",
+            )
+        if not request.expected_runtime_profile:
+            return self._validation_error(
+                request,
+                "simulation transport requires expected_runtime_profile",
+                "expected_runtime_profile",
             )
         return None
 
@@ -766,6 +808,8 @@ class QmtClient:
                 "request_id": request.request_id,
                 "intent_id": request.intent_id,
                 "authorization_ref": request.authorization_ref,
+                "expected_runtime_mode": request.expected_runtime_mode,
+                "expected_runtime_profile": request.expected_runtime_profile,
                 "redaction_label": request.redaction_label,
                 "payload": dict(request.payload),
             }
@@ -781,6 +825,8 @@ class QmtClient:
             request_id=request.request_id,
             intent_id=request.intent_id,
             authorization_ref=request.authorization_ref,
+            expected_runtime_mode=request.expected_runtime_mode,
+            expected_runtime_profile=request.expected_runtime_profile,
             redaction_label=request.redaction_label,
             required_scope=spec.required_scope,
             payload=request.payload,

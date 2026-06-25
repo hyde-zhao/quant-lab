@@ -99,11 +99,15 @@ def _client(
     auth_provider: _FakeAuthProvider | None = None,
     retry_policy: QmtRetryPolicy | None = None,
     allow_simulation_transport: bool = False,
+    expected_runtime_mode: str = "",
+    expected_runtime_profile: str = "",
 ) -> QmtClient:
     return QmtClient(
         config=QmtClientConfig(
             base_url="http://127.0.0.1:18080/",
             allow_simulation_transport=allow_simulation_transport,
+            expected_runtime_mode=expected_runtime_mode,
+            expected_runtime_profile=expected_runtime_profile,
         ),
         transport=transport,
         auth_header_provider=auth_provider or _FakeAuthProvider(),
@@ -240,7 +244,12 @@ def test_simulation_submit_uses_rest_transport_only_when_explicitly_enabled() ->
             )
         ]
     )
-    client = _client(transport, allow_simulation_transport=True)
+    client = _client(
+        transport,
+        allow_simulation_transport=True,
+        expected_runtime_mode="simulation",
+        expected_runtime_profile="cr138-simulation",
+    )
 
     response = client.submit_simulation(
         run_id="run-simulation-client",
@@ -257,6 +266,31 @@ def test_simulation_submit_uses_rest_transport_only_when_explicitly_enabled() ->
     assert response.counters["real_order"] == 1
     assert transport.calls[0].path == "/qmt/simulation/orders"
     assert transport.calls[0].required_scope == "qmt:simulation:submit"
+    request_body = json.loads(transport.calls[0].body.decode("utf-8"))
+    assert request_body["expected_runtime_mode"] == "simulation"
+    assert request_body["expected_runtime_profile"] == "cr138-simulation"
+
+
+def test_simulation_transport_requires_expected_runtime_identity_before_send() -> None:
+    transport = _FakeTransport(
+        [QmtTransportResult(status="allowed", body=_allowed_body("submit_simulation", {}))]
+    )
+    client = _client(transport, allow_simulation_transport=True)
+
+    response = client.submit_simulation(
+        run_id="run-simulation-missing-profile",
+        request_id="request-simulation-missing-profile",
+        intent_id="intent-simulation-missing-profile",
+        authorization_ref="auth-simulation-missing-profile",
+        payload={"symbol": "000001.SZ", "side": "buy", "quantity": 100, "price": 10.0},
+    )
+
+    assert response.status is QmtResponseStatus.VALIDATION_ERROR
+    assert response.reason_code == QmtBlockedReason.INVALID_REQUEST.value
+    assert response.blocked_result is not None
+    assert response.blocked_result.detail_code == "expected_runtime_mode"
+    assert transport.calls == []
+    _assert_zero_counters(response.counters)
 
 
 def test_auth_provider_missing_or_failing_blocks_before_transport_send() -> None:

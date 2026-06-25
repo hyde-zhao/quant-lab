@@ -25,7 +25,7 @@ from engine.semantic_diff import (
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 FORBIDDEN_CLAIM_SCAN_PATHS = (
-    "docs/CR025-BACKTRADER-MODULE-REFERENCE.md",
+    "docs/reference/BACKTRADER-MODULE-REFERENCE.md",
     "checkpoints/CP5-CR025-RESEARCH-EXECUTION-SEMANTIC-ALIGNMENT-BATCH-A-LLD-BATCH.md",
     "process/stories/CR025-S05-no-real-operation-safety-verification.md",
     "process/stories/CR025-S05-no-real-operation-safety-verification-LLD.md",

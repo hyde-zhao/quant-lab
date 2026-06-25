@@ -6,11 +6,11 @@ from pathlib import Path, PurePosixPath
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-DOC_PATH = PROJECT_ROOT / "docs" / "CR025-BACKTRADER-MODULE-REFERENCE.md"
+DOC_PATH = PROJECT_ROOT / "docs" / "reference" / "BACKTRADER-MODULE-REFERENCE.md"
 TEST_PATH = PROJECT_ROOT / "tests" / "test_cr025_backtrader_no_copy_guardrail.py"
 
 ALLOWED_TEXT_TARGETS = {
-    "docs/CR025-BACKTRADER-MODULE-REFERENCE.md",
+    "docs/reference/BACKTRADER-MODULE-REFERENCE.md",
     "tests/test_cr025_backtrader_no_copy_guardrail.py",
 }
 
@@ -96,7 +96,7 @@ def _import_roots(path: Path) -> set[str]:
 
 
 def test_module_reference_doc_declares_four_categories_and_empty_migration_candidates() -> None:
-    doc = _read_repo_text("docs/CR025-BACKTRADER-MODULE-REFERENCE.md")
+    doc = _read_repo_text("docs/reference/BACKTRADER-MODULE-REFERENCE.md")
 
     for classification in REQUIRED_CLASSIFICATIONS:
         assert f"`{classification}`" in doc
@@ -111,7 +111,7 @@ def test_module_reference_doc_declares_four_categories_and_empty_migration_candi
 
 
 def test_no_copy_guardrail_covers_source_samples_tests_datas_live_and_line_runtime() -> None:
-    doc = _read_repo_text("docs/CR025-BACKTRADER-MODULE-REFERENCE.md")
+    doc = _read_repo_text("docs/reference/BACKTRADER-MODULE-REFERENCE.md")
 
     for token in ("no-copy", "no-source-migration", "no-vendored-source", "GPLv3"):
         assert token in doc
@@ -132,7 +132,7 @@ def test_no_copy_guardrail_covers_source_samples_tests_datas_live_and_line_runti
 
 
 def test_backtrader_is_execution_semantic_reference_not_multifactor_framework() -> None:
-    doc = _read_repo_text("docs/CR025-BACKTRADER-MODULE-REFERENCE.md")
+    doc = _read_repo_text("docs/reference/BACKTRADER-MODULE-REFERENCE.md")
 
     assert "execution semantic reference" in doc
     assert "lightweight execution engine" in doc
@@ -162,7 +162,7 @@ def test_repo_has_no_vendored_backtrader_source_or_copied_samples_tests_datas() 
 
 
 def test_forbidden_operation_counts_are_static_zero_contracts() -> None:
-    doc = _read_repo_text("docs/CR025-BACKTRADER-MODULE-REFERENCE.md")
+    doc = _read_repo_text("docs/reference/BACKTRADER-MODULE-REFERENCE.md")
 
     assert set(FORBIDDEN_OPERATION_COUNTS) == {
         "backtrader_run",
@@ -209,6 +209,6 @@ def test_guardrail_test_is_static_and_does_not_import_backtrader_runtime() -> No
 
     assert imports.isdisjoint(forbidden_import_roots)
     assert ALLOWED_TEXT_TARGETS == {
-        "docs/CR025-BACKTRADER-MODULE-REFERENCE.md",
+        "docs/reference/BACKTRADER-MODULE-REFERENCE.md",
         "tests/test_cr025_backtrader_no_copy_guardrail.py",
     }

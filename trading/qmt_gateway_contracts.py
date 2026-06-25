@@ -58,6 +58,7 @@ QMT_QUERY_POSITIONS_COUNTER_FIELDS: tuple[str, ...] = (
 
 CR138_GATEWAY_SERVICE_SCHEMA_VERSION = "cr138-qmt-gateway-service-layer-v1"
 QMT_SIMULATION_ORDER_SCHEMA_VERSION = "qmt-simulation-order-runtime-v1"
+QMT_RUNTIME_IDENTITY_SCHEMA_VERSION = "qmt-runtime-identity-v1"
 
 
 class QmtGatewayResultStatus(str, Enum):
@@ -81,6 +82,7 @@ class QmtBlockedReason(str, Enum):
     AUTHORIZATION_MISSING = "authorization_missing"
     RAW_POLICY_BLOCKED = "raw_policy_blocked"
     QMT_OPERATION_NOT_AUTHORIZED = "qmt_operation_not_authorized"
+    RUNTIME_PROFILE_MISMATCH = "runtime_profile_mismatch"
     FALLBACK_BLOCKED = "fallback_blocked"
     REDACTION_FAILED = "redaction_failed"
     BROKER_LAKE_WRITE_FORBIDDEN = "broker_lake_write_forbidden"
@@ -213,6 +215,26 @@ class QmtSimulationCancelRequest:
             "authorization_ref": self.authorization_ref,
             "idempotency_key": self.idempotency_key,
             "redaction_label": self.redaction_label,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class QmtRuntimeIdentityExpectation:
+    """请求侧期望的 runtime 身份；不包含账号原文或凭据。"""
+
+    expected_runtime_mode: str = ""
+    expected_runtime_profile: str = ""
+    schema_version: str = QMT_RUNTIME_IDENTITY_SCHEMA_VERSION
+
+    @property
+    def complete(self) -> bool:
+        return bool(self.expected_runtime_mode and self.expected_runtime_profile)
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "schema_version": self.schema_version,
+            "expected_runtime_mode": self.expected_runtime_mode,
+            "expected_runtime_profile": self.expected_runtime_profile,
         }
 
 
@@ -567,6 +589,30 @@ def build_simulation_cancel_request(
         authorization_ref=str(merged.get("authorization_ref") or ""),
         idempotency_key=str(merged.get("idempotency_key") or ""),
         redaction_label=str(merged.get("redaction_label") or "qmt-simulation-cancel-redacted"),
+    )
+
+
+def build_runtime_identity_expectation(
+    source: Mapping[str, object] | QmtRuntimeIdentityExpectation | None = None,
+    *,
+    expected_runtime_mode: str = "",
+    expected_runtime_profile: str = "",
+) -> QmtRuntimeIdentityExpectation:
+    """从请求或显式参数提取 runtime identity expectation。"""
+
+    if isinstance(source, QmtRuntimeIdentityExpectation):
+        return source
+    raw = dict(source or {})
+    payload = raw.get("payload")
+    nested = payload if isinstance(payload, Mapping) else {}
+    merged = {**nested, **raw}
+    return QmtRuntimeIdentityExpectation(
+        expected_runtime_mode=str(
+            merged.get("expected_runtime_mode") or expected_runtime_mode
+        ),
+        expected_runtime_profile=str(
+            merged.get("expected_runtime_profile") or expected_runtime_profile
+        ),
     )
 
 

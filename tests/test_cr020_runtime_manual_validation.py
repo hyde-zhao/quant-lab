@@ -39,6 +39,9 @@ def test_runtime_env_loader_and_public_config_redact_secret_values(tmp_path: Pat
                 "QMT_MINIQMT_PATH=C:/qmt/userdata_mini",
                 "QMT_ACCOUNT_REF=account-fixture",
                 "QMT_ACCOUNT_TYPE=STOCK",
+                "QMT_RUNTIME_MODE=simulation",
+                "QMT_ACCOUNT_KIND=simulation",
+                "QMT_RUNTIME_PROFILE=cr138-simulation",
             ]
         ),
         encoding="utf-8",
@@ -55,6 +58,9 @@ def test_runtime_env_loader_and_public_config_redact_secret_values(tmp_path: Pat
     assert public["client_secret_ref"] == "[REDACTED]"
     assert public["xtquant_site_packages_configured"] is True
     assert public["miniqmt_path_configured"] is True
+    assert public["runtime_mode"] == "simulation"
+    assert public["account_kind"] == "simulation"
+    assert public["runtime_profile"] == "cr138-simulation"
     assert "secret-fixture" not in rendered
     assert "account-fixture" not in rendered
     assert "C:/qmt/bin.x64/Lib/site-packages" not in rendered
@@ -101,6 +107,9 @@ def test_runtime_gateway_query_positions_with_fake_xtquant_redacts_response() ->
             "QMT_MINIQMT_PATH": "C:/qmt/userdata_mini",
             "QMT_ACCOUNT_REF": "account-fixture",
             "QMT_ACCOUNT_TYPE": "STOCK",
+            "QMT_RUNTIME_MODE": "simulation",
+            "QMT_ACCOUNT_KIND": "simulation",
+            "QMT_RUNTIME_PROFILE": "cr138-simulation",
         }
     )
     adapter = XtQuantRuntimeAdapter(config, module_loader=_fake_xtquant_loader)
@@ -156,6 +165,9 @@ def test_runtime_gateway_simulation_submit_and_cancel_use_fake_xtquant_with_reda
             "QMT_MINIQMT_PATH": "C:/qmt/userdata_mini",
             "QMT_ACCOUNT_REF": "account-fixture",
             "QMT_ACCOUNT_TYPE": "STOCK",
+            "QMT_RUNTIME_MODE": "simulation",
+            "QMT_ACCOUNT_KIND": "simulation",
+            "QMT_RUNTIME_PROFILE": "cr138-simulation",
         }
     )
     trader = _FakeOrderTrader()
@@ -183,6 +195,8 @@ def test_runtime_gateway_simulation_submit_and_cancel_use_fake_xtquant_with_reda
             "price": 10.25,
             "authorization_ref": "auth-simulation-fixture",
             "idempotency_key": "idem-submit-fixture",
+            "expected_runtime_mode": "simulation",
+            "expected_runtime_profile": "cr138-simulation",
         }
     )
     submit_headers = build_runtime_hmac_provider(config).build_headers(
@@ -225,6 +239,8 @@ def test_runtime_gateway_simulation_submit_and_cancel_use_fake_xtquant_with_reda
             "broker_order_ref": submit_payload["cancel_ref"],
             "authorization_ref": "auth-simulation-fixture",
             "idempotency_key": "idem-cancel-fixture",
+            "expected_runtime_mode": "simulation",
+            "expected_runtime_profile": "cr138-simulation",
         }
     )
     cancel_headers = build_runtime_hmac_provider(config).build_headers(
@@ -267,6 +283,9 @@ def test_runtime_gateway_simulation_cancel_accepts_numeric_xtquant_order_id() ->
             "QMT_MINIQMT_PATH": "C:/qmt/userdata_mini",
             "QMT_ACCOUNT_REF": "account-fixture",
             "QMT_ACCOUNT_TYPE": "STOCK",
+            "QMT_RUNTIME_MODE": "simulation",
+            "QMT_ACCOUNT_KIND": "simulation",
+            "QMT_RUNTIME_PROFILE": "cr138-simulation",
         }
     )
     trader = _FakeNumericOrderTrader()
@@ -294,6 +313,8 @@ def test_runtime_gateway_simulation_cancel_accepts_numeric_xtquant_order_id() ->
             "price": 1.0,
             "authorization_ref": "auth-simulation-fixture",
             "idempotency_key": "idem-submit-numeric-fixture",
+            "expected_runtime_mode": "simulation",
+            "expected_runtime_profile": "cr138-simulation",
         }
     )
     submit_headers = build_runtime_hmac_provider(config).build_headers(
@@ -324,6 +345,8 @@ def test_runtime_gateway_simulation_cancel_accepts_numeric_xtquant_order_id() ->
             "broker_order_ref": submit_payload["cancel_ref"],
             "authorization_ref": "auth-simulation-fixture",
             "idempotency_key": "idem-cancel-numeric-fixture",
+            "expected_runtime_mode": "simulation",
+            "expected_runtime_profile": "cr138-simulation",
         }
     )
     cancel_headers = build_runtime_hmac_provider(config).build_headers(
@@ -358,6 +381,9 @@ def test_runtime_gateway_simulation_submit_requires_authorized_hmac_scope() -> N
             "QMT_MINIQMT_PATH": "C:/qmt/userdata_mini",
             "QMT_ACCOUNT_REF": "account-fixture",
             "QMT_ACCOUNT_TYPE": "STOCK",
+            "QMT_RUNTIME_MODE": "simulation",
+            "QMT_ACCOUNT_KIND": "simulation",
+            "QMT_RUNTIME_PROFILE": "cr138-simulation",
         }
     )
     runtime = QmtGatewayRuntime(config, XtQuantRuntimeAdapter(config, module_loader=_fake_xtquant_loader))
@@ -372,6 +398,8 @@ def test_runtime_gateway_simulation_submit_requires_authorized_hmac_scope() -> N
             "price": 10.25,
             "authorization_ref": "auth-simulation-fixture",
             "idempotency_key": "idem-submit-fixture",
+            "expected_runtime_mode": "simulation",
+            "expected_runtime_profile": "cr138-simulation",
         }
     )
     headers = build_runtime_hmac_provider(config).build_headers(
@@ -396,6 +424,143 @@ def test_runtime_gateway_simulation_submit_requires_authorized_hmac_scope() -> N
 
     assert result["allowed"] is False
     assert result["blocked_reason"] == "auth_blocked"
+    assert result["counters"]["real_order"] == 0
+
+
+def test_runtime_gateway_simulation_submit_blocks_when_gateway_identity_missing() -> None:
+    config = build_runtime_config(
+        {
+            "QMT_GATEWAY_ALLOWED_SOURCE": "127.0.0.1/32",
+            "QMT_CLIENT_ID": "client-fixture",
+            "QMT_CLIENT_SECRET": "secret-fixture",
+            "QMT_MINIQMT_PATH": "C:/qmt/userdata_mini",
+            "QMT_ACCOUNT_REF": "account-fixture",
+            "QMT_ACCOUNT_TYPE": "STOCK",
+        }
+    )
+    trader = _FakeOrderTrader()
+
+    def loader(name: str) -> object:
+        if name == "xtquant.xttrader":
+            return SimpleNamespace(XtQuantTrader=lambda path, session_id: trader)
+        if name == "xtquant.xttype":
+            return SimpleNamespace(StockAccount=_FakeAccount)
+        if name == "xtquant.xtconstant":
+            return SimpleNamespace(STOCK_BUY=23, STOCK_SELL=24, FIX_PRICE=11)
+        raise ImportError(name)
+
+    runtime = QmtGatewayRuntime(config, XtQuantRuntimeAdapter(config, module_loader=loader))
+    assert runtime.login().ready is True
+    body = _json_bytes(
+        {
+            "run_id": "run-missing-identity-fixture",
+            "request_id": "request-missing-identity-fixture",
+            "order_intent_id": "intent-missing-identity-fixture",
+            "symbol": "000001.SZ",
+            "side": "buy",
+            "quantity": 200,
+            "price": 10.25,
+            "authorization_ref": "auth-simulation-fixture",
+            "idempotency_key": "idem-missing-identity-fixture",
+            "expected_runtime_mode": "simulation",
+            "expected_runtime_profile": "cr138-simulation",
+        }
+    )
+    headers = build_runtime_hmac_provider(config).build_headers(
+        QmtRestRequest(
+            endpoint="submit_simulation",
+            method="POST",
+            path=QMT_SIMULATION_SUBMIT_PATH,
+            base_url=config.base_url,
+            run_id="run-missing-identity-fixture",
+            stage="simulation",
+            mode="simulation",
+            required_scope=QMT_SIMULATION_SUBMIT_SCOPE,
+            body=body,
+        )
+    )
+
+    result = runtime.submit_simulation_order(
+        body=body,
+        headers=headers,
+        source_ip="127.0.0.1",
+    )
+    detail = result["error"]["detail"]  # type: ignore[index]
+
+    assert result["allowed"] is False
+    assert result["blocked_reason"] == "runtime_profile_mismatch"
+    assert "gateway_runtime_mode_not_simulation" in detail["mismatches"]
+    assert trader.submitted_orders == []
+    assert result["counters"]["real_order"] == 0
+
+
+def test_runtime_gateway_simulation_submit_blocks_on_expected_profile_mismatch() -> None:
+    config = build_runtime_config(
+        {
+            "QMT_GATEWAY_ALLOWED_SOURCE": "127.0.0.1/32",
+            "QMT_CLIENT_ID": "client-fixture",
+            "QMT_CLIENT_SECRET": "secret-fixture",
+            "QMT_MINIQMT_PATH": "C:/qmt/userdata_mini",
+            "QMT_ACCOUNT_REF": "account-fixture",
+            "QMT_ACCOUNT_TYPE": "STOCK",
+            "QMT_RUNTIME_MODE": "simulation",
+            "QMT_ACCOUNT_KIND": "simulation",
+            "QMT_RUNTIME_PROFILE": "cr138-simulation",
+        }
+    )
+    trader = _FakeOrderTrader()
+
+    def loader(name: str) -> object:
+        if name == "xtquant.xttrader":
+            return SimpleNamespace(XtQuantTrader=lambda path, session_id: trader)
+        if name == "xtquant.xttype":
+            return SimpleNamespace(StockAccount=_FakeAccount)
+        if name == "xtquant.xtconstant":
+            return SimpleNamespace(STOCK_BUY=23, STOCK_SELL=24, FIX_PRICE=11)
+        raise ImportError(name)
+
+    runtime = QmtGatewayRuntime(config, XtQuantRuntimeAdapter(config, module_loader=loader))
+    assert runtime.login().ready is True
+    body = _json_bytes(
+        {
+            "run_id": "run-profile-mismatch-fixture",
+            "request_id": "request-profile-mismatch-fixture",
+            "order_intent_id": "intent-profile-mismatch-fixture",
+            "symbol": "000001.SZ",
+            "side": "buy",
+            "quantity": 200,
+            "price": 10.25,
+            "authorization_ref": "auth-simulation-fixture",
+            "idempotency_key": "idem-profile-mismatch-fixture",
+            "expected_runtime_mode": "simulation",
+            "expected_runtime_profile": "wrong-profile",
+        }
+    )
+    headers = build_runtime_hmac_provider(config).build_headers(
+        QmtRestRequest(
+            endpoint="submit_simulation",
+            method="POST",
+            path=QMT_SIMULATION_SUBMIT_PATH,
+            base_url=config.base_url,
+            run_id="run-profile-mismatch-fixture",
+            stage="simulation",
+            mode="simulation",
+            required_scope=QMT_SIMULATION_SUBMIT_SCOPE,
+            body=body,
+        )
+    )
+
+    result = runtime.submit_simulation_order(
+        body=body,
+        headers=headers,
+        source_ip="127.0.0.1",
+    )
+    detail = result["error"]["detail"]  # type: ignore[index]
+
+    assert result["allowed"] is False
+    assert result["blocked_reason"] == "runtime_profile_mismatch"
+    assert "expected_runtime_profile_mismatch" in detail["mismatches"]
+    assert trader.submitted_orders == []
     assert result["counters"]["real_order"] == 0
 
 

@@ -110,6 +110,8 @@ REST_GATEWAY_OPTIONAL_METADATA_FIELDS = frozenset(
         "request_id",
         "intent_id",
         "authorization_ref",
+        "expected_runtime_mode",
+        "expected_runtime_profile",
         "client_id_ref",
         "timestamp_utc",
         "nonce_ref",

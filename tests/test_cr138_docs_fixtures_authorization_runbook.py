@@ -10,7 +10,7 @@ from trading.runner_control_contracts import FORBIDDEN_OPERATION_COUNTER_FIELDS
 
 PROJECT_ROOT = Path(__file__).parents[1]
 MATRIX = PROJECT_ROOT / "process" / "docs" / "quality" / "TEST-MATRIX-CR138.md"
-RUNBOOK = PROJECT_ROOT / "docs" / "CR138-RUNNER-QMT-AUTHORIZATION-RUNBOOK.md"
+RUNBOOK = PROJECT_ROOT / "docs" / "reference" / "RUNNER-QMT-AUTHORIZATION.md"
 
 
 def test_cr138_fixture_matrix_covers_all_stories_and_forbidden_operations() -> None:
