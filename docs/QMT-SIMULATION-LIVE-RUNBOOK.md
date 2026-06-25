@@ -4,6 +4,8 @@
 
 Runbook、incident playbook、README、USER-MANUAL、CP5、CP6/CP7、Story verified 或文档存在均不自动授权 `simulation`、`live`、`small_live`、`scale_up`。文档合同不自动授权真实运行。
 
+非交易窗口 readiness（`preflight-only` / `plan-only` / `fixture` / `reconcile-only`）只验证 operator spec、策略准入包、evidence schema、异常恢复矩阵和稳定性窗口定义；不读取 env、不构造 QMT client、不启动 gateway、不读取凭据、不连接账户、不提交或撤单。它不等于 runtime authorization，也不授权 `simulation`、`live`、`small_live` 或 `scale_up`。
+
 | Counter | Current value |
 |---|---:|
 | `default_real_operation_authorization_claim` | `0` |

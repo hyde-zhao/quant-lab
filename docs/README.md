@@ -18,6 +18,7 @@
 |---|---|---|
 | 多因子策略研究：从数据准备到输出策略 | [scenarios/MULTIFACTOR-RESEARCH-TO-STRATEGY.md](scenarios/MULTIFACTOR-RESEARCH-TO-STRATEGY.md) | 研究员 / 策略开发者 |
 | 多因子策略运行：策略导入、gateway、runner、对账 | [scenarios/MULTIFACTOR-SIMULATION-RUNNER-OPERATION.md](scenarios/MULTIFACTOR-SIMULATION-RUNNER-OPERATION.md) | 模拟盘操作者 |
+| 非交易窗口 Runner 准备：fixture、preflight、plan、reconcile | [scenarios/NON-TRADING-WINDOW-RUNNER-READINESS.md](scenarios/NON-TRADING-WINDOW-RUNNER-READINESS.md) | 操作者 / 开发者 |
 | 日常运维：盘前、盘中、盘后、异常恢复 | [scenarios/DAILY-OPERATIONS.md](scenarios/DAILY-OPERATIONS.md) | 操作者 / 值守人员 |
 
 ## 3. 参考边界

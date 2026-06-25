@@ -42,6 +42,10 @@ from trading.strategy_runner.simulation_activation import (
     SimulationGateway,
     execute_simulation_order_plan,
 )
+from trading.strategy_runner.simulation_admission import (
+    operator_signal_rows_from_admission,
+    validate_strategy_admission_for_runner,
+)
 from trading.strategy_runner.simulation_order_plan import (
     SimulationOrderPlanRequest,
     build_simulation_order_plan,
@@ -368,6 +372,146 @@ def run_multifactor_simulation_operator(
     return result
 
 
+def run_multifactor_simulation_fixture_operator(
+    request: MultifactorSimulationOperatorRequest,
+    *,
+    mode: str = "fixture",
+) -> MultifactorSimulationOperatorResult:
+    """执行非交易窗口 fixture / dry-run 编排；不触达 QMT runtime。"""
+
+    normalized_mode = mode if mode in {"fixture", "preflight-only", "plan-only", "reconcile-only"} else "fixture"
+    reason = _offline_preflight_block_reason(request)
+    pre_positions = _positions_summary_from_mapping(
+        request.current_positions,
+        run_id=request.run_id,
+        label="pre",
+    )
+    post_positions = _positions_summary_from_mapping(
+        request.current_positions,
+        run_id=request.run_id,
+        label="post",
+    )
+    if reason:
+        return _offline_result(
+            request,
+            status="blocked",
+            blocked_reason=reason,
+            mode=normalized_mode,
+            pre_positions=pre_positions,
+            post_positions=post_positions,
+        )
+    if normalized_mode == "preflight-only":
+        return _offline_result(
+            request,
+            status="pass",
+            blocked_reason="",
+            mode=normalized_mode,
+            pre_positions=pre_positions,
+            post_positions=post_positions,
+            target={"status": "skipped", "reason": "preflight_only"},
+            order_plan={"status": "skipped", "reason": "preflight_only"},
+            execution={"status": "skipped", "reason": "preflight_only", "runtime_touched": False},
+            reconciliation={"status": "skipped", "reason": "preflight_only"},
+        )
+
+    target = build_multifactor_target_portfolio(
+        strategy_id=request.strategy_id,
+        source_run_id=request.run_id,
+        target_trade_date=request.target_trade_date,
+        signal_rows=request.signal_rows,
+        top_n=request.top_n,
+        weighting=request.weighting,
+        max_weight=request.max_weight,
+        universe_symbols=request.universe_symbols,
+        lineage_refs={"runtime": "non-trading-window-fixture"},
+    )
+    if target.blocked or target.snapshot is None:
+        return _offline_result(
+            request,
+            status="blocked",
+            blocked_reason=target.blocked_reason or "target_portfolio_blocked",
+            mode=normalized_mode,
+            pre_positions=pre_positions,
+            target=target.to_dict(),
+            post_positions=post_positions,
+        )
+    plan = build_simulation_order_plan(
+        SimulationOrderPlanRequest(
+            strategy_id=request.strategy_id,
+            run_id=request.run_id,
+            target_trade_date=request.target_trade_date,
+            target_rows=tuple(target.snapshot.rows()),
+            capital_base=request.capital_base,
+            risk_snapshot=request.risk_snapshot,
+            risk_profile=request.risk_profile,
+            current_positions=request.current_positions,
+            max_turnover_notional=request.max_turnover_notional,
+        )
+    )
+    if plan.blocked:
+        return _offline_result(
+            request,
+            status="blocked",
+            blocked_reason=plan.blocked_reason or "order_plan_blocked",
+            mode=normalized_mode,
+            pre_positions=pre_positions,
+            target=target.to_dict(),
+            order_plan=plan.to_dict(),
+            post_positions=post_positions,
+        )
+    if normalized_mode == "plan-only":
+        return _offline_result(
+            request,
+            status="pass",
+            blocked_reason="",
+            mode=normalized_mode,
+            pre_positions=pre_positions,
+            target=target.to_dict(),
+            order_plan=plan.to_dict(),
+            execution={"status": "skipped", "reason": "plan_only", "runtime_touched": False},
+            reconciliation={"status": "skipped", "reason": "plan_only"},
+            post_positions=post_positions,
+        )
+    execution = SimulationExecutionEngineResult(
+        status="no_op",
+        run_id=request.run_id,
+        stage_gate_status="not_applicable_non_trading_window",
+        actions=(),
+        submitted_count=0,
+        cancelled_count=0,
+        rejected_count=0,
+        unknown_count=0,
+        manual_takeover_required=False,
+        evidence_refs=("fixture:no-runtime-submit-cancel",),
+    )
+    reconciliation = reconcile_simulation_run(
+        SimulationReconciliationRequest(
+            run_id=request.run_id,
+            target_portfolio_ref=target.snapshot.target_portfolio_id,
+            pre_positions_digest=str(pre_positions.get("positions_digest") or ""),
+            post_positions_digest=str(post_positions.get("positions_digest") or ""),
+            execution_result=execution,
+            local_state=_reconciliation_state(execution, len(plan.orders)),
+            broker_facts=_reconciliation_state(execution, len(plan.orders)),
+            broker_lake_facts={"count": 6, "ref": _stable_ref(request.run_id, "broker-lake-fixture")},
+            thresholds=_default_thresholds(),
+            input_source="fixture",
+        )
+    )
+    return _offline_result(
+        request,
+        status="pass" if reconciliation.passed else "blocked",
+        blocked_reason="" if reconciliation.passed else reconciliation.blocked_reason,
+        mode=normalized_mode,
+        pre_positions=pre_positions,
+        target=target.to_dict(),
+        order_plan=plan.to_dict(),
+        execution=execution.to_dict(),
+        post_positions=post_positions,
+        reconciliation=reconciliation.to_dict(),
+    )
+
+
 def build_runtime_qmt_client(
     *,
     config: object,
@@ -397,14 +541,31 @@ def request_from_mapping(payload: Mapping[str, object]) -> MultifactorSimulation
 
     strategy_id = str(payload.get("strategy_id") or "")
     run_id = str(payload.get("run_id") or "")
-    output_path = str(payload.get("output_path") or f"process/evidence/{run_id}-simulation-operator-evidence.json")
+    admission_package = _mapping(payload.get("strategy_admission_package"))
+    admission_contract = (
+        validate_strategy_admission_for_runner(admission_package)
+        if admission_package
+        else None
+    )
+    if admission_contract is not None and admission_contract.passed:
+        strategy_id = strategy_id or admission_contract.strategy_id
+        run_id = run_id or admission_contract.source_run_id
+    output_path = str(payload.get("output_path") or f"process/evidence/runner-simulation/{run_id}/operator-evidence.json")
+    signal_rows = tuple(_signal_row(item) for item in _sequence(payload.get("signal_rows")))
+    if not signal_rows and admission_package:
+        signal_rows = tuple(
+            _signal_row(item) for item in operator_signal_rows_from_admission(admission_package)
+        )
     return MultifactorSimulationOperatorRequest(
         strategy_id=strategy_id,
         run_id=run_id,
-        target_trade_date=str(payload.get("target_trade_date") or ""),
+        target_trade_date=str(
+            payload.get("target_trade_date")
+            or (admission_contract.target_trade_date if admission_contract is not None and admission_contract.passed else "")
+        ),
         authorization_ref=str(payload.get("authorization_ref") or ""),
         expected_runtime_profile=str(payload.get("expected_runtime_profile") or ""),
-        signal_rows=tuple(_signal_row(item) for item in _sequence(payload.get("signal_rows"))),
+        signal_rows=signal_rows,
         capital_base=payload.get("capital_base", "0"),
         current_positions=_int_mapping(payload.get("current_positions")),
         risk_snapshot=_risk_snapshot(payload.get("risk_snapshot")),
@@ -568,6 +729,70 @@ def _blocked(
         persistence_policy=request.persistence_policy,
         stability_window=request.stability_window.to_dict(current_passed=False),
     )
+
+
+def _offline_result(
+    request: MultifactorSimulationOperatorRequest,
+    *,
+    status: str,
+    blocked_reason: str,
+    mode: str,
+    pre_positions: Mapping[str, object],
+    target: Mapping[str, object] | None = None,
+    order_plan: Mapping[str, object] | None = None,
+    execution: Mapping[str, object] | None = None,
+    post_positions: Mapping[str, object] | None = None,
+    reconciliation: Mapping[str, object] | None = None,
+) -> MultifactorSimulationOperatorResult:
+    result = MultifactorSimulationOperatorResult(
+        status=status,
+        run_id=request.run_id,
+        authorization_ref=request.authorization_ref,
+        blocked_reason=blocked_reason,
+        pre_positions_summary=pre_positions,
+        target_summary=target or {},
+        order_plan_summary=order_plan or {},
+        execution_summary=execution or {},
+        post_positions_summary=post_positions or {},
+        reconciliation_summary=reconciliation or {},
+        persistence_policy=request.persistence_policy,
+        stability_window=request.stability_window.to_dict(current_passed=status == "pass"),
+        runtime_authorization_granted=False,
+        small_live_or_live_authorized=False,
+    )
+    return result
+
+
+def _offline_preflight_block_reason(request: MultifactorSimulationOperatorRequest) -> str:
+    if not request.strategy_id or not request.run_id or not request.target_trade_date:
+        return "required_field_missing"
+    if not request.signal_rows:
+        return "signal_rows_empty"
+    if not request.risk_snapshot.evidence_ref:
+        return "risk_snapshot_evidence_ref_missing"
+    if not request.risk_profile.risk_profile_id:
+        return "risk_profile_id_missing"
+    return ""
+
+
+def _positions_summary_from_mapping(
+    positions: Mapping[str, int],
+    *,
+    run_id: str,
+    label: str,
+) -> dict[str, object]:
+    normalized = {str(symbol): int(quantity) for symbol, quantity in positions.items()}
+    digest_source = json.dumps(normalized, ensure_ascii=False, sort_keys=True)
+    return {
+        "status": "ok",
+        "reason_code": "",
+        "position_count_bucket": _position_count_bucket(len(normalized)),
+        "positions_digest": _stable_ref(f"{run_id}:{label}:{digest_source}", "positions"),
+        "items_redacted_count": len(normalized),
+        "raw_payload_emitted": False,
+        "redaction_status": "pass",
+        "source": "fixture_no_runtime",
+    }
 
 
 def _stage_request(request: MultifactorSimulationOperatorRequest) -> StageGateRequest:

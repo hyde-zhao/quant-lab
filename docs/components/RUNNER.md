@@ -17,11 +17,22 @@ Runner 负责把策略准入包或 operator spec 转成一次受控运行，按 
 | 入口 | 用途 |
 |---|---|
 | [../scenarios/MULTIFACTOR-SIMULATION-RUNNER-OPERATION.md](../scenarios/MULTIFACTOR-SIMULATION-RUNNER-OPERATION.md) | 完整运行案例。 |
+| [../scenarios/NON-TRADING-WINDOW-RUNNER-READINESS.md](../scenarios/NON-TRADING-WINDOW-RUNNER-READINESS.md) | 非交易窗口 fixture / preflight / plan / reconcile 准备。 |
 | [../USER-MANUAL.md](../USER-MANUAL.md) | 用户手册中的手动运行指南。 |
 | `scripts/run_qmt_multifactor_simulation_operator.py` | 一次性 simulation operator。 |
 | `process/runbooks/RUNNER-QMT-SIMULATION-MULTIFACTOR-STRATEGY-RUNTIME-RUNBOOK-2026-06-25.md` | 过程 runbook。 |
 
-## 3. 检查清单
+## 3. 非交易窗口模式
+
+| mode | 是否触达 runtime | 用途 |
+|---|---|---|
+| `preflight-only` | 否 | 检查 operator spec 必填字段和 evidence 输出路径。 |
+| `plan-only` | 否 | 生成 P1 target 和 P2 order plan，不进入 P3。 |
+| `fixture` | 否 | 跑 P1、P2 和 P4 fixture reconciliation，P3 为 `no_op`。 |
+| `reconcile-only` | 否 | 复核 P4 fixture 对账合同。 |
+| `runtime` | 是 | 逐次授权后连接真实 simulation gateway。 |
+
+## 4. 检查清单
 
 | 检查 | 必须满足 |
 |---|---|

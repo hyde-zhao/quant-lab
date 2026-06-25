@@ -2,6 +2,30 @@
 
 本案例面向模拟盘操作者，目标是把研究输出的策略准入包导入 runner，通过 QMT gateway 运行一次 simulation operator，并完成检查、停止和对账。本案例只覆盖 `simulation`，不覆盖 `small_live` 或 `live`。
 
+## 大步骤 0：非交易窗口准备
+
+### 0.1 运行本地 readiness 检查
+
+在交易窗口前先执行 [NON-TRADING-WINDOW-RUNNER-READINESS.md](NON-TRADING-WINDOW-RUNNER-READINESS.md)。该步骤只验证本地 operator 输入、策略准入包、evidence schema、异常恢复矩阵和稳定性窗口定义；不触达 QMT runtime。
+
+小步骤：
+
+1. 使用 `--mode preflight-only` 校验 operator spec 和策略准入包。
+2. 使用 `--mode plan-only` 生成本地订单计划 evidence。
+3. 使用 `--mode fixture` 跑完本地 P1-P4 fixture 链路。
+4. 使用 `--mode reconcile-only` 验证对账 evidence schema。
+5. 检查 `operator-evidence.json` 和 `operator-evidence.index.json` 已写入指定 evidence 目录。
+
+检查：
+
+| 检查项 | 通过标准 |
+|---|---|
+| runtime 授权 | `runtime_authorization_granted=false`。 |
+| runtime 触达 | `runtime_touched=false`，未读取 env，未构造 QMT client，未启动 gateway，未读取凭据。 |
+| 订单动作 | `submitted_count=0`、`cancelled_count=0`。 |
+| evidence | 原始账户、原始订单、原始成交、原始持仓和 secret 均未保存；evidence index 只保留摘要、digest、bucket 和 refs。 |
+| 授权边界 | 非交易窗口 readiness 不等于 runtime authorization，不授权真实 simulation gateway、`small_live` 或 `live`。 |
+
 ## 大步骤 1：确认运行授权
 
 ### 1.1 准备授权材料

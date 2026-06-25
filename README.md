@@ -55,6 +55,8 @@
 
 当前 QMT 多因子策略 runner 的正式用户入口是 [docs/USER-MANUAL.md](docs/USER-MANUAL.md) 中的 “RUNNER-QMT simulation multifactor 手动运行指南”，完整场景案例见 [docs/scenarios/MULTIFACTOR-SIMULATION-RUNNER-OPERATION.md](docs/scenarios/MULTIFACTOR-SIMULATION-RUNNER-OPERATION.md)。它说明如何在逐次授权后手动启动 Windows gateway、检查 health / capabilities / positions、运行 simulation operator、停止 gateway、处理 `session_expired`、检查 evidence 和执行 manual takeover。
 
+交易窗口外的 runner 准备入口是 [docs/scenarios/NON-TRADING-WINDOW-RUNNER-READINESS.md](docs/scenarios/NON-TRADING-WINDOW-RUNNER-READINESS.md)。该流程只运行 `preflight-only`、`plan-only`、`fixture`、`reconcile-only` 等非 runtime 模式，用于检查 operator spec、策略准入包、evidence schema、异常恢复矩阵和稳定性窗口；不读取 env、不构造 QMT client、不启动 gateway、不读取凭据、不连接账户、不提交或撤单。
+
 相关文档：
 
 | 文档 | 用途 |
@@ -67,13 +69,14 @@
 | [docs/components/RUNNER.md](docs/components/RUNNER.md) | Runner 组件说明。 |
 | [docs/scenarios/MULTIFACTOR-RESEARCH-TO-STRATEGY.md](docs/scenarios/MULTIFACTOR-RESEARCH-TO-STRATEGY.md) | 多因子策略研究案例，从数据准备到输出策略。 |
 | [docs/scenarios/MULTIFACTOR-SIMULATION-RUNNER-OPERATION.md](docs/scenarios/MULTIFACTOR-SIMULATION-RUNNER-OPERATION.md) | 多因子策略模拟盘运行案例。 |
+| [docs/scenarios/NON-TRADING-WINDOW-RUNNER-READINESS.md](docs/scenarios/NON-TRADING-WINDOW-RUNNER-READINESS.md) | 非交易窗口 runner 准备案例，覆盖 preflight、plan、fixture、reconcile 和 evidence schema。 |
 | [docs/scenarios/DAILY-OPERATIONS.md](docs/scenarios/DAILY-OPERATIONS.md) | 日常运维案例。 |
 | [docs/USER-MANUAL.md](docs/USER-MANUAL.md) | 操作者手册、手动运行步骤、停止 / 检查流程和典型用户案例。 |
 | [docs/QMT-GATEWAY-INSTALL.md](docs/QMT-GATEWAY-INSTALL.md) | Windows S 端 gateway 环境文件、启动、检查、停止和故障处理。 |
 | [docs/QMT-C-S-BRIDGE-RUNBOOK.md](docs/QMT-C-S-BRIDGE-RUNBOOK.md) | C/S bridge、endpoint、HMAC scope 和只读证据边界。 |
 | [docs/reference/RUNNER-QMT-AUTHORIZATION.md](docs/reference/RUNNER-QMT-AUTHORIZATION.md) | runtime 授权模板、scope separation 和 evidence redaction 规则。 |
 
-边界：该入口只覆盖 `simulation`，不授权 `small_live`、`live`、scale-up、真实生产交易、未脱敏账户 / 订单回执落盘、provider fetch、lake write、broker lake write 或 publish。真实 operator 最近一次审计见 `process/checks/RUNNER-QMT-SIMULATION-MULTIFACTOR-STRATEGY-RUNTIME-REAL-OPERATOR-2026-06-25.md`；若状态为 `session_expired`，必须先刷新 Windows gateway session 后再复跑。
+边界：该入口只覆盖 `simulation`，不授权 `small_live`、`live`、scale-up、真实生产交易、未脱敏账户 / 订单回执落盘、provider fetch、lake write、broker lake write 或 publish。非交易窗口 readiness 只证明本地 runner 准备度，不等于 runtime authorization，也不授权 simulation runtime、`small_live` 或 `live`。真实 operator 最近一次审计见 `process/checks/RUNNER-QMT-SIMULATION-MULTIFACTOR-STRATEGY-RUNTIME-REAL-OPERATOR-2026-06-25.md`；若状态为 `session_expired`，必须先刷新 Windows gateway session 后再复跑。
 
 ## 项目根与目录边界
 

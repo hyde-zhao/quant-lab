@@ -11,6 +11,7 @@
 | 了解实验与报告 | [components/EXPERIMENTS.md](components/EXPERIMENTS.md) |
 | 研究多因子策略 | [components/MULTIFACTOR-RESEARCH.md](components/MULTIFACTOR-RESEARCH.md) 和 [scenarios/MULTIFACTOR-RESEARCH-TO-STRATEGY.md](scenarios/MULTIFACTOR-RESEARCH-TO-STRATEGY.md) |
 | 运行多因子模拟盘链路 | [components/RUNNER.md](components/RUNNER.md) 和 [scenarios/MULTIFACTOR-SIMULATION-RUNNER-OPERATION.md](scenarios/MULTIFACTOR-SIMULATION-RUNNER-OPERATION.md) |
+| 非交易窗口准备 runner | [scenarios/NON-TRADING-WINDOW-RUNNER-READINESS.md](scenarios/NON-TRADING-WINDOW-RUNNER-READINESS.md) |
 | 配置和检查 QMT gateway | [components/QMT-GATEWAY.md](components/QMT-GATEWAY.md)、[QMT-GATEWAY-INSTALL.md](QMT-GATEWAY-INSTALL.md) |
 | 处理日常运维 | [scenarios/DAILY-OPERATIONS.md](scenarios/DAILY-OPERATIONS.md) |
 | 查看历史 CR 文档迁移 | [legacy/CR-DOCS-MIGRATION.md](legacy/CR-DOCS-MIGRATION.md) |
@@ -183,7 +184,29 @@ Runner 当前面向 RUNNER-QMT simulation multifactor，阶段如下：
 
 当前入口具备 operator-ready-with-runtime-gate 形态；没有有效授权时，只能进行 fixture / dry-run / mock 检查。
 
-### 7.3 安全计数
+### 7.3 非交易窗口模式
+
+非交易窗口可以用同一个 operator 脚本完成 dry-run 准备，不读取 env、不构造 QMT client、不连接 gateway：
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 uv run --python 3.11 python scripts/run_qmt_multifactor_simulation_operator.py \
+  --mode fixture \
+  --spec-json <operator-spec-json> \
+  --output-dir process/evidence/runner-simulation
+```
+
+可用模式：
+
+| mode | 用途 |
+|---|---|
+| `preflight-only` | 只检查必填字段和 evidence 输出结构。 |
+| `plan-only` | 生成 P1 target 和 P2 order plan。 |
+| `fixture` | 运行 P1/P2/P4 fixture，P3 submit/cancel 为 `no_op`。 |
+| `reconcile-only` | 复核 P4 fixture 对账合同。 |
+
+非交易窗口 evidence 必须满足：`runtime_authorization_granted=false`、`small_live_or_live_authorized=false`、`submitted_count=0`、`cancelled_count=0`，并通过 `validate_operator_evidence` 脱敏检查。
+
+### 7.4 安全计数
 
 | Counter | Current value |
 |---|---:|
@@ -210,7 +233,7 @@ Runner 当前面向 RUNNER-QMT simulation multifactor，阶段如下：
 
 Runbook、incident playbook、README、USER-MANUAL、CP5、CP6/CP7、Story verified 或文档存在均不自动授权 `simulation`、`live`、`small_live`、`scale_up`。文档合同不自动授权真实运行。
 
-### 7.4 CR-015 / CR-016 边界
+### 7.5 CR-015 / CR-016 边界
 
 CR-015 只覆盖 QMT foundation 的 `shadow`、`dry_run`、`mock` 和 [QMT-TRADING-RUNBOOK.md](QMT-TRADING-RUNBOOK.md)。CR-016 承接后续 staged activation，但 `simulation`、`live_readonly`、`small_live`、`scale_up` 都必须经过 per-run authorization、stage gate、risk gate、reconciliation gate、kill switch 和 rollback plan。
 
