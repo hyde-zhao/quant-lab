@@ -274,6 +274,75 @@ def test_runtime_gateway_simulation_submit_and_cancel_use_fake_xtquant_with_reda
     assert "account-fixture" not in cancel_rendered
 
 
+def test_runtime_gateway_blocks_fixture_symbol_before_xtquant_submit() -> None:
+    config = build_runtime_config(
+        {
+            "QMT_GATEWAY_ALLOWED_SOURCE": "127.0.0.1/32",
+            "QMT_CLIENT_ID": "client-fixture",
+            "QMT_CLIENT_SECRET": "secret-fixture",
+            "QMT_MINIQMT_PATH": "C:/qmt/userdata_mini",
+            "QMT_ACCOUNT_REF": "account-fixture",
+            "QMT_ACCOUNT_TYPE": "STOCK",
+            "QMT_RUNTIME_MODE": "simulation",
+            "QMT_ACCOUNT_KIND": "simulation",
+            "QMT_RUNTIME_PROFILE": "cr138-simulation",
+        }
+    )
+    trader = _FakeOrderTrader()
+
+    def loader(name: str) -> object:
+        if name == "xtquant.xttrader":
+            return SimpleNamespace(XtQuantTrader=lambda path, session_id: trader)
+        if name == "xtquant.xttype":
+            return SimpleNamespace(StockAccount=_FakeAccount)
+        if name == "xtquant.xtconstant":
+            return SimpleNamespace(STOCK_BUY=23, STOCK_SELL=24, FIX_PRICE=11)
+        raise ImportError(name)
+
+    runtime = QmtGatewayRuntime(config, XtQuantRuntimeAdapter(config, module_loader=loader))
+    assert runtime.login().ready is True
+
+    submit_body = _json_bytes(
+        {
+            "run_id": "run-fixture-symbol-blocked",
+            "request_id": "request-fixture-symbol-blocked",
+            "order_intent_id": "intent-fixture-symbol-blocked",
+            "symbol": "INSTRUMENT_FIXTURE_A",
+            "side": "buy",
+            "quantity": 100,
+            "price": 10.0,
+            "authorization_ref": "auth-simulation-fixture",
+            "idempotency_key": "idem-fixture-symbol-blocked",
+            "expected_runtime_mode": "simulation",
+            "expected_runtime_profile": "cr138-simulation",
+        }
+    )
+    submit_headers = build_runtime_hmac_provider(config).build_headers(
+        QmtRestRequest(
+            endpoint="submit_simulation",
+            method="POST",
+            path=QMT_SIMULATION_SUBMIT_PATH,
+            base_url=config.base_url,
+            run_id="run-fixture-symbol-blocked",
+            stage="simulation",
+            mode="simulation",
+            required_scope=QMT_SIMULATION_SUBMIT_SCOPE,
+            body=submit_body,
+        )
+    )
+
+    result = runtime.submit_simulation_order(
+        body=submit_body,
+        headers=submit_headers,
+        source_ip="127.0.0.1",
+    )
+
+    assert result["allowed"] is False
+    assert result["blocked_reason"] == "validation_blocked"
+    assert result["error"]["detail"]["message"] == "fixture_simulation_symbol_not_allowed"
+    assert trader.submitted_orders == []
+
+
 def test_runtime_gateway_simulation_cancel_accepts_numeric_xtquant_order_id() -> None:
     config = build_runtime_config(
         {

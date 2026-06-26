@@ -232,6 +232,42 @@ def test_operator_blocks_before_submit_when_runtime_session_is_not_usable(tmp_pa
     assert {call.path for call in transport.calls} == {"/qmt/account/positions"}
 
 
+def test_operator_blocks_fixture_symbol_contract_before_runtime_transport(
+    tmp_path: Path,
+) -> None:
+    transport = _Transport()
+    client = QmtClient(
+        config=QmtClientConfig(
+            base_url="http://127.0.0.1:18765",
+            allow_simulation_transport=True,
+            expected_runtime_mode="simulation",
+            expected_runtime_profile="cr138-simulation",
+        ),
+        transport=transport,
+        auth_header_provider=_Auth(),
+    )
+    spec = _spec(output_path=str(tmp_path / "blocked.json"))
+    spec["signal_rows"] = [
+        {"symbol": "INSTRUMENT_FIXTURE_A", "score": "0.9", "signal_date": "2026-06-25"}
+    ]
+    spec["current_positions"] = {"INSTRUMENT_FIXTURE_A": 0}
+    spec["risk_snapshot"] = {
+        "cash_available": "20000",
+        "positions_available": {"INSTRUMENT_FIXTURE_A": 0},
+        "t1_sellable": {"INSTRUMENT_FIXTURE_A": 0},
+        "raw_price_refs": {
+            "INSTRUMENT_FIXTURE_A": {"price": "10", "evidence_ref": "fixture:price"}
+        },
+    }
+    request = request_from_mapping(spec)
+
+    result = run_multifactor_simulation_operator(request, qmt_client=client)
+
+    assert result.blocked is True
+    assert result.blocked_reason == "runtime_symbol_contract_invalid"
+    assert transport.calls == []
+
+
 def _spec(*, output_path: str = "process/evidence/operator-fixture.json") -> dict[str, object]:
     return {
         "strategy_id": "strategy-alpha",

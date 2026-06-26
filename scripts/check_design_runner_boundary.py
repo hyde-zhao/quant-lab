@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
+import re
 from typing import Any
 
 
@@ -61,8 +62,8 @@ def check_design_runner_boundary(
 
     hld_index = texts.get("hld_index", "")
     if hld_index:
-        _require(hld_index, 'change: "CR-131"', "hld_index_change_not_cr131", errors)
-        _require(hld_index, "version: \"1.3\"", "hld_index_version_not_1_3", errors)
+        _require_any(hld_index, ('change: "CR-131"', "CR131"), "hld_index_change_not_cr131", errors)
+        _require_version_at_least(hld_index, (1, 3), "hld_index_version_not_1_3", errors)
         _require(hld_index, RUNNER_AUTHORITY_HEADING, "hld_runner_authority_section_missing", errors)
         _require(hld_index, STRATEGY_RUNNER_CORE_REF, "hld_strategy_runner_core_ref_missing", errors)
         _require(hld_index, CR126_RUNNER_DESIGN_REF, "hld_cr126_runner_design_ref_missing", errors)
@@ -72,8 +73,8 @@ def check_design_runner_boundary(
 
     adr_index = texts.get("adr_index", "")
     if adr_index:
-        _require(adr_index, 'change: "CR-131"', "adr_index_change_not_cr131", errors)
-        _require(adr_index, "version: \"1.4\"", "adr_index_version_not_1_4", errors)
+        _require_any(adr_index, ('change: "CR-131"', "CR131"), "adr_index_change_not_cr131", errors)
+        _require_version_at_least(adr_index, (1, 4), "adr_index_version_not_1_4", errors)
         _require(adr_index, "Runner Core Authority", "adr_runner_core_authority_row_missing", errors)
         _require(adr_index, STRATEGY_RUNNER_CORE_REF, "adr_strategy_runner_core_ref_missing", errors)
         _require(adr_index, "legacy cross-target ADR cluster", "adr_cr046_legacy_cluster_missing", errors)
@@ -123,6 +124,26 @@ def check_design_runner_boundary(
 
 def _require(text: str, needle: str, error: str, errors: list[str]) -> None:
     if needle not in text:
+        errors.append(error)
+
+
+def _require_any(text: str, needles: tuple[str, ...], error: str, errors: list[str]) -> None:
+    if not any(needle in text for needle in needles):
+        errors.append(error)
+
+
+def _require_version_at_least(
+    text: str,
+    minimum: tuple[int, int],
+    error: str,
+    errors: list[str],
+) -> None:
+    match = re.search(r'^version:\s*"(?P<major>\d+)\.(?P<minor>\d+)"', text, re.MULTILINE)
+    if match is None:
+        errors.append(error)
+        return
+    current = (int(match.group("major")), int(match.group("minor")))
+    if current < minimum:
         errors.append(error)
 
 

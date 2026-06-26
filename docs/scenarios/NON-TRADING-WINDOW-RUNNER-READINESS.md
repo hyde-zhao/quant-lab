@@ -2,6 +2,16 @@
 
 本案例用于在不开 QMT gateway、不读取凭据、不触达真实账户、不提交 / 撤单的情况下，完成交易窗口前的 runner 准备。所有步骤都应保持 `runtime_touched=false`，只生成脱敏 fixture evidence。
 
+当前冻结输入：
+
+| 对象 | 路径 |
+|---|---|
+| StrategyAdmissionPackage | `process/context/RUNNER-QMT-SIMULATION-MULTIFACTOR-FORMAL-STRATEGY-ADMISSION-PACKAGE-2026-06-25.json` |
+| operator spec | `process/context/RUNNER-QMT-SIMULATION-MULTIFACTOR-FORMAL-OPERATOR-SPEC-2026-06-25.json` |
+| 完成记录 | `process/checks/RUNNER-QMT-SIMULATION-MULTIFACTOR-NON-TRADING-WINDOW-COMPLETION-2026-06-25.md` |
+
+这些输入只用于离线 readiness。它们不授权 `runtime`、不授权 `simulation submit/cancel`、不授权 `small_live` / `live`。
+
 ## 大步骤 1：冻结 operator 输入
 
 ### 1.1 准备 operator spec
@@ -139,3 +149,26 @@ PYTHONDONTWRITEBYTECODE=1 uv run --python 3.11 python scripts/run_qmt_multifacto
 | fail criteria | authorization missing、raw payload in evidence、unknown order unresolved、reconciliation diff unclosed、gateway stop unconfirmed |
 
 稳定性窗口定义可以在非交易窗口冻结；真实计数必须等交易窗口内的真实 simulation run 完成后再累计。
+
+当前状态：交易窗口 evidence 已完成 `5/5` runtime count，并被接受为 `READY_WITH_RISK`。原 `required_trading_days=3` 保留为保守观察口径；若未来需要从 `READY_WITH_RISK` 升级为严格 `READY`，可补第三个交易日观察。
+
+## 大步骤 7：证据保留和人工接管
+
+| 项目 | 当前策略 |
+|---|---|
+| evidence 保存范围 | summary、bucket、digest、instrument ref、intent ref、validation result、evidence path |
+| 禁止保存 | 真实账号、真实证券代码、原始持仓、原始订单、broker raw ref、资金明细、token、secret、raw payload |
+| retention | 默认 `30` 天；长期只保留 index、check summary 和必要 digest refs |
+| manual takeover | `session_expired`、`order_submit_unknown`、`cancel_unknown`、`recon_diff`、redaction fail 均 fail closed |
+| kill-switch | 授权缺失、gateway health fail、unknown order、未关闭 recon diff、raw evidence 泄漏均停止新单 |
+
+## 大步骤 8：从 readiness 进入模拟盘运行
+
+当前已完成的 readiness 只允许进入受控人工授权 simulation 模拟盘运行，不允许直接进入长期自动化或 `small_live` / `live`。
+
+| 后续方向 | 入口条件 |
+|---|---|
+| 单次 simulation runtime | 新的逐次 runtime authorization、用户启动 Windows gateway、P0/P0.5 通过、runtime input 按 policy 重新生成。 |
+| 补第三个交易日观察 | 新的逐次 runtime authorization；运行完成后可更新 readiness 为更严格 `READY` 候选。 |
+| 长期自动化模拟盘 | 另行实现自动 preflight checker、运行日历、健康监控、日报和 incident 自动收敛。 |
+| `small_live` / `live` | 独立 CR、`DQ-LIVE-001..004` 人工决策、独立 runtime authorization。 |

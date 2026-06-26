@@ -32,7 +32,27 @@ Runner 负责把策略准入包或 operator spec 转成一次受控运行，按 
 | `reconcile-only` | 否 | 复核 P4 fixture 对账合同。 |
 | `runtime` | 是 | 逐次授权后连接真实 simulation gateway。 |
 
-## 4. 检查清单
+当前已冻结的非交易窗口正式输入：
+
+| 对象 | 路径 | 状态 |
+|---|---|---|
+| StrategyAdmissionPackage | `process/context/RUNNER-QMT-SIMULATION-MULTIFACTOR-FORMAL-STRATEGY-ADMISSION-PACKAGE-2026-06-25.json` | 仅用于离线 readiness，不授权 runtime |
+| operator spec | `process/context/RUNNER-QMT-SIMULATION-MULTIFACTOR-FORMAL-OPERATOR-SPEC-2026-06-25.json` | 不含凭据、账号或 broker ref |
+| completion check | `process/checks/RUNNER-QMT-SIMULATION-MULTIFACTOR-NON-TRADING-WINDOW-COMPLETION-2026-06-25.md` | 四个离线模式均 `pass` |
+
+## 4. 当前 simulation readiness 状态
+
+| 项目 | 状态 | 说明 |
+|---|---|---|
+| runtime stability window | `5/5 pass` | 已完成 after-restart、r3、r4、r5、r6 成功运行汇总。 |
+| readiness decision | `READY_WITH_RISK` | 用户已接受；3 trading days 观察缺口作为风险保留，不阻塞 simulation readiness。 |
+| runtime input policy | `POLICY_DEFINED` | private overlay、builder、字段边界、脱敏 evidence 边界已固化。 |
+| gateway lifecycle policy | `POLICY_DEFINED` | Windows gateway 启停、重启、WSL/Windows 同步和 P0/P0.5 复验规则已固化。 |
+| live readiness | `NOT_READY` | `small_live` / `live` 仍 deferred，必须独立 CR。 |
+
+Runner 当前具备受控人工授权 simulation 模拟盘运行入口条件；不具备长期自动化 / 无人值守模拟盘的完整运营条件。后者还需要独立实现运行日历、自动 preflight、健康监控、日报和 incident 自动收敛。
+
+## 5. 检查清单
 
 | 检查 | 必须满足 |
 |---|---|
@@ -42,3 +62,5 @@ Runner 负责把策略准入包或 operator spec 转成一次受控运行，按 
 | order plan | risk gate pass 或 no-op。 |
 | execution | unknown_count 为 0；cancel_after_submit 按策略执行。 |
 | reconciliation | 差异闭环；失败进入 manual takeover 或 kill-switch 候选。 |
+
+非交易窗口冻结的稳定性窗口标准曾设定为 `5` 次真实 simulation run、覆盖 `3` 个交易日。当前 5/5 count 已完成并被接受为 `READY_WITH_RISK`；如未来要求升级为严格 `READY`，可以补第三个交易日观察。离线 fixture pass 只证明合同和 evidence schema 可用，不计入真实 runtime 稳定性窗口。

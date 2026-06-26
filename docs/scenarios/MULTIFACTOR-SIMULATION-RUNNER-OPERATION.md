@@ -2,11 +2,34 @@
 
 本案例面向模拟盘操作者，目标是把研究输出的策略准入包导入 runner，通过 QMT gateway 运行一次 simulation operator，并完成检查、停止和对账。本案例只覆盖 `simulation`，不覆盖 `small_live` 或 `live`。
 
+## 当前入口状态
+
+截至 2026-06-26，Runner 已具备受控人工授权 simulation 模拟盘运行入口条件：
+
+| 项目 | 状态 | 证据 |
+|---|---|---|
+| stability window | `5/5 pass` | `process/evidence/RUNNER-QMT-SIMULATION-MULTIFACTOR-STABILITY-WINDOW-SUMMARY-2026-06-26-r6.json` |
+| readiness | `READY_WITH_RISK`，已接受 | `process/checks/RUNNER-QMT-SIMULATION-MULTIFACTOR-SIMULATION-OPERATIONAL-READINESS-CLOSURE-2026-06-26.md` |
+| runtime input policy | `POLICY_DEFINED` | `process/policies/RUNNER-QMT-SIMULATION-MULTIFACTOR-RUNTIME-INPUT-GATEWAY-LIFECYCLE-POLICY-2026-06-26.md` |
+| gateway lifecycle policy | `POLICY_DEFINED` | `process/checks/RUNNER-QMT-SIMULATION-MULTIFACTOR-OPS-POLICY-CLOSURE-2026-06-26.md` |
+
+入口条件不等于自动运行授权。每一次 simulation runtime 都必须重新取得逐次 authorization，并从 P0 health / identity、P0 capabilities 和 P0.5 signed readonly 开始。长期自动化 / 无人值守模拟盘仍未就绪。
+
 ## 大步骤 0：非交易窗口准备
 
 ### 0.1 运行本地 readiness 检查
 
 在交易窗口前先执行 [NON-TRADING-WINDOW-RUNNER-READINESS.md](NON-TRADING-WINDOW-RUNNER-READINESS.md)。该步骤只验证本地 operator 输入、策略准入包、evidence schema、异常恢复矩阵和稳定性窗口定义；不触达 QMT runtime。
+
+截至 `2026-06-25`，非交易窗口正式输入和完成记录为：
+
+| 对象 | 路径 |
+|---|---|
+| StrategyAdmissionPackage | `process/context/RUNNER-QMT-SIMULATION-MULTIFACTOR-FORMAL-STRATEGY-ADMISSION-PACKAGE-2026-06-25.json` |
+| operator spec | `process/context/RUNNER-QMT-SIMULATION-MULTIFACTOR-FORMAL-OPERATOR-SPEC-2026-06-25.json` |
+| completion check | `process/checks/RUNNER-QMT-SIMULATION-MULTIFACTOR-NON-TRADING-WINDOW-COMPLETION-2026-06-25.md` |
+
+交易窗口内仍必须重新确认 runtime authorization、真实 current positions 脱敏摘要、gateway health / capabilities 和 manual takeover readiness；非交易窗口 `pass` 不等于 runtime 授权。
 
 小步骤：
 
@@ -64,15 +87,27 @@
 | 证据 | 数据、因子、组合、风险均有 refs。 |
 | blocked claims | QMT-ready / live-ready 不被误解。 |
 
-### 2.2 准备 operator spec
+### 2.2 生成私有 runtime operator spec
 
 小步骤：
 
-1. 从策略包提取 `signal_rows`。
-2. 输入本地私有 `current_positions`。
-3. 输入 `risk_snapshot` 和 `risk_profile`。
-4. 设置 `cancel_submitted_after_submit=true`。
+1. 在私有 runtime 目录准备 `<private-runtime-overlay.json>`。
+2. 使用 runtime input builder 合成授权窗口内 spec / admission package。
+3. 输入 `runtime_authorization_ref`、`run_id` 和 `expected_runtime_profile=cr138-simulation`。
+4. 确认输出目录为 `/home/hyde/.quant-lab/runtime/qmt/cr138-simulation`，不得是 `process/` 或 Git tracked 路径。
 5. 设置脱敏 evidence 输出路径。
+
+```bash
+uv run --python 3.11 python scripts/build_qmt_multifactor_runtime_inputs.py \
+  --base-spec-json process/context/RUNNER-QMT-SIMULATION-MULTIFACTOR-FORMAL-OPERATOR-SPEC-2026-06-25.json \
+  --strategy-admission-json process/context/RUNNER-QMT-SIMULATION-MULTIFACTOR-FORMAL-STRATEGY-ADMISSION-PACKAGE-2026-06-25.json \
+  --runtime-overlay-json <private-runtime-overlay.json> \
+  --readonly-evidence-ref <redacted-readonly-evidence-ref> \
+  --run-id <authorized-run-id> \
+  --runtime-authorization-ref <runtime-authorization-ref> \
+  --expected-runtime-profile cr138-simulation \
+  --output-dir /home/hyde/.quant-lab/runtime/qmt/cr138-simulation
+```
 
 检查：
 
@@ -80,7 +115,7 @@
 |---|---|
 | current positions | 只作为本机输入，evidence 不保存原文。 |
 | risk snapshot | cash、positions、t1_sellable、raw_price_refs 齐全。 |
-| output_path | 指向 `process/evidence/<run-id>-simulation-operator-evidence.json`。 |
+| output_path | runtime spec / admission package 位于私有 runtime 目录；正式 evidence 只保留脱敏 summary 和 refs。 |
 
 ## 大步骤 3：启动 QMT gateway
 
@@ -106,6 +141,8 @@ uv run --with typer --python 3.11 python -m trading.qmt_runtime_cli server-diagn
 ```bash
 uv run --with typer --python 3.11 python -m trading.qmt_runtime_cli serve \
   --env-file <windows-runtime-env> \
+  --host <windows-wsl-host> \
+  --port <gateway-port> \
   --runtime-authorization-ref <runtime-authorization-ref>
 ```
 
@@ -157,6 +194,7 @@ uv run --with typer --python 3.11 python -m trading.qmt_runtime_cli query-positi
 ```bash
 PYTHONDONTWRITEBYTECODE=1 uv run --python 3.11 python scripts/run_qmt_multifactor_simulation_operator.py \
   --spec-json <private-spec-json> \
+  --strategy-admission-json <private-admission-package-json> \
   --env-file <wsl-client-env> \
   --base-url http://<windows-host>:<port>
 ```
@@ -196,3 +234,12 @@ PYTHONDONTWRITEBYTECODE=1 uv run --python 3.11 python scripts/run_qmt_multifacto
 | unknown order | 停止新 submit，在 MiniQMT 人工核对。 |
 | cancel blocked | 人工撤单或记录无法撤单原因。 |
 | recon diff | manual takeover，差异闭环前不恢复自动运行。 |
+
+## 大步骤 7：模拟盘运行边界
+
+| 运行形态 | 当前状态 | 说明 |
+|---|---|---|
+| 单次受控 simulation runtime | 已具备入口条件 | 仍需逐次授权、用户启动 gateway、P0/P0.5 前置检查。 |
+| 连续人工授权 simulation 观察 | 可作为下一阶段目标 | 每次 run 都必须新授权并生成独立 evidence。 |
+| 长期自动化 / 无人值守模拟盘 | 未就绪 | 需要额外的自动 preflight checker、运行日历、健康监控、日报和 incident 自动收敛。 |
+| `small_live` / `live` | 未授权 | 必须独立 CR、独立人工决策、独立 runtime authorization。 |

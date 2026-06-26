@@ -701,9 +701,33 @@ def _authorization_block_reason(request: MultifactorSimulationOperatorRequest) -
         return "runtime_authorization_missing"
     if not request.expected_runtime_profile:
         return "runtime_profile_missing"
+    if _runtime_symbol_contract_invalid(request):
+        return "runtime_symbol_contract_invalid"
     if not request.strategy_id or not request.run_id or not request.target_trade_date:
         return "required_field_missing"
     return ""
+
+
+def _runtime_symbol_contract_invalid(
+    request: MultifactorSimulationOperatorRequest,
+) -> bool:
+    symbols = [row.symbol for row in request.signal_rows]
+    symbols.extend(str(item) for item in request.current_positions)
+    symbols.extend(str(item) for item in request.risk_snapshot.positions_available)
+    symbols.extend(str(item) for item in request.risk_snapshot.t1_sellable)
+    symbols.extend(str(item) for item in request.risk_snapshot.raw_price_refs)
+    return any(_is_non_runtime_symbol(symbol) for symbol in symbols)
+
+
+def _is_non_runtime_symbol(symbol: str) -> bool:
+    normalized = symbol.strip()
+    upper = normalized.upper()
+    lower = normalized.lower()
+    return (
+        upper.startswith("INSTRUMENT_")
+        or "FIXTURE" in upper
+        or lower.startswith(("instrument:", "symbol:", "fixture:"))
+    )
 
 
 def _blocked(

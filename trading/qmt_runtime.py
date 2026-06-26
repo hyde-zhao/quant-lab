@@ -905,6 +905,8 @@ def _validate_simulation_submit_request(request: QmtSimulationOrderRequest) -> N
     ]
     if missing:
         raise ValueError("missing_simulation_submit_fields:" + ",".join(missing))
+    if _is_non_runtime_simulation_symbol(request.symbol):
+        raise ValueError("fixture_simulation_symbol_not_allowed")
     if request.quantity <= 0:
         raise ValueError("invalid_simulation_submit_quantity")
     if request.price <= 0:
@@ -925,6 +927,21 @@ def _validate_simulation_cancel_request(request: QmtSimulationCancelRequest) -> 
     ]
     if missing:
         raise ValueError("missing_simulation_cancel_fields:" + ",".join(missing))
+    if request.symbol and _is_non_runtime_simulation_symbol(request.symbol):
+        raise ValueError("fixture_simulation_symbol_not_allowed")
+
+
+def _is_non_runtime_simulation_symbol(symbol: str) -> bool:
+    """阻止 fixture / 脱敏 ref 误入真实 QMT simulation adapter。"""
+
+    normalized = symbol.strip()
+    upper = normalized.upper()
+    lower = normalized.lower()
+    return (
+        upper.startswith("INSTRUMENT_")
+        or "FIXTURE" in upper
+        or lower.startswith(("instrument:", "symbol:", "fixture:"))
+    )
 
 
 def _validate_simulation_runtime_identity(

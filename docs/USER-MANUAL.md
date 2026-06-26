@@ -182,7 +182,17 @@ Runner 当前面向 RUNNER-QMT simulation multifactor，阶段如下：
 6. 停止 gateway：确认进程停止、授权窗口关闭、evidence 已脱敏。
 7. 检查结果：若有 unknown order、recon_diff、session_expired、risk_blocked 或 kill_switch_triggered，进入 manual takeover。
 
-当前入口具备 operator-ready-with-runtime-gate 形态；没有有效授权时，只能进行 fixture / dry-run / mock 检查。
+当前入口状态：
+
+| 项目 | 状态 | 证据 |
+|---|---|---|
+| simulation stability window | `5/5 pass` | `process/evidence/RUNNER-QMT-SIMULATION-MULTIFACTOR-STABILITY-WINDOW-SUMMARY-2026-06-26-r6.json` |
+| simulation readiness | `READY_WITH_RISK`，已接受 | `process/checks/RUNNER-QMT-SIMULATION-MULTIFACTOR-SIMULATION-OPERATIONAL-READINESS-CLOSURE-2026-06-26.md` |
+| runtime input policy | `POLICY_DEFINED` | `process/policies/RUNNER-QMT-SIMULATION-MULTIFACTOR-RUNTIME-INPUT-GATEWAY-LIFECYCLE-POLICY-2026-06-26.md` |
+| gateway lifecycle policy | `POLICY_DEFINED` | `process/checks/RUNNER-QMT-SIMULATION-MULTIFACTOR-OPS-POLICY-CLOSURE-2026-06-26.md` |
+| `small_live` / `live` | `DEFERRED` | 必须独立 CR、独立人工决策、独立 runtime authorization |
+
+因此当前已具备受控人工授权 simulation 模拟盘运行的入口条件；没有有效逐次授权时，仍只能进行 fixture / dry-run / mock 检查。长期自动化或无人值守模拟盘尚未就绪，仍需要额外的 preflight checker、运行日历、健康监控、日报和 incident 自动收敛。
 
 ### 7.3 非交易窗口模式
 
@@ -206,7 +216,55 @@ PYTHONDONTWRITEBYTECODE=1 uv run --python 3.11 python scripts/run_qmt_multifacto
 
 非交易窗口 evidence 必须满足：`runtime_authorization_granted=false`、`small_live_or_live_authorized=false`、`submitted_count=0`、`cancelled_count=0`，并通过 `validate_operator_evidence` 脱敏检查。
 
-### 7.4 安全计数
+当前冻结输入和完成记录：
+
+| 对象 | 路径 |
+|---|---|
+| StrategyAdmissionPackage | `process/context/RUNNER-QMT-SIMULATION-MULTIFACTOR-FORMAL-STRATEGY-ADMISSION-PACKAGE-2026-06-25.json` |
+| operator spec | `process/context/RUNNER-QMT-SIMULATION-MULTIFACTOR-FORMAL-OPERATOR-SPEC-2026-06-25.json` |
+| 非交易窗口完成记录 | `process/checks/RUNNER-QMT-SIMULATION-MULTIFACTOR-NON-TRADING-WINDOW-COMPLETION-2026-06-25.md` |
+
+可重复执行的离线入口：
+
+```bash
+uv run --python 3.11 python scripts/run_qmt_multifactor_simulation_operator.py \
+  --mode fixture \
+  --spec-json process/context/RUNNER-QMT-SIMULATION-MULTIFACTOR-FORMAL-OPERATOR-SPEC-2026-06-25.json \
+  --strategy-admission-json process/context/RUNNER-QMT-SIMULATION-MULTIFACTOR-FORMAL-STRATEGY-ADMISSION-PACKAGE-2026-06-25.json \
+  --output-dir process/evidence/runner-simulation-formal-2026-06-25/fixture
+```
+
+非交易窗口不得传 `--env-file`，不得使用 `--mode runtime`。交易窗口 runtime 前必须重新取得逐次授权，并替换为授权窗口内生成的真实 current positions 脱敏输入。
+
+### 7.4 交易窗口 runtime input 与 gateway lifecycle
+
+交易窗口 runtime 输入必须通过私有 overlay 和 builder 生成，输出保存在私有 runtime 目录，不能写入 `process/` 或 Git tracked 路径：
+
+```bash
+uv run --python 3.11 python scripts/build_qmt_multifactor_runtime_inputs.py \
+  --base-spec-json process/context/RUNNER-QMT-SIMULATION-MULTIFACTOR-FORMAL-OPERATOR-SPEC-2026-06-25.json \
+  --strategy-admission-json process/context/RUNNER-QMT-SIMULATION-MULTIFACTOR-FORMAL-STRATEGY-ADMISSION-PACKAGE-2026-06-25.json \
+  --runtime-overlay-json <private-runtime-overlay.json> \
+  --readonly-evidence-ref <redacted-readonly-evidence-ref> \
+  --run-id <authorized-run-id> \
+  --runtime-authorization-ref <per-run-authorization-ref> \
+  --expected-runtime-profile cr138-simulation \
+  --output-dir /home/hyde/.quant-lab/runtime/qmt/cr138-simulation
+```
+
+Windows gateway 由操作者在 Windows 项目目录启动。推荐命令形态：
+
+```powershell
+uv run --with typer --python 3.11 python -m trading.qmt_runtime_cli serve `
+  --env-file .env `
+  --host 172.30.32.1 `
+  --port 18765 `
+  --runtime-authorization-ref <per-run-simulation-runtime-authorization-ref>
+```
+
+gateway 启动命令本身不等于 runtime 授权。每次 simulation runtime 仍必须从 P0 health / identity、P0 capabilities 和 P0.5 signed readonly 开始；若修改影响 gateway 的 `trading/*`，必须同步到 `/mnt/c/quant-lab-runtime`，由操作者重启 gateway 后重新验证。
+
+### 7.5 安全计数
 
 | Counter | Current value |
 |---|---:|
