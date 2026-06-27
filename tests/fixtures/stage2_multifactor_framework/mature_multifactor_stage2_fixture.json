@@ -1,0 +1,33 @@
+{
+  "strategy_id": "stage2-mature-mf-fixture",
+  "trade_date": "2026-06-26",
+  "universe_ref": "typed_unavailable:stage3_pit_universe",
+  "lineage_ref": "fixture://stage2/no-lake/lineage-placeholder",
+  "scores": {
+    "000300.SH": 0.72,
+    "000905.SH": 0.41
+  },
+  "evidence_refs": [
+    "fixture://stage2/factor-specs",
+    "fixture://stage2/factor-panel-schema",
+    "fixture://stage2/portfolio-risk-policy"
+  ],
+  "metric_refs": {
+    "ic_rankic_ref": "typed_unavailable:stage3_ic_rankic",
+    "layered_returns_ref": "typed_unavailable:stage3_layered_returns",
+    "turnover_ref": "typed_unavailable:stage3_turnover",
+    "exposure_ref": "typed_unavailable:stage3_exposure"
+  },
+  "cr039_candidate": {
+    "strategy_id": "stage2-mature-mf-fixture",
+    "source_portfolio_id": "portfolio_stage2_mature_fixture",
+    "admission": "research_baseline",
+    "simulation_candidate": false,
+    "evidence_status": "complete",
+    "mean_net_return_25bps": 0.0012,
+    "mean_turnover": 0.18,
+    "max_drawdown_proxy": -0.06,
+    "capacity_evidence": "proxy_available",
+    "reason": "Stage 2 fixture from CR039 research candidate."
+  }
+}
