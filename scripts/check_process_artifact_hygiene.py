@@ -668,7 +668,7 @@ def _normalize_status_path(raw_path: str) -> str:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Check CR132 process artifact hygiene before runner development.")
+    parser = argparse.ArgumentParser(description="Check process artifact hygiene before runner development.")
     parser.add_argument("--source-root", default=".")
     parser.add_argument("--process-root", default="process")
     parser.add_argument("--write-report", default="")

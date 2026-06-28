@@ -59,6 +59,8 @@ raw/
 canonical/
 gold/
 quality/
+!/scripts/quality/
+!/scripts/quality/*.py
 catalog/
 manifest/
 manifests/

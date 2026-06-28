@@ -12,9 +12,14 @@ from datetime import date, datetime
 from enum import Enum
 import hashlib
 import json
-from pathlib import Path
 from typing import Any, Mapping, Sequence
 
+from engine.serialization import (
+    as_mapping as _shared_as_mapping,
+    is_blank as _shared_is_blank,
+    json_safe as _shared_json_safe,
+    normalise_permission_counters,
+)
 
 SCHEMA_VERSION = "multifactor_contracts_v1"
 RESEARCH_INPUT_SCHEMA = "research_input_v1"
@@ -479,36 +484,11 @@ def _canonical_json(value: Any) -> str:
 
 
 def _json_safe(value: Any) -> Any:
-    if isinstance(value, Enum):
-        return value.value
-    if is_dataclass(value):
-        return _json_safe(asdict(value))
-    if isinstance(value, Mapping):
-        return {str(key): _json_safe(value[key]) for key in sorted(value, key=lambda item: str(item))}
-    if isinstance(value, (str, int, float, bool)) or value is None:
-        return value
-    if isinstance(value, (datetime, date)):
-        return value.isoformat()
-    if isinstance(value, Path):
-        return value.as_posix()
-    if isinstance(value, Sequence) and not isinstance(value, (str, bytes, bytearray)):
-        return [_json_safe(item) for item in value]
-    return str(value)
+    return _shared_json_safe(value)
 
 
 def _as_mapping(value: Any) -> dict[str, Any] | None:
-    if value is None:
-        return None
-    if is_dataclass(value):
-        return _json_safe(asdict(value))
-    if isinstance(value, Mapping):
-        return _json_safe(dict(value))
-    if hasattr(value, "__dict__"):
-        return _json_safe(vars(value))
-    slots = getattr(type(value), "__slots__", ())
-    if slots:
-        return _json_safe({slot: getattr(value, slot) for slot in slots if hasattr(value, slot)})
-    return None
+    return _shared_as_mapping(value)
 
 
 def _required_field_reasons(data: Mapping[str, Any], required_fields: Sequence[str]) -> list[BlockedReason]:
@@ -652,15 +632,7 @@ def _contains_external_marker(value: Any) -> bool:
 
 
 def _normalise_permission_counters(value: Any) -> dict[str, int]:
-    data = _as_mapping(value) or {}
-    counters: dict[str, int] = {}
-    for key in FORBIDDEN_OPERATION_COUNTERS:
-        raw_value = data.get(key, 0)
-        try:
-            counters[key] = int(raw_value)
-        except (TypeError, ValueError):
-            counters[key] = 1
-    return counters
+    return normalise_permission_counters(value, FORBIDDEN_OPERATION_COUNTERS)
 
 
 def _permission_counter_reasons(counters: Mapping[str, int]) -> list[BlockedReason]:
@@ -686,15 +658,7 @@ def _permission_counter_reasons(counters: Mapping[str, int]) -> list[BlockedReas
 
 
 def _is_blank(value: Any) -> bool:
-    if value is None:
-        return True
-    if isinstance(value, str):
-        return value.strip() == ""
-    if isinstance(value, Mapping):
-        return len(value) == 0
-    if isinstance(value, Sequence) and not isinstance(value, (str, bytes, bytearray)):
-        return len(value) == 0
-    return False
+    return _shared_is_blank(value)
 
 
 def _reason(code: str, message: str, *, field: str = "", remediation: str = "") -> BlockedReason:

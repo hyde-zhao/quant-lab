@@ -4,7 +4,7 @@ import importlib.util
 from pathlib import Path
 
 
-SCRIPT_PATH = Path("scripts/collect_cr089_qmt_runtime_smoke_summary.py")
+SCRIPT_PATH = Path("scripts/qmt/collect_qmt_runtime_smoke_summary.py")
 
 
 def _load_script_module():

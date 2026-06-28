@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from engine.chapter5_anomalies import (
+from engine.anomaly_research import (
     DEFAULT_CHAPTER5_ANOMALIES,
     FORBIDDEN_OPERATION_COUNTS,
     HARVEY_T_STAT_THRESHOLD,
@@ -17,7 +17,7 @@ from engine.chapter5_anomalies import (
     validate_chapter5_inputs,
 )
 from tests.test_chapter4_factor_models import _panel_and_labels
-from scripts.run_chapter5_anomalies import (
+from scripts.research.run_anomaly_research import (
     assert_chapter4_report_pass,
     run_chapter5_from_paths,
 )

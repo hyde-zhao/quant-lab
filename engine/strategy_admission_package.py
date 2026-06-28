@@ -7,15 +7,20 @@ gate 和 `order_intent_draft_v1` 草稿引用。它不导入或调用真实交�
 
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass, field, is_dataclass
-from enum import Enum
+from dataclasses import asdict, dataclass, field
 from typing import Any, Mapping, Sequence
 
+from engine.admission_contracts import AdmissionStatus
 from engine.order_intent_draft import SCHEMA_VERSION as ORDER_INTENT_DRAFT_SCHEMA_VERSION
 from engine.research_manifest import (
     CATALOG_P0_FIELDS,
     MANIFEST_P0_FIELDS,
     assert_manifest_ready_for_admission,
+)
+from engine.serialization import (
+    as_mapping as _shared_as_mapping,
+    is_blank as _shared_is_blank,
+    json_safe as _shared_json_safe,
 )
 
 
@@ -55,13 +60,6 @@ NOT_AUTHORIZED_CLAIMS = (
 )
 
 FOLLOW_UP_ROUTE = ("CR-020", "CR-021", "CR-022", "CR-023", "CR-024")
-
-
-class AdmissionStatus(str, Enum):
-    PASS = "pass"
-    WARN = "warn"
-    FAIL = "fail"
-    BLOCKED = "blocked"
 
 
 @dataclass(frozen=True, slots=True)
@@ -691,15 +689,7 @@ def _dedupe_claims(claims: Sequence[AdmissionClaim]) -> tuple[AdmissionClaim, ..
 
 
 def _as_mapping(value: Any) -> dict[str, Any]:
-    if value is None:
-        return {}
-    if isinstance(value, Mapping):
-        return _json_safe(dict(value))
-    if hasattr(value, "to_dict") and callable(value.to_dict):
-        return _as_mapping(value.to_dict())
-    if is_dataclass(value):
-        return _json_safe(asdict(value))
-    return {}
+    return _shared_as_mapping(value, none_as_empty=True) or {}
 
 
 def _as_sequence(value: Any) -> tuple[Any, ...]:
@@ -715,22 +705,14 @@ def _as_sequence(value: Any) -> tuple[Any, ...]:
 
 
 def _is_blank(value: Any) -> bool:
-    if value is None:
-        return True
-    if isinstance(value, str):
-        return not value.strip()
-    if isinstance(value, Mapping):
-        return not value
-    if isinstance(value, Sequence) and not isinstance(value, (str, bytes)):
-        return not value
-    return False
+    return _shared_is_blank(value)
 
 
 def _first_non_empty(*values: Any) -> str:
     for value in values:
         if value is None:
             continue
-        if isinstance(value, Enum):
+        if hasattr(value, "value"):
             value = value.value
         if isinstance(value, str):
             if value.strip():
@@ -742,22 +724,10 @@ def _first_non_empty(*values: Any) -> str:
 
 
 def _enum_value(value: Any) -> str:
-    if isinstance(value, Enum):
+    if hasattr(value, "value"):
         return str(value.value)
     return str(value)
 
 
 def _json_safe(value: Any) -> Any:
-    if isinstance(value, Enum):
-        return value.value
-    if is_dataclass(value):
-        return _json_safe(asdict(value))
-    if isinstance(value, Mapping):
-        return {str(key): _json_safe(item) for key, item in value.items()}
-    if isinstance(value, tuple):
-        return tuple(_json_safe(item) for item in value)
-    if isinstance(value, list):
-        return [_json_safe(item) for item in value]
-    if isinstance(value, set):
-        return sorted(_json_safe(item) for item in value)
-    return value
+    return _shared_json_safe(value)

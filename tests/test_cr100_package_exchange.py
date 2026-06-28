@@ -23,7 +23,7 @@ from trading.strategy_runner.package_exchange import (
 )
 
 
-SCRIPT_PATH = Path("scripts/cr100_package_exchange.py")
+SCRIPT_PATH = Path("scripts/package_exchange.py")
 
 
 def _write_package(root: Path, *, approval_status: str = "approved") -> Path:

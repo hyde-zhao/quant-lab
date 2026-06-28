@@ -7,17 +7,22 @@ lake / publish / QMT / simulation / live 操作，也不把外部 PIT 或 label 
 
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass, field, is_dataclass
+from dataclasses import asdict, dataclass, field
 from datetime import date, datetime, time
-from enum import Enum
-from pathlib import Path
 from typing import Any, Mapping, Sequence
 
+from engine.admission_contracts import GateStatus
 from engine.multifactor_contracts import (
     FAILURE_POLICY_FAIL_CLOSED,
     FORBIDDEN_OPERATION_COUNTERS,
     FactorRunSpec,
     PermissionCounters,
+)
+from engine.serialization import (
+    as_mapping as _shared_as_mapping,
+    is_blank as _shared_is_blank,
+    json_safe as _shared_json_safe,
+    normalise_permission_counters,
 )
 
 
@@ -56,12 +61,6 @@ EXTERNAL_TRUTH_MARKERS = (
     "provider_uri",
     "qrun",
 )
-
-
-class GateStatus(str, Enum):
-    PASS = "pass"
-    BLOCKED = "blocked"
-    RESEARCH_LIMITED = "research_limited"
 
 
 @dataclass(frozen=True, slots=True)
@@ -620,15 +619,7 @@ def _label_object_id(data: Mapping[str, Any]) -> str:
 
 
 def _normalise_permission_counters(value: Any) -> dict[str, int]:
-    data = _as_mapping(value) or {}
-    counters: dict[str, int] = {}
-    for key in FORBIDDEN_OPERATION_COUNTERS:
-        raw_value = data.get(key, 0)
-        try:
-            counters[key] = int(raw_value)
-        except (TypeError, ValueError):
-            counters[key] = 1
-    return counters
+    return normalise_permission_counters(value, FORBIDDEN_OPERATION_COUNTERS)
 
 
 def _merge_counters(*counter_sets: Mapping[str, int]) -> dict[str, int]:
@@ -692,45 +683,12 @@ def _to_datetime(value: Any) -> datetime | None:
 
 
 def _as_mapping(value: Any) -> dict[str, Any] | None:
-    if value is None:
-        return None
-    if is_dataclass(value):
-        return _json_safe(asdict(value))
-    if isinstance(value, Mapping):
-        return _json_safe(dict(value))
-    if hasattr(value, "__dict__"):
-        return _json_safe(vars(value))
-    slots = getattr(type(value), "__slots__", ())
-    if slots:
-        return _json_safe({slot: getattr(value, slot) for slot in slots if hasattr(value, slot)})
-    return None
+    return _shared_as_mapping(value)
 
 
 def _json_safe(value: Any) -> Any:
-    if isinstance(value, Enum):
-        return value.value
-    if is_dataclass(value):
-        return _json_safe(asdict(value))
-    if isinstance(value, Mapping):
-        return {str(key): _json_safe(value[key]) for key in sorted(value, key=lambda item: str(item))}
-    if isinstance(value, (str, int, float, bool)) or value is None:
-        return value
-    if isinstance(value, (datetime, date)):
-        return value.isoformat()
-    if isinstance(value, Path):
-        return value.as_posix()
-    if isinstance(value, Sequence) and not isinstance(value, (str, bytes, bytearray)):
-        return [_json_safe(item) for item in value]
-    return str(value)
+    return _shared_json_safe(value)
 
 
 def _is_blank(value: Any) -> bool:
-    if value is None:
-        return True
-    if isinstance(value, str):
-        return value.strip() == ""
-    if isinstance(value, Mapping):
-        return len(value) == 0
-    if isinstance(value, Sequence) and not isinstance(value, (str, bytes, bytearray)):
-        return len(value) == 0
-    return False
+    return _shared_is_blank(value)

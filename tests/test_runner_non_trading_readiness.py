@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from scripts.run_qmt_multifactor_simulation_operator import main as operator_main
+from scripts.qmt.run_multifactor_simulation_operator import main as operator_main
 from trading.strategy_runner import (
     allowed_evidence_data_classes,
     build_default_stability_window_definition,

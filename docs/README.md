@@ -11,6 +11,7 @@
 | 多因子研究 | [components/MULTIFACTOR-RESEARCH.md](components/MULTIFACTOR-RESEARCH.md) | FactorSpec、factor panel、单因子评价、多因子组合、策略准入包。 |
 | QMT gateway | [components/QMT-GATEWAY.md](components/QMT-GATEWAY.md) | Windows S 端 gateway、C 端 client、env、health、capabilities、positions。 |
 | Runner | [components/RUNNER.md](components/RUNNER.md) | 策略导入、runner operator、P1-P4、evidence、manual takeover。 |
+| 脚本入口 | [components/SCRIPT-ENTRYPOINTS.md](components/SCRIPT-ENTRYPOINTS.md) | 稳定脚本路径、legacy 兼容、命名 guardrail 和公共 CLI helper。 |
 
 ## 2. 场景案例
 

@@ -237,7 +237,7 @@ Runner 当前面向 RUNNER-QMT simulation multifactor，阶段如下：
 非交易窗口可以用同一个 operator 脚本完成 dry-run 准备，不读取 env、不构造 QMT client、不连接 gateway：
 
 ```bash
-PYTHONDONTWRITEBYTECODE=1 uv run --python 3.11 python scripts/run_qmt_multifactor_simulation_operator.py \
+PYTHONDONTWRITEBYTECODE=1 uv run --python 3.11 python scripts/qmt/run_multifactor_simulation_operator.py \
   --mode fixture \
   --spec-json <operator-spec-json> \
   --output-dir process/evidence/runner-simulation
@@ -265,7 +265,7 @@ PYTHONDONTWRITEBYTECODE=1 uv run --python 3.11 python scripts/run_qmt_multifacto
 可重复执行的离线入口：
 
 ```bash
-uv run --python 3.11 python scripts/run_qmt_multifactor_simulation_operator.py \
+uv run --python 3.11 python scripts/qmt/run_multifactor_simulation_operator.py \
   --mode fixture \
   --spec-json process/context/RUNNER-QMT-SIMULATION-MULTIFACTOR-FORMAL-OPERATOR-SPEC-2026-06-25.json \
   --strategy-admission-json process/context/RUNNER-QMT-SIMULATION-MULTIFACTOR-FORMAL-STRATEGY-ADMISSION-PACKAGE-2026-06-25.json \
@@ -279,7 +279,7 @@ uv run --python 3.11 python scripts/run_qmt_multifactor_simulation_operator.py \
 交易窗口 runtime 输入必须通过私有 overlay 和 builder 生成，输出保存在私有 runtime 目录，不能写入 `process/` 或 Git tracked 路径：
 
 ```bash
-uv run --python 3.11 python scripts/build_qmt_multifactor_runtime_inputs.py \
+uv run --python 3.11 python scripts/qmt/build_multifactor_runtime_inputs.py \
   --base-spec-json process/context/RUNNER-QMT-SIMULATION-MULTIFACTOR-FORMAL-OPERATOR-SPEC-2026-06-25.json \
   --strategy-admission-json process/context/RUNNER-QMT-SIMULATION-MULTIFACTOR-FORMAL-STRATEGY-ADMISSION-PACKAGE-2026-06-25.json \
   --runtime-overlay-json <private-runtime-overlay.json> \

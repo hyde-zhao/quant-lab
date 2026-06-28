@@ -76,7 +76,7 @@ def _result(design_root: Path, archive_root: Path, errors: list[str]) -> dict[st
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Check CR131 design surface archive boundary.")
+    parser = argparse.ArgumentParser(description="Check design surface archive boundary.")
     parser.add_argument("--design-root", default="process/docs/design")
     parser.add_argument("--archive-root", default="process/archive/design-cr-docs")
     parser.add_argument("--json", action="store_true")

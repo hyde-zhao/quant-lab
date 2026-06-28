@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from scripts.check_cr_tracking_consistency import (
+from scripts.quality.check_change_tracking_consistency import (
     audit_history_active_changes,
     check_project,
     main,

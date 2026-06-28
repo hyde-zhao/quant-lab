@@ -37,7 +37,7 @@
 ### 2.1 preflight-only
 
 ```bash
-PYTHONDONTWRITEBYTECODE=1 uv run --python 3.11 python scripts/run_qmt_multifactor_simulation_operator.py \
+PYTHONDONTWRITEBYTECODE=1 uv run --python 3.11 python scripts/qmt/run_multifactor_simulation_operator.py \
   --mode preflight-only \
   --spec-json <operator-spec-json> \
   --output-dir process/evidence/runner-simulation
@@ -54,7 +54,7 @@ PYTHONDONTWRITEBYTECODE=1 uv run --python 3.11 python scripts/run_qmt_multifacto
 ### 2.2 plan-only
 
 ```bash
-PYTHONDONTWRITEBYTECODE=1 uv run --python 3.11 python scripts/run_qmt_multifactor_simulation_operator.py \
+PYTHONDONTWRITEBYTECODE=1 uv run --python 3.11 python scripts/qmt/run_multifactor_simulation_operator.py \
   --mode plan-only \
   --spec-json <operator-spec-json> \
   --output-dir process/evidence/runner-simulation
@@ -72,7 +72,7 @@ PYTHONDONTWRITEBYTECODE=1 uv run --python 3.11 python scripts/run_qmt_multifacto
 ### 2.3 fixture / reconcile-only
 
 ```bash
-PYTHONDONTWRITEBYTECODE=1 uv run --python 3.11 python scripts/run_qmt_multifactor_simulation_operator.py \
+PYTHONDONTWRITEBYTECODE=1 uv run --python 3.11 python scripts/qmt/run_multifactor_simulation_operator.py \
   --mode fixture \
   --spec-json <operator-spec-json> \
   --output-dir process/evidence/runner-simulation
@@ -96,7 +96,7 @@ PYTHONDONTWRITEBYTECODE=1 uv run --python 3.11 python scripts/run_qmt_multifacto
 operator CLI 支持独立传入策略准入包：
 
 ```bash
-PYTHONDONTWRITEBYTECODE=1 uv run --python 3.11 python scripts/run_qmt_multifactor_simulation_operator.py \
+PYTHONDONTWRITEBYTECODE=1 uv run --python 3.11 python scripts/qmt/run_multifactor_simulation_operator.py \
   --mode plan-only \
   --spec-json <operator-base-spec-json> \
   --strategy-admission-json <strategy-admission-package-json> \

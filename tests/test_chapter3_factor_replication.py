@@ -5,7 +5,7 @@ from datetime import timedelta
 import pandas as pd
 import pytest
 
-from engine.chapter3_factor_replication import (
+from engine.factor_replication import (
     Chapter3ResearchPolicy,
     DEFAULT_FACTOR_IDS,
     audit_chapter3_data_issues,

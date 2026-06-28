@@ -1,4 +1,4 @@
-"""Stage 3 mature multifactor research runner.
+"""Mature multifactor research runner.
 
 This module reads canonical market-data lake inputs and writes research
 artifacts only. It does not write the lake, publish catalog pointers, call QMT,
@@ -7,7 +7,7 @@ start a gateway, read credentials, or run simulation/live.
 
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass, field, is_dataclass
+from dataclasses import asdict, dataclass, field
 from datetime import datetime
 import hashlib
 import json
@@ -40,6 +40,7 @@ from engine.multifactor_contracts import (
     BLOCKED_CLAIMS_DEFAULT,
     FactorSpec,
 )
+from engine.serialization import json_safe
 from trading.strategy_runner.target_portfolio import MultifactorSignalRow, build_multifactor_target_portfolio
 
 
@@ -1229,14 +1230,6 @@ def _now() -> str:
 
 
 def _json_safe(value: Any) -> Any:
-    if is_dataclass(value):
-        return _json_safe(asdict(value))
-    if isinstance(value, Mapping):
-        return {str(key): _json_safe(item) for key, item in value.items()}
-    if isinstance(value, (list, tuple)):
-        return [_json_safe(item) for item in value]
-    if isinstance(value, Path):
-        return str(value)
     if hasattr(value, "to_dict") and callable(value.to_dict):
         return _json_safe(value.to_dict())
     try:
@@ -1244,4 +1237,4 @@ def _json_safe(value: Any) -> Any:
             return None
     except (TypeError, ValueError):
         pass
-    return value
+    return json_safe(value)

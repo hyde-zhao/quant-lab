@@ -81,7 +81,7 @@ Mature research package 进入 observation / simulation 审查前只能作为研
 
 ## 7. Mature Multifactor Research Runner
 
-Mature multifactor research runner 当前兼容入口为 `scripts/run_stage3_mature_multifactor_research.py`，核心实现为 `engine/mature_multifactor_research.py`。旧 `engine/stage3_mature_multifactor_research.py` 已归档到 `docs/legacy/archive/engine/stage3_mature_multifactor_research.py`；文件名中的 `stage3` 是历史项目阶段命名。该 runner 只读 canonical data lake，写 research run 与 process evidence；禁止 provider fetch、lake write、catalog publish、QMT、gateway、simulation/live、账户/订单操作和凭据读取。
+Mature multifactor research runner 的稳定入口为 `scripts/research/run_multifactor_strategy_research.py`，归档实现桥接路径为 `scripts/legacy/cr/run_stage3_mature_multifactor_research.py`，核心实现为 `engine/mature_multifactor_research.py`。旧 `engine/stage3_mature_multifactor_research.py` 已归档到 `docs/legacy/archive/engine/stage3_mature_multifactor_research.py`；文件名中的 `stage3` 是历史项目阶段命名。该 runner 只读 canonical data lake，写 research run 与 process evidence；禁止 provider fetch、lake write、catalog publish、QMT、gateway、simulation/live、账户/订单操作和凭据读取。
 
 默认数据湖根目录为 `/home/hyde/data/quant-lab/lake`，研究输出根目录为 `/home/hyde/data/quant-lab/research/runs/stage3_mature_multifactor`。reader 优先读取完整 `canonical/<dataset>/1.0` 目录；catalog 中指向单个 parquet 分片的 `canonical_path` 只作为 lineage ref 使用，避免误读局部分片。
 
@@ -118,8 +118,8 @@ Mature multifactor research runner 当前兼容入口为 `scripts/run_stage3_mat
 | mature research package | `/home/hyde/data/quant-lab/research/runs/stage3_mature_multifactor/stage3-mature-mf-20260627-csi-all-value-bottom-top200-step20-pass-candidate-v3/STAGE3-MATURE-RESEARCH-PACKAGE.json` |
 | mature admission package | `/home/hyde/data/quant-lab/research/runs/stage3_mature_multifactor/stage3-mature-mf-20260627-csi-all-value-bottom-top200-step20-pass-candidate-v3/MATURE-STRATEGY-ADMISSION-PACKAGE.json` |
 | factor model validation report | `/home/hyde/data/quant-lab/research/runs/stage3_mature_multifactor/stage3-mature-mf-20260627-csi-all-value-bottom-top200-step20-pass-candidate-v3/FACTOR-MODEL-VALIDATION-REPORT.json` |
-| runner offline preflight | `/home/hyde/data/quant-lab/research/runs/stage3_mature_multifactor/stage3-mature-mf-20260627-real-lake-v4-validation-gated/RUNNER-OFFLINE-PREFLIGHT.json` |
-| observation plan | `/home/hyde/data/quant-lab/research/runs/stage3_mature_multifactor/stage3-mature-mf-20260627-real-lake-v4-validation-gated/STAGE4-OBSERVATION-PLAN.json` |
-| process summary | `process/evidence/stage3-mature-multifactor/stage3-mature-mf-20260627-real-lake-v4-validation-gated/stage3-research-summary.json` |
+| runner offline preflight | `/home/hyde/data/quant-lab/research/runs/stage3_mature_multifactor/stage3-mature-mf-20260627-csi-all-value-bottom-top200-step20-pass-candidate-v3/RUNNER-OFFLINE-PREFLIGHT.json` |
+| observation plan | `/home/hyde/data/quant-lab/research/runs/stage3_mature_multifactor/stage3-mature-mf-20260627-csi-all-value-bottom-top200-step20-pass-candidate-v3/STAGE4-OBSERVATION-PLAN.json` |
+| process summary | `process/evidence/stage3-mature-multifactor/stage3-mature-mf-20260627-csi-all-value-bottom-top200-step20-pass-candidate-v3/stage3-research-summary.json` |
 
-已知限制：当前策略未通过 mature admission，不能关闭 Stage 3，也不能进入 Stage 4；`prices_limit` catalog lineage 仍记录历史 run ref，但 runner 实际读取完整 canonical root；流动性容量阈值使用数据湖原生字段单位；风格暴露使用市值、PB、波动和动量代理；mature research 仍不授权 simulation runtime、gateway、`small_live` 或 `live`。
+已知限制：当前策略已通过研究准入，但该结论只允许进入观察审查候选；`prices_limit` catalog lineage 仍记录历史 run ref，但 runner 实际读取完整 canonical root；流动性容量阈值使用数据湖原生字段单位；风格暴露使用市值、PB、波动和动量代理；mature research 仍不授权 simulation runtime、gateway、`small_live` 或 `live`。

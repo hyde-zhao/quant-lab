@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from scripts.cr034_chapter3_backfill import (
+from scripts.data_lake.backfill_market_data import (
     BackfillContext,
     fetch_adj_factor,
     fetch_market_cap,

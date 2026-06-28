@@ -6,14 +6,14 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from engine.chapter7_factor_practice import (
+from engine.factor_portfolio_practice import (
     FORBIDDEN_OPERATION_COUNTS,
     Chapter7Config,
     parse_robustness_admission,
     run_chapter7_analysis,
     validate_chapter7_inputs,
 )
-from scripts.run_chapter7_factor_practice import assert_robustness_admission_summary_usable, run_chapter7_from_paths
+from scripts.research.run_factor_practice import assert_robustness_admission_summary_usable, run_chapter7_from_paths
 from tests.test_chapter4_factor_models import _panel_and_labels
 
 

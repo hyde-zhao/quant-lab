@@ -98,7 +98,7 @@
 5. 设置脱敏 evidence 输出路径。
 
 ```bash
-uv run --python 3.11 python scripts/build_qmt_multifactor_runtime_inputs.py \
+uv run --python 3.11 python scripts/qmt/build_multifactor_runtime_inputs.py \
   --base-spec-json process/context/RUNNER-QMT-SIMULATION-MULTIFACTOR-FORMAL-OPERATOR-SPEC-2026-06-25.json \
   --strategy-admission-json process/context/RUNNER-QMT-SIMULATION-MULTIFACTOR-FORMAL-STRATEGY-ADMISSION-PACKAGE-2026-06-25.json \
   --runtime-overlay-json <private-runtime-overlay.json> \
@@ -192,7 +192,7 @@ uv run --with typer --python 3.11 python -m trading.qmt_runtime_cli query-positi
 ### 5.1 执行命令
 
 ```bash
-PYTHONDONTWRITEBYTECODE=1 uv run --python 3.11 python scripts/run_qmt_multifactor_simulation_operator.py \
+PYTHONDONTWRITEBYTECODE=1 uv run --python 3.11 python scripts/qmt/run_multifactor_simulation_operator.py \
   --spec-json <private-spec-json> \
   --strategy-admission-json <private-admission-package-json> \
   --env-file <wsl-client-env> \

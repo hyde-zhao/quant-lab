@@ -125,7 +125,7 @@ def test_cr128_checker_script_uses_runner_core_api() -> None:
     completed = subprocess.run(
         [
             sys.executable,
-            "scripts/check_cr091_strategy_runner_package.py",
+            "scripts/quality/check_strategy_runner_package.py",
             "--package-root",
             str(PACKAGE_ROOT),
             "--json",

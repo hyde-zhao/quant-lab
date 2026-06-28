@@ -12,7 +12,7 @@ from typing import Any, Mapping, Sequence
 import numpy as np
 import pandas as pd
 
-from engine.chapter5_anomalies import AnomalyDefinition, cross_sectional_winsorize, cross_sectional_zscore
+from engine.anomaly_research import AnomalyDefinition, cross_sectional_winsorize, cross_sectional_zscore
 
 
 ANOMALY_TEMPLATE_SCHEMA = "controlled_anomaly_template_v1"

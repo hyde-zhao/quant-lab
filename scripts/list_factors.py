@@ -26,8 +26,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--status", choices=tuple(item.value for item in FactorAvailabilityStatus))
     parser.add_argument("--used-by", dest="used_by", choices=("stage3", "stage3_candidate", "chapter3", "chapter5", "anomaly_discovery"))
     parser.add_argument("--factor-id", dest="factor_id")
-    parser.add_argument("--anomaly-candidates", help="Optional anomaly_candidates.json from scripts/run_anomaly_discovery.py.")
-    parser.add_argument("--anomaly-decisions", help="Optional anomaly_admission_decisions.json from scripts/run_anomaly_discovery.py.")
+    parser.add_argument("--anomaly-candidates", help="Optional anomaly_candidates.json from scripts/research/run_anomaly_discovery.py.")
+    parser.add_argument("--anomaly-decisions", help="Optional anomaly_admission_decisions.json from scripts/research/run_anomaly_discovery.py.")
     args = parser.parse_args(argv)
 
     extra_entries = ()

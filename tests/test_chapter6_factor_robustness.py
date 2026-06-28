@@ -7,13 +7,13 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from engine.chapter5_anomalies import run_chapter5_analysis
-from engine.chapter6_factor_robustness import (
+from engine.anomaly_research import run_chapter5_analysis
+from engine.factor_robustness import (
     FORBIDDEN_OPERATION_COUNTS,
     run_chapter6_analysis,
     validate_chapter6_inputs,
 )
-from scripts.run_chapter6_factor_robustness import (
+from scripts.research.run_factor_robustness import (
     assert_chapter5_report_pass,
     run_chapter6_from_paths,
 )

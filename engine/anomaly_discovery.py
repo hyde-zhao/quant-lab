@@ -16,7 +16,7 @@ from engine.anomaly_candidate_generator import (
     generate_controlled_anomaly_definitions,
 )
 from engine.anomaly_multiple_testing import apply_multiple_testing_control
-from engine.chapter5_anomalies import (
+from engine.anomaly_research import (
     AnomalyDefinition,
     build_alpha_tests,
     build_anomaly_candidates,

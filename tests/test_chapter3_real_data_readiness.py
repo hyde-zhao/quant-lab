@@ -1,4 +1,4 @@
-from engine.chapter3_real_data_readiness import (
+from engine.research_data_readiness import (
     BLOCKED,
     MISSING,
     PASS,
@@ -171,7 +171,7 @@ def test_render_markdown_includes_forbidden_operation_counts() -> None:
         target_end="2019-12-31",
     )
 
-    from engine.chapter3_real_data_readiness import Chapter3ReadinessReport
+    from engine.research_data_readiness import Chapter3ReadinessReport
 
     markdown = render_readiness_markdown(
         Chapter3ReadinessReport(

@@ -7,14 +7,14 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from engine.chapter4_factor_models import (
+from engine.factor_model_research import (
     DEFAULT_CHAPTER4_MODELS,
     FORBIDDEN_OPERATION_COUNTS,
     run_chapter4_analysis,
     validate_chapter4_inputs,
 )
 from engine.factor_library import DEFAULT_EQUITY_CORE_FACTOR_IDS
-from scripts.run_chapter4_factor_models import (
+from scripts.research.run_factor_model_validation import (
     assert_chapter3_report_pass,
     read_label_parts,
     run_chapter4_from_paths,

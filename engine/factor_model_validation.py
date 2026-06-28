@@ -18,6 +18,7 @@ import yaml
 
 from engine.factor_statistics import newey_west_t_stat
 from engine.multifactor_contracts import FORBIDDEN_OPERATION_COUNTERS
+from engine.serialization import json_safe, safe_float
 
 
 FACTOR_MODEL_VALIDATION_SCHEMA = "factor_model_validation_report_v1"
@@ -760,28 +761,18 @@ def _frame(value: Any) -> pd.DataFrame:
 
 
 def _safe_float(value: Any) -> float | None:
-    try:
-        number = float(value)
-    except (TypeError, ValueError):
-        return None
-    return number if np.isfinite(number) else None
+    return safe_float(value)
 
 
 def _json_safe(value: Any) -> Any:
-    if isinstance(value, Mapping):
-        return {str(key): _json_safe(item) for key, item in value.items()}
-    if isinstance(value, (list, tuple)):
-        return [_json_safe(item) for item in value]
-    if isinstance(value, (pd.Timestamp, date)):
-        return value.isoformat()
     if isinstance(value, np.generic):
-        return value.item()
+        return json_safe(value.item())
     try:
         if pd.isna(value):
             return None
     except (TypeError, ValueError):
         pass
-    return value
+    return json_safe(value)
 
 
 __all__ = (

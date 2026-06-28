@@ -5,11 +5,11 @@ from pathlib import Path
 
 import yaml
 
-from scripts.check_cr099_redacted_evidence import check_redacted_evidence, check_run_contract
-from scripts.collect_cr099_runner_readonly_smoke import build_cr099_evidence
+from scripts.quality.check_redacted_evidence import check_redacted_evidence, check_run_contract
+from scripts.qmt.collect_readonly_smoke_evidence import build_cr099_evidence
 
 
-CHECKER_PATH = Path("scripts/check_cr099_redacted_evidence.py")
+CHECKER_PATH = Path("scripts/quality/check_redacted_evidence.py")
 
 
 def _valid_contract() -> dict[str, object]:

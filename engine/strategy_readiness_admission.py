@@ -11,6 +11,8 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Iterable, Mapping, Sequence
 
+from engine.admission_contracts import AdmissionStatus, GateStatus
+
 
 class Stage6GateId(str, Enum):
     """阶段六固定 10 类 P0 gate。"""
@@ -25,21 +27,6 @@ class Stage6GateId(str, Enum):
     ABLATION = "ablation"
     FREEZE_INTEGRITY = "freeze_integrity"
     PRESIM_AND_5DAY_DRY_RUN = "presim_and_5day_dry_run"
-
-
-class GateStatus(str, Enum):
-    """单个 gate 的评估状态。"""
-
-    PASS = "pass"
-    BLOCKED = "blocked"
-    NOT_EVALUATED = "not_evaluated"
-
-
-class AdmissionStatus(str, Enum):
-    """Admission package 的总状态。"""
-
-    PASS = "pass"
-    BLOCKED = "blocked"
 
 
 REQUIRED_STAGE6_GATE_IDS: tuple[Stage6GateId, ...] = (

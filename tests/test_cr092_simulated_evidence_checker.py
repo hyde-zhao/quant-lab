@@ -5,15 +5,38 @@ from pathlib import Path
 
 import yaml
 
-from scripts.check_cr092_simulated_evidence import check_evidence
+from scripts.quality.check_simulated_evidence import check_evidence
 
 
-TEMPLATE_PATH = Path("docs/qmt/CR092-REAL-QMT-READONLY-RUNTIME-SMOKE-EVIDENCE-TEMPLATE.yaml")
-CHECKER_PATH = Path("scripts/check_cr092_simulated_evidence.py")
+CHECKER_PATH = Path("scripts/quality/check_simulated_evidence.py")
+
+EVIDENCE_TEMPLATE = {
+    "schema_version": "cr092-simulated-account-evidence-v1",
+    "change_id": "CR-092",
+    "not_authorization": True,
+    "runtime_authorization_status": "not_authorized_by_template",
+    "account_mode": "simulated",
+    "run_id": "fixture-run",
+    "evidence_source": "fixture",
+    "scope": ["health", "capabilities", "query_positions_readonly"],
+    "health_status": "N/A",
+    "capabilities_status": "N/A",
+    "query_positions_status": "N/A",
+    "redaction_status": "PASS",
+    "forbidden_counters": {
+        "nas_access": 0,
+        "credential_read": 0,
+        "real_account_read": 0,
+        "submit_cancel": 0,
+        "simulation_live": 0,
+        "provider_lake_publish": 0,
+    },
+    "simulated_account_summary": {"notes_redacted": "fixture only"},
+}
 
 
 def _write_evidence(tmp_path: Path, **overrides: object) -> Path:
-    evidence = yaml.safe_load(TEMPLATE_PATH.read_text(encoding="utf-8"))
+    evidence = dict(EVIDENCE_TEMPLATE)
     evidence.update(overrides)
     path = tmp_path / "cr092-evidence.yaml"
     path.write_text(yaml.safe_dump(evidence, sort_keys=False), encoding="utf-8")

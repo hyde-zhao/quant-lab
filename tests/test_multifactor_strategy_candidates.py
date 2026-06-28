@@ -7,7 +7,7 @@ import pandas as pd
 import pytest
 
 from engine.multifactor_strategy_candidates import FORBIDDEN_OPERATION_COUNTS, run_strategy_research
-from scripts.run_multifactor_strategy_candidates import run_strategy_candidates_from_paths
+from scripts.research.run_multifactor_strategy_candidates import run_strategy_candidates_from_paths
 
 
 def _portfolio_payload(simulation_candidate: bool = False) -> dict[str, object]:

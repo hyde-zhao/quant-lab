@@ -6,7 +6,7 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from scripts.run_chapter3_empirical import (
+from scripts.research.run_factor_empirical_research import (
     assert_full_mode_window_allowed,
     chapter3_financial_run_ids,
     chapter3_price_run_ids,

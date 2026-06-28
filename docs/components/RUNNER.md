@@ -19,7 +19,7 @@ Runner 负责把策略准入包或 operator spec 转成一次受控运行，按 
 | [../scenarios/MULTIFACTOR-SIMULATION-RUNNER-OPERATION.md](../scenarios/MULTIFACTOR-SIMULATION-RUNNER-OPERATION.md) | 完整运行案例。 |
 | [../scenarios/NON-TRADING-WINDOW-RUNNER-READINESS.md](../scenarios/NON-TRADING-WINDOW-RUNNER-READINESS.md) | 非交易窗口 fixture / preflight / plan / reconcile 准备。 |
 | [../USER-MANUAL.md](../USER-MANUAL.md) | 用户手册中的手动运行指南。 |
-| `scripts/run_qmt_multifactor_simulation_operator.py` | 一次性 simulation operator。 |
+| `scripts/qmt/run_multifactor_simulation_operator.py` | 一次性 simulation operator。 |
 | `process/runbooks/RUNNER-QMT-SIMULATION-MULTIFACTOR-STRATEGY-RUNTIME-RUNBOOK-2026-06-25.md` | 过程 runbook。 |
 
 ## 3. 非交易窗口模式

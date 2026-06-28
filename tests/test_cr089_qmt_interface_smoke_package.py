@@ -6,7 +6,7 @@ from pathlib import Path
 
 import yaml
 
-from scripts.check_cr089_qmt_interface_smoke_package import (
+from scripts.quality.check_qmt_interface_smoke_package import (
     REQUIRED_CHECKSUM_PATHS,
     REQUIRED_FORBIDDEN_OPERATIONS,
     check_package,
@@ -14,7 +14,7 @@ from scripts.check_cr089_qmt_interface_smoke_package import (
 
 
 PACKAGE_ROOT = Path("packages/qmt_interface_smoke/0.1.0")
-CHECKER_PATH = Path("scripts/check_cr089_qmt_interface_smoke_package.py")
+CHECKER_PATH = Path("scripts/quality/check_qmt_interface_smoke_package.py")
 
 
 def test_cr089_qmt_interface_smoke_package_skeleton_passes() -> None:
