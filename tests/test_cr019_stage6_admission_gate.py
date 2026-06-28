@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import replace
 
-from engine.stage6_admission import (
+from engine.strategy_readiness_admission import (
     AdmissionStatus,
     BlockedClaim,
     GateResult,

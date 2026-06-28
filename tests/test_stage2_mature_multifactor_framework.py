@@ -11,19 +11,25 @@ from engine.mature_multifactor_framework import (
     STAGE2_DATA_REQUIREMENTS,
     STAGE2_MATURE_FRAMEWORK_BUNDLE_SCHEMA,
     STAGE3_REQUIRED_EVIDENCE,
+    STAGE3_MATURE_RESEARCH_PACKAGE_SCHEMA,
     STAGE3_RESEARCH_MACHINE_HANDOFF_SCHEMA,
+    STAGE3_RESEARCH_RUN_MANIFEST_SCHEMA,
     STRATEGY_CANDIDATE_SCHEMA,
     StrategyFamily,
     build_mature_admission_support_from_cr030_cr039_outputs,
     build_multifactor_strategy_type_adapter,
     build_project_strategy_candidate_from_cr039,
+    build_stage3_mature_research_package,
+    build_stage3_research_run_manifest,
     build_stage3_research_machine_handoff,
     build_stage2_mature_admission_support,
     build_stage2_portfolio_risk_policy,
     build_stage2_research_evidence_index,
     build_stage2_signal_set,
     validate_project_strategy_candidate,
+    validate_stage3_mature_research_package,
     validate_stage3_research_machine_handoff,
+    validate_stage3_research_run_manifest,
     validate_stage2_no_lake,
     validate_strategy_type_adapter,
 )
@@ -87,6 +93,94 @@ def _stage2_objects() -> dict[str, object]:
             max_weight=0.03,
             turnover_limit=0.25,
         ),
+    }
+
+
+def _stage3_input_refs() -> dict[str, str]:
+    return {
+        name: (
+            "lake://research-release/ashare-mf-20260626"
+            if name == "data_release_ref"
+            else f"artifact://stage3/p0-inputs/{name}.json"
+        )
+        for name in STAGE2_DATA_REQUIREMENTS
+    }
+
+
+def _stage3_evidence_refs() -> dict[str, str]:
+    return {
+        name: (
+            "lake://research-release/ashare-mf-20260626"
+            if name == "data_release_ref"
+            else f"artifact://stage3/evidence/{name}.json"
+        )
+        for name in STAGE3_REQUIRED_EVIDENCE
+    }
+
+
+def _stage3_objects() -> dict[str, object]:
+    fixture = _fixture()
+    input_refs = _stage3_input_refs()
+    evidence_refs = _stage3_evidence_refs()
+    signal_set = build_stage2_signal_set(
+        strategy_id=str(fixture["strategy_id"]),
+        trade_date="2026-06-26",
+        universe_ref=input_refs["pit_universe"],
+        scores=fixture["scores"],  # type: ignore[arg-type]
+        lineage_ref="artifact://stage3/lineage/signal-set.json",
+        evidence_refs=(evidence_refs["factor_panel_ref"], evidence_refs["portfolio_version_ref"]),
+        available_at="2026-06-26T09:25:00+08:00",
+    )
+    evidence_index = build_stage2_research_evidence_index(
+        index_id="stage3-evidence-index-real-refs",
+        data_release_ref=input_refs["data_release_ref"],
+        run_manifest_ref=evidence_refs["run_manifest_ref"],
+        metric_refs={
+            "ic_rankic_ref": evidence_refs["ic_rankic_ref"],
+            "layered_returns_ref": evidence_refs["layered_returns_ref"],
+            "turnover_ref": evidence_refs["turnover_ref"],
+            "exposure_ref": evidence_refs["exposure_ref"],
+        },
+        lineage_refs={name: ref for name, ref in input_refs.items() if name != "data_release_ref"},
+    )
+    risk_policy = build_stage2_portfolio_risk_policy(
+        policy_id="stage3-risk-policy-real-refs",
+        top_n=80,
+        max_weight=0.025,
+        turnover_limit=0.2,
+        fee_slippage_ref=input_refs["fee_slippage_model"],
+        industry_limit={"max_industry_active_weight": 0.12, "ref": input_refs["industry_classification"]},
+        style_limit={"max_style_zscore": 0.8, "ref": input_refs["style_exposure"]},
+        capacity_assumption={"adv_participation_cap": 0.05, "ref": input_refs["liquidity_filter"]},
+    )
+    candidate = build_project_strategy_candidate_from_cr039(
+        cr039_candidate=fixture["cr039_candidate"],  # type: ignore[index]
+        signal_set=signal_set,
+        evidence_index=evidence_index,
+        risk_policy=risk_policy,
+        source_run_id="stage3-mature-mf-20260626-initial",
+        source_admission_package_ref=evidence_refs["mature_strategy_admission_package_ref"],
+    )
+    manifest = build_stage3_research_run_manifest(
+        run_id="stage3-mature-mf-20260626-initial",
+        strategy_id=str(fixture["strategy_id"]),
+        data_release_ref=input_refs["data_release_ref"],
+        factor_versions={"momentum_20d": "stage3-v1", "liquidity_quality": "stage3-v1"},
+        code_version="git:stage3-test",
+        seed=7,
+        date_range={"start": "2021-01-01", "end": "2026-06-26"},
+        config={"top_n": 80, "rebalance": "weekly", "risk_policy": "stage3-risk-policy-real-refs"},
+        created_at="2026-06-26T15:30:00+08:00",
+        evidence_refs={"run_manifest_ref": evidence_refs["run_manifest_ref"]},
+    )
+    return {
+        "input_refs": input_refs,
+        "evidence_refs": evidence_refs,
+        "signal_set": signal_set,
+        "evidence_index": evidence_index,
+        "risk_policy": risk_policy,
+        "candidate": candidate,
+        "manifest": manifest,
     }
 
 
@@ -308,6 +402,7 @@ def test_stage2_08_stage3_handoff_lists_research_machine_inputs_and_evidence() -
     assert set(STAGE3_REQUIRED_EVIDENCE) <= set(handoff.required_evidence)
     assert "factor_panel_ref" in handoff.required_evidence
     assert "label_window_ref" in handoff.required_evidence
+    assert "factor_model_validation_report_ref" in handoff.required_evidence
     assert "mature_strategy_admission_package_ref" in handoff.required_evidence
     assert "runner_offline_preflight_ref" in handoff.required_evidence
     assert payload["data_lake_requirements"]["environment"] == "research_machine"
@@ -315,3 +410,88 @@ def test_stage2_08_stage3_handoff_lists_research_machine_inputs_and_evidence() -
     assert payload["execution_boundary"]["not_order_generation"] is True
     assert validate_stage3_research_machine_handoff(handoff).passed
     json.dumps(payload, sort_keys=True)
+
+
+def test_stage3_09_builds_mature_research_package_from_real_refs_without_runtime_authorization() -> None:
+    objects = _stage3_objects()
+    evidence_refs = objects["evidence_refs"]  # type: ignore[assignment]
+    package = build_stage3_mature_research_package(
+        strategy_id=str(_fixture()["strategy_id"]),
+        run_manifest=objects["manifest"],  # type: ignore[arg-type]
+        input_refs=objects["input_refs"],  # type: ignore[arg-type]
+        evidence_refs=evidence_refs,  # type: ignore[arg-type]
+        signal_set=objects["signal_set"],  # type: ignore[arg-type]
+        strategy_candidate=objects["candidate"],  # type: ignore[arg-type]
+        research_evidence_index=objects["evidence_index"],  # type: ignore[arg-type]
+        portfolio_risk_policy=objects["risk_policy"],  # type: ignore[arg-type]
+        mature_strategy_admission_package_ref=evidence_refs["mature_strategy_admission_package_ref"],  # type: ignore[index]
+        runner_offline_preflight_ref=evidence_refs["runner_offline_preflight_ref"],  # type: ignore[index]
+        observation_plan_ref="artifact://stage3/observation-plan/stage4-plan.json",
+    )
+    payload = package.to_dict()
+
+    assert package.schema_version == STAGE3_MATURE_RESEARCH_PACKAGE_SCHEMA
+    assert package.status == "stage3_research_ready_for_stage4_review"
+    assert package.not_runtime_authorization is True
+    assert package.not_simulation_authorization is True
+    assert package.not_live_authorization is True
+    assert package.not_gateway_or_qmt_operation is True
+    assert package.blocked_reasons == ()
+    assert set(STAGE3_REQUIRED_EVIDENCE) <= set(package.evidence_refs)
+    assert package.factor_model_validation_report_ref == evidence_refs["factor_model_validation_report_ref"]
+    assert set(STAGE2_DATA_REQUIREMENTS) <= set(package.input_refs)
+    assert {"qmt_ready", "simulation_ready", "live_ready"} <= set(package.blocked_claims)
+    assert payload["run_manifest"]["schema_version"] == STAGE3_RESEARCH_RUN_MANIFEST_SCHEMA
+    assert validate_stage3_research_run_manifest(package.run_manifest).passed
+    assert validate_stage3_mature_research_package(package).passed
+    json.dumps(payload, sort_keys=True)
+
+
+def test_stage3_10_missing_real_refs_fail_closed_before_stage4_review() -> None:
+    objects = _stage3_objects()
+    input_refs = dict(objects["input_refs"])  # type: ignore[arg-type]
+    evidence_refs = dict(objects["evidence_refs"])  # type: ignore[arg-type]
+    input_refs["pit_universe"] = "typed_unavailable:stage3_pit_universe"
+    evidence_refs.pop("factor_panel_ref")
+
+    package = build_stage3_mature_research_package(
+        strategy_id=str(_fixture()["strategy_id"]),
+        run_manifest=objects["manifest"],  # type: ignore[arg-type]
+        input_refs=input_refs,
+        evidence_refs=evidence_refs,
+        signal_set=objects["signal_set"],  # type: ignore[arg-type]
+        strategy_candidate=objects["candidate"],  # type: ignore[arg-type]
+        research_evidence_index=objects["evidence_index"],  # type: ignore[arg-type]
+        portfolio_risk_policy=objects["risk_policy"],  # type: ignore[arg-type]
+        mature_strategy_admission_package_ref=evidence_refs["mature_strategy_admission_package_ref"],
+        runner_offline_preflight_ref=evidence_refs["runner_offline_preflight_ref"],
+        observation_plan_ref="artifact://stage3/observation-plan/stage4-plan.json",
+    )
+    result = validate_stage3_mature_research_package(package)
+
+    assert package.status == "blocked"
+    assert result.status == "blocked"
+    assert "input_refs.pit_universe" in {reason.field for reason in result.blocked_reasons}
+    assert "evidence_refs.factor_panel_ref" in {reason.field for reason in result.blocked_reasons}
+
+
+def test_stage3_11_run_manifest_requires_frozen_release_factor_versions_and_date_range() -> None:
+    manifest = build_stage3_research_run_manifest(
+        run_id="stage3-mature-mf-20260626-bad",
+        strategy_id="mature-mf",
+        data_release_ref="typed_unavailable:stage3_data_release_ref",
+        factor_versions={},
+        code_version="git:stage3-test",
+        seed=7,
+        date_range={"start": "2021-01-01"},
+        config_hash="",
+    )
+    result = validate_stage3_research_run_manifest(manifest)
+
+    assert result.status == "blocked"
+    assert {
+        "config_hash",
+        "data_release_ref",
+        "factor_versions",
+        "date_range.end",
+    } <= {reason.field for reason in result.blocked_reasons}

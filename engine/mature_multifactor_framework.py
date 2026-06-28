@@ -34,6 +34,8 @@ TYPED_UNAVAILABLE_SCHEMA = "typed_unavailable_v1"
 STRATEGY_CANDIDATE_SCHEMA = "strategy_candidate_v1"
 STAGE2_MATURE_FRAMEWORK_BUNDLE_SCHEMA = "stage2_mature_framework_bundle_v1"
 STAGE3_RESEARCH_MACHINE_HANDOFF_SCHEMA = "stage3_research_machine_handoff_v1"
+STAGE3_RESEARCH_RUN_MANIFEST_SCHEMA = "stage3_research_run_manifest_v1"
+STAGE3_MATURE_RESEARCH_PACKAGE_SCHEMA = "stage3_mature_research_package_v1"
 CR030_STRATEGY_ADMISSION_PACKAGE_SCHEMA = "strategy_admission_package_v1"
 CR039_STRATEGY_ADMISSION_PACKAGE_SCHEMA = "multifactor_strategy_admission_package_v1"
 CR039_STRATEGY_CANDIDATE_REF_SCHEMA = "cr039_strategy_candidate_ref_v1"
@@ -50,6 +52,8 @@ MF_STAGE2_RISK_POLICY_INVALID = "MF_STAGE2_RISK_POLICY_INVALID"
 MF_STAGE2_STRATEGY_CANDIDATE_INVALID = "MF_STAGE2_STRATEGY_CANDIDATE_INVALID"
 MF_STAGE2_CR039_OUTPUT_INVALID = "MF_STAGE2_CR039_OUTPUT_INVALID"
 MF_STAGE3_HANDOFF_INVALID = "MF_STAGE3_HANDOFF_INVALID"
+MF_STAGE3_RUN_MANIFEST_INVALID = "MF_STAGE3_RUN_MANIFEST_INVALID"
+MF_STAGE3_RESEARCH_PACKAGE_INVALID = "MF_STAGE3_RESEARCH_PACKAGE_INVALID"
 
 STAGE2_DATA_REQUIREMENTS = (
     "data_release_ref",
@@ -77,10 +81,30 @@ STAGE3_REQUIRED_EVIDENCE = (
     "layered_returns_ref",
     "turnover_ref",
     "exposure_ref",
+    "factor_model_validation_report_ref",
     "portfolio_version_ref",
     "risk_policy_version_ref",
     "mature_strategy_admission_package_ref",
     "runner_offline_preflight_ref",
+)
+
+STAGE3_RUN_MANIFEST_REQUIRED_FIELDS = (
+    "run_id",
+    "strategy_id",
+    "config_hash",
+    "data_release_ref",
+    "factor_versions",
+    "code_version",
+    "seed",
+    "date_range",
+)
+
+STAGE3_FORBIDDEN_CLAIMS = (
+    "qmt_ready",
+    "simulation_ready",
+    "live_ready",
+    "small_live_ready",
+    "runtime_authorized",
 )
 
 
@@ -297,6 +321,63 @@ class Stage3ResearchMachineHandoff:
 
     def to_dict(self) -> dict[str, Any]:
         data = asdict(self)
+        data["blocked_reasons"] = [reason.to_dict() for reason in self.blocked_reasons]
+        return _json_safe(data)
+
+
+@dataclass(frozen=True, slots=True)
+class Stage3ResearchRunManifest:
+    run_id: str
+    strategy_id: str
+    config_hash: str
+    data_release_ref: str
+    factor_versions: Mapping[str, str]
+    code_version: str
+    seed: int
+    date_range: Mapping[str, str]
+    created_at: str
+    evidence_refs: Mapping[str, str]
+    schema_version: str = STAGE3_RESEARCH_RUN_MANIFEST_SCHEMA
+    not_runtime_authorization: bool = True
+    not_simulation_authorization: bool = True
+    not_live_authorization: bool = True
+
+    def to_dict(self) -> dict[str, Any]:
+        return _json_safe(asdict(self))
+
+
+@dataclass(frozen=True, slots=True)
+class Stage3MatureResearchPackage:
+    package_id: str
+    strategy_id: str
+    status: str
+    run_manifest: Stage3ResearchRunManifest | Mapping[str, Any]
+    input_refs: Mapping[str, str]
+    evidence_refs: Mapping[str, str]
+    signal_set: SignalSet | Mapping[str, Any]
+    strategy_candidate: StrategyCandidate | Mapping[str, Any]
+    research_evidence_index: ResearchEvidenceIndex | Mapping[str, Any]
+    portfolio_risk_policy: PortfolioRiskPolicy | Mapping[str, Any]
+    factor_model_validation_report_ref: str
+    mature_strategy_admission_package_ref: str
+    runner_offline_preflight_ref: str
+    observation_plan_ref: str
+    blocked_claims: tuple[str, ...]
+    unlock_conditions: tuple[str, ...]
+    blocked_reasons: tuple[Stage2BlockedReason, ...]
+    schema_version: str = STAGE3_MATURE_RESEARCH_PACKAGE_SCHEMA
+    not_runtime_authorization: bool = True
+    not_simulation_authorization: bool = True
+    not_live_authorization: bool = True
+    not_gateway_or_qmt_operation: bool = True
+
+    def to_dict(self) -> dict[str, Any]:
+        data = asdict(self)
+        data["run_manifest"] = _object_to_dict(self.run_manifest)
+        data["signal_set"] = _object_to_dict(self.signal_set)
+        data["strategy_candidate"] = _object_to_dict(self.strategy_candidate)
+        data["research_evidence_index"] = _object_to_dict(self.research_evidence_index)
+        data["portfolio_risk_policy"] = _object_to_dict(self.portfolio_risk_policy)
         data["blocked_reasons"] = [reason.to_dict() for reason in self.blocked_reasons]
         return _json_safe(data)
 
@@ -730,6 +811,191 @@ def build_stage3_research_machine_handoff(
     )
 
 
+def build_stage3_research_run_manifest(
+    *,
+    run_id: str,
+    strategy_id: str,
+    data_release_ref: str,
+    factor_versions: Mapping[str, str],
+    code_version: str,
+    seed: int,
+    date_range: Mapping[str, str],
+    config_hash: str = "",
+    config: Mapping[str, Any] | None = None,
+    created_at: str = "",
+    evidence_refs: Mapping[str, str] | None = None,
+) -> Stage3ResearchRunManifest:
+    resolved_config_hash = config_hash
+    if not resolved_config_hash and config:
+        resolved_config_hash = hashlib.sha256(
+            json.dumps(_json_safe(config), ensure_ascii=False, sort_keys=True).encode("utf-8")
+        ).hexdigest()
+    return Stage3ResearchRunManifest(
+        run_id=run_id,
+        strategy_id=strategy_id,
+        config_hash=resolved_config_hash,
+        data_release_ref=data_release_ref,
+        factor_versions=dict(factor_versions),
+        code_version=code_version,
+        seed=int(seed),
+        date_range=dict(date_range),
+        created_at=created_at,
+        evidence_refs=dict(evidence_refs or {}),
+    )
+
+
+def build_stage3_mature_research_package(
+    *,
+    strategy_id: str,
+    run_manifest: Stage3ResearchRunManifest | Mapping[str, Any],
+    input_refs: Mapping[str, str],
+    evidence_refs: Mapping[str, str],
+    signal_set: SignalSet | Mapping[str, Any],
+    strategy_candidate: StrategyCandidate | Mapping[str, Any],
+    research_evidence_index: ResearchEvidenceIndex | Mapping[str, Any],
+    portfolio_risk_policy: PortfolioRiskPolicy | Mapping[str, Any],
+    mature_strategy_admission_package_ref: str,
+    runner_offline_preflight_ref: str,
+    observation_plan_ref: str,
+    factor_model_validation_report_ref: str = "",
+    blocked_claims: Sequence[str] | None = None,
+    unlock_conditions: Sequence[str] | None = None,
+) -> Stage3MatureResearchPackage:
+    manifest_data = _as_mapping(run_manifest)
+    evidence_index_data = _as_mapping(research_evidence_index)
+    blocked: list[Stage2BlockedReason] = []
+
+    for validation in (
+        validate_stage3_research_run_manifest(run_manifest),
+        validate_signal_set(signal_set),
+        validate_project_strategy_candidate(strategy_candidate),
+        validate_research_evidence_index(research_evidence_index),
+        validate_portfolio_risk_policy(portfolio_risk_policy),
+    ):
+        blocked.extend(validation.blocked_reasons)
+
+    input_data = {str(key): str(value) for key, value in input_refs.items()}
+    evidence_data = {str(key): str(value) for key, value in evidence_refs.items()}
+    for name in STAGE2_DATA_REQUIREMENTS:
+        if not _is_real_ref(input_data.get(name)):
+            blocked.append(
+                Stage2BlockedReason(
+                    code=MF_STAGE3_RESEARCH_PACKAGE_INVALID,
+                    message=f"Stage 3 mature research package 缺少真实 P0 输入引用: {name}",
+                    field=f"input_refs.{name}",
+                    remediation="在研究机填入真实数据 release / PIT / 过滤 / 暴露 / 成本等 artifact ref。",
+                )
+            )
+    for name in STAGE3_REQUIRED_EVIDENCE:
+        if not _is_real_ref(evidence_data.get(name)):
+            blocked.append(
+                Stage2BlockedReason(
+                    code=MF_STAGE3_RESEARCH_PACKAGE_INVALID,
+                    message=f"Stage 3 mature research package 缺少真实 evidence 引用: {name}",
+                    field=f"evidence_refs.{name}",
+                    remediation="补齐 run manifest、factor panel、label、评价、组合、风控和 runner preflight evidence ref。",
+                )
+            )
+
+    manifest_release = str(manifest_data.get("data_release_ref") or "")
+    index_release = str(evidence_index_data.get("data_release_ref") or "")
+    if _is_real_ref(manifest_release) and _is_real_ref(index_release) and manifest_release != index_release:
+        blocked.append(
+            Stage2BlockedReason(
+                code=MF_STAGE3_RESEARCH_PACKAGE_INVALID,
+                message="run manifest 与 ResearchEvidenceIndex 的 data_release_ref 不一致。",
+                field="data_release_ref",
+                remediation="使用同一个冻结 data release / snapshot 作为准入包真相源。",
+            )
+        )
+
+    package_claims = tuple(str(item) for item in (blocked_claims or STAGE3_FORBIDDEN_CLAIMS) if str(item))
+    for claim in STAGE3_FORBIDDEN_CLAIMS:
+        if claim not in package_claims:
+            blocked.append(
+                Stage2BlockedReason(
+                    code=MF_STAGE3_RESEARCH_PACKAGE_INVALID,
+                    message=f"Stage 3 package 必须显式阻断未授权声明: {claim}",
+                    field=f"blocked_claims.{claim}",
+                    remediation="Stage 3 只能输出研究准入证据；runtime / simulation / live 需后续单独门禁。",
+                )
+            )
+
+    validation_ref = factor_model_validation_report_ref or evidence_data.get("factor_model_validation_report_ref", "")
+    if not _is_real_ref(validation_ref):
+        blocked.append(
+            Stage2BlockedReason(
+                code=MF_STAGE3_RESEARCH_PACKAGE_INVALID,
+                message="Stage 3 package 缺少 factor model validation report ref。",
+                field="factor_model_validation_report_ref",
+                remediation="补齐高级因子模型验证报告，或记录经批准的 waiver。",
+            )
+        )
+    if not _is_real_ref(mature_strategy_admission_package_ref):
+        blocked.append(
+            Stage2BlockedReason(
+                code=MF_STAGE3_RESEARCH_PACKAGE_INVALID,
+                message="Stage 3 package 缺少 mature strategy admission package ref。",
+                field="mature_strategy_admission_package_ref",
+            )
+        )
+    if not _is_real_ref(runner_offline_preflight_ref):
+        blocked.append(
+            Stage2BlockedReason(
+                code=MF_STAGE3_RESEARCH_PACKAGE_INVALID,
+                message="Stage 3 package 缺少 runner offline preflight ref。",
+                field="runner_offline_preflight_ref",
+            )
+        )
+    if not _is_real_ref(observation_plan_ref):
+        blocked.append(
+            Stage2BlockedReason(
+                code=MF_STAGE3_RESEARCH_PACKAGE_INVALID,
+                message="Stage 3 package 缺少 Stage 4 observation plan ref。",
+                field="observation_plan_ref",
+            )
+        )
+
+    deduped = tuple(_dedupe_reasons(blocked))
+    return Stage3MatureResearchPackage(
+        package_id=_stable_id(
+            "stage3-mature-research-package",
+            strategy_id,
+            manifest_data.get("run_id"),
+            manifest_data.get("config_hash"),
+            manifest_data.get("data_release_ref"),
+        ),
+        strategy_id=strategy_id,
+        status="blocked" if deduped else "stage3_research_ready_for_stage4_review",
+        run_manifest=run_manifest,
+        input_refs=input_data,
+        evidence_refs=evidence_data,
+        signal_set=signal_set,
+        strategy_candidate=strategy_candidate,
+        research_evidence_index=research_evidence_index,
+        portfolio_risk_policy=portfolio_risk_policy,
+        factor_model_validation_report_ref=validation_ref,
+        mature_strategy_admission_package_ref=mature_strategy_admission_package_ref,
+        runner_offline_preflight_ref=runner_offline_preflight_ref,
+        observation_plan_ref=observation_plan_ref,
+        blocked_claims=package_claims,
+        unlock_conditions=tuple(
+            str(item)
+            for item in (
+                unlock_conditions
+                or (
+                    "stage4_simulation_runtime_authorization",
+                    "gateway_identity_revalidated",
+                    "stage4_observation_gate_approved",
+                    "independent_live_switch_cr_for_small_live_or_live",
+                )
+            )
+            if str(item)
+        ),
+        blocked_reasons=deduped,
+    )
+
+
 def build_mature_admission_support_from_cr030_cr039_outputs(
     *,
     strategy_id: str,
@@ -860,6 +1126,119 @@ def validate_stage3_research_machine_handoff(handoff: Stage3ResearchMachineHando
             )
         )
     return _validation("Stage3ResearchMachineHandoff", str(data.get("handoff_id") or ""), reasons)
+
+
+def validate_stage3_research_run_manifest(
+    manifest: Stage3ResearchRunManifest | Mapping[str, Any],
+) -> Stage2ValidationResult:
+    data = _as_mapping(manifest)
+    reasons = _required_reasons(
+        data,
+        STAGE3_RUN_MANIFEST_REQUIRED_FIELDS,
+        code=MF_STAGE3_RUN_MANIFEST_INVALID,
+    )
+    if not _is_real_ref(data.get("data_release_ref")):
+        reasons.append(
+            Stage2BlockedReason(
+                code=MF_STAGE3_RUN_MANIFEST_INVALID,
+                message="Stage 3 run manifest 必须引用真实冻结 data_release_ref。",
+                field="data_release_ref",
+                remediation="不要使用 current pointer 或 typed unavailable 作为唯一真相。",
+            )
+        )
+    if not _as_mapping(data.get("factor_versions")):
+        reasons.append(
+            Stage2BlockedReason(
+                code=MF_STAGE3_RUN_MANIFEST_INVALID,
+                message="Stage 3 run manifest 必须记录 factor_versions。",
+                field="factor_versions",
+            )
+        )
+    date_range = _as_mapping(data.get("date_range"))
+    for field_name in ("start", "end"):
+        if _is_blank(date_range.get(field_name)):
+            reasons.append(
+                Stage2BlockedReason(
+                    code=MF_STAGE3_RUN_MANIFEST_INVALID,
+                    message=f"Stage 3 run manifest.date_range 缺少 {field_name}。",
+                    field=f"date_range.{field_name}",
+                )
+            )
+    return _validation("Stage3ResearchRunManifest", str(data.get("run_id") or ""), reasons)
+
+
+def validate_stage3_mature_research_package(
+    package: Stage3MatureResearchPackage | Mapping[str, Any],
+) -> Stage2ValidationResult:
+    data = _as_mapping(package)
+    reasons = _required_reasons(
+        data,
+        (
+            "package_id",
+            "strategy_id",
+            "run_manifest",
+            "input_refs",
+            "evidence_refs",
+            "signal_set",
+            "strategy_candidate",
+            "research_evidence_index",
+            "portfolio_risk_policy",
+            "factor_model_validation_report_ref",
+            "mature_strategy_admission_package_ref",
+            "runner_offline_preflight_ref",
+            "observation_plan_ref",
+            "blocked_claims",
+            "unlock_conditions",
+        ),
+        code=MF_STAGE3_RESEARCH_PACKAGE_INVALID,
+    )
+    reasons.extend(validate_stage3_research_run_manifest(_as_mapping(data.get("run_manifest"))).blocked_reasons)
+    reasons.extend(validate_signal_set(_as_mapping(data.get("signal_set"))).blocked_reasons)
+    reasons.extend(validate_project_strategy_candidate(_as_mapping(data.get("strategy_candidate"))).blocked_reasons)
+    reasons.extend(validate_research_evidence_index(_as_mapping(data.get("research_evidence_index"))).blocked_reasons)
+    reasons.extend(validate_portfolio_risk_policy(_as_mapping(data.get("portfolio_risk_policy"))).blocked_reasons)
+
+    input_refs = {str(key): str(value) for key, value in _as_mapping(data.get("input_refs")).items()}
+    evidence_refs = {str(key): str(value) for key, value in _as_mapping(data.get("evidence_refs")).items()}
+    for name in STAGE2_DATA_REQUIREMENTS:
+        if not _is_real_ref(input_refs.get(name)):
+            reasons.append(
+                Stage2BlockedReason(
+                    code=MF_STAGE3_RESEARCH_PACKAGE_INVALID,
+                    message=f"Stage 3 package input_refs 缺少真实引用: {name}",
+                    field=f"input_refs.{name}",
+                )
+            )
+    for name in STAGE3_REQUIRED_EVIDENCE:
+        if not _is_real_ref(evidence_refs.get(name)):
+            reasons.append(
+                Stage2BlockedReason(
+                    code=MF_STAGE3_RESEARCH_PACKAGE_INVALID,
+                    message=f"Stage 3 package evidence_refs 缺少真实引用: {name}",
+                    field=f"evidence_refs.{name}",
+                )
+            )
+    blocked_claims = set(str(item) for item in _sequence(data.get("blocked_claims")))
+    for claim in STAGE3_FORBIDDEN_CLAIMS:
+        if claim not in blocked_claims:
+            reasons.append(
+                Stage2BlockedReason(
+                    code=MF_STAGE3_RESEARCH_PACKAGE_INVALID,
+                    message=f"Stage 3 package 未阻断未授权声明: {claim}",
+                    field=f"blocked_claims.{claim}",
+                )
+            )
+    for field_name in ("factor_model_validation_report_ref", "mature_strategy_admission_package_ref", "runner_offline_preflight_ref", "observation_plan_ref"):
+        if not _is_real_ref(data.get(field_name)):
+            reasons.append(
+                Stage2BlockedReason(
+                    code=MF_STAGE3_RESEARCH_PACKAGE_INVALID,
+                    message=f"Stage 3 package 缺少真实引用: {field_name}",
+                    field=field_name,
+                )
+            )
+    reasons.extend(_reasons_from_payload(data.get("blocked_reasons")))
+    return _validation("Stage3MatureResearchPackage", str(data.get("package_id") or ""), reasons)
 
 
 def validate_stage2_no_lake(counters: PermissionCounters | Mapping[str, int] | None) -> Stage2ValidationResult:
@@ -1199,6 +1578,18 @@ def _is_blank(value: Any) -> bool:
     if isinstance(value, Sequence) and not isinstance(value, (str, bytes, bytearray)):
         return not value
     return False
+
+
+def _is_real_ref(value: Any) -> bool:
+    if _is_blank(value):
+        return False
+    text = str(value).strip()
+    return not (
+        text == "required"
+        or text.startswith("typed_unavailable:")
+        or text.startswith("fixture://stage2/")
+        or text.startswith("placeholder:")
+    )
 
 
 def _enum_value(value: Any) -> Any:

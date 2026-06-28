@@ -1,0 +1,30 @@
+schema_version: policy_cycle_config_v1
+cycles:
+  - cycle_id: deleveraging_2018
+    name: Deleveraging and trade-friction cycle
+    start: "2018-01-01"
+    end: "2018-12-31"
+    policy_type: macro_liquidity
+    market: CN_A
+    source_ref: internal:policy-cycle-seed:v1
+  - cycle_id: covid_policy_response_2020
+    name: COVID policy response
+    start: "2020-01-01"
+    end: "2020-12-31"
+    policy_type: crisis_response
+    market: CN_A
+    source_ref: internal:policy-cycle-seed:v1
+  - cycle_id: post_reopen_recovery_2023
+    name: Post-reopen recovery and policy support
+    start: "2023-01-01"
+    end: "2023-12-31"
+    policy_type: growth_support
+    market: CN_A
+    source_ref: internal:policy-cycle-seed:v1
+  - cycle_id: market_support_2024_2026
+    name: Market support and structural reform cycle
+    start: "2024-01-01"
+    end: "2026-12-31"
+    policy_type: capital_market_support
+    market: CN_A
+    source_ref: internal:policy-cycle-seed:v1

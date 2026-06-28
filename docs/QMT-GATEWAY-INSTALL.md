@@ -2,9 +2,11 @@
 
 本文件是 Windows S 端 QMT gateway 的正式用户文档入口，覆盖环境文件、启动、检查、停止和常见故障。它只说明在用户已经取得逐次授权后的手工操作方式，不保存真实账号、密码、token、HMAC secret、session、原始持仓或原始订单回执。
 
-## CR020 Windows S 端手工安装调试手册
+## Windows S 端手工安装调试手册
 
-### CR020 Contract Summary
+### Contract Summary
+
+历史来源：本节继承 CR020 的 Windows S 端手工安装调试合同；CR020 只作为审计来源，不作为当前用户入口命名。
 
 QMT gateway 采用 C/S 边界：Windows S 端运行 MiniQMT / XtQuant 和本地 HTTP gateway；Linux / WSL C 端只通过 HMAC 签名请求访问白名单 endpoint。当前正式白名单包括：
 

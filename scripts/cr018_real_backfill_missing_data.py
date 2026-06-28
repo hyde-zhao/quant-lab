@@ -139,6 +139,7 @@ BENCHMARKS = {
 PRICE_FULL_RUN_PREFIXES = (
     "run-cr014-s14-prices-adj-factor-",
     "run-cr014-s11-full-a-2026-ytd-date-batch-143508",
+    "run-stage3-data-update-",
 )
 
 

@@ -68,6 +68,7 @@ class Chapter5Artifacts:
     anomaly_panel_path: Path
     anomaly_returns_path: Path
     alpha_tests_path: Path
+    anomaly_research_report_path: Path
     anomaly_correlation_path: Path
     gap_register_path: Path
     manifest_path: Path
@@ -210,12 +211,14 @@ def write_outputs(
     anomaly_panel = pd.concat([item.anomaly_panel.assign(sample_id=item.sample_id) for item in sample_results], ignore_index=True)
     anomaly_returns = pd.concat([item.anomaly_returns.assign(sample_id=item.sample_id) for item in sample_results], ignore_index=True)
     alpha_tests = pd.concat([item.alpha_tests.assign(sample_id=item.sample_id) for item in sample_results], ignore_index=True)
+    anomaly_research_reports = [dict(row, sample_id=item.sample_id) for item in sample_results for row in item.anomaly_research_reports]
     anomaly_correlation = stack_correlation(sample_results)
     gap_register = [dict(row, sample_id=item.sample_id) for item in sample_results for row in item.gap_register]
     admission = build_admission_payload(sample_results)
     anomaly_panel.to_parquet(artifacts.anomaly_panel_path, index=False)
     anomaly_returns.to_csv(artifacts.anomaly_returns_path, index=False)
     alpha_tests.to_csv(artifacts.alpha_tests_path, index=False)
+    artifacts.anomaly_research_report_path.write_text(json.dumps(_json_safe(anomaly_research_reports), ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     anomaly_correlation.to_csv(artifacts.anomaly_correlation_path, index=False)
     pd.DataFrame(gap_register).to_csv(artifacts.gap_register_path, index=False)
     artifacts.anomaly_admission_summary_path.write_text(json.dumps(admission, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
@@ -224,6 +227,7 @@ def write_outputs(
         "run_id": artifacts.run_id,
         "anomaly_definitions": [item.to_dict() for item in DEFAULT_CHAPTER5_ANOMALIES],
         "sample_results": [item.to_dict() for item in sample_results],
+        "anomaly_research_reports": anomaly_research_reports,
         "artifacts": artifacts.to_dict(),
         "memory_budget": memory_budget_summary(max_memory_gb),
         "operation_counts": dict(FORBIDDEN_OPERATION_COUNTS),
@@ -234,6 +238,7 @@ def write_outputs(
         "run_id": artifacts.run_id,
         "status": "PASS" if sample_results and all(item.status == "PASS" for item in sample_results) else "BLOCKED",
         "sample_results": [item.to_dict() for item in sample_results],
+        "anomaly_research_reports": anomaly_research_reports,
         "artifacts": artifacts.to_dict(),
         "anomaly_admission_summary": admission,
         "operation_counts": dict(FORBIDDEN_OPERATION_COUNTS),
@@ -252,6 +257,7 @@ def chapter5_artifacts(run_id: str, *, output_root: Path, report_root: Path) -> 
         anomaly_panel_path=report_dir / "anomaly_panel.parquet",
         anomaly_returns_path=report_dir / "anomaly_returns.csv",
         alpha_tests_path=report_dir / "alpha_tests.csv",
+        anomaly_research_report_path=report_dir / "anomaly_research_report.json",
         anomaly_correlation_path=report_dir / "anomaly_correlation.csv",
         gap_register_path=report_dir / "gap_register.csv",
         manifest_path=report_dir / "anomaly_manifest.json",
@@ -335,6 +341,7 @@ def render_markdown(sample_results: Sequence[Chapter5AnalysisResult], artifacts:
             f"- anomaly_panel: `{artifacts.anomaly_panel_path}`",
             f"- anomaly_returns: `{artifacts.anomaly_returns_path}`",
             f"- alpha_tests: `{artifacts.alpha_tests_path}`",
+            f"- anomaly_research_report: `{artifacts.anomaly_research_report_path}`",
             f"- anomaly_correlation: `{artifacts.anomaly_correlation_path}`",
             f"- gap_register: `{artifacts.gap_register_path}`",
             f"- anomaly_admission_summary: `{artifacts.anomaly_admission_summary_path}`",

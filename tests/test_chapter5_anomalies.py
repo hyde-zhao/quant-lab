@@ -10,6 +10,9 @@ import pytest
 from engine.chapter5_anomalies import (
     DEFAULT_CHAPTER5_ANOMALIES,
     FORBIDDEN_OPERATION_COUNTS,
+    HARVEY_T_STAT_THRESHOLD,
+    build_anomaly_candidates,
+    build_anomaly_research_reports,
     run_chapter5_analysis,
     validate_chapter5_inputs,
 )
@@ -60,11 +63,57 @@ def test_chapter5_analysis_builds_anomaly_panel_returns_and_alpha_tests() -> Non
     assert not result.anomaly_panel.empty
     assert not result.anomaly_returns.empty
     assert not result.alpha_tests.empty
+    assert result.anomaly_candidates
+    assert result.anomaly_research_reports
+    first_report = result.anomaly_research_reports[0]
+    assert first_report["harvey_t_threshold"] == HARVEY_T_STAT_THRESHOLD
+    assert "monotonicity_score" in first_report
+    assert "factor_control_pass" in first_report
+    assert "time_split_pass" in first_report
+    assert "net_long_short_return_after_cost" in first_report
+    assert first_report["economic_story_status"] == "pass"
     assert result.operation_counts == FORBIDDEN_OPERATION_COUNTS
     assert {"production_valid", "qmt_ready", "simulation_ready", "live_ready"} <= {
         item["claim"] for item in result.blocked_claims
     }
     assert any(gap["gap_id"] == "CR036-GAP-BOOK-CHAPTER5-SOURCE" for gap in result.gap_register)
+
+
+def test_chapter5_anomaly_candidates_require_prior_logic() -> None:
+    candidates = build_anomaly_candidates(DEFAULT_CHAPTER5_ANOMALIES)
+
+    assert {item.anomaly_id for item in candidates} == {item.anomaly_id for item in DEFAULT_CHAPTER5_ANOMALIES}
+    for candidate in candidates:
+        assert candidate.source_type in {"financial_extension", "behavioral_theory", "risk_theory"}
+        assert candidate.hypothesis
+        assert candidate.economic_rationale
+        assert candidate.prior_logic_ref.startswith("book:")
+        assert candidate.required_factor_ids
+
+
+def test_chapter5_research_report_blocks_factor_candidate_when_harvey_fails() -> None:
+    anomaly_returns = pd.DataFrame(
+        {
+            "trade_date": [f"2020-0{month}-28" for month in range(1, 7)],
+            "anomaly_id": ["valuation_extreme_spread"] * 6,
+            "long_short_return": [0.010, -0.009, 0.008, -0.007, 0.006, -0.005],
+            "monotonicity_score": [1.0] * 6,
+        }
+    )
+    alpha_tests = pd.DataFrame(
+        {
+            "anomaly_id": ["valuation_extreme_spread"],
+            "model_id": ["seven_factor_full"],
+            "alpha_t_stat": [2.5],
+        }
+    )
+    candidates = tuple(item for item in build_anomaly_candidates(DEFAULT_CHAPTER5_ANOMALIES) if item.anomaly_id == "valuation_extreme_spread")
+
+    report = build_anomaly_research_reports(anomaly_returns, alpha_tests, candidates)[0]
+
+    assert report["harvey_pass"] is False
+    assert report["decision"] != "factor_catalog_candidate"
+    assert any(item["claim"] == "factor_catalog_candidate" for item in report["blocked_claims"])
 
 
 def test_chapter5_validation_rejects_missing_factor_and_label_leakage() -> None:
@@ -116,6 +165,7 @@ def test_chapter5_runner_writes_artifacts_from_local_paths(tmp_path: Path) -> No
     assert result.artifacts.anomaly_panel_path.exists()
     assert result.artifacts.anomaly_returns_path.exists()
     assert result.artifacts.alpha_tests_path.exists()
+    assert result.artifacts.anomaly_research_report_path.exists()
     assert result.artifacts.gap_register_path.exists()
     assert result.artifacts.report_md_path.exists()
     assert result.operation_counts == FORBIDDEN_OPERATION_COUNTS
