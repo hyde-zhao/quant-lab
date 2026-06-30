@@ -18,6 +18,7 @@ if str(PROJECT_ROOT) not in sys.path:
 
 from engine.backtest import BacktestConfig, BacktestResult, run_backtest
 from engine.diagnostics import LOGGER_NAME
+from engine.experiment_report_helpers import resolve_date_range as _resolve_date_range
 from engine.portfolio import PortfolioConfig
 from engine.research_paths import research_report_path
 from engine.reporting import write_rows_csv
@@ -783,14 +784,6 @@ def _to_optional_float(value: Any) -> float | None:
     if value in ("", None) or pd.isna(value):
         return None
     return float(value)
-
-
-def _resolve_date_range(data_dir: Path, start_date: str | None, end_date: str | None) -> tuple[str, str]:
-    calendar = pd.read_parquet(data_dir / "trade_calendar.parquet")
-    dates = pd.to_datetime(calendar["trade_date"], errors="coerce").dropna().sort_values()
-    start = start_date or dates.iloc[0].date().isoformat()
-    end = end_date or dates.iloc[-1].date().isoformat()
-    return start, end
 
 
 if __name__ == "__main__":

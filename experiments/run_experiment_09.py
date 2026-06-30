@@ -17,6 +17,11 @@ if str(PROJECT_ROOT) not in sys.path:
 
 from engine.backtest import BacktestConfig, run_backtest
 from engine.diagnostics import LOGGER_NAME
+from engine.experiment_report_helpers import (
+    format_value as _shared_format_value,
+    markdown_table as _shared_markdown_table,
+    resolve_date_range as _resolve_date_range,
+)
 from engine.portfolio import PortfolioConfig
 from engine.research_paths import research_report_path
 from engine.reporting import write_rows_csv
@@ -367,37 +372,11 @@ def _top_rows(rows: list[dict[str, Any]], metric: str, limit: int) -> list[dict[
 
 
 def _markdown_table(rows: list[dict[str, Any]], fields: list[str]) -> str:
-    header = "| " + " | ".join(_format_header(field) for field in fields) + " |"
-    sep = "| " + " | ".join("---" for _ in fields) + " |"
-    body = ["| " + " | ".join(_format_value(row.get(field, ""), field) for field in fields) + " |" for row in rows]
-    return "\n".join([header, sep, *body])
-
-
-def _format_header(field: str) -> str:
-    if field in PERCENT_FIELDS:
-        return f"{field}(%)"
-    return field
+    return _shared_markdown_table(rows, fields, percent_fields=PERCENT_FIELDS)
 
 
 def _format_value(value: Any, field: str) -> str:
-    if value in ("", None):
-        return ""
-    if field in PERCENT_FIELDS:
-        try:
-            return f"{float(value) * 100:.2f}%"
-        except (TypeError, ValueError):
-            return str(value)
-    if isinstance(value, float):
-        return f"{value:.4f}"
-    return str(value)
-
-
-def _resolve_date_range(data_dir: Path, start_date: str | None, end_date: str | None) -> tuple[str, str]:
-    calendar = pd.read_parquet(data_dir / "trade_calendar.parquet")
-    dates = pd.to_datetime(calendar["trade_date"], errors="coerce").dropna().sort_values()
-    start = start_date or dates.iloc[0].date().isoformat()
-    end = end_date or dates.iloc[-1].date().isoformat()
-    return start, end
+    return _shared_format_value(value, field, percent_fields=PERCENT_FIELDS)
 
 
 if __name__ == "__main__":

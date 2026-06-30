@@ -37,3 +37,23 @@ uv run --python 3.11 --group ml pytest -q tests/test_experiment_23_29_ml_factor_
 ```
 
 CR-139 S10 的 no-bypass / lake-as-of 合同测试属于 static/fixture 范围，不要求安装 `ml` 组。安装 `ml` 组只解决本地 ML 训练依赖，不授权 provider fetch、lake write、catalog publish、DuckDB runtime、QMT、simulation 或 live。
+
+## 5. 实验编号索引
+
+| 编号 | 入口 | 责任 |
+|---:|---|---|
+| 06/07 | `experiments/run_experiment_06_07.py` | 动量与 RSI 策略本地回测报告。 |
+| 08 | `experiments/run_experiment_08.py` | MACD 金叉 / 死叉策略回测报告。 |
+| 09 | `experiments/run_experiment_09.py` | 多策略参数敏感性分析。 |
+| 10 | `experiments/run_experiment_10.py` | 样本外测试与过拟合风险排序。 |
+| 12 | `experiments/run_experiment_12.py` | 市场环境分段策略比较。 |
+| 13 | `experiments/run_experiment_13.py` | 代理 benchmark / 真实 benchmark 与交易成本对比。 |
+| 14 | `experiments/run_experiment_14.py` | 数据与 benchmark 审计报告。 |
+| 15 | `experiments/run_experiment_15_factor_framework.py` | 因子框架与单因子回测。 |
+| 16 | `experiments/run_experiment_16_momentum_factor.py` | 动量因子验证。 |
+| 17-21 | `experiments/run_experiment_17_21_factor_suite.py` | 多因子套件与研究报告。 |
+| 23-29 | `experiments/run_experiment_23_29_ml_factor_suite.py` | ML 因子套件；需要 `ml` dependency group。 |
+| 30-36 | `experiments/run_experiment_30_36_stage5.py` | Stage 5 多因子研究与候选产出。 |
+| turnover | `experiments/run_experiment_turnover_factor.py` | abnormal turnover 因子研究；CR140 Phase 3 仅做合成 fixture 重构等价验证。 |
+
+当前 `experiments/` 顶层只保留实验入口。production_strict 数据湖审计、reporting helper、CR139 lake / training contract helper 和 production current truth dry-run contract 已归位到 `scripts/data_lake/` 或 `engine/`。
