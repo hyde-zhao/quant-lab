@@ -71,6 +71,12 @@ Recovery requires `manual_takeover_record=recorded`, `reconciliation_status=pass
 | `unsupported_execution_claim_unblocked` | `0` |
 | `sensitive_raw_value_output` | `0` |
 
+## 7. CR019-S08 Fallback / Signed File Manual-Only Boundary
+
+Fallback / signed file payload 只能作为人工 dry-run 候选，不是 gateway bypass，也不是运行许可。有效载荷必须保持 `mode=manual_dry_run_only`、`auto_execute=false`、`real_qmt_allowed=false`、`manual_handling_required=true`。
+
+该边界不授权真实交易、撤单、broker lake 写入、simulation/live、QMT/MiniQMT/XtQuant 调用或账户查询。任何启用自动执行或真实 QMT 允许字段的载荷都必须 fail closed。
+
 ## 8. CR019-S10 Documentation Boundary Addendum
 
 QMT C/S bridge addendum covers admission blocked、auth failed、endpoint blocked、run gate blocked、gateway unavailable、signed file candidate 和 fallback blocked。所有路径 fail closed；No-real-operation counters remain zero until a separate per-run authorization and stage gate pass.

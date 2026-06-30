@@ -2,9 +2,9 @@
 
 本文件是 Windows S 端 QMT gateway 的正式用户文档入口，覆盖环境文件、启动、检查、停止和常见故障。它只说明在用户已经取得逐次授权后的手工操作方式，不保存真实账号、密码、token、HMAC secret、session、原始持仓或原始订单回执。
 
-## Windows S 端手工安装调试手册
+## CR020 Windows S 端手工安装调试手册
 
-### Contract Summary
+### CR020 Contract Summary
 
 历史来源：本节继承 CR020 的 Windows S 端手工安装调试合同；CR020 只作为审计来源，不作为当前用户入口命名。
 
@@ -23,6 +23,8 @@ QMT gateway 采用 C/S 边界：Windows S 端运行 MiniQMT / XtQuant 和本地 
 启动 gateway、绑定端口、读取本机 env 文件、连接 MiniQMT / XtQuant、查询只读持仓、提交 simulation 订单和撤单，都是需要逐次授权的运行时动作。授权必须写明 `action_scope`、时间窗口、环境引用、凭据策略、脱敏规则、回滚计划、审计引用、允许命令和禁止命令。
 
 授权 simulation 不等于授权 `small_live` 或 `live`。本文档不授权真实 live 交易、不授权资金放大、不授权读取或落盘原始敏感信息。
+
+未取得逐次授权时，不得启动真实服务，不得写入真实凭据。
 
 ### No-Authorization Table
 
@@ -65,6 +67,7 @@ QMT_SESSION_TTL_SECONDS=<session-ttl-seconds>
 |---|---|
 | `<windows-host>` | Windows 主机地址或本机绑定地址。 |
 | `<port>` | gateway 端口，占位示例通常是 `18765`。 |
+| `<config-path>` | gateway 配置文件路径占位符。 |
 | `<wsl-client-cidr>` | 允许访问 gateway 的 C 端来源网段。 |
 | `<manual-client-id>` | 手工分配的 client id 引用。 |
 | `<manual-long-random-secret>` | 手工生成的 HMAC secret 引用，不写入真实值。 |

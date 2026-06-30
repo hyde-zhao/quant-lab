@@ -84,7 +84,7 @@ Fallback / signed file candidate is only a manual review candidate. It must not 
 | `publish` | `0` |
 | `simulation_run` | `0` unless separately authorized |
 
-## 9. Gateway Manual Install Debug Guide
+## 9. CR020 Manual Install Debug Guide
 
 ### Contract Summary
 
