@@ -6,6 +6,7 @@ import pytest
 
 from engine.factor_statistics import (
     build_forward_return_matrix,
+    calculate_information_coefficient_timeseries,
     conditional_double_sort_returns,
     fama_macbeth_regression,
     independent_double_sort_returns,
@@ -13,6 +14,8 @@ from engine.factor_statistics import (
     long_short_summary_from_double_sort,
     newey_west_t_stat,
     single_sort_returns,
+    spearman_rank_correlation,
+    summarize_information_coefficient,
 )
 
 
@@ -81,3 +84,57 @@ def test_factor_statistics_validate_invalid_arguments() -> None:
         build_forward_return_matrix(factor, horizon=0)
     with pytest.raises(ValueError, match="factors"):
         fama_macbeth_regression(forward_returns, {})
+
+
+def test_information_coefficient_matches_experiment_16_golden_fixture() -> None:
+    factor_panel = pd.DataFrame(
+        [
+            {"factor_name": "momentum_5d", "date": "2024-01-02", "symbol": "AAA", "factor_value": 1.0, "forward_return_1d": 0.01},
+            {"factor_name": "momentum_5d", "date": "2024-01-02", "symbol": "BBB", "factor_value": 2.0, "forward_return_1d": 0.02},
+            {"factor_name": "momentum_5d", "date": "2024-01-02", "symbol": "CCC", "factor_value": 3.0, "forward_return_1d": 0.03},
+            {"factor_name": "momentum_5d", "date": "2024-01-03", "symbol": "AAA", "factor_value": 3.0, "forward_return_1d": 0.01},
+            {"factor_name": "momentum_5d", "date": "2024-01-03", "symbol": "BBB", "factor_value": 2.0, "forward_return_1d": 0.02},
+            {"factor_name": "momentum_5d", "date": "2024-01-03", "symbol": "CCC", "factor_value": 1.0, "forward_return_1d": 0.03},
+            {"factor_name": "momentum_20d", "date": "2024-01-02", "symbol": "AAA", "factor_value": 1.0, "forward_return_1d": 0.02},
+            {"factor_name": "momentum_20d", "date": "2024-01-02", "symbol": "BBB", "factor_value": 1.0, "forward_return_1d": 0.01},
+            {"factor_name": "momentum_20d", "date": "2024-01-02", "symbol": "CCC", "factor_value": 1.0, "forward_return_1d": 0.03},
+        ]
+    )
+
+    ic = calculate_information_coefficient_timeseries(
+        factor_panel,
+        min_cross_section=3,
+        forward_return_columns={"1d": "forward_return_1d"},
+    )
+    summary = summarize_information_coefficient(ic)
+
+    first = ic[(ic["factor_name"] == "momentum_5d") & (ic["date"] == "2024-01-02")].iloc[0]
+    second = ic[(ic["factor_name"] == "momentum_5d") & (ic["date"] == "2024-01-03")].iloc[0]
+    constant = ic[ic["factor_name"] == "momentum_20d"].iloc[0]
+    row = summary[summary["factor_name"] == "momentum_5d"].iloc[0]
+
+    assert first["rank_ic"] == pytest.approx(1.0)
+    assert second["rank_ic"] == pytest.approx(-1.0)
+    assert pd.isna(constant["rank_ic"])
+    assert row["valid_ic_days"] == 2
+    assert row["rank_ic_mean"] == pytest.approx(0.0)
+    assert row["rank_ic_std"] == pytest.approx(np.sqrt(2.0))
+    assert row["positive_rank_ic_ratio"] == pytest.approx(0.5)
+
+
+def test_information_coefficient_handles_low_sample_and_duplicate_ranks() -> None:
+    assert spearman_rank_correlation(pd.Series([1.0, 1.0, 2.0]), pd.Series([0.1, 0.2, 0.3])) is not None
+    assert spearman_rank_correlation(pd.Series([1.0, 1.0]), pd.Series([0.1, 0.2])) is None
+
+    factor_panel = pd.DataFrame(
+        [
+            {"factor_name": "low_sample", "date": "2024-01-02", "factor_value": 1.0, "forward_return_1d": 0.01},
+            {"factor_name": "low_sample", "date": "2024-01-02", "factor_value": 2.0, "forward_return_1d": 0.02},
+        ]
+    )
+    ic = calculate_information_coefficient_timeseries(factor_panel, min_cross_section=3)
+
+    assert len(ic) == 1
+    assert pd.isna(ic.iloc[0]["ic"])
+    assert pd.isna(ic.iloc[0]["rank_ic"])
+    assert ic.iloc[0]["cross_section_n"] == 2

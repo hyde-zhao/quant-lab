@@ -7,13 +7,19 @@
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
+from fnmatch import fnmatchcase
 from typing import Any, Mapping, Sequence
 
 from engine.multifactor_contracts import FactorDirection, FactorSpec
 
 
 FACTOR_LIBRARY_SCHEMA = "factor_library_v1"
+FACTOR_OWNERSHIP_SCHEMA = "factor_ownership_v1"
 EQUITY_CORE_FACTOR_SET_ID = "equity_core_factor_set_v1"
+OWNERSHIP_ENGINE_CORE = "engine_core"
+OWNERSHIP_EXPERIMENT_LOCAL = "experiment_local"
+OWNERSHIP_RESEARCH_CANDIDATE = "research_candidate"
+OWNERSHIP_FUTURE_PRODUCTION_CANDIDATE = "future_production_candidate"
 
 DEFAULT_EQUITY_CORE_FACTOR_IDS = (
     "market_beta_252",
@@ -23,6 +29,19 @@ DEFAULT_EQUITY_CORE_FACTOR_IDS = (
     "profitability_roe_ttm",
     "investment_asset_growth",
     "abnormal_turnover_21_252",
+)
+
+EXPERIMENT_LOCAL_FACTOR_PATTERNS = (
+    "momentum_*d",
+    "volume_ratio_*d",
+    "volatility_*d",
+    "reversal_*d",
+    "rsi_*",
+    "macd_*",
+    "ma_gap_*",
+    "volume_change_*d",
+    "turnover_proxy",
+    "max_drawdown_*d",
 )
 
 
@@ -60,6 +79,18 @@ class EquityFactorDefinition:
             if ref.startswith("book:factor_investing:chapter3:"):
                 return ref.rsplit(":", maxsplit=1)[-1]
         return ""
+
+    def to_dict(self) -> dict[str, Any]:
+        return asdict(self)
+
+
+@dataclass(frozen=True, slots=True)
+class FactorOwnershipDecision:
+    factor_id: str
+    ownership: str
+    reason: str
+    calculator_available: bool
+    schema_version: str = FACTOR_OWNERSHIP_SCHEMA
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -199,6 +230,59 @@ def equity_core_factor_definitions() -> tuple[EquityFactorDefinition, ...]:
 
 def equity_core_factor_definition_map() -> dict[str, EquityFactorDefinition]:
     return {item.factor_id: item for item in equity_core_factor_definitions()}
+
+
+def classify_equity_factor_ownership(
+    factor_id: str,
+    *,
+    calculator_ids: Sequence[str] = DEFAULT_EQUITY_CORE_FACTOR_IDS,
+) -> FactorOwnershipDecision:
+    """判定研究因子当前应归属的位置。
+
+    该判定只表达离线研究框架的归属边界，不读取真实数据湖，也不把实验因子
+    自动提升为生产 core factor。进入 engine core 的前置条件包括长期定义和
+    calculator 可用；否则只能是研究候选或未来生产候选。
+    """
+
+    available = factor_id in set(calculator_ids)
+    if factor_id in DEFAULT_EQUITY_CORE_FACTOR_IDS:
+        if available:
+            return FactorOwnershipDecision(
+                factor_id=factor_id,
+                ownership=OWNERSHIP_ENGINE_CORE,
+                reason="已在 equity core factor library 中登记，且 engine calculator 可用。",
+                calculator_available=True,
+            )
+        return FactorOwnershipDecision(
+            factor_id=factor_id,
+            ownership=OWNERSHIP_FUTURE_PRODUCTION_CANDIDATE,
+            reason="已在 equity core factor library 中登记，但缺少 engine calculator，暂不能作为可计算 core factor。",
+            calculator_available=False,
+        )
+    if any(fnmatchcase(factor_id, pattern) for pattern in EXPERIMENT_LOCAL_FACTOR_PATTERNS):
+        return FactorOwnershipDecision(
+            factor_id=factor_id,
+            ownership=OWNERSHIP_EXPERIMENT_LOCAL,
+            reason="匹配 experiment-local 动态研究因子模式；真实数据语义和生产 calculator 未稳定前不进入 core。",
+            calculator_available=available,
+        )
+    return FactorOwnershipDecision(
+        factor_id=factor_id,
+        ownership=OWNERSHIP_RESEARCH_CANDIDATE,
+        reason="未匹配 core 或已知 experiment-local 模式；需补定义、calculator 和真实数据语义后再决定归属。",
+        calculator_available=available,
+    )
+
+
+def factor_ownership_matrix(
+    factor_ids: Sequence[str],
+    *,
+    calculator_ids: Sequence[str] = DEFAULT_EQUITY_CORE_FACTOR_IDS,
+) -> tuple[FactorOwnershipDecision, ...]:
+    return tuple(
+        classify_equity_factor_ownership(factor_id, calculator_ids=calculator_ids)
+        for factor_id in factor_ids
+    )
 
 
 def build_equity_factor_library(

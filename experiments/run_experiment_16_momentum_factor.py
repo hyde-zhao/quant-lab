@@ -16,6 +16,11 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
+from engine.factor_statistics import (
+    calculate_information_coefficient_timeseries,
+    spearman_rank_correlation,
+    summarize_information_coefficient,
+)
 from engine.research_paths import research_report_path
 from experiments.run_experiment_15_factor_framework import (
     FORWARD_HORIZONS,
@@ -156,56 +161,15 @@ def run_momentum_factor_validation(args: argparse.Namespace) -> Experiment16Resu
 
 
 def calculate_ic_timeseries(factor_panel: pd.DataFrame, *, min_cross_section: int) -> pd.DataFrame:
-    rows: list[dict[str, Any]] = []
-    for factor_name, factor_group in factor_panel.groupby("factor_name", sort=True):
-        for horizon in FORWARD_HORIZONS:
-            target_col = f"forward_return_{horizon}d"
-            for trade_date, day_group in factor_group.groupby("date", sort=True):
-                valid = day_group[["factor_value", target_col]].dropna()
-                n = int(len(valid))
-                ic = None
-                rank_ic = None
-                if n >= min_cross_section and _has_variation(valid["factor_value"]) and _has_variation(valid[target_col]):
-                    ic = float(valid["factor_value"].corr(valid[target_col], method="pearson"))
-                    rank_ic = _spearman_corr(valid["factor_value"], valid[target_col])
-                rows.append(
-                    {
-                        "factor_name": str(factor_name),
-                        "horizon": f"{horizon}d",
-                        "date": str(trade_date),
-                        "ic": ic,
-                        "rank_ic": rank_ic,
-                        "cross_section_n": n,
-                    }
-                )
-    return pd.DataFrame(rows)
+    return calculate_information_coefficient_timeseries(
+        factor_panel,
+        min_cross_section=min_cross_section,
+        forward_return_columns={f"{horizon}d": f"forward_return_{horizon}d" for horizon in FORWARD_HORIZONS},
+    )
 
 
 def summarize_ic(ic_timeseries: pd.DataFrame) -> pd.DataFrame:
-    rows: list[dict[str, Any]] = []
-    for (factor_name, horizon), group in ic_timeseries.groupby(["factor_name", "horizon"], sort=True):
-        ic = pd.to_numeric(group["ic"], errors="coerce").dropna()
-        rank_ic = pd.to_numeric(group["rank_ic"], errors="coerce").dropna()
-        ic_std = float(ic.std(ddof=1)) if len(ic) > 1 else 0.0
-        rank_std = float(rank_ic.std(ddof=1)) if len(rank_ic) > 1 else 0.0
-        rows.append(
-            {
-                "factor_name": factor_name,
-                "horizon": horizon,
-                "observation_days": int(len(group)),
-                "valid_ic_days": int(len(ic)),
-                "avg_cross_section_n": float(group["cross_section_n"].mean()) if not group.empty else 0.0,
-                "ic_mean": _series_mean(ic),
-                "ic_std": ic_std,
-                "icir": _safe_divide(_series_mean(ic), ic_std),
-                "rank_ic_mean": _series_mean(rank_ic),
-                "rank_ic_std": rank_std,
-                "rank_icir": _safe_divide(_series_mean(rank_ic), rank_std),
-                "positive_ic_ratio": _positive_ratio(ic),
-                "positive_rank_ic_ratio": _positive_ratio(rank_ic),
-            }
-        )
-    return pd.DataFrame(rows)
+    return summarize_information_coefficient(ic_timeseries)
 
 
 def calculate_group_timeseries(factor_panel: pd.DataFrame, *, group_count: int) -> pd.DataFrame:
@@ -523,10 +487,7 @@ def _has_variation(series: pd.Series) -> bool:
 
 
 def _spearman_corr(left: pd.Series, right: pd.Series) -> float | None:
-    paired = pd.DataFrame({"left": left, "right": right}).dropna()
-    if len(paired) < 2 or not _has_variation(paired["left"]) or not _has_variation(paired["right"]):
-        return None
-    return float(paired["left"].rank(method="average").corr(paired["right"].rank(method="average"), method="pearson"))
+    return spearman_rank_correlation(left, right)
 
 
 def _series_mean(series: pd.Series) -> float | None:

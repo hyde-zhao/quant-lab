@@ -3,10 +3,13 @@
 from __future__ import annotations
 
 from datetime import date
+import re
 from typing import Any, Mapping, Sequence
 
 import numpy as np
 import pandas as pd
+
+_FORWARD_RETURN_COLUMN_PATTERN = re.compile(r"^forward_return_(?P<horizon>\d+d)$")
 
 
 def build_forward_return_matrix(
@@ -21,6 +24,104 @@ def build_forward_return_matrix(
         growth = (1.0 + daily_returns).shift(-1)
         return growth.rolling(horizon, min_periods=horizon).apply(np.prod, raw=True).shift(-(horizon - 1)) - 1.0
     return close.shift(-horizon) / close - 1.0
+
+
+def calculate_information_coefficient_timeseries(
+    factor_panel: pd.DataFrame,
+    *,
+    min_cross_section: int,
+    factor_name_column: str = "factor_name",
+    date_column: str = "date",
+    factor_value_column: str = "factor_value",
+    forward_return_columns: Mapping[str, str] | None = None,
+) -> pd.DataFrame:
+    """计算长表因子面板的 IC / Rank IC 时间序列。
+
+    本函数只消费调用方提供的离线 DataFrame，不读取真实 lake、provider 或运行时状态。
+    `forward_return_columns` 的 key 是输出 horizon 标签，value 是因子面板中的未来收益列。
+    未显式传入时会自动识别 `forward_return_1d` 这类列。
+    """
+
+    if min_cross_section < 2:
+        raise ValueError("min_cross_section 必须至少为 2")
+    required = {factor_name_column, date_column, factor_value_column}
+    if not required <= set(factor_panel.columns):
+        missing = ", ".join(sorted(required - set(factor_panel.columns)))
+        raise ValueError(f"factor_panel 缺少必需字段: {missing}")
+    target_columns = dict(forward_return_columns or _infer_forward_return_columns(factor_panel))
+    if not target_columns:
+        raise ValueError("factor_panel 缺少 forward_return_* 未来收益列")
+
+    rows: list[dict[str, Any]] = []
+    for factor_name, factor_group in factor_panel.groupby(factor_name_column, sort=True):
+        for horizon, target_col in target_columns.items():
+            if target_col not in factor_group.columns:
+                raise ValueError(f"factor_panel 缺少未来收益列: {target_col}")
+            for trade_date, day_group in factor_group.groupby(date_column, sort=True):
+                valid = day_group[[factor_value_column, target_col]].dropna()
+                n_obs = int(len(valid))
+                ic = None
+                rank_ic = None
+                if (
+                    n_obs >= min_cross_section
+                    and _has_variation(valid[factor_value_column])
+                    and _has_variation(valid[target_col])
+                ):
+                    ic = float(valid[factor_value_column].corr(valid[target_col], method="pearson"))
+                    rank_ic = spearman_rank_correlation(valid[factor_value_column], valid[target_col])
+                rows.append(
+                    {
+                        "factor_name": str(factor_name),
+                        "horizon": str(horizon),
+                        "date": _iso_date(trade_date),
+                        "ic": ic,
+                        "rank_ic": rank_ic,
+                        "cross_section_n": n_obs,
+                    }
+                )
+    return pd.DataFrame(rows)
+
+
+def summarize_information_coefficient(ic_timeseries: pd.DataFrame) -> pd.DataFrame:
+    """汇总 IC / Rank IC 时间序列，保持实验 16 既有统计口径。"""
+
+    required = {"factor_name", "horizon", "ic", "rank_ic", "cross_section_n"}
+    if not required <= set(ic_timeseries.columns):
+        missing = ", ".join(sorted(required - set(ic_timeseries.columns)))
+        raise ValueError(f"ic_timeseries 缺少必需字段: {missing}")
+    rows: list[dict[str, Any]] = []
+    for (factor_name, horizon), group in ic_timeseries.groupby(["factor_name", "horizon"], sort=True):
+        ic = pd.to_numeric(group["ic"], errors="coerce").dropna()
+        rank_ic = pd.to_numeric(group["rank_ic"], errors="coerce").dropna()
+        ic_std = float(ic.std(ddof=1)) if len(ic) > 1 else 0.0
+        rank_std = float(rank_ic.std(ddof=1)) if len(rank_ic) > 1 else 0.0
+        rows.append(
+            {
+                "factor_name": factor_name,
+                "horizon": horizon,
+                "observation_days": int(len(group)),
+                "valid_ic_days": int(len(ic)),
+                "avg_cross_section_n": float(group["cross_section_n"].mean()) if not group.empty else 0.0,
+                "ic_mean": _series_mean(ic),
+                "ic_std": ic_std,
+                "icir": _safe_divide(_series_mean(ic), ic_std),
+                "rank_ic_mean": _series_mean(rank_ic),
+                "rank_ic_std": rank_std,
+                "rank_icir": _safe_divide(_series_mean(rank_ic), rank_std),
+                "positive_ic_ratio": _positive_ratio(ic),
+                "positive_rank_ic_ratio": _positive_ratio(rank_ic),
+            }
+        )
+    return pd.DataFrame(rows)
+
+
+def spearman_rank_correlation(left: pd.Series, right: pd.Series) -> float | None:
+    """返回 Spearman rank correlation；低样本或无横截面变化时返回 None。"""
+
+    paired = pd.DataFrame({"left": left, "right": right}).dropna()
+    if len(paired) < 2 or not _has_variation(paired["left"]) or not _has_variation(paired["right"]):
+        return None
+    return float(paired["left"].rank(method="average").corr(paired["right"].rank(method="average"), method="pearson"))
 
 
 def single_sort_returns(
@@ -295,6 +396,41 @@ def _quantile_groups(values: pd.Series, groups: int) -> pd.Series:
     result = pd.Series(index=values.index, dtype="float64")
     result.loc[labels.index] = labels.astype(float) + 1.0
     return result
+
+
+def _infer_forward_return_columns(factor_panel: pd.DataFrame) -> dict[str, str]:
+    pairs: list[tuple[int, str, str]] = []
+    for column in factor_panel.columns:
+        match = _FORWARD_RETURN_COLUMN_PATTERN.match(str(column))
+        if match:
+            horizon = match.group("horizon")
+            pairs.append((int(horizon.removesuffix("d")), horizon, str(column)))
+    return {horizon: column for _days, horizon, column in sorted(pairs)}
+
+
+def _has_variation(series: pd.Series) -> bool:
+    clean = pd.to_numeric(series, errors="coerce").dropna()
+    return len(clean) >= 2 and clean.nunique(dropna=True) >= 2
+
+
+def _series_mean(series: pd.Series) -> float | None:
+    if series.empty:
+        return None
+    return float(series.mean())
+
+
+def _positive_ratio(series: pd.Series) -> float | None:
+    if series.empty:
+        return None
+    return float((series > 0).mean())
+
+
+def _safe_divide(left: float | None, right: float | None) -> float | None:
+    if left is None or right in (None, 0):
+        return None
+    if not np.isfinite(float(right)):
+        return None
+    return float(left) / float(right)
 
 
 def _t_stat(values: pd.Series) -> float | None:
