@@ -10,7 +10,7 @@ import pandas as pd
 from market_data.catalog import CatalogEntry, CatalogStore
 from market_data.contracts import SCHEMA_VERSION
 from market_data.lake_layout import LakeLayout
-from scripts.cr139_gateb_batch0_preflight import build_batch0_preflight
+from scripts.legacy.cr.cr139_gateb_batch0_preflight import build_batch0_preflight
 
 
 def test_batch0_preflight_reports_duplicate_decision_and_events_repair(tmp_path: Path) -> None:
@@ -45,7 +45,7 @@ def test_batch0_preflight_cli_rejects_output_inside_lake_root(tmp_path: Path) ->
     result = subprocess.run(
         [
             sys.executable,
-            "scripts/cr139_gateb_batch0_preflight.py",
+            "scripts/legacy/cr/cr139_gateb_batch0_preflight.py",
             "--lake-root",
             str(lake),
             "--out",

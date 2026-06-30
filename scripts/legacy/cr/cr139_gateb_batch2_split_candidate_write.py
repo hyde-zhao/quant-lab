@@ -14,7 +14,7 @@ from typing import Any
 import pandas as pd
 import pyarrow.parquet as pq
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
 from market_data.lake_layout import build_cr139_run_id, validate_cr139_run_id
 

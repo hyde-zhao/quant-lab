@@ -7,7 +7,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
+PROJECT_ROOT = Path(__file__).resolve().parents[3]
 F2_EVIDENCE = PROJECT_ROOT / "process/evidence/CR139-W2-GATEF2-LEGACY-RETAIN-SUPERSEDED-PLAN-2026-06-30.json"
 REGISTER_PATH = PROJECT_ROOT / "process/registers/CR139-W3-LEGACY-SUPERSEDED-REGISTER-2026-06-30.json"
 EVIDENCE_PATH = PROJECT_ROOT / "process/evidence/CR139-W3B-RETENTION-SUPERSEDED-REGISTER-2026-06-30.json"

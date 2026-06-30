@@ -15,7 +15,7 @@ from typing import Any
 
 import pyarrow.parquet as pq
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
 from market_data.catalog import validate_catalog_pointer
 from market_data.contracts import CR014_UNIVERSE_SCOPE_ALL_A_SHARE, PIT_STATUS_AVAILABLE

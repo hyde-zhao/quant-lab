@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Any
 
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
+PROJECT_ROOT = Path(__file__).resolve().parents[3]
 LAKE_ROOT = Path("/home/hyde/data/quant-lab/data-lake").resolve()
 PREFLIGHT_PATH = PROJECT_ROOT / "process/evidence/CR139-W2-GATEF1-CLEANUP-AUTHORIZATION-PREFLIGHT-2026-06-30.json"
 MANIFEST_PREVIEW = PROJECT_ROOT / "process/evidence/CR139-W2-GATEF-CLEANUP-DELETE-MANIFEST-PREVIEW-2026-06-29.jsonl"

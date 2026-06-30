@@ -19,7 +19,7 @@ from typing import Any, Iterable, Mapping, Sequence
 import pandas as pd
 import pyarrow.parquet as pq
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
 from market_data.contracts import CANONICAL_EVENTS_COLUMNS, DATASET_EVENTS
 from market_data.lake_layout import LakeLayout, MarketDataPathError, ensure_path_outside_root

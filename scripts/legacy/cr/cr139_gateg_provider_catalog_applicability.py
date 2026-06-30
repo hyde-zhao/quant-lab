@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Any
 
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
+PROJECT_ROOT = Path(__file__).resolve().parents[3]
 PROCESS_ROOT = PROJECT_ROOT / "process"
 
 EVIDENCE_PATH = PROCESS_ROOT / "evidence" / "CR139-W2-GATEG-PROVIDER-CATALOG-APPLICABILITY-2026-06-30.json"

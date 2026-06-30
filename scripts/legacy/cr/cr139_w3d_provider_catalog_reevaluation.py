@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
+PROJECT_ROOT = Path(__file__).resolve().parents[3]
 PROCESS_ROOT = PROJECT_ROOT / "process"
 EVIDENCE_PATH = PROCESS_ROOT / "evidence/CR139-W3D-PROVIDER-CATALOG-REEVALUATION-2026-06-30.json"
 CHECK_PATH = PROCESS_ROOT / "checks/CR139-W3D-PROVIDER-CATALOG-REEVALUATION-2026-06-30.md"

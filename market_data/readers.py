@@ -56,16 +56,14 @@ from .contracts import (
     CR017_VIEW_PRICES_QFQ,
     CR017_VIEW_PRICES_RAW,
     CR017_VIEW_RETURNS_ADJUSTED,
+    FallbackRule,
     READINESS_STATUS_AVAILABLE,
     SCHEMA_VERSION,
-)
-from .contracts import DATASET_INDEX_MEMBERS, DATASET_TRADE_CALENDAR
-from engine.contracts import (
-    FallbackRule,
     SchemaCompatibilityResult,
     SchemaContractFreeze,
     evaluate_schema_compatibility,
 )
+from .contracts import DATASET_INDEX_MEMBERS, DATASET_TRADE_CALENDAR
 from .dataset_groups import PRIORITY_P0, list_dataset_groups
 from .lake_layout import LakeLayout
 from .release_scope import default_permission_counters, normalise_permission_counters

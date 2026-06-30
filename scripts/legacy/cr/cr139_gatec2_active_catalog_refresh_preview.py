@@ -13,7 +13,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
 from market_data.catalog import validate_catalog_manifest_consistency
 from market_data.manifest import compute_lineage_checksum, derive_manifest_from_catalog

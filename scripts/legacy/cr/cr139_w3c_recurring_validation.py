@@ -8,8 +8,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
-PUBLISH_GUARD = PROJECT_ROOT / "scripts/cr139_w3b_publish_guard.py"
+PROJECT_ROOT = Path(__file__).resolve().parents[3]
+PUBLISH_GUARD = PROJECT_ROOT / "scripts/legacy/cr/cr139_w3b_publish_guard.py"
 PUBLISH_GUARD_EVIDENCE = PROJECT_ROOT / "process/evidence/CR139-W3B-PUBLISH-GUARD-2026-06-30.json"
 RETENTION_EVIDENCE = PROJECT_ROOT / "process/evidence/CR139-W3B-RETENTION-SUPERSEDED-REGISTER-2026-06-30.json"
 RETENTION_REGISTER = PROJECT_ROOT / "process/registers/CR139-W3-LEGACY-SUPERSEDED-REGISTER-2026-06-30.json"
@@ -74,9 +74,9 @@ def main() -> int:
             },
         },
         "recurring_pack": {
-            "local_command": "uv run --python 3.11 scripts/cr139_w3c_recurring_validation.py",
-            "publish_guard_command": "uv run --python 3.11 scripts/cr139_w3b_publish_guard.py",
-            "nas_dry_run_command": "uv run --python 3.11 scripts/cr139_gateh_nas_dry_run.py",
+            "local_command": "uv run --python 3.11 scripts/legacy/cr/cr139_w3c_recurring_validation.py",
+            "publish_guard_command": "uv run --python 3.11 scripts/legacy/cr/cr139_w3b_publish_guard.py",
+            "nas_dry_run_command": "uv run --python 3.11 scripts/legacy/cr/cr139_gateh_nas_dry_run.py",
             "nas_dry_run_policy": "separate runtime authorization before each external NAS touch unless standing approval is explicitly granted",
             "provider_catalog_policy": "deferred until production provider catalog consumer is confirmed",
         },
