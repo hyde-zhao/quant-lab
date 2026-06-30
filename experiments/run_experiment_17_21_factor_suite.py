@@ -21,6 +21,7 @@ if str(PROJECT_ROOT) not in sys.path:
 
 from engine.metrics import calculate_metrics
 from engine.diagnostics import LOGGER_NAME
+from engine.factor_statistics import build_forward_return_matrix, single_sort_returns
 from engine.portfolio import (
     DEFAULT_COST_GRID_BPS,
     PortfolioConfig,
@@ -761,7 +762,7 @@ def preprocess_factor_matrices(
 
 
 def build_forward_returns(close_df: pd.DataFrame, *, horizon: int) -> pd.DataFrame:
-    return close_df.shift(-horizon) / close_df - 1.0
+    return build_forward_return_matrix(close_df, horizon=horizon)
 
 
 def calculate_ic_timeseries(
@@ -831,31 +832,22 @@ def calculate_group_timeseries(
 ) -> pd.DataFrame:
     rows: list[dict[str, Any]] = []
     for factor_name, scores in score_matrices.items():
-        for trade_date in scores.index:
-            valid = pd.DataFrame(
-                {
-                    "symbol": scores.columns,
-                    "score": scores.loc[trade_date].to_numpy(),
-                    "forward_return": forward_returns.loc[trade_date].to_numpy(),
-                }
-            ).dropna()
-            if len(valid) < max(group_count, min_cross_section):
-                continue
-            valid["group"] = assign_quantile_groups(valid["score"], group_count)
-            valid = valid.dropna(subset=["group"])
-            if valid.empty:
-                continue
-            for group_id, group_rows in valid.groupby("group", sort=True):
-                rows.append(
-                    {
-                        "factor_name": factor_name,
-                        "date": trade_date.isoformat() if isinstance(trade_date, date) else str(trade_date),
-                        "group": int(group_id),
-                        "mean_forward_return": float(group_rows["forward_return"].mean()),
-                        "symbol_count": int(len(group_rows)),
-                    }
-                )
-    return pd.DataFrame(rows)
+        grouped = single_sort_returns(
+            scores,
+            forward_returns,
+            quantiles=group_count,
+            min_cross_section=min_cross_section,
+        )
+        if grouped.empty:
+            continue
+        grouped = grouped.rename(columns={"trade_date": "date"})
+        grouped["factor_name"] = factor_name
+        rows.extend(
+            grouped[["factor_name", "date", "group", "mean_forward_return", "symbol_count"]]
+            .assign(group=lambda frame: frame["group"].astype(int))
+            .to_dict(orient="records")
+        )
+    return pd.DataFrame(rows, columns=["factor_name", "date", "group", "mean_forward_return", "symbol_count"])
 
 
 def summarize_group_returns(group_timeseries: pd.DataFrame) -> pd.DataFrame:

@@ -8,7 +8,11 @@ from typing import Any, Callable, Mapping, Sequence
 import numpy as np
 import pandas as pd
 
-from engine.factor_library import DEFAULT_EQUITY_CORE_FACTOR_IDS, equity_core_factor_definitions
+from engine.factor_library import (
+    DEFAULT_EQUITY_CORE_FACTOR_IDS,
+    EquityFactorDefinition,
+    build_equity_factor_library,
+)
 
 
 FACTOR_CALCULATOR_SCHEMA = "factor_calculator_v1"
@@ -55,6 +59,7 @@ def compute_equity_factor_matrices(
     turnover_matrix: pd.DataFrame | None = None,
     financial_daily: Mapping[str, pd.DataFrame] | None = None,
     factor_ids: Sequence[str] = DEFAULT_EQUITY_CORE_FACTOR_IDS,
+    additional_definitions: Sequence[EquityFactorDefinition] = (),
     calculator_registry: Mapping[str, FactorCalculator] | None = None,
     eligibility_mask: pd.DataFrame | None = None,
     winsor_limits: tuple[float, float] = (0.01, 0.99),
@@ -110,7 +115,8 @@ def compute_equity_factor_matrices(
         eligibility = eligibility_mask.reindex(index=calendar, columns=symbols, fill_value=False).astype(bool)
         raw = {factor_id: matrix.reindex(index=calendar, columns=symbols).where(eligibility) for factor_id, matrix in raw.items()}
 
-    direction_by_factor = {item.factor_id: item.direction for item in equity_core_factor_definitions()}
+    factor_library = build_equity_factor_library(additional_definitions)
+    direction_by_factor = {item.factor_id: item.direction for item in factor_library.values()}
     directional = {
         factor_id: _apply_direction(matrix, direction_by_factor.get(factor_id, "positive"))
         for factor_id, matrix in raw.items()

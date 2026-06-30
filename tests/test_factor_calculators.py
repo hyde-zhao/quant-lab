@@ -3,7 +3,7 @@ from __future__ import annotations
 import pandas as pd
 
 from engine.factor_calculators import FactorCalculationContext, compute_equity_factor_matrices, factor_matrices_to_panel
-from engine.factor_library import DEFAULT_EQUITY_CORE_FACTOR_IDS
+from engine.factor_library import DEFAULT_EQUITY_CORE_FACTOR_IDS, EquityFactorDefinition
 
 
 def _calculator_fixture(days: int = 280, symbols: int = 6) -> dict[str, object]:
@@ -110,18 +110,34 @@ def test_compute_equity_factor_matrices_accepts_custom_calculator_registry() -> 
     def quality_proxy(context: FactorCalculationContext) -> pd.DataFrame:
         return context.financial_daily["roe_ttm"] * context.financial_daily["asset_growth"]
 
+    definition = EquityFactorDefinition(
+        factor_id="quality_profit_growth_proxy",
+        name="Quality Profit Growth Proxy",
+        category="quality",
+        raw_variable="roe_ttm * asset_growth",
+        direction="negative",
+        input_fields=("roe_ttm", "asset_growth"),
+        formula="roe_ttm * asset_growth",
+        default_window=1,
+        source_refs=("test:custom_factor_registry",),
+    )
     result = compute_equity_factor_matrices(
         close=fixture["close"],
         returns=fixture["returns"],
         price_frame=fixture["prices"],
         financial_daily=fixture["financial_daily"],
         factor_ids=("quality_profit_growth_proxy",),
+        additional_definitions=(definition,),
         calculator_registry={"quality_profit_growth_proxy": quality_proxy},
         min_cross_section=3,
     )
 
     assert set(result.raw_matrices) == {"quality_profit_growth_proxy"}
     assert result.limitations == ()
+    pd.testing.assert_frame_equal(
+        result.directional_matrices["quality_profit_growth_proxy"],
+        -result.raw_matrices["quality_profit_growth_proxy"],
+    )
     assert result.zscore_matrices["quality_profit_growth_proxy"].notna().sum().sum() > 0
 
 
