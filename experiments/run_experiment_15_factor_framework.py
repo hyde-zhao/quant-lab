@@ -137,8 +137,7 @@ def main() -> None:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="运行实验十五因子工程基础框架。")
-    parser.add_argument("--data-dir", required=True, help="显式传入离线 fixture 数据目录；禁止默认读取仓库旧数据目录。")
-    add_experiment_lake_args(parser, required=False)
+    add_experiment_lake_args(parser)
     parser.add_argument("--output-dir", default=str(research_report_path("experiment_15")))
     parser.add_argument("--start-date", default=None)
     parser.add_argument("--end-date", default=None)
@@ -148,6 +147,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--top-fraction", type=float, default=0.1)
     parser.add_argument("--initial-cash", type=float, default=1_000_000.0)
     parser.add_argument("--preview-rows", type=int, default=2000, help="CSV 预览最多输出行数；完整面板写 parquet。")
+    if len(sys.argv) <= 1:
+        parser.error("legacy --data-dir is no longer a CLI input; pass --lake-root and --as-of.")
     return parser.parse_args()
 
 
@@ -163,10 +164,7 @@ def run_factor_framework(args: argparse.Namespace) -> Experiment15Result:
     if not 0 < args.top_fraction <= 1:
         raise FactorFrameworkError("top_fraction 必须在 (0, 1] 内")
 
-    if getattr(args, "lake_root", None) and getattr(args, "as_of", None):
-        frames = load_experiment_lake_frames(args).frames
-    else:
-        frames = load_local_frames(require_explicit_data_dir(args))
+    frames = _frames_from_explicit_inputs(args)
     close_df, volume_df, universe, calendar = build_matrices(frames, args.start_date, args.end_date)
     factor_panel = build_factor_panel(close_df, volume_df, specs)
     coverages = summarize_factor_coverage(factor_panel)
@@ -221,6 +219,22 @@ def require_explicit_data_dir(args: argparse.Namespace) -> Path:
     if data_dir is None or str(data_dir).strip() == "":
         raise FactorFrameworkError("必须显式传入 --data-dir，禁止默认读取仓库旧数据目录。")
     return Path(data_dir)
+
+
+def _frames_from_explicit_inputs(args: argparse.Namespace) -> dict[str, pd.DataFrame]:
+    if getattr(args, "lake_root", None) and getattr(args, "as_of", None):
+        return dict(load_experiment_lake_frames(args).frames)
+    fixture_frames = load_local_frames(require_explicit_data_dir(args))
+    fixture_args = argparse.Namespace(
+        lake_root=getattr(args, "lake_root", "explicit-fixture-frames"),
+        as_of=getattr(args, "as_of", "1970-01-01T00:00:00+00:00"),
+        start_date=getattr(args, "start_date", None),
+        end_date=getattr(args, "end_date", None),
+        symbols=getattr(args, "symbols", None),
+        quality_policy=getattr(args, "quality_policy", "require_pass"),
+        fixture_frames=fixture_frames,
+    )
+    return dict(load_experiment_lake_frames(fixture_args).frames)
 
 
 def parse_factor_specs(factor_names: list[str] | tuple[str, ...]) -> list[FactorSpec]:
