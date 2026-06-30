@@ -16,7 +16,7 @@ if str(PROJECT_ROOT) not in sys.path:
 
 from engine.research_dataset import ResearchInputMetadata, build_research_input_metadata
 from engine.research_paths import research_report_path
-from experiments.reporting import attach_research_input_metadata, legacy_report_limitation
+from engine.research_reporting import attach_research_input_metadata, legacy_report_limitation
 from market_data.benchmarks import BenchmarkPolicy, resolve_hs300_benchmark
 
 

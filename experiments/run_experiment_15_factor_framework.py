@@ -29,8 +29,8 @@ from engine.research_dataset import (
     metadata_to_dict,
 )
 from engine.research_paths import research_report_path
-from experiments.lake_input_contract import add_experiment_lake_args, load_experiment_lake_frames
-from experiments.reporting import attach_research_input_metadata
+from engine.experiment_lake_input_contract import add_experiment_lake_args, load_experiment_lake_frames
+from engine.research_reporting import attach_research_input_metadata
 from market_data.benchmarks import build_benchmark_field_payload
 
 

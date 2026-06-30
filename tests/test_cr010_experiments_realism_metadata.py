@@ -6,7 +6,7 @@ from pathlib import Path
 import pandas as pd
 
 from engine.research_dataset import ResearchDatasetRequest, build_research_dataset
-from experiments.reporting import build_experiment_realism_matrix
+from engine.research_reporting import build_experiment_realism_matrix
 from market_data.catalog import CatalogEntry
 from market_data.contracts import (
     DATASET_EVENTS,

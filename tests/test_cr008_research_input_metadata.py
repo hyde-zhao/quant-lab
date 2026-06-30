@@ -21,14 +21,14 @@ from engine.research_dataset import (
     metadata_to_dict,
     validate_research_input_metadata,
 )
-from experiments.reporting import legacy_report_limitation, render_research_input_metadata_section
+from engine.research_reporting import legacy_report_limitation, render_research_input_metadata_section
 import experiments.run_experiment_14 as experiment_14
 import experiments.run_experiment_15_factor_framework as experiment_15
 
 
 TARGET_FILES = [
     Path("engine/research_dataset.py"),
-    Path("experiments/reporting.py"),
+    Path("engine/research_reporting.py"),
     Path("experiments/run_experiment_14.py"),
     Path("experiments/run_experiment_15_factor_framework.py"),
 ]

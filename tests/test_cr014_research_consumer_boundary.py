@@ -10,7 +10,7 @@ from engine.research_dataset import (
     build_research_dataset_from_published_truth,
     consume_duckdb_audit_evidence_ref,
 )
-from experiments.reporting import (
+from engine.research_reporting import (
     attach_cr014_claim_boundary_metadata,
     emit_docs_runbook_refresh_contract,
 )
@@ -290,7 +290,7 @@ def test_research_consumer_forbidden_operation_guard_and_static_scan() -> None:
     guard = assert_research_consumer_forbidden_operations(
         touched_files=[
             "engine/research_dataset.py",
-            "experiments/reporting.py",
+            "engine/research_reporting.py",
             "tests/test_cr014_research_consumer_boundary.py",
         ],
         duckdb_evidence_refs=[

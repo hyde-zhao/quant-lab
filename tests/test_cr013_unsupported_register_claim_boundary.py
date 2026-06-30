@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 
 from engine.research_dataset import read_execution_price_audit, resolve_execution_claim_boundary
-from experiments.reporting import (
+from engine.research_reporting import (
     attach_report_claim_boundary,
     build_claim_boundary_summary,
     read_unsupported_data_register,

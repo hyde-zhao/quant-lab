@@ -9,7 +9,7 @@ CONSUMER_FILES = (
     Path("engine/backtest.py"),
     Path("engine/backtrader_adapter.py"),
     Path("market_data/readers.py"),
-    Path("experiments/reporting.py"),
+    Path("engine/research_reporting.py"),
 )
 
 
