@@ -21,6 +21,7 @@ from engine.factor_statistics import (
     spearman_rank_correlation,
     summarize_information_coefficient,
 )
+from engine.experiment_lake_input_contract import add_experiment_lake_args, load_experiment_lake_frames
 from engine.research_paths import research_report_path
 from experiments.run_experiment_15_factor_framework import (
     FORWARD_HORIZONS,
@@ -28,7 +29,6 @@ from experiments.run_experiment_15_factor_framework import (
     build_factor_panel,
     build_matrices,
     format_value,
-    load_local_frames,
     markdown_table,
     parse_factor_specs,
 )
@@ -62,7 +62,7 @@ def main() -> None:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="运行实验十六动量因子有效性检验。")
-    parser.add_argument("--data-dir", default="data", help="本地标准 parquet 目录。")
+    add_experiment_lake_args(parser)
     parser.add_argument("--output-dir", default=str(research_report_path("experiment_16")))
     parser.add_argument("--start-date", default=None)
     parser.add_argument("--end-date", default=None)
@@ -86,7 +86,7 @@ def run_momentum_factor_validation(args: argparse.Namespace) -> Experiment16Resu
     if non_momentum:
         raise FactorFrameworkError("实验十六仅支持 momentum 因子: " + ", ".join(non_momentum))
 
-    frames = load_local_frames(Path(args.data_dir))
+    frames = _frames_from_experiment_inputs(args)
     close_df, volume_df, universe, calendar = build_matrices(frames, args.start_date, args.end_date)
     factor_panel = build_factor_panel(close_df, volume_df, specs)
     if factor_panel.empty:
@@ -158,6 +158,10 @@ def run_momentum_factor_validation(args: argparse.Namespace) -> Experiment16Resu
         top_bottom_path=top_bottom_path,
         data_coverage_path=data_coverage_path,
     )
+
+
+def _frames_from_experiment_inputs(args: argparse.Namespace) -> dict[str, pd.DataFrame]:
+    return dict(load_experiment_lake_frames(args).frames)
 
 
 def calculate_ic_timeseries(factor_panel: pd.DataFrame, *, min_cross_section: int) -> pd.DataFrame:

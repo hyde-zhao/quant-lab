@@ -21,6 +21,7 @@ if str(PROJECT_ROOT) not in sys.path:
 
 from engine.metrics import calculate_metrics
 from engine.diagnostics import LOGGER_NAME
+from engine.experiment_lake_input_contract import add_experiment_lake_args, load_experiment_lake_frames
 from engine.factor_statistics import build_forward_return_matrix, single_sort_returns
 from engine.portfolio import (
     DEFAULT_COST_GRID_BPS,
@@ -43,7 +44,6 @@ from experiments.run_experiment_15_factor_framework import (
     FactorFrameworkError,
     build_universe,
     format_value,
-    load_local_frames,
     markdown_table,
 )
 from market_data.benchmarks import build_benchmark_policy_result
@@ -122,7 +122,7 @@ def main() -> None:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="运行实验十七至二十一因子研究与策略化回测。")
-    parser.add_argument("--data-dir", required=True, default=None, help="必须显式传入的本地标准 parquet 目录。")
+    add_experiment_lake_args(parser)
     parser.add_argument("--output-dir", default=DEFAULT_CR011_OUTPUT_DIR)
     parser.add_argument("--run-id", default=None, help="可选 run_id；传入时在 output-dir 下创建隔离子目录。")
     parser.add_argument("--benchmark-policy", default="hs300_required", choices=["hs300_required", "hs300_optional", "proxy_allowed"])
@@ -158,7 +158,8 @@ def run_factor_suite(args: argparse.Namespace) -> Experiment1721Result:
     output_dir.mkdir(parents=True, exist_ok=True)
 
     definitions = select_factor_definitions(args.factors)
-    frames = load_local_frames(require_explicit_data_dir(args))
+    lake_input = load_experiment_lake_frames(args)
+    frames = dict(lake_input.frames)
     market = build_market_matrices(frames, args.start_date, args.end_date, max_symbols=int(args.max_symbols))
     raw_matrices = calculate_raw_factor_matrices(market, definitions)
     zscore_matrices, preprocessing_summary = preprocess_factor_matrices(
@@ -278,7 +279,9 @@ def run_factor_suite(args: argparse.Namespace) -> Experiment1721Result:
     robust_claim_result = evaluate_robust_validation_claims(robust_validation_summary, capacity_cost_metadata)
     metadata_payload = merge_factor_audit_metadata(
         {
-            "data_dir": str(args.data_dir),
+            "lake_root": str(getattr(args, "lake_root", "")),
+            "as_of": str(getattr(args, "as_of", "")),
+            "lake_input": lake_input.to_dict(),
             "start_date": market.close.index.min().isoformat(),
             "end_date": market.close.index.max().isoformat(),
             "symbol_count": len(market.universe),
@@ -448,13 +451,6 @@ def resolve_cr011_validation_output_dir(output_dir: str | Path, run_id: str | No
             f"禁止覆盖旧实验 17-21 baseline 报告；请将 --output-dir 指向 {DEFAULT_CR011_OUTPUT_DIR} 或测试临时目录。"
         )
     return base_dir
-
-
-def require_explicit_data_dir(args: argparse.Namespace) -> Path:
-    data_dir = getattr(args, "data_dir", None)
-    if data_dir is None or str(data_dir).strip() == "":
-        raise FactorFrameworkError("必须显式传入 --data-dir，禁止默认读取仓库旧数据目录。")
-    return Path(data_dir)
 
 
 def factor_definitions() -> dict[str, FactorDefinition]:
@@ -1699,7 +1695,7 @@ def render_report(
         "## 执行结论",
         "",
         f"- 输出报告：`{paths['report']}`",
-        f"- 数据目录：`{args.data_dir}`",
+        f"- Lake 输入：`{getattr(args, 'lake_root', '')}`；as-of：`{getattr(args, 'as_of', '')}`。",
         f"- 样本区间：{market.close.index.min().isoformat()} 至 {market.close.index.max().isoformat()}；股票数：{len(market.universe)}；交易日数：{len(market.calendar)}。",
         f"- IC/分组收益标签：未来 {args.horizon} 个交易日 close-to-close 收益。",
         f"- 严格保留因子：{', '.join(strict_retained) if strict_retained else '无'}。",

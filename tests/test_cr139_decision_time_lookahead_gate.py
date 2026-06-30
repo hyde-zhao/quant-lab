@@ -12,7 +12,7 @@ from market_data.contracts import (
     SCHEMA_VERSION,
 )
 from market_data.lake_layout import LakeLayout
-from market_data.readers import read_dataset
+from market_data.readers import read_dataset, read_panel_as_of
 
 
 def test_s25_decision_time_gate_allows_available_rows(tmp_path: Path) -> None:
@@ -35,6 +35,36 @@ def test_s25_decision_time_gate_allows_available_rows(tmp_path: Path) -> None:
     assert result.status == "available"
     assert result.frame is not None
     assert result.frame[["symbol", "close"]].to_dict("records") == [{"symbol": "000001", "close": 10.0}]
+
+
+def test_s25_read_panel_as_of_accepts_mixed_timestamp_formats(tmp_path: Path) -> None:
+    lake = _lake_with_prices(
+        tmp_path,
+        [
+            {
+                "symbol": "000001",
+                "trade_date": "20260102",
+                "close": 10.0,
+                "source_run_id": "run-cr139-s25-data",
+                "available_at": "2026-01-02T15:10:00+08:00",
+                "readiness_status": READINESS_STATUS_AVAILABLE,
+            },
+            {
+                "symbol": "000002",
+                "trade_date": "20260102",
+                "close": 11.0,
+                "source_run_id": "run-cr139-s25-data",
+                "available_at": "2026-01-02T07:10:00.123456+00:00",
+                "readiness_status": READINESS_STATUS_AVAILABLE,
+            },
+        ],
+    )
+
+    result = read_panel_as_of(DATASET_PRICES, lake, as_of="2026-01-02T15:30:00+08:00", keys=("symbol",))
+
+    assert result.status == "available"
+    assert result.frame is not None
+    assert set(result.frame["symbol"]) == {"000001", "000002"}
 
 
 def test_s25_decision_time_gate_blocks_future_available_at(tmp_path: Path) -> None:

@@ -14,13 +14,17 @@ from engine.experiment_lake_input_contract import (
 )
 from experiments.run_experiment_15_factor_framework import parse_args as parse_experiment_15_args
 from experiments.run_experiment_15_factor_framework import run_factor_framework
+from experiments.run_experiment_16_momentum_factor import parse_args as parse_experiment_16_args
+from experiments.run_experiment_16_momentum_factor import run_momentum_factor_validation
+from experiments.run_experiment_17_21_factor_suite import parse_args as parse_experiment_17_21_args
+from experiments.run_experiment_17_21_factor_suite import run_factor_suite
 from experiments.run_experiment_23_29_ml_factor_suite import parse_args as parse_stage4_args
 from experiments.run_experiment_23_29_ml_factor_suite import run_stage4_suite
 from market_data.readers import ReaderResult
 
 
 def test_target_entry_functions_do_not_call_local_parquet_bypass() -> None:
-    for function in (run_factor_framework, run_stage4_suite):
+    for function in (run_factor_framework, run_momentum_factor_validation, run_factor_suite, run_stage4_suite):
         tree = ast.parse(inspect.getsource(function))
         calls = [
             node.func.id
@@ -32,6 +36,8 @@ def test_target_entry_functions_do_not_call_local_parquet_bypass() -> None:
 
 def test_parsers_no_longer_define_data_dir() -> None:
     assert "--data-dir" not in _parser_options(parse_experiment_15_args)
+    assert "--data-dir" not in _parser_options(parse_experiment_16_args)
+    assert "--data-dir" not in _parser_options(parse_experiment_17_21_args)
     assert "--data-dir" not in _parser_options(parse_stage4_args)
 
 
@@ -57,8 +63,37 @@ def test_lake_input_contract_calls_pit_reader_for_required_datasets(tmp_path: Pa
     assert tuple(call["dataset"] for call in calls) == EXPERIMENT_REQUIRED_DATASETS
     assert {call["as_of"] for call in calls} == {"2024-02-01T16:00:00+08:00"}
     assert set(result.frames) == {"prices", "index_members", "trade_calendar"}
+    assert calls[0]["keys"] == ("trade_date", "symbol")
+    assert calls[1]["keys"] == ("trade_date", "con_code")
     assert all(value == 0 for value in result.permission_counters.values())
     assert result.source_lineage["input_mode"] == "read_panel_as_of"
+
+
+def test_lake_input_contract_normalises_canonical_index_members_con_code(tmp_path: Path) -> None:
+    def reader(dataset: str, lake_root: str | Path, **kwargs: object) -> ReaderResult:
+        if dataset == "index_members":
+            return ReaderResult(
+                status="available",
+                frame=pd.DataFrame(
+                    [
+                        {
+                            "trade_date": "2024-01-02",
+                            "con_code": "AAA",
+                            "index_code": "UNIT",
+                            "is_member": True,
+                            "available_at": "2024-01-02T16:00:00+08:00",
+                        }
+                    ]
+                ),
+            )
+        return ReaderResult(status="available", frame=_frame_for(dataset))
+
+    result = load_experiment_lake_frames(
+        Namespace(lake_root=tmp_path / "lake", as_of="2024-02-01T16:00:00+08:00"),
+        reader=reader,
+    )
+
+    assert result.frames["index_members"]["symbol"].tolist() == ["AAA"]
 
 
 def test_fixture_frames_are_explicit_test_only_input(tmp_path: Path) -> None:

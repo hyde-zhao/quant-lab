@@ -5,6 +5,7 @@ from pathlib import Path
 
 import pandas as pd
 
+from experiments.run_experiment_15_factor_framework import load_local_frames
 from experiments.run_experiment_16_momentum_factor import run_momentum_factor_validation
 
 
@@ -54,7 +55,10 @@ def write_momentum_dataset(root: Path, *, inject_missing_close: bool = False) ->
 
 def args_for(root: Path, **overrides) -> Namespace:
     values = {
-        "data_dir": str(root / "data"),
+        "lake_root": str(root / "lake"),
+        "as_of": "2024-12-31T23:59:59+08:00",
+        "quality_policy": "require_pass",
+        "fixture_frames": load_local_frames(root / "data"),
         "output_dir": str(root / "reports" / "experiment_16"),
         "start_date": None,
         "end_date": None,

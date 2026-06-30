@@ -1445,7 +1445,7 @@ def write_cr030_artifacts(
     paths["factor_run_spec"] = factor_run_spec_path
 
     # FactorEvaluationReport (JSON)
-    eval_dir = research_report_path("factor_evaluation", "v1", f"report-{run_id}-{FACTOR_ID}")
+    eval_dir = REPORTS_BASE / "factor_evaluation" / "v1" / f"report-{run_id}-{FACTOR_ID}"
     eval_dir.mkdir(parents=True, exist_ok=True)
     eval_report = {
         "report_id": f"report-{run_id}-{FACTOR_ID}",
@@ -1508,7 +1508,7 @@ def write_cr030_artifacts(
     paths["experiment_manifest"] = manifest_path
 
     # ResearchReportCatalog
-    catalog_dir = research_report_path("research_catalog", "v1", f"catalog-{run_id}")
+    catalog_dir = REPORTS_BASE / "research_catalog" / "v1" / f"catalog-{run_id}"
     catalog_dir.mkdir(parents=True, exist_ok=True)
     catalog = {
         "catalog_id": f"catalog-{run_id}",
@@ -1523,7 +1523,7 @@ def write_cr030_artifacts(
     paths["research_catalog"] = catalog_dir / "catalog.json"
 
     # StrategyAdmissionPackage
-    sap_dir = research_report_path("stage6_admission", f"package-{STRATEGY_ID}-{run_id}")
+    sap_dir = REPORTS_BASE / "stage6_admission" / f"package-{STRATEGY_ID}-{run_id}"
     sap_dir.mkdir(parents=True, exist_ok=True)
     sap = {
         "package_id": f"package-{STRATEGY_ID}-{run_id}",
@@ -1587,6 +1587,7 @@ def write_process_docs(
 ) -> dict[str, Path]:
     """生成过程文档."""
     paths: dict[str, Path] = {}
+    PROCESS_DIR.mkdir(parents=True, exist_ok=True)
 
     # PLAN.md
     plan = (
@@ -1721,11 +1722,18 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--group-count", type=int, default=5, help="分组数")
     parser.add_argument("--forward-horizon", type=int, default=20, help="前瞻 horizon（交易日）")
     parser.add_argument("--min-252d-samples", type=int, default=60, help="252 日窗口最小有效样本")
+    parser.add_argument("--output-root", default=None, help="研究报告输出根目录；默认使用 engine.research_paths 配置。")
+    parser.add_argument("--process-dir", default=None, help="过程文档输出目录；默认使用 engine.research_paths 配置。")
     return parser.parse_args()
 
 
 def main() -> None:
+    global PROCESS_DIR, REPORTS_BASE
     args = parse_args()
+    if args.output_root:
+        REPORTS_BASE = Path(args.output_root)
+    if args.process_dir:
+        PROCESS_DIR = Path(args.process_dir)
     run_id = args.run_id
     run_dir = REPORTS_BASE / run_id
     run_dir.mkdir(parents=True, exist_ok=True)

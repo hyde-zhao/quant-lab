@@ -2087,8 +2087,8 @@ def evaluate_corporate_action_availability(
     if frame["available_at"].isna().any() or frame["available_at"].astype(str).str.strip().eq("").any():
         return _corporate_action_result("required_missing", "corporate_action_available_at_missing", result)
     if decision_time:
-        available_at = pd.to_datetime(frame["available_at"], errors="coerce")
-        decision = pd.to_datetime(decision_time, errors="coerce")
+        available_at = pd.to_datetime(frame["available_at"], errors="coerce", utc=True, format="mixed")
+        decision = pd.to_datetime(decision_time, errors="coerce", utc=True, format="mixed")
         if pd.isna(decision) or available_at.isna().any():
             return _corporate_action_result("required_missing", "corporate_action_available_at_unparseable", result)
         if bool((available_at > decision).any()):
@@ -3283,7 +3283,7 @@ def _decision_time_lookahead_gate(
             },
         )
 
-    decision = pd.to_datetime(decision_time, errors="coerce")
+    decision = pd.to_datetime(decision_time, errors="coerce", utc=True, format="mixed")
     if pd.isna(decision):
         return ReaderResult(
             status=status,
@@ -3303,7 +3303,7 @@ def _decision_time_lookahead_gate(
             },
         )
 
-    available_at = pd.to_datetime(frame["available_at"], errors="coerce")
+    available_at = pd.to_datetime(frame["available_at"], errors="coerce", utc=True, format="mixed")
     if available_at.isna().any():
         return ReaderResult(
             status=status,
@@ -3499,8 +3499,8 @@ def read_panel_as_of(
             },
         )
 
-    decision_time = pd.to_datetime(as_of, errors="coerce")
-    available_at = pd.to_datetime(frame["available_at"], errors="coerce")
+    decision_time = pd.to_datetime(as_of, errors="coerce", utc=True, format="mixed")
+    available_at = pd.to_datetime(frame["available_at"], errors="coerce", utc=True, format="mixed")
     if pd.isna(decision_time) or available_at.isna().any():
         return ReaderResult(
             status="required_missing" if required else "unavailable",
@@ -3544,7 +3544,7 @@ def read_panel_as_of(
             },
         )
 
-    work["_cr139_available_at_sort"] = pd.to_datetime(work["available_at"], errors="coerce")
+    work["_cr139_available_at_sort"] = pd.to_datetime(work["available_at"], errors="coerce", utc=True, format="mixed")
     sort_columns = [*list(keys), "_cr139_available_at_sort"]
     if "trade_date" in work.columns:
         sort_columns.insert(len(keys), "trade_date")

@@ -26,8 +26,8 @@ EXPERIMENT_FRAME_KEYS = {
     DATASET_TRADE_CALENDAR: "trade_calendar",
 }
 EXPERIMENT_PIT_KEYS = {
-    DATASET_PRICES: ("symbol",),
-    DATASET_INDEX_MEMBERS: ("symbol",),
+    DATASET_PRICES: ("trade_date", "symbol"),
+    DATASET_INDEX_MEMBERS: ("trade_date", "con_code"),
     DATASET_TRADE_CALENDAR: ("trade_date",),
 }
 
@@ -119,7 +119,7 @@ def load_experiment_lake_frames(
         if result.status != "available" or result.frame is None:
             issue_codes = ",".join(str(item.get("code") or "") for item in result.issues) or result.status
             raise ValueError(f"lake input unavailable: dataset={dataset} status={result.status} issues={issue_codes}")
-        frames[EXPERIMENT_FRAME_KEYS[dataset]] = result.frame.copy()
+        frames[EXPERIMENT_FRAME_KEYS[dataset]] = _normalise_experiment_frame(dataset, result.frame)
 
     return ExperimentLakeInputResult(
         request=request,
@@ -133,6 +133,13 @@ def load_experiment_lake_frames(
         },
         permission_counters=_zero_permission_counters(),
     )
+
+
+def _normalise_experiment_frame(dataset: str, frame: pd.DataFrame) -> pd.DataFrame:
+    work = frame.copy()
+    if dataset == DATASET_INDEX_MEMBERS and "symbol" not in work.columns and "con_code" in work.columns:
+        work["symbol"] = work["con_code"]
+    return work
 
 
 def _request_from_args(args: Any) -> ExperimentLakeInputRequest:
