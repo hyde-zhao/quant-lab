@@ -48,18 +48,18 @@ CR013_UNSUPPORTED_DATA_ITEMS = (
 
 def _experiment_entrypoint(index: int) -> str:
     if index in {6, 7}:
-        return "experiments/run_experiment_06_07.py"
+        return "experiments/run_momentum_rsi_backtest_exp06_07.py"
     if index == 11:
         return "N/A"
     known = {
-        8: "experiments/run_experiment_08.py",
-        9: "experiments/run_experiment_09.py",
-        10: "experiments/run_experiment_10.py",
-        12: "experiments/run_experiment_12.py",
-        13: "experiments/run_experiment_13.py",
-        14: "experiments/run_experiment_14.py",
-        15: "experiments/run_experiment_15_factor_framework.py",
-        16: "experiments/run_experiment_16_momentum_factor.py",
+        8: "experiments/run_macd_backtest_exp08.py",
+        9: "experiments/run_strategy_parameter_sensitivity_exp09.py",
+        10: "experiments/run_out_of_sample_overfit_risk_exp10.py",
+        12: "experiments/run_market_regime_segments_exp12.py",
+        13: "experiments/run_strategy_comparison_exp13.py",
+        14: "experiments/run_data_benchmark_audit_exp14.py",
+        15: "experiments/run_factor_framework_exp15.py",
+        16: "experiments/run_momentum_factor_validation_exp16.py",
     }
     return known.get(index, "legacy-script-regression")
 

@@ -63,12 +63,12 @@ def main() -> int:
     }
     tests = [
         {
-            "command": "uv run --python 3.11 pytest -q tests/test_cr139_w3_reader_p0_support.py",
+            "command": "uv run --python 3.11 pytest -q tests/data_lake/test_reader_reader_p0_support.py",
             "result": "pass",
             "tests_passed": 3,
         },
         {
-            "command": "uv run --python 3.11 pytest -q tests/test_market_data_tushare_datasets.py",
+            "command": "uv run --python 3.11 pytest -q tests/market_data/test_market_data_tushare_datasets.py",
             "result": "pass",
             "tests_passed": 13,
         },
@@ -319,8 +319,8 @@ def _write_check(path: Path, evidence: dict[str, Any]) -> None:
 
 ## Verification Commands
 
-- `uv run --python 3.11 pytest -q tests/test_cr139_w3_reader_p0_support.py` -> pass, 3 tests
-- `uv run --python 3.11 pytest -q tests/test_market_data_tushare_datasets.py` -> pass, 13 tests
+- `uv run --python 3.11 pytest -q tests/data_lake/test_reader_reader_p0_support.py` -> pass, 3 tests
+- `uv run --python 3.11 pytest -q tests/market_data/test_market_data_tushare_datasets.py` -> pass, 13 tests
 
 ## Operation Counts
 

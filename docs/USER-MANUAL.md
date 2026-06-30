@@ -24,11 +24,11 @@ CR 编号文档不再作为用户主入口。已合并的旧文档位于 `docs/l
 
 1. 使用 `uv` 管理 Python 解释器、依赖和命令运行。
 2. 不手工维护 `.venv/`，不把依赖直接写入锁文件。
-3. 默认环境不安装 ML 可选依赖组。实验 23-29 的 ML 全流程和 `tests/test_experiment_23_29_ml_factor_suite.py` 需要 `pyproject.toml` 中的 `ml` dependency group，该组包含 `scikit-learn` 和 `LightGBM`。运行前使用：
+3. 默认环境不安装 ML 可选依赖组。实验 23-29 的 ML 全流程和 `tests/experiments/test_ml_factor_strategy_suite_exp23_29.py` 需要 `pyproject.toml` 中的 `ml` dependency group，该组包含 `scikit-learn` 和 `LightGBM`。运行前使用：
 
 ```bash
 uv sync --python 3.11 --group ml
-uv run --python 3.11 --group ml pytest -q tests/test_experiment_23_29_ml_factor_suite.py
+uv run --python 3.11 --group ml pytest -q tests/experiments/test_ml_factor_strategy_suite_exp23_29.py
 ```
 
 CR-139 S10 的 no-bypass / lake-as-of 合同测试是 static/fixture 范围，不要求安装 `ml` 组；ML 全流程运行仍不授权 provider、lake write、catalog publish、runtime 或交易操作。

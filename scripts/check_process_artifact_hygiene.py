@@ -12,22 +12,22 @@ from typing import Any
 KNOWN_SOURCE_RESIDUALS = frozenset(
     {
         "scripts/check_human_gate_decision_brief.py",
-        "tests/test_cr118_human_gate_path_alias_checker.py",
-        "tests/test_cr119_human_gate_launch_message_checker.py",
+        "tests/meta_flow/test_human_gate_path_alias_checker.py",
+        "tests/meta_flow/test_human_gate_launch_message_checker.py",
     }
 )
 
 CURRENT_CR132_SOURCE_ASSETS = frozenset(
     {
         "scripts/check_process_artifact_hygiene.py",
-        "tests/test_cr132_process_artifact_hygiene.py",
+        "tests/meta_flow/test_process_artifact_hygiene.py",
     }
 )
 
 CURRENT_GUARDRAIL_SOURCE_ASSETS = frozenset(
     {
         "scripts/check_process_artifact_hygiene.py",
-        "tests/test_cr132_process_artifact_hygiene.py",
+        "tests/meta_flow/test_process_artifact_hygiene.py",
     }
 )
 
@@ -79,7 +79,7 @@ CURRENT_CR133_SOURCE_ASSETS = frozenset(
         "trading/strategy_runner/result.py",
         "trading/strategy_runner/run_spec.py",
         "trading/strategy_runner/runner.py",
-        "tests/test_cr133_runner_spec_cli.py",
+        "tests/runner/test_runner_spec_cli.py",
     }
 )
 
@@ -107,8 +107,8 @@ CURRENT_CR133_PROCESS_ASSETS = frozenset(
 CURRENT_CR134_SOURCE_ASSETS = frozenset(
     {
         "scripts/check_process_artifact_hygiene.py",
-        "tests/test_cr132_process_artifact_hygiene.py",
-        "tests/test_cr134_runner_evidence_index.py",
+        "tests/meta_flow/test_process_artifact_hygiene.py",
+        "tests/runner/test_runner_evidence_index.py",
         "trading/strategy_runner/__init__.py",
         "trading/strategy_runner/cli.py",
         "trading/strategy_runner/evidence_index.py",
@@ -165,8 +165,8 @@ CURRENT_CR135_PROCESS_ASSETS = frozenset(
 CURRENT_CR135_SOURCE_ASSETS = frozenset(
     {
         "scripts/check_process_artifact_hygiene.py",
-        "tests/test_cr132_process_artifact_hygiene.py",
-        "tests/test_cr135_runner_artifact_bundle.py",
+        "tests/meta_flow/test_process_artifact_hygiene.py",
+        "tests/runner/test_runner_artifact_bundle.py",
         "trading/strategy_runner/__init__.py",
         "trading/strategy_runner/artifact_bundle.py",
         "trading/strategy_runner/cli.py",
@@ -207,8 +207,8 @@ CURRENT_CR136_PROCESS_ASSETS = frozenset(
 CURRENT_CR136_SOURCE_ASSETS = frozenset(
     {
         "scripts/check_process_artifact_hygiene.py",
-        "tests/test_cr132_process_artifact_hygiene.py",
-        "tests/test_cr136_runner_bundle_validation.py",
+        "tests/meta_flow/test_process_artifact_hygiene.py",
+        "tests/runner/test_runner_bundle_validation.py",
         "trading/strategy_runner/__init__.py",
         "trading/strategy_runner/artifact_bundle.py",
         "trading/strategy_runner/cli.py",
@@ -246,8 +246,8 @@ CURRENT_CR137_PROCESS_ASSETS = frozenset(
 CURRENT_CR137_SOURCE_ASSETS = frozenset(
     {
         "scripts/check_process_artifact_hygiene.py",
-        "tests/test_cr132_process_artifact_hygiene.py",
-        "tests/test_cr137_runner_run_registry.py",
+        "tests/meta_flow/test_process_artifact_hygiene.py",
+        "tests/runner/test_runner_run_registry.py",
         "trading/strategy_runner/__init__.py",
         "trading/strategy_runner/cli.py",
         "trading/strategy_runner/run_registry.py",
@@ -260,14 +260,14 @@ CURRENT_CR138_SOURCE_ASSETS = frozenset(
     {
         "docs/CR138-RUNNER-QMT-AUTHORIZATION-RUNBOOK.md",
         "docs/QMT-GATEWAY-INSTALL.md",
-        "tests/test_cr138_docs_fixtures_authorization_runbook.py",
-        "tests/test_cr138_gateway_lifecycle_health_rest_contract.py",
-        "tests/test_cr138_gateway_query_calendar_commission_pnl.py",
-        "tests/test_cr138_gateway_subscription_order_report_recovery.py",
-        "tests/test_cr138_runner_event_signal_rebalance_tracking.py",
-        "tests/test_cr138_runner_evidence_review_incident_lifecycle.py",
-        "tests/test_cr138_runner_plan_preflight_control.py",
-        "tests/test_cr138_shared_contracts_authorization_audit.py",
+        "tests/docs_quality/test_docs_fixtures_authorization_runbook.py",
+        "tests/trading/test_gateway_lifecycle_health_rest_contract.py",
+        "tests/trading/test_gateway_query_calendar_commission_pnl.py",
+        "tests/trading/test_gateway_subscription_order_report_recovery.py",
+        "tests/runner/test_runner_event_signal_rebalance_tracking.py",
+        "tests/runner/test_runner_evidence_review_incident_lifecycle.py",
+        "tests/runner/test_runner_plan_preflight_control.py",
+        "tests/trading/test_shared_contracts_authorization_audit.py",
         "trading/qmt_gateway_config.py",
         "trading/qmt_gateway_contracts.py",
         "trading/qmt_gateway_gates.py",
@@ -368,9 +368,9 @@ CURRENT_CR138_PROCESS_ASSETS = frozenset(
 
 CURRENT_RUNNER_SIMULATION_ENTRY_SOURCE_ASSETS = frozenset(
     {
-        "tests/test_cr020_linux_client_rest_transport.py",
-        "tests/test_cr020_runtime_manual_validation.py",
-        "tests/test_runner_simulation_activation.py",
+        "tests/trading/test_linux_client_rest_transport.py",
+        "tests/trading/test_runtime_manual_validation.py",
+        "tests/runner/test_runner_simulation_activation.py",
         "trading/qmt_client.py",
         "trading/qmt_gateway_contracts.py",
         "trading/qmt_runtime.py",

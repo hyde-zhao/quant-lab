@@ -176,11 +176,11 @@ graph TD
 uv sync --python 3.11
 ```
 
-默认环境覆盖核心数据、回测、合同和 fixture/static 测试。实验 23-29 的 ML 全流程会进入 `scikit-learn` / `LightGBM` 路径，这些依赖在 `pyproject.toml` 的 `ml` dependency group 中，不随默认 sync 安装。需要运行 ML 模型训练、walk-forward 全流程或 `tests/test_experiment_23_29_ml_factor_suite.py` 时，先安装 ML 依赖组：
+默认环境覆盖核心数据、回测、合同和 fixture/static 测试。实验 23-29 的 ML 全流程会进入 `scikit-learn` / `LightGBM` 路径，这些依赖在 `pyproject.toml` 的 `ml` dependency group 中，不随默认 sync 安装。需要运行 ML 模型训练、walk-forward 全流程或 `tests/experiments/test_ml_factor_strategy_suite_exp23_29.py` 时，先安装 ML 依赖组：
 
 ```bash
 uv sync --python 3.11 --group ml
-uv run --python 3.11 --group ml pytest -q tests/test_experiment_23_29_ml_factor_suite.py
+uv run --python 3.11 --group ml pytest -q tests/experiments/test_ml_factor_strategy_suite_exp23_29.py
 ```
 
 CR-139 的 S10 no-bypass / lake-as-of 合同验证不要求安装 `ml` 组；它通过 static/fixture 测试确认实验入口不再直接绕过 lake reader。真实 ML 全流程运行仍需要显式安装 `ml` 依赖组，并且不等于 runtime、provider、lake write、catalog publish 或交易授权。
@@ -986,7 +986,7 @@ strategies/
 reports/
   .gitkeep                    # 报告目录占位；真实报告不入库
 tests/
-  test_story_004_013.py       # STORY-004..013 代表路径测试
+  test_strategy_pipeline_contracts.py       # STORY-004..013 代表路径测试
 process/
   *.md / *.yaml               # 工作流过程、需求、设计、验证证据
 docs/

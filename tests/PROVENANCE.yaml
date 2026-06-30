@@ -1,0 +1,1772 @@
+version: 1
+items:
+  tests/backtest/test_backtrader_clean_feed.py:
+    domains:
+      - backtest
+    old_paths:
+      - tests/test_cr006_backtrader_clean_feed.py
+    provenance:
+      -
+        cr: CR-006
+  tests/backtest/test_backtrader_no_copy_guardrail.py:
+    domains:
+      - backtest
+    old_paths:
+      - tests/test_cr025_backtrader_no_copy_guardrail.py
+    provenance:
+      -
+        cr: CR-025
+  tests/backtest/test_backtrader_optional_backend.py:
+    domains:
+      - backtest
+    old_paths:
+      - tests/test_backtrader_optional_backend.py
+    provenance:
+      -
+        source: legacy-topic-test
+  tests/backtest/test_clean_feed_gate.py:
+    domains:
+      - backtest
+    old_paths:
+      - tests/test_cr025_clean_feed_gate.py
+    provenance:
+      -
+        cr: CR-025
+  tests/backtest/test_lightweight_engine_adapter.py:
+    domains:
+      - backtest
+    old_paths:
+      - tests/test_cr006_lightweight_engine_adapter.py
+    provenance:
+      -
+        cr: CR-006
+  tests/backtest/test_old_data_reference_guardrail.py:
+    domains:
+      - backtest
+    old_paths:
+      - tests/test_cr006_old_data_reference_guardrail.py
+    provenance:
+      -
+        cr: CR-006
+  tests/backtest/test_strategy_pipeline_contracts.py:
+    domains:
+      - backtest
+    old_paths:
+      - tests/test_story_004_013.py
+    provenance:
+      -
+        story: 004-013
+  tests/data_lake/test_adjustment_leakage_gates.py:
+    domains:
+      - data_lake
+    old_paths:
+      - tests/test_cr017_adjustment_leakage_gates.py
+    provenance:
+      -
+        cr: CR-017
+  tests/data_lake/test_adjustment_policy_contract.py:
+    domains:
+      - data_lake
+    old_paths:
+      - tests/test_cr017_adjustment_policy_contract.py
+    provenance:
+      -
+        cr: CR-017
+  tests/data_lake/test_adjustment_publish_readiness.py:
+    domains:
+      - data_lake
+    old_paths:
+      - tests/test_cr018_adjustment_publish_readiness.py
+    provenance:
+      -
+        cr: CR-018
+  tests/data_lake/test_adjustment_quality_parity.py:
+    domains:
+      - data_lake
+    old_paths:
+      - tests/test_cr017_adjustment_quality_parity.py
+    provenance:
+      -
+        cr: CR-017
+  tests/data_lake/test_backup_archive_restore.py:
+    domains:
+      - data_lake
+    old_paths:
+      - tests/test_cr010_backup_archive_restore.py
+    provenance:
+      -
+        cr: CR-010
+  tests/data_lake/test_broker_lake_audit_chain.py:
+    domains:
+      - data_lake
+    old_paths:
+      - tests/test_cr139_broker_lake_audit_chain.py
+    provenance:
+      -
+        cr: CR-139
+  tests/data_lake/test_catalog_manifest_pointer.py:
+    domains:
+      - data_lake
+    old_paths:
+      - tests/test_cr139_catalog_manifest_source_of_truth.py
+      - tests/test_cr139_incremental_append_pointer_plan.py
+      - tests/test_cr139_published_pointer.py
+      - tests/test_cr139_replay_published_asof.py
+    provenance:
+      -
+        cr: CR-139
+  tests/data_lake/test_catalog_publish_gate.py:
+    domains:
+      - data_lake
+    old_paths:
+      - tests/test_cr014_catalog_publish_gate.py
+    provenance:
+      -
+        cr: CR-014
+  tests/trading/test_commission_cost_pretrade_gate.py:
+    domains:
+      - trading
+    old_paths:
+      - tests/test_cr139_commission_cost_pretrade_gate.py
+    provenance:
+      -
+        cr: CR-139
+  tests/data_lake/test_config_facts_versioning.py:
+    domains:
+      - data_lake
+    old_paths:
+      - tests/test_cr139_config_facts_versioning.py
+    provenance:
+      -
+        cr: CR-139
+  tests/data_lake/test_consumer_boundary.py:
+    domains:
+      - data_lake
+    old_paths:
+      - tests/test_cr010_consumer_boundary.py
+    provenance:
+      -
+        cr: CR-010
+  tests/data_lake/test_cr_data_audit_chain.py:
+    domains:
+      - data_lake
+    old_paths:
+      - tests/test_cr139_cr_data_audit_chain.py
+    provenance:
+      -
+        cr: CR-139
+  tests/data_lake/test_cross_source_calendar_timezone.py:
+    domains:
+      - data_lake
+    old_paths:
+      - tests/test_cr139_cross_source_calendar_timezone.py
+    provenance:
+      -
+        cr: CR-139
+  tests/data_lake/test_data_lake_publish_and_contracts.py:
+    domains:
+      - data_lake
+    old_paths:
+      - tests/test_cr010_data_lake_publish_and_contracts.py
+    provenance:
+      -
+        cr: CR-010
+  tests/data_lake/test_decision_time_lookahead_gate.py:
+    domains:
+      - data_lake
+    old_paths:
+      - tests/test_cr139_decision_time_lookahead_gate.py
+    provenance:
+      -
+        cr: CR-139
+  tests/data_lake/test_dedup_contracts.py:
+    domains:
+      - data_lake
+    old_paths:
+      - tests/test_cr139_dedup_correctness.py
+      - tests/test_cr139_read_layer_dedup.py
+      - tests/test_cr139_write_dedup_guarantee.py
+    provenance:
+      -
+        cr: CR-139
+  tests/data_lake/test_duckdb_pushdown_e2e.py:
+    domains:
+      - data_lake
+    old_paths:
+      - tests/test_cr139_duckdb_pushdown_e2e.py
+    provenance:
+      -
+        cr: CR-139
+  tests/data_lake/test_duckdb_readonly_adapter.py:
+    domains:
+      - data_lake
+    old_paths:
+      - tests/test_cr139_duckdb_readonly_adapter.py
+    provenance:
+      -
+        cr: CR-139
+  tests/data_lake/test_duckdb_readonly_boundary.py:
+    domains:
+      - data_lake
+    old_paths:
+      - tests/test_cr014_duckdb_readonly_boundary.py
+    provenance:
+      -
+        cr: CR-014
+  tests/data_lake/test_duplicate_fingerprint_profiling.py:
+    domains:
+      - data_lake
+    old_paths:
+      - tests/test_cr139_duplicate_fingerprint_profiling.py
+    provenance:
+      -
+        cr: CR-139
+  tests/data_lake/test_feature_label_artifact_layer.py:
+    domains:
+      - data_lake
+    old_paths:
+      - tests/test_cr139_feature_label_artifact_layer.py
+    provenance:
+      -
+        cr: CR-139
+  tests/data_lake/test_duplicate_profile_gate_b.py:
+    domains:
+      - data_lake
+    old_paths:
+      - tests/test_cr139_gateb_batch0_duplicate_profile.py
+    provenance:
+      -
+        cr: CR-139
+  tests/data_lake/test_preflight_gate_b.py:
+    domains:
+      - data_lake
+    old_paths:
+      - tests/test_cr139_gateb_batch0_preflight.py
+    provenance:
+      -
+        cr: CR-139
+  tests/data_lake/test_golden_baseline.py:
+    domains:
+      - data_lake
+    old_paths:
+      - tests/test_cr139_s02_golden_baseline.py
+    provenance:
+      -
+        cr: CR-139
+  tests/data_lake/test_incremental_replay_retention.py:
+    domains:
+      - data_lake
+    old_paths:
+      - tests/test_cr014_incremental_replay_retention.py
+    provenance:
+      -
+        cr: CR-014
+  tests/data_lake/test_lake_inventory.py:
+    domains:
+      - data_lake
+    old_paths:
+      - tests/test_cr139_s01_inventory.py
+    provenance:
+      -
+        cr: CR-139
+  tests/data_lake/test_jqdata_index_members_source.py:
+    domains:
+      - data_lake
+    old_paths:
+      - tests/test_cr010_jqdata_index_members_source.py
+    provenance:
+      -
+        cr: CR-010
+  tests/data_lake/test_label_leak_online_offline_consistency.py:
+    domains:
+      - data_lake
+    old_paths:
+      - tests/test_cr139_label_leak_online_offline_consistency.py
+    provenance:
+      -
+        cr: CR-139
+  tests/data_lake/test_lineage_and_run_id.py:
+    domains:
+      - data_lake
+    old_paths:
+      - tests/test_cr139_lineage_checksum_backfill.py
+      - tests/test_cr139_read_audit_runid.py
+      - tests/test_cr139_runid_lineage_penetration.py
+      - tests/test_cr139_runid_naming.py
+    provenance:
+      -
+        cr: CR-139
+  tests/data_lake/test_p0_pipeline_contract.py:
+    domains:
+      - data_lake
+    old_paths:
+      - tests/test_cr014_p0_pipeline_contract.py
+    provenance:
+      -
+        cr: CR-014
+  tests/data_lake/test_p1_auxiliary_claim_boundary.py:
+    domains:
+      - data_lake
+    old_paths:
+      - tests/test_cr018_p1_auxiliary_claim_boundary.py
+    provenance:
+      -
+        cr: CR-018
+  tests/data_lake/test_panel_reader.py:
+    domains:
+      - data_lake
+    old_paths:
+      - tests/test_cr139_panel_reader.py
+    provenance:
+      -
+        cr: CR-139
+  tests/data_lake/test_partition_governance.py:
+    domains:
+      - data_lake
+    old_paths:
+      - tests/test_cr139_s08_partition_governance.py
+    provenance:
+      -
+        cr: CR-139
+  tests/data_lake/test_pit_as_of_reader.py:
+    domains:
+      - data_lake
+    old_paths:
+      - tests/test_cr139_pit_as_of_reader.py
+    provenance:
+      -
+        cr: CR-139
+  tests/data_lake/test_pit_correctness.py:
+    domains:
+      - data_lake
+    old_paths:
+      - tests/test_cr139_pit_correctness.py
+    provenance:
+      -
+        cr: CR-139
+  tests/data_lake/test_pit_universe_constituent_chain.py:
+    domains:
+      - data_lake
+    old_paths:
+      - tests/test_cr139_pit_universe_constituent_chain.py
+    provenance:
+      -
+        cr: CR-139
+  tests/data_lake/test_production_current_truth_rerun.py:
+    domains:
+      - data_lake
+    old_paths:
+      - tests/test_cr018_production_current_truth_rerun.py
+    provenance:
+      -
+        cr: CR-018
+  tests/data_lake/test_publish_current_reader_smoke.py:
+    domains:
+      - data_lake
+    old_paths:
+      - tests/test_cr018_publish_current_reader_smoke.py
+    provenance:
+      -
+        cr: CR-018
+  tests/data_lake/test_qfq_hfq_derivation.py:
+    domains:
+      - data_lake
+    old_paths:
+      - tests/test_cr017_qfq_hfq_derivation.py
+    provenance:
+      -
+        cr: CR-017
+  tests/data_lake/test_quality_partition_writer.py:
+    domains:
+      - data_lake
+    old_paths:
+      - tests/test_cr139_quality_partition_writer.py
+    provenance:
+      -
+        cr: CR-139
+  tests/data_lake/test_reader_fail_fast_contracts.py:
+    domains:
+      - data_lake
+    old_paths:
+      - tests/test_cr010_w3_fail_fast_contracts.py
+    provenance:
+      -
+        cr: CR-010
+  tests/data_lake/test_reader_policy_gates.py:
+    domains:
+      - data_lake
+    old_paths:
+      - tests/test_cr017_reader_policy_gates.py
+    provenance:
+      -
+        cr: CR-017
+  tests/data_lake/test_reader_p0_support.py:
+    domains:
+      - data_lake
+    old_paths:
+      - tests/test_cr139_w3_reader_p0_support.py
+    provenance:
+      -
+        cr: CR-139
+  tests/data_lake/test_readiness_claim_boundary.py:
+    domains:
+      - data_lake
+    old_paths:
+      - tests/test_cr014_readiness_claim_boundary.py
+    provenance:
+      -
+        cr: CR-014
+  tests/data_lake/test_readiness_pre_read_gate.py:
+    domains:
+      - data_lake
+    old_paths:
+      - tests/test_cr139_readiness_pre_read_gate.py
+    provenance:
+      -
+        cr: CR-139
+  tests/data_lake/test_readiness_rollback_gate.py:
+    domains:
+      - data_lake
+    old_paths:
+      - tests/test_cr018_readiness_rollback_gate.py
+    provenance:
+      -
+        cr: CR-018
+  tests/data_lake/test_release_scope_dataset_groups.py:
+    domains:
+      - data_lake
+    old_paths:
+      - tests/test_cr018_release_scope_dataset_groups.py
+    provenance:
+      -
+        cr: CR-018
+  tests/data_lake/test_schema_contracts.py:
+    domains:
+      - data_lake
+    old_paths:
+      - tests/test_cr139_adjustment_factor_pit.py
+      - tests/test_cr139_events_schema_repair.py
+      - tests/test_cr139_schema_contract_freeze.py
+    provenance:
+      -
+        cr: CR-139
+  tests/data_lake/test_training_snapshot_cutoff.py:
+    domains:
+      - data_lake
+    old_paths:
+      - tests/test_cr139_training_snapshot_cutoff.py
+    provenance:
+      -
+        cr: CR-139
+  tests/data_lake/test_universe_lifecycle_contract.py:
+    domains:
+      - data_lake
+    old_paths:
+      - tests/test_cr014_universe_lifecycle_contract.py
+    provenance:
+      -
+        cr: CR-014
+  tests/data_lake/test_unsupported_boundary.py:
+    domains:
+      - data_lake
+    old_paths:
+      - tests/test_cr014_unsupported_boundary.py
+    provenance:
+      -
+        cr: CR-014
+  tests/data_lake/test_versioned_policy_cycle_shortability.py:
+    domains:
+      - data_lake
+    old_paths:
+      - tests/test_cr139_versioned_policy_cycle_shortability.py
+    provenance:
+      -
+        cr: CR-139
+  tests/data_lake/test_windowed_real_run_contract.py:
+    domains:
+      - data_lake
+    old_paths:
+      - tests/test_cr014_windowed_real_run_contract.py
+    provenance:
+      -
+        cr: CR-014
+  tests/docs_quality/test_backfill_roadmap_boundaries.py:
+    domains:
+      - docs_quality
+    old_paths:
+      - tests/test_cr013_backfill_roadmap_boundaries.py
+    provenance:
+      -
+        cr: CR-013
+  tests/docs_quality/test_docs_fixtures_authorization_runbook.py:
+    domains:
+      - docs_quality
+    old_paths:
+      - tests/test_cr138_docs_fixtures_authorization_runbook.py
+    provenance:
+      -
+        cr: CR-138
+  tests/docs_quality/test_docs_incident_playbooks.py:
+    domains:
+      - docs_quality
+    old_paths:
+      - tests/test_cr016_docs_incident_playbooks.py
+    provenance:
+      -
+        cr: CR-016
+  tests/docs_quality/test_docs_runbook_boundary.py:
+    domains:
+      - docs_quality
+    old_paths:
+      - tests/test_cr019_docs_runbook_boundary.py
+    provenance:
+      -
+        cr: CR-019
+  tests/docs_quality/test_docs_runbook_no_authorization.py:
+    domains:
+      - docs_quality
+    old_paths:
+      - tests/test_cr020_docs_runbook_no_authorization.py
+    provenance:
+      -
+        cr: CR-020
+  tests/docs_quality/test_external_reference_guardrails.py:
+    domains:
+      - docs_quality
+    old_paths:
+      - tests/test_cr030_external_reference_guardrails.py
+    provenance:
+      -
+        cr: CR-030
+  tests/docs_quality/test_foundation_runbook_boundary.py:
+    domains:
+      - docs_quality
+    old_paths:
+      - tests/test_cr015_foundation_runbook_boundary.py
+    provenance:
+      -
+        cr: CR-015
+  tests/docs_quality/test_full_history_gap_register.py:
+    domains:
+      - docs_quality
+    old_paths:
+      - tests/test_cr013_full_history_gap_register.py
+    provenance:
+      -
+        cr: CR-013
+  tests/docs_quality/test_quality_report_doc_guardrail.py:
+    domains:
+      - docs_quality
+    old_paths:
+      - tests/test_cr007_quality_report_doc_guardrail.py
+    provenance:
+      -
+        cr: CR-007
+  tests/docs_quality/test_runbook_approval_gates.py:
+    domains:
+      - docs_quality
+    old_paths:
+      - tests/test_cr016_runbook_approval_gates.py
+    provenance:
+      -
+        cr: CR-016
+  tests/docs_quality/test_unsupported_register_claim_boundary.py:
+    domains:
+      - docs_quality
+    old_paths:
+      - tests/test_cr013_unsupported_register_claim_boundary.py
+    provenance:
+      -
+        cr: CR-013
+  tests/experiments/test_data_benchmark_audit_exp14.py:
+    domains:
+      - experiments
+    old_paths:
+      - tests/test_experiment_14_data_and_benchmark.py
+    provenance:
+      -
+        source: experiment-14
+  tests/experiments/test_experiment_manifest_catalog.py:
+    domains:
+      - experiments
+    old_paths:
+      - tests/test_cr030_experiment_manifest_catalog.py
+    provenance:
+      -
+        cr: CR-030
+  tests/experiments/test_experiment_manifest_closure.py:
+    domains:
+      - experiments
+    old_paths:
+      - tests/test_cr139_experiment_manifest_closure.py
+    provenance:
+      -
+        cr: CR-139
+  tests/experiments/test_experiment_real_benchmark_consumption.py:
+    domains:
+      - experiments
+    old_paths:
+      - tests/test_cr007_experiment_real_benchmark_consumption.py
+    provenance:
+      -
+        cr: CR-007
+  tests/experiments/test_experiments_realism_metadata.py:
+    domains:
+      - experiments
+    old_paths:
+      - tests/test_cr010_experiments_realism_metadata.py
+    provenance:
+      -
+        cr: CR-010
+  tests/experiments/test_factor_framework_exp15.py:
+    domains:
+      - experiments
+    old_paths:
+      - tests/test_experiment_15_factor_framework.py
+    provenance:
+      -
+        source: experiment-15
+  tests/experiments/test_ml_factor_strategy_suite_exp23_29.py:
+    domains:
+      - experiments
+    old_paths:
+      - tests/test_experiment_23_29_ml_factor_suite.py
+    provenance:
+      -
+        source: experiment-23-29
+  tests/experiments/test_ml_lake_onboard_no_bypass.py:
+    domains:
+      - experiments
+    old_paths:
+      - tests/test_cr139_ml_lake_onboard_no_bypass.py
+    provenance:
+      -
+        cr: CR-139
+  tests/experiments/test_momentum_factor_validation_exp16.py:
+    domains:
+      - experiments
+    old_paths:
+      - tests/test_experiment_16_momentum_factor.py
+    provenance:
+      -
+        source: experiment-16
+  tests/experiments/test_multifactor_strategy_suite_exp17_21.py:
+    domains:
+      - experiments
+    old_paths:
+      - tests/test_experiment_17_21_factor_suite.py
+    provenance:
+      -
+        source: experiment-17-21
+  tests/experiments/test_risk_tradability_integration_exp30_36.py:
+    domains:
+      - experiments
+    old_paths:
+      - tests/test_experiment_30_36_stage5.py
+    provenance:
+      -
+        source: experiment-30-36
+  tests/market_data/test_benchmark_calendar_backfill.py:
+    domains:
+      - market_data
+    old_paths:
+      - tests/test_cr007_benchmark_calendar_backfill.py
+    provenance:
+      -
+        cr: CR-007
+  tests/market_data/test_index_members_stock_basic_datasets.py:
+    domains:
+      - market_data
+    old_paths:
+      - tests/test_cr007_index_members_stock_basic_datasets.py
+    provenance:
+      -
+        cr: CR-007
+  tests/market_data/test_market_data_cli_comparison.py:
+    domains:
+      - market_data
+    old_paths:
+      - tests/test_market_data_cli_comparison.py
+    provenance:
+      -
+        source: legacy-topic-test
+  tests/market_data/test_market_data_contracts.py:
+    domains:
+      - market_data
+    old_paths:
+      - tests/test_market_data_contracts.py
+    provenance:
+      -
+        source: legacy-topic-test
+  tests/market_data/test_market_data_experiment_readers.py:
+    domains:
+      - market_data
+    old_paths:
+      - tests/test_market_data_experiment_readers.py
+    provenance:
+      -
+        source: legacy-topic-test
+  tests/market_data/test_market_data_hs300_benchmark.py:
+    domains:
+      - market_data
+    old_paths:
+      - tests/test_market_data_hs300_benchmark.py
+    provenance:
+      -
+        source: legacy-topic-test
+  tests/market_data/test_market_data_multidataset_quality_readers.py:
+    domains:
+      - market_data
+    old_paths:
+      - tests/test_market_data_multidataset_quality_readers.py
+    provenance:
+      -
+        source: legacy-topic-test
+  tests/market_data/test_market_data_normalization_validation_readers.py:
+    domains:
+      - market_data
+    old_paths:
+      - tests/test_market_data_normalization_validation_readers.py
+    provenance:
+      -
+        source: legacy-topic-test
+  tests/market_data/test_market_data_runtime_storage.py:
+    domains:
+      - market_data
+    old_paths:
+      - tests/test_market_data_runtime_storage.py
+    provenance:
+      -
+        source: legacy-topic-test
+  tests/market_data/test_market_data_tushare_comparison.py:
+    domains:
+      - market_data
+    old_paths:
+      - tests/test_market_data_tushare_comparison.py
+    provenance:
+      -
+        source: legacy-topic-test
+  tests/market_data/test_market_data_tushare_connector.py:
+    domains:
+      - market_data
+    old_paths:
+      - tests/test_market_data_tushare_connector.py
+    provenance:
+      -
+        source: legacy-topic-test
+  tests/market_data/test_market_data_tushare_datasets.py:
+    domains:
+      - market_data
+    old_paths:
+      - tests/test_market_data_tushare_datasets.py
+    provenance:
+      -
+        source: legacy-topic-test
+  tests/market_data/test_prices_long_horizon_backfill_planner.py:
+    domains:
+      - market_data
+    old_paths:
+      - tests/test_cr007_prices_long_horizon_backfill_planner.py
+    provenance:
+      -
+        cr: CR-007
+  tests/market_data/test_tushare_first_acquisition.py:
+    domains:
+      - market_data
+    old_paths:
+      - tests/test_cr006_tushare_first_acquisition.py
+    provenance:
+      -
+        cr: CR-006
+  tests/meta_flow/test_cr_tracking_consistency.py:
+    domains:
+      - meta_flow
+    old_paths:
+      - tests/test_cr093_cr_tracking_consistency.py
+    provenance:
+      -
+        cr: CR-093
+  tests/meta_flow/test_design_runner_boundary.py:
+    domains:
+      - meta_flow
+    old_paths:
+      - tests/test_cr130_design_runner_boundary.py
+    provenance:
+      -
+        cr: CR-130
+  tests/meta_flow/test_design_surface.py:
+    domains:
+      - meta_flow
+    old_paths:
+      - tests/test_cr131_design_surface.py
+    provenance:
+      -
+        cr: CR-131
+  tests/meta_flow/test_feature_runner_boundary.py:
+    domains:
+      - meta_flow
+    old_paths:
+      - tests/test_cr129_feature_runner_boundary.py
+    provenance:
+      -
+        cr: CR-129
+  tests/meta_flow/test_human_gate_launch_message_checker.py:
+    domains:
+      - meta_flow
+    old_paths:
+      - tests/test_cr119_human_gate_launch_message_checker.py
+    provenance:
+      -
+        cr: CR-119
+  tests/meta_flow/test_human_gate_path_alias_checker.py:
+    domains:
+      - meta_flow
+    old_paths:
+      - tests/test_cr118_human_gate_path_alias_checker.py
+    provenance:
+      -
+        cr: CR-118
+  tests/meta_flow/test_package_import_layout.py:
+    domains:
+      - meta_flow
+    old_paths:
+      - tests/test_cr061_package_import_layout.py
+    provenance:
+      -
+        cr: CR-061
+  tests/meta_flow/test_process_artifact_hygiene.py:
+    domains:
+      - meta_flow
+    old_paths:
+      - tests/test_cr132_process_artifact_hygiene.py
+    provenance:
+      -
+        cr: CR-132
+  tests/research/test_adjustment_audit.py:
+    domains:
+      - research
+    old_paths:
+      - tests/test_cr011_adjustment_audit.py
+    provenance:
+      -
+        cr: CR-011
+  tests/research/test_anomalies.py:
+    domains:
+      - research
+    old_paths:
+      - tests/test_chapter5_anomalies.py
+    provenance:
+      -
+        source: chapter-5
+  tests/research/test_anomaly_candidate_generator.py:
+    domains:
+      - research
+    old_paths:
+      - tests/test_anomaly_candidate_generator.py
+    provenance:
+      -
+        source: legacy-topic-test
+  tests/research/test_anomaly_discovery.py:
+    domains:
+      - research
+    old_paths:
+      - tests/test_anomaly_discovery.py
+    provenance:
+      -
+        source: legacy-topic-test
+  tests/research/test_batch_d_dataloader.py:
+    domains:
+      - research
+    old_paths:
+      - tests/test_cr004_batch_d_dataloader.py
+    provenance:
+      -
+        cr: CR-004
+  tests/research/test_benchmark_group_readiness.py:
+    domains:
+      - research
+    old_paths:
+      - tests/test_cr018_benchmark_group_readiness.py
+    provenance:
+      -
+        cr: CR-018
+  tests/research/test_benchmark_policy_consumption.py:
+    domains:
+      - research
+    old_paths:
+      - tests/test_cr011_benchmark_policy_consumption.py
+    provenance:
+      -
+        cr: CR-011
+  tests/research/test_capacity_cost_sensitivity.py:
+    domains:
+      - research
+    old_paths:
+      - tests/test_cr011_capacity_cost_sensitivity.py
+    provenance:
+      -
+        cr: CR-011
+  tests/research/test_chapter3_backfill.py:
+    domains:
+      - research
+    old_paths:
+      - tests/test_cr034_chapter3_backfill.py
+    provenance:
+      -
+        cr: CR-034
+  tests/research/test_empirical_runner_chapter3.py:
+    domains:
+      - research
+    old_paths:
+      - tests/test_chapter3_empirical_runner.py
+    provenance:
+      -
+        source: chapter-3
+  tests/research/test_execution_price_policy.py:
+    domains:
+      - research
+    old_paths:
+      - tests/test_cr011_execution_price_policy.py
+    provenance:
+      -
+        cr: CR-011
+  tests/research/test_execution_vwap_claim_boundary.py:
+    domains:
+      - research
+    old_paths:
+      - tests/test_cr013_execution_vwap_claim_boundary.py
+    provenance:
+      -
+        cr: CR-013
+  tests/research/test_exposure_claims.py:
+    domains:
+      - research
+    old_paths:
+      - tests/test_cr011_exposure_claims.py
+    provenance:
+      -
+        cr: CR-011
+  tests/research/test_factor_auxiliary_data_contract.py:
+    domains:
+      - research
+    old_paths:
+      - tests/test_cr008_factor_auxiliary_data_contract.py
+    provenance:
+      -
+        cr: CR-008
+  tests/research/test_factor_calculators.py:
+    domains:
+      - research
+    old_paths:
+      - tests/test_factor_calculators.py
+    provenance:
+      -
+        source: legacy-topic-test
+  tests/research/test_factor_evaluation_report.py:
+    domains:
+      - research
+    old_paths:
+      - tests/test_cr030_factor_evaluation_report.py
+    provenance:
+      -
+        cr: CR-030
+  tests/research/test_factor_library.py:
+    domains:
+      - research
+    old_paths:
+      - tests/test_factor_library.py
+    provenance:
+      -
+        source: legacy-topic-test
+  tests/research/test_factor_model_validation_integration_stage3.py:
+    domains:
+      - research
+    old_paths:
+      - tests/test_stage3_factor_model_validation_integration.py
+    provenance:
+      -
+        source: stage-3
+  tests/research/test_factor_model_validation_report.py:
+    domains:
+      - research
+    old_paths:
+      - tests/test_factor_model_validation_report.py
+    provenance:
+      -
+        source: legacy-topic-test
+  tests/research/test_factor_models.py:
+    domains:
+      - research
+    old_paths:
+      - tests/test_chapter4_factor_models.py
+    provenance:
+      -
+        source: chapter-4
+  tests/research/test_factor_panel_label_window_gates.py:
+    domains:
+      - research
+    old_paths:
+      - tests/test_cr030_factor_panel_label_window_gates.py
+    provenance:
+      -
+        cr: CR-030
+  tests/research/test_factor_panel_robust_validation.py:
+    domains:
+      - research
+    old_paths:
+      - tests/test_cr011_factor_panel_robust_validation.py
+    provenance:
+      -
+        cr: CR-011
+  tests/research/test_factor_portfolio_practice.py:
+    domains:
+      - research
+    old_paths:
+      - tests/test_chapter7_factor_practice.py
+    provenance:
+      -
+        source: chapter-7
+  tests/research/test_factor_registry.py:
+    domains:
+      - research
+    old_paths:
+      - tests/test_factor_registry.py
+    provenance:
+      -
+        source: legacy-topic-test
+  tests/research/test_factor_replication_chapter3.py:
+    domains:
+      - research
+    old_paths:
+      - tests/test_chapter3_factor_replication.py
+    provenance:
+      -
+        source: chapter-3
+  tests/research/test_factor_robustness.py:
+    domains:
+      - research
+    old_paths:
+      - tests/test_chapter6_factor_robustness.py
+    provenance:
+      -
+        source: chapter-6
+  tests/research/test_factor_spec_run_spec_contract.py:
+    domains:
+      - research
+    old_paths:
+      - tests/test_cr030_factor_spec_run_spec_contract.py
+    provenance:
+      -
+        cr: CR-030
+  tests/research/test_factor_statistics.py:
+    domains:
+      - research
+    old_paths:
+      - tests/test_factor_statistics.py
+    provenance:
+      -
+        source: legacy-topic-test
+  tests/research/test_mature_multifactor_framework_stage2.py:
+    domains:
+      - research
+    old_paths:
+      - tests/test_stage2_mature_multifactor_framework.py
+    provenance:
+      -
+        source: stage-2
+  tests/research/test_mature_multifactor_research_stage3.py:
+    domains:
+      - research
+    old_paths:
+      - tests/test_stage3_mature_multifactor_research.py
+    provenance:
+      -
+        source: stage-3
+  tests/research/test_multifactor_combiner.py:
+    domains:
+      - research
+    old_paths:
+      - tests/test_cr030_multifactor_combiner.py
+    provenance:
+      -
+        cr: CR-030
+  tests/research/test_multifactor_strategy_candidates.py:
+    domains:
+      - research
+    old_paths:
+      - tests/test_multifactor_strategy_candidates.py
+    provenance:
+      -
+        source: legacy-topic-test
+  tests/research/test_no_real_operation_safety.py:
+    domains:
+      - research
+    old_paths:
+      - tests/test_cr030_no_real_operation_safety.py
+    provenance:
+      -
+        cr: CR-030
+  tests/research/test_paper_simulation.py:
+    domains:
+      - research
+    old_paths:
+      - tests/test_cr041_paper_simulation.py
+    provenance:
+      -
+        cr: CR-041
+  tests/research/test_pit_tradability_readiness.py:
+    domains:
+      - research
+    old_paths:
+      - tests/test_cr018_pit_tradability_readiness.py
+    provenance:
+      -
+        cr: CR-018
+  tests/research/test_pit_universe_contract.py:
+    domains:
+      - research
+    old_paths:
+      - tests/test_cr008_pit_universe_contract.py
+    provenance:
+      -
+        cr: CR-008
+  tests/research/test_pit_universe_lifecycle.py:
+    domains:
+      - research
+    old_paths:
+      - tests/test_cr011_pit_universe_lifecycle.py
+    provenance:
+      -
+        cr: CR-011
+  tests/research/test_policy_cycle_dataset_contract.py:
+    domains:
+      - research
+    old_paths:
+      - tests/test_policy_cycle_dataset_contract.py
+    provenance:
+      -
+        source: legacy-topic-test
+  tests/research/test_proxy_real_benchmark_fields.py:
+    domains:
+      - research
+    old_paths:
+      - tests/test_cr008_proxy_real_benchmark_fields.py
+    provenance:
+      -
+        cr: CR-008
+  tests/research/test_quality_adjustment_label_gates.py:
+    domains:
+      - research
+    old_paths:
+      - tests/test_cr008_quality_adjustment_label_gates.py
+    provenance:
+      -
+        cr: CR-008
+  tests/research/test_raw_adj_factor_contract.py:
+    domains:
+      - research
+    old_paths:
+      - tests/test_cr017_raw_adj_factor_contract.py
+    provenance:
+      -
+        cr: CR-017
+  tests/research/test_real_data_readiness_chapter3.py:
+    domains:
+      - research
+    old_paths:
+      - tests/test_chapter3_real_data_readiness.py
+    provenance:
+      -
+        source: chapter-3
+  tests/research/test_research_consumer_boundary.py:
+    domains:
+      - research
+    old_paths:
+      - tests/test_cr014_research_consumer_boundary.py
+    provenance:
+      -
+        cr: CR-014
+  tests/research/test_research_dataset_builder.py:
+    domains:
+      - research
+    old_paths:
+      - tests/test_cr008_research_dataset_builder.py
+    provenance:
+      -
+        cr: CR-008
+  tests/research/test_research_input_metadata.py:
+    domains:
+      - research
+    old_paths:
+      - tests/test_cr008_research_input_metadata.py
+    provenance:
+      -
+        cr: CR-008
+  tests/research/test_research_qmt_consumer_boundary.py:
+    domains:
+      - research
+    old_paths:
+      - tests/test_cr017_research_qmt_consumer_boundary.py
+    provenance:
+      -
+        cr: CR-017
+  tests/research/test_simulated_evidence_checker.py:
+    domains:
+      - research
+    old_paths:
+      - tests/test_cr092_simulated_evidence_checker.py
+    provenance:
+      -
+        cr: CR-092
+  tests/research/test_strategy_admission_package.py:
+    domains:
+      - research
+    old_paths:
+      - tests/test_cr030_strategy_admission_package.py
+    provenance:
+      -
+        cr: CR-030
+  tests/research/test_tradability_gates.py:
+    domains:
+      - research
+    old_paths:
+      - tests/test_cr011_tradability_gates.py
+    provenance:
+      -
+        cr: CR-011
+  tests/experiments/test_low_turnover_double_sort.py:
+    domains:
+      - experiments
+    old_paths:
+      - tests/test_cr140_turnover_engine_adapter.py
+    provenance:
+      -
+        cr: CR-140
+  tests/runner/test_package_exchange.py:
+    domains:
+      - runner
+    old_paths:
+      - tests/test_cr100_package_exchange.py
+    provenance:
+      -
+        cr: CR-100
+  tests/runner/test_runner_artifact_bundle.py:
+    domains:
+      - runner
+    old_paths:
+      - tests/test_cr135_runner_artifact_bundle.py
+    provenance:
+      -
+        cr: CR-135
+  tests/runner/test_runner_bundle_validation.py:
+    domains:
+      - runner
+    old_paths:
+      - tests/test_cr136_runner_bundle_validation.py
+    provenance:
+      -
+        cr: CR-136
+  tests/runner/test_runner_core_mvp.py:
+    domains:
+      - runner
+    old_paths:
+      - tests/test_cr128_runner_core_mvp.py
+    provenance:
+      -
+        cr: CR-128
+  tests/runner/test_runner_event_signal_rebalance_tracking.py:
+    domains:
+      - runner
+    old_paths:
+      - tests/test_cr138_runner_event_signal_rebalance_tracking.py
+    provenance:
+      -
+        cr: CR-138
+  tests/runner/test_runner_evidence_index.py:
+    domains:
+      - runner
+    old_paths:
+      - tests/test_cr134_runner_evidence_index.py
+    provenance:
+      -
+        cr: CR-134
+  tests/runner/test_runner_evidence_review_incident_lifecycle.py:
+    domains:
+      - runner
+    old_paths:
+      - tests/test_cr138_runner_evidence_review_incident_lifecycle.py
+    provenance:
+      -
+        cr: CR-138
+  tests/runner/test_runner_multifactor_ops_pipeline.py:
+    domains:
+      - runner
+    old_paths:
+      - tests/test_runner_multifactor_ops_pipeline.py
+    provenance:
+      -
+        source: legacy-topic-test
+  tests/runner/test_runner_multifactor_runtime_pipeline.py:
+    domains:
+      - runner
+    old_paths:
+      - tests/test_runner_multifactor_runtime_pipeline.py
+    provenance:
+      -
+        source: legacy-topic-test
+  tests/runner/test_runner_multifactor_simulation_operator.py:
+    domains:
+      - runner
+    old_paths:
+      - tests/test_runner_multifactor_simulation_operator.py
+    provenance:
+      -
+        source: legacy-topic-test
+  tests/runner/test_runner_non_trading_readiness.py:
+    domains:
+      - runner
+    old_paths:
+      - tests/test_runner_non_trading_readiness.py
+    provenance:
+      -
+        source: legacy-topic-test
+  tests/runner/test_runner_plan_preflight_control.py:
+    domains:
+      - runner
+    old_paths:
+      - tests/test_cr138_runner_plan_preflight_control.py
+    provenance:
+      -
+        cr: CR-138
+  tests/runner/test_runner_readonly_integration.py:
+    domains:
+      - runner
+    old_paths:
+      - tests/test_cr098_runner_readonly_integration.py
+    provenance:
+      -
+        cr: CR-098
+  tests/runner/test_runner_real_readonly_smoke_contract.py:
+    domains:
+      - runner
+    old_paths:
+      - tests/test_cr099_runner_real_readonly_smoke_contract.py
+    provenance:
+      -
+        cr: CR-099
+  tests/runner/test_runner_run_registry.py:
+    domains:
+      - runner
+    old_paths:
+      - tests/test_cr137_runner_run_registry.py
+    provenance:
+      -
+        cr: CR-137
+  tests/runner/test_runner_runtime_inputs.py:
+    domains:
+      - runner
+    old_paths:
+      - tests/test_runner_runtime_inputs.py
+    provenance:
+      -
+        source: legacy-topic-test
+  tests/runner/test_runner_simulation_activation.py:
+    domains:
+      - runner
+    old_paths:
+      - tests/test_runner_simulation_activation.py
+    provenance:
+      -
+        source: legacy-topic-test
+  tests/runner/test_runner_spec_cli.py:
+    domains:
+      - runner
+    old_paths:
+      - tests/test_cr133_runner_spec_cli.py
+    provenance:
+      -
+        cr: CR-133
+  tests/runner/test_strategy_runner_contracts.py:
+    domains:
+      - runner
+    old_paths:
+      - tests/test_cr091_strategy_runner_contracts.py
+    provenance:
+      -
+        cr: CR-091
+  tests/safety/test_forbidden_source_copy.py:
+    domains:
+      - safety
+    old_paths:
+      - tests/test_cr025_forbidden_source_copy.py
+    provenance:
+      -
+        cr: CR-025
+  tests/safety/test_safety_no_real_operation.py:
+    domains:
+      - safety
+    old_paths:
+      - tests/test_cr025_no_real_operation_safety.py
+    provenance:
+      -
+        cr: CR-025
+  tests/scripts/test_data_lake_readiness_audit.py:
+    domains:
+      - scripts
+    old_paths:
+      - tests/test_data_lake_readiness_audit.py
+    provenance:
+      -
+        source: legacy-topic-test
+  tests/scripts/test_list_factors_cli.py:
+    domains:
+      - scripts
+    old_paths:
+      - tests/test_list_factors_cli.py
+    provenance:
+      -
+        source: legacy-topic-test
+  tests/scripts/test_runtime_validation_scripts.py:
+    domains:
+      - scripts
+    old_paths:
+      - tests/test_cr104_runtime_validation_scripts.py
+    provenance:
+      -
+        cr: CR-104
+  tests/scripts/test_script_entrypoint_naming.py:
+    domains:
+      - scripts
+    old_paths:
+      - tests/test_script_entrypoint_naming.py
+    provenance:
+      -
+        source: legacy-topic-test
+  tests/trading/test_admission_gate_stage6.py:
+    domains:
+      - trading
+    old_paths:
+      - tests/test_cr019_stage6_admission_gate.py
+    provenance:
+      -
+        cr: CR-019
+  tests/trading/test_broker_adapter_contract.py:
+    domains:
+      - trading
+    old_paths:
+      - tests/test_cr042_broker_adapter_contract.py
+    provenance:
+      -
+        cr: CR-042
+  tests/trading/test_broker_lake_schema_writer.py:
+    domains:
+      - trading
+    old_paths:
+      - tests/test_cr015_broker_lake_schema_writer.py
+    provenance:
+      -
+        cr: CR-015
+  tests/trading/test_deferred_capabilities.py:
+    domains:
+      - trading
+    old_paths:
+      - tests/test_cr019_deferred_capabilities.py
+    provenance:
+      -
+        cr: CR-019
+  tests/trading/test_gateway_lifecycle_health_rest_contract.py:
+    domains:
+      - trading
+    old_paths:
+      - tests/test_cr138_gateway_lifecycle_health_rest_contract.py
+    provenance:
+      -
+        cr: CR-138
+  tests/trading/test_gateway_query_calendar_commission_pnl.py:
+    domains:
+      - trading
+    old_paths:
+      - tests/test_cr138_gateway_query_calendar_commission_pnl.py
+    provenance:
+      -
+        cr: CR-138
+  tests/trading/test_gateway_subscription_order_report_recovery.py:
+    domains:
+      - trading
+    old_paths:
+      - tests/test_cr138_gateway_subscription_order_report_recovery.py
+    provenance:
+      -
+        cr: CR-138
+  tests/trading/test_goldminer_admission_guard.py:
+    domains:
+      - trading
+    old_paths:
+      - tests/test_cr044_goldminer_admission_guard.py
+    provenance:
+      -
+        cr: CR-044
+  tests/trading/test_goldminer_bridge_client.py:
+    domains:
+      - trading
+    old_paths:
+      - tests/test_cr045_goldminer_bridge_client.py
+    provenance:
+      -
+        cr: CR-045
+  tests/trading/test_goldminer_bridge_contract.py:
+    domains:
+      - trading
+    old_paths:
+      - tests/test_cr045_goldminer_bridge_contract.py
+    provenance:
+      -
+        cr: CR-045
+  tests/trading/test_goldminer_no_operation_static.py:
+    domains:
+      - trading
+    old_paths:
+      - tests/test_cr045_goldminer_no_operation_static.py
+    provenance:
+      -
+        cr: CR-045
+  tests/trading/test_goldminer_readonly_probe.py:
+    domains:
+      - trading
+    old_paths:
+      - tests/test_cr045_goldminer_readonly_probe.py
+    provenance:
+      -
+        cr: CR-045
+  tests/trading/test_hmac_pairing_allowlist_scope.py:
+    domains:
+      - trading
+    old_paths:
+      - tests/test_cr020_hmac_pairing_allowlist_scope.py
+    provenance:
+      -
+        cr: CR-020
+  tests/trading/test_linux_client_rest_transport.py:
+    domains:
+      - trading
+    old_paths:
+      - tests/test_cr020_linux_client_rest_transport.py
+    provenance:
+      -
+        cr: CR-020
+  tests/trading/test_monitoring_kill_switch.py:
+    domains:
+      - trading
+    old_paths:
+      - tests/test_cr016_monitoring_kill_switch.py
+    provenance:
+      -
+        cr: CR-016
+  tests/trading/test_oms_state_machine.py:
+    domains:
+      - trading
+    old_paths:
+      - tests/test_cr015_oms_state_machine.py
+    provenance:
+      -
+        cr: CR-015
+  tests/trading/test_order_intent_draft_contract.py:
+    domains:
+      - trading
+    old_paths:
+      - tests/test_cr025_order_intent_draft_contract.py
+    provenance:
+      -
+        cr: CR-025
+  tests/trading/test_pretrade_risk_gate.py:
+    domains:
+      - trading
+    old_paths:
+      - tests/test_cr015_pretrade_risk_gate.py
+    provenance:
+      -
+        cr: CR-015
+  tests/trading/test_primary_benchmark_policy.py:
+    domains:
+      - trading
+    old_paths:
+      - tests/test_cr019_primary_benchmark_policy.py
+    provenance:
+      -
+        cr: CR-019
+  tests/trading/test_qmt_adapter_contract.py:
+    domains:
+      - trading
+    old_paths:
+      - tests/test_cr015_qmt_adapter_contract.py
+    provenance:
+      -
+        cr: CR-015
+  tests/trading/test_qmt_cside_client_cli.py:
+    domains:
+      - trading
+    old_paths:
+      - tests/test_cr019_qmt_cside_client_cli.py
+    provenance:
+      -
+        cr: CR-019
+  tests/trading/test_qmt_endpoint_matrix.py:
+    domains:
+      - trading
+    old_paths:
+      - tests/test_cr019_qmt_endpoint_matrix.py
+    provenance:
+      -
+        cr: CR-019
+  tests/trading/test_qmt_environment_boundary.py:
+    domains:
+      - trading
+    old_paths:
+      - tests/test_cr015_qmt_environment_boundary.py
+    provenance:
+      -
+        cr: CR-015
+  tests/trading/test_qmt_gateway_fallback.py:
+    domains:
+      - trading
+    old_paths:
+      - tests/test_cr019_qmt_gateway_fallback.py
+    provenance:
+      -
+        cr: CR-019
+  tests/trading/test_qmt_gateway_lifecycle.py:
+    domains:
+      - trading
+    old_paths:
+      - tests/test_cr019_qmt_gateway_lifecycle.py
+    provenance:
+      -
+        cr: CR-019
+  tests/trading/test_qmt_gateway_run_gates.py:
+    domains:
+      - trading
+    old_paths:
+      - tests/test_cr019_qmt_gateway_run_gates.py
+    provenance:
+      -
+        cr: CR-019
+  tests/trading/test_qmt_interface_smoke_package.py:
+    domains:
+      - trading
+    old_paths:
+      - tests/test_cr089_qmt_interface_smoke_package.py
+    provenance:
+      -
+        cr: CR-089
+  tests/trading/test_qmt_pairing_hmac_auth.py:
+    domains:
+      - trading
+    old_paths:
+      - tests/test_cr019_qmt_pairing_hmac_auth.py
+    provenance:
+      -
+        cr: CR-019
+  tests/trading/test_qmt_runtime_smoke_summary.py:
+    domains:
+      - trading
+    old_paths:
+      - tests/test_cr089_qmt_runtime_smoke_summary.py
+    provenance:
+      -
+        cr: CR-089
+  tests/trading/test_query_positions_readonly.py:
+    domains:
+      - trading
+    old_paths:
+      - tests/test_cr020_query_positions_readonly.py
+    provenance:
+      -
+        cr: CR-020
+  tests/trading/test_reconciliation_service_reports.py:
+    domains:
+      - trading
+    old_paths:
+      - tests/test_cr016_reconciliation_service_reports.py
+    provenance:
+      -
+        cr: CR-016
+  tests/trading/test_runtime_manual_validation.py:
+    domains:
+      - trading
+    old_paths:
+      - tests/test_cr020_runtime_manual_validation.py
+    provenance:
+      -
+        cr: CR-020
+  tests/trading/test_trading_schema_contracts.py:
+    domains:
+      - trading
+    old_paths:
+      - tests/test_cr025_schema_contracts.py
+    provenance:
+      -
+        cr: CR-025
+  tests/trading/test_semantic_diff_contract.py:
+    domains:
+      - trading
+    old_paths:
+      - tests/test_cr025_semantic_diff_contract.py
+    provenance:
+      -
+        cr: CR-025
+  tests/trading/test_server_qmt_login_session.py:
+    domains:
+      - trading
+    old_paths:
+      - tests/test_cr020_server_qmt_login_session.py
+    provenance:
+      -
+        cr: CR-020
+  tests/trading/test_shadow_order_intent_pipeline.py:
+    domains:
+      - trading
+    old_paths:
+      - tests/test_cr015_shadow_order_intent_pipeline.py
+    provenance:
+      -
+        cr: CR-015
+  tests/trading/test_shared_contracts_authorization_audit.py:
+    domains:
+      - trading
+    old_paths:
+      - tests/test_cr138_shared_contracts_authorization_audit.py
+    provenance:
+      -
+        cr: CR-138
+  tests/trading/test_simulation_order_enable_gate.py:
+    domains:
+      - trading
+    old_paths:
+      - tests/test_cr016_simulation_order_enable_gate.py
+    provenance:
+      -
+        cr: CR-016
+  tests/trading/test_windows_gateway_runtime_admission.py:
+    domains:
+      - trading
+    old_paths:
+      - tests/test_cr020_windows_gateway_runtime_admission.py
+    provenance:
+      -
+        cr: CR-020
+  tests/meta_flow/test_experiment_entrypoint_taxonomy.py:
+    domains:
+      - meta_flow
+    old_paths: []
+    introduced_by: CR-145
+    provenance:
+      -
+        cr: CR-145
+  tests/meta_flow/test_test_file_taxonomy.py:
+    domains:
+      - meta_flow
+    old_paths: []
+    introduced_by: CR-145
+    provenance:
+      -
+        cr: CR-145

@@ -441,7 +441,7 @@ def map_legacy_factor_definition(legacy_definition: Mapping[str, Any] | Any) -> 
             "legacy_experiment": data["experiment"],
             "legacy_factor_definition": factor_name,
             "evidence_refs": [
-                "experiments/run_experiment_17_21_factor_suite.py:FactorDefinition",
+                "experiments/run_multifactor_strategy_suite_exp17_21.py:FactorDefinition",
                 "process/HLD.md#35.7.1",
             ],
         },
