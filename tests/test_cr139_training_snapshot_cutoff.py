@@ -8,7 +8,7 @@ from engine.research_manifest import (
     PublishedDatasetSnapshotRef,
     build_experiment_manifest_closure,
 )
-from experiments.training_snapshot_contract import (
+from engine.training_snapshot_contract import (
     STATUS_BLOCKED,
     STATUS_PASS,
     TrainingSnapshotSpec,

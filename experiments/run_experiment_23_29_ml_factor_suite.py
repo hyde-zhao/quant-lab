@@ -25,7 +25,7 @@ if str(PROJECT_ROOT) not in sys.path:
 from engine.metrics import calculate_metrics
 from engine.diagnostics import LOGGER_NAME
 from engine.research_paths import research_report_path
-from experiments.lake_input_contract import add_experiment_lake_args, load_experiment_lake_frames
+from engine.experiment_lake_input_contract import add_experiment_lake_args, load_experiment_lake_frames
 from experiments.run_experiment_15_factor_framework import FactorFrameworkError, markdown_table
 from experiments.run_experiment_17_21_factor_suite import (
     MarketMatrices,
