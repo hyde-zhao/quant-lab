@@ -222,19 +222,7 @@ def require_explicit_data_dir(args: argparse.Namespace) -> Path:
 
 
 def _frames_from_explicit_inputs(args: argparse.Namespace) -> dict[str, pd.DataFrame]:
-    if getattr(args, "lake_root", None) and getattr(args, "as_of", None):
-        return dict(load_experiment_lake_frames(args).frames)
-    fixture_frames = load_local_frames(require_explicit_data_dir(args))
-    fixture_args = argparse.Namespace(
-        lake_root=getattr(args, "lake_root", "explicit-fixture-frames"),
-        as_of=getattr(args, "as_of", "1970-01-01T00:00:00+00:00"),
-        start_date=getattr(args, "start_date", None),
-        end_date=getattr(args, "end_date", None),
-        symbols=getattr(args, "symbols", None),
-        quality_policy=getattr(args, "quality_policy", "require_pass"),
-        fixture_frames=fixture_frames,
-    )
-    return dict(load_experiment_lake_frames(fixture_args).frames)
+    return dict(load_experiment_lake_frames(args).frames)
 
 
 def parse_factor_specs(factor_names: list[str] | tuple[str, ...]) -> list[FactorSpec]:

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from argparse import Namespace
 from datetime import date
 
 import pandas as pd
@@ -8,6 +9,7 @@ from pandas.testing import assert_frame_equal
 
 from experiments.run_experiment_turnover_factor import (
     calculate_abnormal_turnover,
+    resolve_output_roots,
     run_experiment_a,
     run_experiment_b,
     run_experiment_c,
@@ -84,6 +86,20 @@ def test_turnover_sorting_adapter_keeps_all_constant_quantile_as_no_data() -> No
 
     with pytest.raises(RuntimeError, match="无有效分组数据"):
         run_experiment_a(constant, forward, valid_mask, rebalance_dates, group_count=3)
+
+
+def test_turnover_output_root_also_derives_process_dir(tmp_path) -> None:
+    output_root = tmp_path / "reports" / "turnover"
+    args = Namespace(
+        output_root=str(output_root),
+        process_dir=None,
+        run_id="run-unit-turnover",
+    )
+
+    reports_base, process_dir = resolve_output_roots(args)
+
+    assert reports_base == output_root
+    assert process_dir == output_root / "run-unit-turnover" / "process"
 
 
 def test_turnover_sorting_adapter_keeps_low_sample_quantile_as_no_data() -> None:

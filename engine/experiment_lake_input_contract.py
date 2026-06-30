@@ -15,7 +15,7 @@ from typing import Any, Callable, Mapping
 import pandas as pd
 
 from engine.multifactor_contracts import FORBIDDEN_OPERATION_COUNTERS
-from market_data.contracts import DATASET_INDEX_MEMBERS, DATASET_PRICES, DATASET_TRADE_CALENDAR
+from market_data.contracts import DATASET_INDEX_MEMBERS, DATASET_KEY_COLUMNS, DATASET_PRICES, DATASET_TRADE_CALENDAR
 from market_data.readers import ReaderResult, read_panel_as_of
 
 
@@ -26,9 +26,9 @@ EXPERIMENT_FRAME_KEYS = {
     DATASET_TRADE_CALENDAR: "trade_calendar",
 }
 EXPERIMENT_PIT_KEYS = {
-    DATASET_PRICES: ("trade_date", "symbol"),
-    DATASET_INDEX_MEMBERS: ("trade_date", "con_code"),
-    DATASET_TRADE_CALENDAR: ("trade_date",),
+    DATASET_PRICES: DATASET_KEY_COLUMNS[DATASET_PRICES],
+    DATASET_INDEX_MEMBERS: DATASET_KEY_COLUMNS[DATASET_INDEX_MEMBERS],
+    DATASET_TRADE_CALENDAR: DATASET_KEY_COLUMNS[DATASET_TRADE_CALENDAR],
 }
 
 

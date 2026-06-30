@@ -3546,7 +3546,7 @@ def read_panel_as_of(
 
     work["_cr139_available_at_sort"] = pd.to_datetime(work["available_at"], errors="coerce", utc=True, format="mixed")
     sort_columns = [*list(keys), "_cr139_available_at_sort"]
-    if "trade_date" in work.columns:
+    if "trade_date" in work.columns and "trade_date" not in set(keys):
         sort_columns.insert(len(keys), "trade_date")
     work = work.sort_values(sort_columns).drop_duplicates(list(keys), keep="last")
     work = work.drop(columns=["_cr139_available_at_sort"]).reset_index(drop=True)

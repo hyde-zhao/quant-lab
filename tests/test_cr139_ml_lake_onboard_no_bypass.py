@@ -20,7 +20,9 @@ from experiments.run_experiment_17_21_factor_suite import parse_args as parse_ex
 from experiments.run_experiment_17_21_factor_suite import run_factor_suite
 from experiments.run_experiment_23_29_ml_factor_suite import parse_args as parse_stage4_args
 from experiments.run_experiment_23_29_ml_factor_suite import run_stage4_suite
+from market_data.contracts import DATASET_INDEX_MEMBERS
 from market_data.readers import ReaderResult
+from market_data.readers import read_panel_as_of
 
 
 def test_target_entry_functions_do_not_call_local_parquet_bypass() -> None:
@@ -64,7 +66,7 @@ def test_lake_input_contract_calls_pit_reader_for_required_datasets(tmp_path: Pa
     assert {call["as_of"] for call in calls} == {"2024-02-01T16:00:00+08:00"}
     assert set(result.frames) == {"prices", "index_members", "trade_calendar"}
     assert calls[0]["keys"] == ("trade_date", "symbol")
-    assert calls[1]["keys"] == ("trade_date", "con_code")
+    assert calls[1]["keys"] == ("trade_date", "index_code", "con_code")
     assert all(value == 0 for value in result.permission_counters.values())
     assert result.source_lineage["input_mode"] == "read_panel_as_of"
 
@@ -94,6 +96,42 @@ def test_lake_input_contract_normalises_canonical_index_members_con_code(tmp_pat
     )
 
     assert result.frames["index_members"]["symbol"].tolist() == ["AAA"]
+
+
+def test_index_members_pit_reader_preserves_multi_index_membership_rows() -> None:
+    result = read_panel_as_of(
+        DATASET_INDEX_MEMBERS,
+        as_of="2024-01-02T16:30:00+08:00",
+        keys=("trade_date", "index_code", "con_code"),
+        reader=lambda *args, **kwargs: ReaderResult(
+            status="available",
+            frame=pd.DataFrame(
+                [
+                    {
+                        "trade_date": "2024-01-02",
+                        "index_code": "HS300",
+                        "con_code": "AAA",
+                        "is_member": False,
+                        "available_at": "2024-01-02T16:20:00+08:00",
+                    },
+                    {
+                        "trade_date": "2024-01-02",
+                        "index_code": "ZZ500",
+                        "con_code": "AAA",
+                        "is_member": True,
+                        "available_at": "2024-01-02T16:00:00+08:00",
+                    },
+                ]
+            ),
+        ),
+    )
+
+    assert result.status == "available"
+    assert result.frame is not None
+    assert result.frame[["index_code", "con_code", "is_member"]].to_dict("records") == [
+        {"index_code": "HS300", "con_code": "AAA", "is_member": False},
+        {"index_code": "ZZ500", "con_code": "AAA", "is_member": True},
+    ]
 
 
 def test_fixture_frames_are_explicit_test_only_input(tmp_path: Path) -> None:

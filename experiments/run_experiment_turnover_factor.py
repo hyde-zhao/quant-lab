@@ -1727,13 +1727,21 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
+def resolve_output_roots(args: argparse.Namespace) -> tuple[Path, Path]:
+    reports_base = Path(args.output_root) if args.output_root else REPORTS_BASE
+    if args.process_dir:
+        process_dir = Path(args.process_dir)
+    elif args.output_root:
+        process_dir = reports_base / str(args.run_id) / "process"
+    else:
+        process_dir = PROCESS_DIR
+    return reports_base, process_dir
+
+
 def main() -> None:
     global PROCESS_DIR, REPORTS_BASE
     args = parse_args()
-    if args.output_root:
-        REPORTS_BASE = Path(args.output_root)
-    if args.process_dir:
-        PROCESS_DIR = Path(args.process_dir)
+    REPORTS_BASE, PROCESS_DIR = resolve_output_roots(args)
     run_id = args.run_id
     run_dir = REPORTS_BASE / run_id
     run_dir.mkdir(parents=True, exist_ok=True)

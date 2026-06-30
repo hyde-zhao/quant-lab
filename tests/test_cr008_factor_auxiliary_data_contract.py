@@ -16,7 +16,7 @@ from engine.research_dataset import (
     evaluate_allowed_claims,
     merge_auxiliary_claims_into_metadata,
 )
-from experiments.run_experiment_15_factor_framework import run_factor_framework
+from experiments.run_experiment_15_factor_framework import load_local_frames, run_factor_framework
 from market_data.readers import AuxiliaryInputRequest, ReaderResult, read_auxiliary_inputs
 
 
@@ -275,6 +275,10 @@ def write_factor_dataset(root: Path, *, days: int = 45, symbols: tuple[str, ...]
 def args_for(root: Path, **overrides: Any) -> Namespace:
     values = {
         "data_dir": str(root / "data"),
+        "lake_root": str(root / "lake"),
+        "as_of": "2024-12-31T23:59:59+08:00",
+        "quality_policy": "require_pass",
+        "fixture_frames": load_local_frames(root / "data"),
         "output_dir": str(root / "reports" / "experiment_15"),
         "start_date": None,
         "end_date": None,
