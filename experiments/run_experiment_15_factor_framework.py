@@ -137,7 +137,8 @@ def main() -> None:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="运行实验十五因子工程基础框架。")
-    add_experiment_lake_args(parser)
+    parser.add_argument("--data-dir", required=True, help="显式传入离线 fixture 数据目录；禁止默认读取仓库旧数据目录。")
+    add_experiment_lake_args(parser, required=False)
     parser.add_argument("--output-dir", default=str(research_report_path("experiment_15")))
     parser.add_argument("--start-date", default=None)
     parser.add_argument("--end-date", default=None)
@@ -162,7 +163,10 @@ def run_factor_framework(args: argparse.Namespace) -> Experiment15Result:
     if not 0 < args.top_fraction <= 1:
         raise FactorFrameworkError("top_fraction 必须在 (0, 1] 内")
 
-    frames = load_experiment_lake_frames(args).frames
+    if getattr(args, "lake_root", None) and getattr(args, "as_of", None):
+        frames = load_experiment_lake_frames(args).frames
+    else:
+        frames = load_local_frames(require_explicit_data_dir(args))
     close_df, volume_df, universe, calendar = build_matrices(frames, args.start_date, args.end_date)
     factor_panel = build_factor_panel(close_df, volume_df, specs)
     coverages = summarize_factor_coverage(factor_panel)

@@ -436,7 +436,13 @@ def resolve_cr011_validation_output_dir(output_dir: str | Path, run_id: str | No
 
     legacy_report = LEGACY_EXPERIMENT_17_21_REPORT.resolve()
     report_path = base_dir / "factor_strategy_report.md"
-    if base_dir.resolve() == legacy_report or base_dir.resolve() == legacy_report.parent or report_path.resolve() == legacy_report:
+    if (
+        _is_legacy_experiment17_alias(base_dir)
+        or _is_legacy_experiment17_alias(report_path)
+        or base_dir.resolve() == legacy_report
+        or base_dir.resolve() == legacy_report.parent
+        or report_path.resolve() == legacy_report
+    ):
         raise FactorFrameworkError(
             f"禁止覆盖旧实验 17-21 baseline 报告；请将 --output-dir 指向 {DEFAULT_CR011_OUTPUT_DIR} 或测试临时目录。"
         )
@@ -1343,7 +1349,7 @@ def build_experiment_benchmark_policy_metadata(
         proxy_baseline={
             "status": "used" if proxy_used else "not_used",
             "definition": "same_universe_equal_weight_buy_and_hold",
-            "baseline_report_path": str(baseline_report_path or LEGACY_EXPERIMENT_17_21_REPORT.relative_to(PROJECT_ROOT)),
+            "baseline_report_path": str(baseline_report_path or LEGACY_EXPERIMENT_17_21_REPORT),
         },
     )
     metadata = policy_result.to_metadata()
@@ -1992,8 +1998,18 @@ def _parameter_grid_from_strategy_summary(strategy_summary: pd.DataFrame) -> lis
 
 
 def _assert_not_legacy_artifact_path(path: Path) -> None:
-    if path.resolve() == LEGACY_EXPERIMENT_17_21_REPORT.resolve():
+    resolved = path.resolve()
+    legacy_report = LEGACY_EXPERIMENT_17_21_REPORT.resolve()
+    if _is_legacy_experiment17_alias(path) or resolved == legacy_report or resolved == legacy_report.parent:
         raise FactorFrameworkError("禁止覆盖旧实验 17-21 baseline 报告；S08 只能写入当前 CR011 输出目录。")
+
+
+def _is_legacy_experiment17_alias(path: Path) -> bool:
+    normalized = path.as_posix().rstrip("/")
+    return normalized in {
+        "reports/experiment_17_21",
+        "reports/experiment_17_21/factor_strategy_report.md",
+    }
 
 
 def retention_display_records(retention: pd.DataFrame) -> list[dict[str, Any]]:

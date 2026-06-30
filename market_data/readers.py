@@ -1010,7 +1010,7 @@ def read_auxiliary_inputs(
     results: dict[str, ReaderResult] = {}
     for capability in req.capabilities:
         dataset = _AUXILIARY_CAPABILITY_DATASETS.get(capability)
-        if dataset is None or dataset not in DATASETS:
+        if dataset is None or dataset not in DATASETS or capability not in CR018_P1_AUXILIARY_FIELD_DEFINITIONS:
             results[capability] = _auxiliary_reader_error(capability, "unavailable", "auxiliary_dataset_not_registered")
             continue
         filters: dict[str, Any] = {

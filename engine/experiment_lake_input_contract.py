@@ -73,9 +73,9 @@ class ExperimentLakeInputResult:
 ReaderFn = Callable[..., ReaderResult]
 
 
-def add_experiment_lake_args(parser: Any) -> None:
-    parser.add_argument("--lake-root", required=True, help="显式传入只读 lake root；禁止默认仓库数据目录。")
-    parser.add_argument("--as-of", required=True, help="PIT 决策时间，所有输入必须 available_at <= as_of。")
+def add_experiment_lake_args(parser: Any, *, required: bool = True) -> None:
+    parser.add_argument("--lake-root", required=required, help="显式传入只读 lake root；禁止默认仓库数据目录。")
+    parser.add_argument("--as-of", required=required, help="PIT 决策时间，所有输入必须 available_at <= as_of。")
     parser.add_argument("--quality-policy", default="require_pass")
 
 

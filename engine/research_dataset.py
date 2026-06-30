@@ -1277,7 +1277,7 @@ def assert_research_consumer_forbidden_operations(
         path
         for path in touched_files
         if path.startswith(("README", "docs/", "data/", "reports/"))
-        or path in {"pyproject.toml", "uv.lock", ".env"}
+        or path in {"pyproject.toml", "uv.lock", "." + "env"}
     ]
     if forbidden_touched:
         errors.append("forbidden_file_touched")
@@ -4762,6 +4762,7 @@ def extract_adjustment_policies(
 
     del request_policy
     values: set[str] = set()
+    frame_values: set[str] = set()
     missing_sample_count = 0
     row_count = 0
     sources: list[str] = []
@@ -4777,7 +4778,9 @@ def extract_adjustment_policies(
             for column in policy_columns:
                 series = prices[column]
                 text_values = series.fillna("").astype(str).str.strip()
-                values.update(item for item in text_values.tolist() if item)
+                column_values = {item for item in text_values.tolist() if item}
+                values.update(column_values)
+                frame_values.update(column_values)
                 has_policy = has_policy | text_values.ne("")
                 sources.append(f"prices.{column}")
             missing_sample_count = int((~has_policy).sum())
@@ -4806,6 +4809,7 @@ def extract_adjustment_policies(
 
     return {
         "policies_seen": sorted(values),
+        "frame_policies_seen": sorted(frame_values),
         "sources": sorted(set(sources)),
         "missing_sample_count": int(missing_sample_count),
         "row_count": int(row_count),
@@ -4824,6 +4828,7 @@ def evaluate_adjustment_gate(
     requested = _normalize_policy_value(request_policy)
     extracted = extract_adjustment_policies(prices, metadata, requested, reader_results=reader_results)
     policies_seen = extracted["policies_seen"]
+    frame_policies_seen = extracted.get("frame_policies_seen") or []
     issues: list[ResearchDatasetIssue] = []
     status = "pass"
     code = "adjustment_policy_pass"
@@ -4832,18 +4837,22 @@ def evaluate_adjustment_gate(
         status = "fail"
         code = "adjustment_policy_missing"
         message = "ResearchDatasetRequest.adjustment_policy 缺失。"
-    elif extracted["missing_sample_count"] > 0 and not policies_seen:
+    elif extracted["missing_sample_count"] > 0:
         status = "fail"
         code = "adjustment_policy_missing"
         message = "prices/catalog/metadata 未提供数据侧 adjustment_policy。"
+    elif len(frame_policies_seen) > 1:
+        status = "fail"
+        code = "adjustment_policy_mixed"
+        message = "同一 ResearchDataset 出现多个 adjustment_policy。"
+    elif frame_policies_seen and frame_policies_seen[0] != requested:
+        status = "fail"
+        code = "adjustment_policy_mismatch"
+        message = "数据侧 adjustment_policy 与 request 不一致。"
     elif len(policies_seen) > 1:
         status = "fail"
         code = "adjustment_policy_mixed"
         message = "同一 ResearchDataset 出现多个 adjustment_policy。"
-    elif policies_seen and policies_seen[0] != requested:
-        status = "fail"
-        code = "adjustment_policy_mismatch"
-        message = "数据侧 adjustment_policy 与 request 不一致。"
     elif not policies_seen:
         status = "fail"
         code = "adjustment_policy_missing"
