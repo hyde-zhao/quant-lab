@@ -86,6 +86,44 @@ def test_turnover_sorting_adapter_keeps_all_constant_quantile_as_no_data() -> No
         run_experiment_a(constant, forward, valid_mask, rebalance_dates, group_count=3)
 
 
+def test_turnover_sorting_adapter_keeps_low_sample_quantile_as_no_data() -> None:
+    factor, forward, _size, valid_mask, rebalance_dates = _sorting_fixture()
+    low_sample_mask = valid_mask.copy()
+    low_sample_mask.loc[:, :] = False
+    low_sample_mask.iloc[:, :4] = True
+
+    with pytest.raises(RuntimeError, match="无有效分组数据"):
+        run_experiment_a(factor, forward, low_sample_mask, rebalance_dates, group_count=5)
+
+
+def test_turnover_sorting_adapter_matches_legacy_logic_with_repeated_values() -> None:
+    factor, forward, size, valid_mask, rebalance_dates = _sorting_fixture()
+    repeated_values = [1.0, 2.0, 3.0] * 3
+    repeated = factor.copy()
+    for trade_date in repeated.index:
+        repeated.loc[trade_date] = repeated_values
+
+    actual_a = run_experiment_a(repeated, forward, valid_mask, rebalance_dates, group_count=3).group_returns_ts
+    actual_b = run_experiment_b(repeated, size, forward, valid_mask, rebalance_dates, group_count=3).cell_returns
+    actual_c = run_experiment_c(repeated, size, forward, valid_mask, rebalance_dates, group_count=3).cell_returns
+
+    assert_frame_equal(
+        _sorted(actual_a),
+        _sorted(_legacy_single_sort(repeated, forward, valid_mask, rebalance_dates, group_count=3)),
+        check_like=True,
+    )
+    assert_frame_equal(
+        _sorted(actual_b),
+        _sorted(_legacy_double_sort(repeated, size, forward, valid_mask, rebalance_dates, group_count=3, conditional=False)),
+        check_like=True,
+    )
+    assert_frame_equal(
+        _sorted(actual_c),
+        _sorted(_legacy_double_sort(repeated, size, forward, valid_mask, rebalance_dates, group_count=3, conditional=True)),
+        check_like=True,
+    )
+
+
 def _legacy_quantile_groups(values: pd.Series, group_count: int) -> pd.Series:
     clean = values.dropna()
     if len(clean) < group_count or clean.nunique() < 2:
