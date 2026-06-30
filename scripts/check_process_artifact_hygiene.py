@@ -12,8 +12,8 @@ from typing import Any
 KNOWN_SOURCE_RESIDUALS = frozenset(
     {
         "scripts/check_human_gate_decision_brief.py",
-        "tests/meta_flow/test_human_gate_path_alias_checker.py",
-        "tests/meta_flow/test_human_gate_launch_message_checker.py",
+        "tests/meta_flow/test_human_gate_contracts.py",
+        "tests/meta_flow/test_human_gate_contracts.py",
     }
 )
 
@@ -261,13 +261,13 @@ CURRENT_CR138_SOURCE_ASSETS = frozenset(
         "docs/CR138-RUNNER-QMT-AUTHORIZATION-RUNBOOK.md",
         "docs/QMT-GATEWAY-INSTALL.md",
         "tests/docs_quality/test_docs_fixtures_authorization_runbook.py",
-        "tests/trading/test_gateway_lifecycle_health_rest_contract.py",
-        "tests/trading/test_gateway_query_calendar_commission_pnl.py",
-        "tests/trading/test_gateway_subscription_order_report_recovery.py",
-        "tests/runner/test_runner_event_signal_rebalance_tracking.py",
-        "tests/runner/test_runner_evidence_review_incident_lifecycle.py",
-        "tests/runner/test_runner_plan_preflight_control.py",
-        "tests/trading/test_shared_contracts_authorization_audit.py",
+        "tests/trading/test_qmt_gateway_contracts.py",
+        "tests/trading/test_qmt_gateway_contracts.py",
+        "tests/trading/test_qmt_gateway_contracts.py",
+        "tests/runner/test_control_plane_contracts.py",
+        "tests/runner/test_control_plane_contracts.py",
+        "tests/runner/test_control_plane_contracts.py",
+        "tests/trading/test_qmt_gateway_contracts.py",
         "trading/qmt_gateway_config.py",
         "trading/qmt_gateway_contracts.py",
         "trading/qmt_gateway_gates.py",

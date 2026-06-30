@@ -31,8 +31,8 @@ def test_cr132_process_history_residuals_are_classified_non_blocking() -> None:
 def test_cr132_source_human_gate_residuals_are_classified_non_blocking() -> None:
     entries = [
         StatusEntry(repo="source", status="M", path="scripts/check_human_gate_decision_brief.py"),
-        StatusEntry(repo="source", status="??", path="tests/meta_flow/test_human_gate_path_alias_checker.py"),
-        StatusEntry(repo="source", status="??", path="tests/meta_flow/test_human_gate_launch_message_checker.py"),
+        StatusEntry(repo="source", status="??", path="tests/meta_flow/test_human_gate_contracts.py"),
+        StatusEntry(repo="source", status="??", path="tests/meta_flow/test_human_gate_contracts.py"),
     ]
 
     assert {classify_entry(entry) for entry in entries} == {"source_human_gate_residual"}
@@ -89,8 +89,8 @@ def test_cr132_cr138_source_assets_are_classified_non_blocking() -> None:
         StatusEntry(repo="source", status="M", path="trading/qmt_gateway_gates.py"),
         StatusEntry(repo="source", status="??", path="docs/CR138-RUNNER-QMT-AUTHORIZATION-RUNBOOK.md"),
         StatusEntry(repo="source", status="??", path="docs/QMT-GATEWAY-INSTALL.md"),
-        StatusEntry(repo="source", status="??", path="tests/trading/test_shared_contracts_authorization_audit.py"),
-        StatusEntry(repo="source", status="??", path="tests/trading/test_gateway_query_calendar_commission_pnl.py"),
+        StatusEntry(repo="source", status="??", path="tests/trading/test_qmt_gateway_contracts.py"),
+        StatusEntry(repo="source", status="??", path="tests/trading/test_qmt_gateway_contracts.py"),
     ]
 
     assert {

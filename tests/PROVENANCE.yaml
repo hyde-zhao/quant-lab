@@ -810,22 +810,17 @@ items:
     provenance:
       -
         cr: CR-129
-  tests/meta_flow/test_human_gate_launch_message_checker.py:
-    domains:
-      - meta_flow
-    old_paths:
-      - tests/test_cr119_human_gate_launch_message_checker.py
-    provenance:
-      -
-        cr: CR-119
-  tests/meta_flow/test_human_gate_path_alias_checker.py:
+  tests/meta_flow/test_human_gate_contracts.py:
     domains:
       - meta_flow
     old_paths:
       - tests/test_cr118_human_gate_path_alias_checker.py
+      - tests/test_cr119_human_gate_launch_message_checker.py
     provenance:
       -
         cr: CR-118
+      -
+        cr: CR-119
   tests/meta_flow/test_package_import_layout.py:
     domains:
       - meta_flow
@@ -1274,11 +1269,13 @@ items:
     provenance:
       -
         cr: CR-128
-  tests/runner/test_runner_event_signal_rebalance_tracking.py:
+  tests/runner/test_control_plane_contracts.py:
     domains:
       - runner
     old_paths:
+      - tests/test_cr138_runner_plan_preflight_control.py
       - tests/test_cr138_runner_event_signal_rebalance_tracking.py
+      - tests/test_cr138_runner_evidence_review_incident_lifecycle.py
     provenance:
       -
         cr: CR-138
@@ -1290,14 +1287,6 @@ items:
     provenance:
       -
         cr: CR-134
-  tests/runner/test_runner_evidence_review_incident_lifecycle.py:
-    domains:
-      - runner
-    old_paths:
-      - tests/test_cr138_runner_evidence_review_incident_lifecycle.py
-    provenance:
-      -
-        cr: CR-138
   tests/runner/test_runner_multifactor_ops_pipeline.py:
     domains:
       - runner
@@ -1330,14 +1319,6 @@ items:
     provenance:
       -
         source: legacy-topic-test
-  tests/runner/test_runner_plan_preflight_control.py:
-    domains:
-      - runner
-    old_paths:
-      - tests/test_cr138_runner_plan_preflight_control.py
-    provenance:
-      -
-        cr: CR-138
   tests/runner/test_runner_readonly_integration.py:
     domains:
       - runner
@@ -1474,27 +1455,14 @@ items:
     provenance:
       -
         cr: CR-019
-  tests/trading/test_gateway_lifecycle_health_rest_contract.py:
+  tests/trading/test_qmt_gateway_contracts.py:
     domains:
       - trading
     old_paths:
       - tests/test_cr138_gateway_lifecycle_health_rest_contract.py
-    provenance:
-      -
-        cr: CR-138
-  tests/trading/test_gateway_query_calendar_commission_pnl.py:
-    domains:
-      - trading
-    old_paths:
       - tests/test_cr138_gateway_query_calendar_commission_pnl.py
-    provenance:
-      -
-        cr: CR-138
-  tests/trading/test_gateway_subscription_order_report_recovery.py:
-    domains:
-      - trading
-    old_paths:
       - tests/test_cr138_gateway_subscription_order_report_recovery.py
+      - tests/test_cr138_shared_contracts_authorization_audit.py
     provenance:
       -
         cr: CR-138
@@ -1730,14 +1698,6 @@ items:
     provenance:
       -
         cr: CR-015
-  tests/trading/test_shared_contracts_authorization_audit.py:
-    domains:
-      - trading
-    old_paths:
-      - tests/test_cr138_shared_contracts_authorization_audit.py
-    provenance:
-      -
-        cr: CR-138
   tests/trading/test_simulation_order_enable_gate.py:
     domains:
       - trading
