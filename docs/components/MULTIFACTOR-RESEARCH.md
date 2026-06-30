@@ -83,7 +83,7 @@ Mature research package 进入 observation / simulation 审查前只能作为研
 
 Mature multifactor research runner 的稳定入口为 `scripts/research/run_multifactor_strategy_research.py`，归档实现桥接路径为 `scripts/legacy/cr/run_stage3_mature_multifactor_research.py`，核心实现为 `engine/mature_multifactor_research.py`。旧 `engine/stage3_mature_multifactor_research.py` 已归档到 `docs/legacy/archive/engine/stage3_mature_multifactor_research.py`；文件名中的 `stage3` 是历史项目阶段命名。该 runner 只读 canonical data lake，写 research run 与 process evidence；禁止 provider fetch、lake write、catalog publish、QMT、gateway、simulation/live、账户/订单操作和凭据读取。
 
-默认数据湖根目录为 `/home/hyde/data/quant-lab/lake`，研究输出根目录为 `/home/hyde/data/quant-lab/research/runs/stage3_mature_multifactor`。reader 优先读取完整 `canonical/<dataset>/1.0` 目录；catalog 中指向单个 parquet 分片的 `canonical_path` 只作为 lineage ref 使用，避免误读局部分片。
+默认数据湖根目录为 `/home/hyde/data/quant-lab/data-lake`，与 NAS 末级目录 `/data-lake` 保持一致；研究输出根目录为 `/home/hyde/data/quant-lab/research/runs/stage3_mature_multifactor`。reader 优先读取完整 `canonical/<dataset>/1.0` 目录；catalog 中指向单个 parquet 分片的 `canonical_path` 只作为 lineage ref 使用，避免误读局部分片。
 
 当前通过准入的研究候选运行：
 

@@ -203,9 +203,15 @@ def load_policy_cycle_config(path: str | Path = DEFAULT_POLICY_CYCLE_CONFIG_PATH
     config_path = Path(path)
     payload = yaml.safe_load(config_path.read_text(encoding="utf-8")) if config_path.exists() else {}
     rows = payload.get("cycles", []) if isinstance(payload, Mapping) else []
+    version = str(payload.get("version") or "v1") if isinstance(payload, Mapping) else "v1"
+    release_id = str(payload.get("release_id") or "policy-cycle-release-v1") if isinstance(payload, Mapping) else "policy-cycle-release-v1"
     frame = pd.DataFrame(rows)
     if frame.empty:
-        return pd.DataFrame(columns=["cycle_id", "name", "start", "end", "policy_type", "market", "source_ref"])
+        return pd.DataFrame(columns=["cycle_id", "version", "release_id", "name", "start", "end", "policy_type", "market", "source_ref"])
+    if "version" not in frame.columns:
+        frame["version"] = version
+    if "release_id" not in frame.columns:
+        frame["release_id"] = release_id
     required = {"cycle_id", "name", "start", "end", "policy_type", "market", "source_ref"}
     missing = required - set(frame.columns)
     if missing:
@@ -474,7 +480,35 @@ def policy_cycle_coverage(
         "status": STATUS_PASS if coverage >= float(config.get("min_policy_cycle_coverage", 0.5)) else STATUS_PASS_WITH_RISK,
         "coverage_ratio": coverage,
         "cycles": rows,
+        "release_ids": tuple(sorted(str(item) for item in cycles.get("release_id", pd.Series(dtype="str")).dropna().unique())),
+        "versions": tuple(sorted(str(item) for item in cycles.get("version", pd.Series(dtype="str")).dropna().unique())),
         "data_lake_dataset_candidates": ("policy_cycle_events", "macro_policy_regime"),
+    }
+
+
+def policy_cycle_shortability_gate(
+    joined: pd.DataFrame,
+    policy_cycle_frame: pd.DataFrame | None,
+    tradability_frame: pd.DataFrame | None,
+    config: Mapping[str, Any],
+) -> dict[str, Any]:
+    coverage = policy_cycle_coverage(joined, policy_cycle_frame, config)
+    short = short_feasibility(tradability_frame, {**dict(config), "strategy_type": str(config.get("strategy_type", "long_short"))})
+    cycles = policy_cycle_frame.copy() if policy_cycle_frame is not None and not policy_cycle_frame.empty else load_policy_cycle_config(config.get("policy_cycle_config_path", DEFAULT_POLICY_CYCLE_CONFIG_PATH))
+    missing_release_count = int((cycles.get("release_id", pd.Series(dtype="object")).astype(str).str.strip() == "").sum()) if not cycles.empty else 1
+    missing_version_count = int((cycles.get("version", pd.Series(dtype="object")).astype(str).str.strip() == "").sum()) if not cycles.empty else 1
+    release_ok = missing_release_count == 0 and missing_version_count == 0
+    status = STATUS_PASS if coverage.get("status") == STATUS_PASS and short.get("status") == STATUS_PASS and release_ok else STATUS_BLOCKED
+    return {
+        "schema_version": "cr139_policy_cycle_shortability_gate_v1",
+        "status": status,
+        "policy_cycle_coverage": coverage,
+        "short_feasibility": short,
+        "missing_release_count": missing_release_count,
+        "missing_version_count": missing_version_count,
+        "release_ids": tuple(sorted(str(item) for item in cycles.get("release_id", pd.Series(dtype="str")).dropna().unique())) if not cycles.empty else (),
+        "versions": tuple(sorted(str(item) for item in cycles.get("version", pd.Series(dtype="str")).dropna().unique())) if not cycles.empty else (),
+        "operation_counts": dict(OPERATION_COUNTS),
     }
 
 
@@ -552,6 +586,129 @@ def multiple_testing_control(premium: Mapping[str, Any]) -> dict[str, Any]:
         "status": STATUS_PASS_WITH_RISK if len(summary) >= 20 else STATUS_PASS,
         "candidate_count": int(len(summary)),
         "adjusted_summary": adjusted,
+    }
+
+
+def label_cutoff_gate(
+    factors: pd.DataFrame,
+    labels: pd.DataFrame,
+    *,
+    cutoff_time: str,
+    label_horizon_days: int,
+    split_policy_ref: str,
+) -> dict[str, Any]:
+    required_factor = {"trade_date", "symbol", "available_at"}
+    required_label = {"trade_date", "symbol", "label_available_at"}
+    missing_factor = sorted(required_factor - set(factors.columns))
+    missing_label = sorted(required_label - set(labels.columns))
+    if missing_factor or missing_label:
+        return {
+            "schema_version": "cr139_label_cutoff_gate_v1",
+            "status": STATUS_BLOCKED,
+            "reason": "required availability columns missing",
+            "missing_factor_columns": missing_factor,
+            "missing_label_columns": missing_label,
+            "operation_counts": dict(OPERATION_COUNTS),
+        }
+    if not split_policy_ref:
+        return {
+            "schema_version": "cr139_label_cutoff_gate_v1",
+            "status": STATUS_BLOCKED,
+            "reason": "split_policy_ref missing",
+            "operation_counts": dict(OPERATION_COUNTS),
+        }
+    if int(label_horizon_days) <= 0:
+        return {
+            "schema_version": "cr139_label_cutoff_gate_v1",
+            "status": STATUS_BLOCKED,
+            "reason": "label_horizon_days must be positive",
+            "operation_counts": dict(OPERATION_COUNTS),
+        }
+
+    merged = factors[["trade_date", "symbol", "available_at"]].merge(
+        labels[["trade_date", "symbol", "label_available_at"]],
+        on=["trade_date", "symbol"],
+        how="inner",
+    )
+    feature_available = pd.to_datetime(merged["available_at"], errors="coerce", utc=True)
+    label_available = pd.to_datetime(merged["label_available_at"], errors="coerce", utc=True)
+    cutoff = pd.to_datetime(cutoff_time, errors="coerce", utc=True)
+    leakage_count = int((feature_available.notna() & label_available.notna() & (label_available <= feature_available)).sum())
+    if pd.isna(cutoff):
+        cutoff_violation_count = int(len(merged))
+    else:
+        cutoff_violation_count = int(((feature_available > cutoff) | (label_available > cutoff)).sum())
+    status = STATUS_PASS if leakage_count == 0 and cutoff_violation_count == 0 and not pd.isna(cutoff) else STATUS_BLOCKED
+    return {
+        "schema_version": "cr139_label_cutoff_gate_v1",
+        "status": status,
+        "matched_rows": int(len(merged)),
+        "leakage_count": leakage_count,
+        "cutoff_violation_count": cutoff_violation_count,
+        "cutoff_time": str(cutoff_time),
+        "label_horizon_days": int(label_horizon_days),
+        "split_policy_ref": split_policy_ref,
+        "operation_counts": dict(OPERATION_COUNTS),
+    }
+
+
+def offline_online_feature_consistency(
+    offline_features: pd.DataFrame,
+    online_features: pd.DataFrame,
+    *,
+    feature_columns: Sequence[str] | None = None,
+    key_columns: Sequence[str] = ("trade_date", "symbol"),
+) -> dict[str, Any]:
+    keys = tuple(str(item) for item in key_columns)
+    missing_offline_keys = [key for key in keys if key not in offline_features.columns]
+    missing_online_keys = [key for key in keys if key not in online_features.columns]
+    if missing_offline_keys or missing_online_keys:
+        return {
+            "schema_version": "cr139_offline_online_consistency_v1",
+            "status": STATUS_BLOCKED,
+            "reason": "primary key columns missing",
+            "missing_offline_keys": missing_offline_keys,
+            "missing_online_keys": missing_online_keys,
+            "operation_counts": dict(OPERATION_COUNTS),
+        }
+    ignored = {*keys, "available_at", "source", "run_id"}
+    offline_cols = tuple(str(col) for col in offline_features.columns if col not in ignored)
+    online_cols = tuple(str(col) for col in online_features.columns if col not in ignored)
+    features = tuple(str(col) for col in (feature_columns or offline_cols))
+    missing_offline = sorted(set(features) - set(offline_cols))
+    missing_online = sorted(set(features) - set(online_cols))
+    schema_mismatch = sorted(set(offline_cols) ^ set(online_cols))
+    if missing_offline or missing_online or schema_mismatch:
+        return {
+            "schema_version": "cr139_offline_online_consistency_v1",
+            "status": STATUS_BLOCKED,
+            "reason": "offline/online feature schema mismatch",
+            "feature_columns": list(features),
+            "missing_offline_features": missing_offline,
+            "missing_online_features": missing_online,
+            "schema_mismatch": schema_mismatch,
+            "operation_counts": dict(OPERATION_COUNTS),
+        }
+    merged = offline_features[list(keys) + list(features)].merge(
+        online_features[list(keys) + list(features)],
+        on=list(keys),
+        how="inner",
+        suffixes=("_offline", "_online"),
+    )
+    mismatch_count = 0
+    for feature in features:
+        left = pd.to_numeric(merged[f"{feature}_offline"], errors="coerce")
+        right = pd.to_numeric(merged[f"{feature}_online"], errors="coerce")
+        numeric_equal = (left.fillna(np.nan).round(12) == right.fillna(np.nan).round(12)) | (left.isna() & right.isna())
+        raw_equal = merged[f"{feature}_offline"].astype(str) == merged[f"{feature}_online"].astype(str)
+        mismatch_count += int((~(numeric_equal | raw_equal)).sum())
+    return {
+        "schema_version": "cr139_offline_online_consistency_v1",
+        "status": STATUS_PASS if mismatch_count == 0 else STATUS_BLOCKED,
+        "matched_rows": int(len(merged)),
+        "feature_columns": list(features),
+        "value_mismatch_count": int(mismatch_count),
+        "operation_counts": dict(OPERATION_COUNTS),
     }
 
 
@@ -780,5 +937,8 @@ __all__ = (
     "FactorModelValidationReport",
     "ValidationGateDecision",
     "build_factor_model_validation_report",
+    "label_cutoff_gate",
     "load_policy_cycle_config",
+    "offline_online_feature_consistency",
+    "policy_cycle_shortability_gate",
 )

@@ -29,6 +29,7 @@ from engine.research_dataset import (
     metadata_to_dict,
 )
 from engine.research_paths import research_report_path
+from experiments.lake_input_contract import add_experiment_lake_args, load_experiment_lake_frames
 from experiments.reporting import attach_research_input_metadata
 from market_data.benchmarks import build_benchmark_field_payload
 
@@ -136,7 +137,7 @@ def main() -> None:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="运行实验十五因子工程基础框架。")
-    parser.add_argument("--data-dir", required=True, default=None, help="必须显式传入的本地标准 parquet 目录。")
+    add_experiment_lake_args(parser)
     parser.add_argument("--output-dir", default=str(research_report_path("experiment_15")))
     parser.add_argument("--start-date", default=None)
     parser.add_argument("--end-date", default=None)
@@ -161,7 +162,7 @@ def run_factor_framework(args: argparse.Namespace) -> Experiment15Result:
     if not 0 < args.top_fraction <= 1:
         raise FactorFrameworkError("top_fraction 必须在 (0, 1] 内")
 
-    frames = load_local_frames(require_explicit_data_dir(args))
+    frames = load_experiment_lake_frames(args).frames
     close_df, volume_df, universe, calendar = build_matrices(frames, args.start_date, args.end_date)
     factor_panel = build_factor_panel(close_df, volume_df, specs)
     coverages = summarize_factor_coverage(factor_panel)
@@ -445,7 +446,9 @@ def build_factor_schema(
             "zero_std_policy": "factor_zscore=null",
         },
         "source": {
-            "data_dir": str(args.data_dir),
+            "input_mode": "read_panel_as_of",
+            "lake_root": str(getattr(args, "lake_root", "")),
+            "as_of": str(getattr(args, "as_of", "")),
             "start_date": close_df.index.min().isoformat() if len(close_df.index) else "",
             "end_date": close_df.index.max().isoformat() if len(close_df.index) else "",
             "calendar_days": len(calendar),
@@ -745,7 +748,8 @@ def render_report(
         "",
         "## 数据与标签口径",
         "",
-        f"- 数据目录：`{args.data_dir}`",
+        f"- Lake 输入：`{getattr(args, 'lake_root', '')}`",
+        f"- PIT as_of：`{getattr(args, 'as_of', '')}`",
         f"- 数据区间：{schema['source']['start_date']} 至 {schema['source']['end_date']}",
         f"- 股票数：{schema['source']['symbol_count']}；交易日数：{schema['source']['calendar_days']}",
         "- 标签定义：`forward_return_Nd = close[t+N] / close[t] - 1`，当前输出仅保留 1/5/10/20 日标签完整的样本。",

@@ -85,7 +85,7 @@ def test_normalize_run_writes_canonical_and_preserves_lineage(tmp_path):
     }
     assert set(frame["source_run_id"]) == {"run-1"}
     assert str(result.canonical_paths[0]).endswith(
-        "canonical/prices/1.0/run_id=run-1/part-b1.parquet"
+        "canonical/prices/1.0/current/part-b1.parquet"
     )
 
 

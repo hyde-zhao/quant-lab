@@ -61,6 +61,7 @@ AUTO_PUBLISH_PRODUCERS: tuple[str, ...] = (
     "quality",
     "duckdb_audit",
 )
+POINTER_ADVANCE_PLAN_SCHEMA = "cr139.pointer_advance_plan.v1"
 
 
 @dataclass(frozen=True, slots=True)
@@ -163,6 +164,43 @@ class ReleasePublishDecision:
             "publish_evidence": dict(self.publish_evidence or {}),
             "blocked_reasons": [dict(item) for item in self.blocked_reasons],
             "auto_publish_count": self.auto_publish_count,
+            "operation_counts": dict(self.operation_counts or RELEASE_PUBLISH_OPERATION_COUNTERS),
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class PointerAdvancePlan:
+    """W2 current pointer advance plan; not an execution authorization."""
+
+    dataset: str
+    from_run_id: str
+    to_run_id: str
+    manifest_ref: str
+    lineage_checksum: str
+    status: str = "planned"
+    execute_allowed: bool = False
+    current_pointer_publish_count: int = 0
+    catalog_current_pointer_publish_count: int = 0
+    real_lake_write_count: int = 0
+    approval_required: bool = True
+    blocked_reasons: tuple[dict[str, Any], ...] = ()
+    operation_counts: dict[str, int] | None = None
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "schema_name": POINTER_ADVANCE_PLAN_SCHEMA,
+            "status": self.status,
+            "dataset": self.dataset,
+            "from_run_id": self.from_run_id,
+            "to_run_id": self.to_run_id,
+            "manifest_ref": self.manifest_ref,
+            "lineage_checksum": self.lineage_checksum,
+            "execute_allowed": self.execute_allowed,
+            "current_pointer_publish_count": self.current_pointer_publish_count,
+            "catalog_current_pointer_publish_count": self.catalog_current_pointer_publish_count,
+            "real_lake_write_count": self.real_lake_write_count,
+            "approval_required": self.approval_required,
+            "blocked_reasons": [dict(item) for item in self.blocked_reasons],
             "operation_counts": dict(self.operation_counts or RELEASE_PUBLISH_OPERATION_COUNTERS),
         }
 
@@ -418,6 +456,68 @@ def forbid_auto_publish_guard(
         auto_publish_count=0,
         reason_code=AUTO_PUBLISH_FORBIDDEN,
         operation_counts=_normalise_release_publish_counters(permission_counters),
+    )
+
+
+def build_pointer_advance_plan(
+    *,
+    dataset: str,
+    from_run_id: str,
+    to_run_id: str,
+    manifest_ref: str,
+    lineage_checksum: str,
+    approval_id: str | None = None,
+    permission_counters: Mapping[str, Any] | None = None,
+) -> PointerAdvancePlan:
+    """Build a pointer advance plan without executing or authorizing publish."""
+
+    counters = _normalise_release_publish_counters(permission_counters)
+    blocked_reasons: list[dict[str, Any]] = []
+    required = {
+        "dataset": dataset,
+        "from_run_id": from_run_id,
+        "to_run_id": to_run_id,
+        "manifest_ref": manifest_ref,
+        "lineage_checksum": lineage_checksum,
+    }
+    for field_name, value in required.items():
+        if not _release_non_empty(value):
+            blocked_reasons.append(
+                {
+                    "reason_code": "pointer_advance_input_missing",
+                    "field": field_name,
+                }
+            )
+    if not _release_non_empty(approval_id):
+        blocked_reasons.append(
+            {
+                "reason_code": PUBLISH_BLOCKED_MISSING_APPROVAL,
+                "field": "approval_id",
+            }
+        )
+    if any(value != 0 for value in counters.values()):
+        blocked_reasons.append(
+            {
+                "reason_code": RELEASE_PUBLISH_PERMISSION_COUNTER_VIOLATION,
+                "field": "operation_counts",
+                "operation_counts": dict(counters),
+            }
+        )
+    status = "blocked" if blocked_reasons else "planned"
+    return PointerAdvancePlan(
+        dataset=str(dataset or ""),
+        from_run_id=str(from_run_id or ""),
+        to_run_id=str(to_run_id or ""),
+        manifest_ref=str(manifest_ref or ""),
+        lineage_checksum=str(lineage_checksum or ""),
+        status=status,
+        execute_allowed=False,
+        current_pointer_publish_count=0,
+        catalog_current_pointer_publish_count=0,
+        real_lake_write_count=0,
+        approval_required=True,
+        blocked_reasons=tuple(blocked_reasons),
+        operation_counts=counters,
     )
 
 
@@ -679,12 +779,15 @@ __all__ = [
     "RELEASE_READINESS_NOT_PUBLISHABLE",
     "AutoPublishGuardResult",
     "PointerUpdateResult",
+    "PointerAdvancePlan",
+    "POINTER_ADVANCE_PLAN_SCHEMA",
     "PublishGateResult",
     "PublishIntent",
     "ReleasePublishDecision",
     "ReleasePublishRequest",
     "ReleasePublishAuditHookResult",
     "explicit_publish_gate",
+    "build_pointer_advance_plan",
     "forbid_auto_publish_guard",
     "publish_current_pointer",
     "validate_release_publish_readiness_audit",

@@ -192,6 +192,24 @@ class GapRegister:
         }
 
 
+@dataclass(frozen=True, slots=True)
+class PreReadReadinessGateResult:
+    dataset: str
+    passed: bool
+    status: str
+    issues: tuple[dict[str, Any], ...] = ()
+    remediation_spec: dict[str, Any] = field(default_factory=dict)
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "dataset": self.dataset,
+            "passed": self.passed,
+            "status": self.status,
+            "issues": [dict(item) for item in self.issues],
+            "remediation_spec": dict(self.remediation_spec),
+        }
+
+
 def _payload(value: Any) -> dict[str, Any]:
     if value is None:
         return {}
@@ -205,6 +223,92 @@ def _payload(value: Any) -> dict[str, Any]:
     if hasattr(value, "__dict__"):
         return dict(vars(value))
     return {}
+
+
+def evaluate_pre_read_readiness_gate(
+    dataset: str,
+    readiness: Mapping[str, Any] | object | None,
+    *,
+    require_pit: bool = True,
+    required: bool = True,
+) -> PreReadReadinessGateResult:
+    """Evaluate a dataset readiness matrix before the reader touches parquet paths."""
+
+    dataset_text = str(dataset)
+    row = _readiness_row_payload(dataset_text, readiness)
+    if not row:
+        return PreReadReadinessGateResult(
+            dataset=dataset_text,
+            passed=False,
+            status="required_missing" if required else "unavailable",
+            issues=({"code": "pre_read_readiness_missing", "dataset": dataset_text},),
+            remediation_spec=_pre_read_remediation(dataset_text),
+        )
+
+    gap_codes = _gap_codes_from_row(row)
+    readiness_status = _first_text(row, "readiness_status")
+    publish_status = _first_text(row, "publish_status")
+    pit_status = _first_text(row, "pit_status")
+    issue_codes: list[str] = []
+    if gap_codes:
+        issue_codes.append("pre_read_readiness_blocked")
+        issue_codes.extend(gap_codes)
+    if readiness_status and readiness_status not in {"available", "pass"}:
+        issue_codes.append("readiness_not_available")
+    if publish_status and publish_status not in {PUBLISH_STATUS_PUBLISHED, "available", "pass"}:
+        issue_codes.append("pre_read_not_published")
+    if require_pit and (
+        GAP_PIT_INCOMPLETE in gap_codes
+        or pit_status in {"pit_incomplete", "failed", "pit_failed", "non_pit_snapshot"}
+    ):
+        issue_codes.append(GAP_PIT_INCOMPLETE)
+    issue_codes = list(dict.fromkeys(issue_codes))
+    if issue_codes:
+        return PreReadReadinessGateResult(
+            dataset=dataset_text,
+            passed=False,
+            status="required_missing" if required else "unavailable",
+            issues=tuple({"code": code, "dataset": dataset_text} for code in issue_codes),
+            remediation_spec=_pre_read_remediation(dataset_text),
+        )
+    return PreReadReadinessGateResult(
+        dataset=dataset_text,
+        passed=True,
+        status="available",
+        remediation_spec={"action": "no_action_required", "dataset": dataset_text, "auto_execute": False},
+    )
+
+
+def _readiness_row_payload(dataset: str, readiness: Mapping[str, Any] | object | None) -> dict[str, Any]:
+    payload = _payload(readiness)
+    if not payload:
+        return {}
+    rows = payload.get("rows")
+    if rows is None and payload.get("dataset") == dataset:
+        return payload
+    if rows is None:
+        rows = getattr(readiness, "rows", None)
+    for row in rows or ():
+        row_payload = _payload(row)
+        if str(row_payload.get("dataset") or "") == dataset:
+            return row_payload
+    return {}
+
+
+def _gap_codes_from_row(row: Mapping[str, Any]) -> list[str]:
+    value = row.get("gap_codes") or ()
+    if isinstance(value, str):
+        return [value]
+    return [str(item) for item in value if str(item)]
+
+
+def _pre_read_remediation(dataset: str) -> dict[str, Any]:
+    return {
+        "action": "resolve_readiness_before_read",
+        "dataset": dataset,
+        "dry_run_default": True,
+        "auto_execute": False,
+    }
 
 
 def _index_by_dataset(items: Any) -> dict[str, dict[str, Any]]:
@@ -656,6 +760,7 @@ __all__ = [
     "GAP_READINESS_NOT_AVAILABLE",
     "GapRegister",
     "GapRegisterRow",
+    "PreReadReadinessGateResult",
     "PUBLISH_STATUS_CANDIDATE_UNPUBLISHED",
     "PUBLISH_STATUS_MISSING_REQUIRED",
     "PUBLISH_STATUS_PUBLISHED",
@@ -664,5 +769,6 @@ __all__ = [
     "ReadinessMatrixRow",
     "build_gap_register",
     "build_readiness_matrix",
+    "evaluate_pre_read_readiness_gate",
     "merge_audit_evidence",
 ]

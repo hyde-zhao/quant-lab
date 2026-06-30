@@ -8,7 +8,7 @@ import os
 from dataclasses import dataclass, field
 from datetime import date, datetime
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any, Mapping, Sequence
 
 import pandas as pd
 
@@ -54,7 +54,13 @@ from .contracts import (
     SCHEMA_VERSION,
     SOURCE_TUSHARE,
 )
-from .lake_layout import LakeLayout, ensure_parent_dirs_for_write
+from .lake_layout import (
+    LakeLayout,
+    build_cr139_run_id,
+    ensure_parent_dirs_for_write,
+    legacy_run_id_path_detected,
+    validate_cr139_run_id,
+)
 
 
 class DatasetMappingError(ValueError):
@@ -67,6 +73,10 @@ class CanonicalSchemaError(ValueError):
 
 class ManifestLineageError(RuntimeError):
     """manifest/raw/canonical 血缘校验失败。"""
+
+
+class CanonicalDeduplicationError(CanonicalSchemaError):
+    """canonical write would create duplicate primary keys."""
 
 
 ADJUSTMENT_POLICY_CONFLICT = "adjustment_policy_conflict"
@@ -115,9 +125,62 @@ class NormalizationResult:
     lineage_filled_from_manifest: bool = False
 
 
+@dataclass(frozen=True, slots=True)
+class EventsSchemaRepairResult:
+    dataset: str
+    frame: pd.DataFrame
+    repaired_fields: tuple[str, ...] = ()
+    defaulted_fields: tuple[str, ...] = ()
+    issues: tuple[dict[str, Any], ...] = ()
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "dataset": self.dataset,
+            "row_count": len(self.frame),
+            "columns": list(self.frame.columns),
+            "repaired_fields": list(self.repaired_fields),
+            "defaulted_fields": list(self.defaulted_fields),
+            "issues": [dict(item) for item in self.issues],
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class WriteDeduplicationResult:
+    dataset: str
+    primary_key: tuple[str, ...]
+    policy: str
+    frame: pd.DataFrame
+    duplicate_count: int
+    dropped_count: int = 0
+    issues: tuple[dict[str, Any], ...] = ()
+
+    @property
+    def passed(self) -> bool:
+        return self.duplicate_count == 0 or self.policy == "deduplicate_deterministic"
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "dataset": self.dataset,
+            "primary_key": list(self.primary_key),
+            "policy": self.policy,
+            "row_count": len(self.frame),
+            "duplicate_count": self.duplicate_count,
+            "dropped_count": self.dropped_count,
+            "issues": [dict(item) for item in self.issues],
+        }
+
+
 CANDIDATE_UNPUBLISHED = "candidate_unpublished"
 REPLAY_SOURCE_MISSING = "replay_source_missing"
 NORMALIZE_MANIFEST_INCOMPLETE = "normalize_manifest_incomplete"
+PARTITION_LAYOUT_CURRENT_ARCHIVE = "current_archive"
+PARTITION_LAYOUT_LEGACY_RUN_ID = "legacy_run_id"
+PARTITION_LAYOUTS = frozenset(
+    {
+        PARTITION_LAYOUT_CURRENT_ARCHIVE,
+        PARTITION_LAYOUT_LEGACY_RUN_ID,
+    }
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -595,6 +658,154 @@ def _assert_no_duplicate(frame: pd.DataFrame, keys: tuple[str, ...]) -> None:
         raise CanonicalSchemaError("duplicate_key")
 
 
+def build_canonical_run_id(
+    *,
+    dataset: str,
+    source: str,
+    as_of_date: object,
+    purpose: str = "canonical",
+) -> str:
+    """Expose W2 run_id naming for normalization callers without side effects."""
+
+    return build_cr139_run_id(
+        dataset=dataset,
+        source=source,
+        as_of_date=as_of_date,
+        purpose=purpose,
+    )
+
+
+def validate_partition_naming_contract(
+    *,
+    run_id: str,
+    target_path: str | Path | None = None,
+) -> dict[str, Any]:
+    """Static W2 partition naming check; legacy path detection is audit-only."""
+
+    valid_run_id = validate_cr139_run_id(run_id)
+    legacy_path_detected = (
+        legacy_run_id_path_detected(target_path) if target_path is not None else False
+    )
+    return {
+        "status": "pass" if valid_run_id and not legacy_path_detected else "blocked",
+        "run_id": run_id,
+        "valid_run_id": valid_run_id,
+        "legacy_run_id_path_detected": legacy_path_detected,
+        "physical_migration_executed": False,
+        "lake_write_count": 0,
+    }
+
+
+def repair_events_schema(
+    frame: pd.DataFrame,
+    *,
+    source: str,
+    source_interface: str,
+    source_run_id: str,
+    schema_version: str = SCHEMA_VERSION,
+    lineage_raw_checksum: str = "",
+) -> EventsSchemaRepairResult:
+    """Repair in-memory events frames to the canonical W2 schema."""
+
+    output = frame.copy()
+    repaired: list[str] = []
+    defaulted: list[str] = []
+    required_input = ("symbol", "event_type", "event_date")
+    missing_input = [field for field in required_input if field not in output.columns]
+    if missing_input:
+        raise CanonicalSchemaError(f"events_schema_missing_required:{','.join(missing_input)}")
+    if "payload" not in output.columns:
+        output["payload"] = ""
+        defaulted.append("payload")
+    if "available_at" not in output.columns:
+        output["available_at"] = output["event_date"].map(
+            lambda value: _timestamp_at(value, "09:20:00")
+        )
+        repaired.append("available_at")
+    if "available_at_rule" not in output.columns:
+        output["available_at_rule"] = AVAILABLE_AT_RULE_TUSHARE_STOCK_ST_0920
+        repaired.append("available_at_rule")
+    defaults = {
+        "source": source,
+        "source_interface": source_interface,
+        "source_run_id": source_run_id,
+        "schema_version": schema_version,
+        "lineage_raw_checksum": lineage_raw_checksum,
+    }
+    for field_name, value in defaults.items():
+        if field_name not in output.columns:
+            output[field_name] = value
+            defaulted.append(field_name)
+    output = output[list(CANONICAL_EVENTS_COLUMNS)]
+    output["event_date"] = output["event_date"].map(_parse_date)
+    output = output.sort_values(["symbol", "event_date", "event_type"]).reset_index(drop=True)
+    dedup = validate_canonical_write_dedup(
+        output,
+        dataset=DATASET_EVENTS,
+        primary_key=("symbol", "event_type", "event_date", "available_at"),
+        policy="fail_on_duplicate",
+    )
+    return EventsSchemaRepairResult(
+        dataset=DATASET_EVENTS,
+        frame=dedup.frame,
+        repaired_fields=tuple(repaired),
+        defaulted_fields=tuple(defaulted),
+    )
+
+
+def validate_canonical_write_dedup(
+    frame: pd.DataFrame,
+    *,
+    dataset: str,
+    primary_key: tuple[str, ...],
+    policy: str = "fail_on_duplicate",
+) -> WriteDeduplicationResult:
+    """Validate or deterministically deduplicate rows before a canonical write."""
+
+    missing_keys = [field for field in primary_key if field not in frame.columns]
+    if missing_keys:
+        raise CanonicalDeduplicationError(f"dedup_key_missing:{','.join(missing_keys)}")
+    duplicate_mask = frame.duplicated(list(primary_key), keep=False)
+    duplicate_count = int(duplicate_mask.sum())
+    if duplicate_count == 0:
+        return WriteDeduplicationResult(
+            dataset=dataset,
+            primary_key=tuple(primary_key),
+            policy=policy,
+            frame=frame.copy(),
+            duplicate_count=0,
+        )
+    if policy == "fail_on_duplicate":
+        raise CanonicalDeduplicationError("duplicate_key")
+    if policy != "deduplicate_deterministic":
+        raise CanonicalDeduplicationError(f"unknown_dedup_policy:{policy}")
+    sort_columns = [
+        column
+        for column in (*primary_key, "available_at", "source_run_id", "lineage_raw_checksum")
+        if column in frame.columns
+    ]
+    output = (
+        frame.sort_values(sort_columns)
+        .drop_duplicates(list(primary_key), keep="last")
+        .reset_index(drop=True)
+    )
+    return WriteDeduplicationResult(
+        dataset=dataset,
+        primary_key=tuple(primary_key),
+        policy=policy,
+        frame=output,
+        duplicate_count=duplicate_count,
+        dropped_count=len(frame) - len(output),
+        issues=(
+            {
+                "code": "duplicate_key_deduplicated",
+                "duplicate_row_count": duplicate_count,
+                "dropped_count": len(frame) - len(output),
+            },
+        ),
+    )
+
+
 def _record_params(record: Mapping[str, Any]) -> Mapping[str, Any]:
     params = record.get("params")
     return params if isinstance(params, Mapping) else {}
@@ -780,6 +991,67 @@ def _adj_factor_frame(
     return frame[["trade_date", "symbol", "adj_factor", "adjustment_policy"]]
 
 
+def select_pit_adj_factor_frame(
+    frame: pd.DataFrame,
+    *,
+    as_of: str | pd.Timestamp,
+    keys: Sequence[str] = ("trade_date", "symbol"),
+) -> pd.DataFrame:
+    """Select adjustment factors visible at a PIT decision time."""
+
+    key_list = list(dict.fromkeys(str(key) for key in keys))
+    missing_columns = [column for column in [*key_list, "available_at"] if column not in frame.columns]
+    if missing_columns:
+        raise CanonicalSchemaError(
+            "schema_mismatch: adj_factor PIT selection requires columns: "
+            + ",".join(missing_columns)
+        )
+
+    decision_time = pd.to_datetime(as_of, errors="coerce")
+    available_at = pd.to_datetime(frame["available_at"], errors="coerce")
+    if pd.isna(decision_time) or available_at.isna().any():
+        raise CanonicalSchemaError("schema_mismatch: unparseable adj_factor available_at/as_of")
+
+    work = frame.loc[available_at <= decision_time].copy()
+    if work.empty:
+        return work.reset_index(drop=True)
+
+    work["_cr139_available_at_sort"] = pd.to_datetime(work["available_at"], errors="coerce")
+    work["_cr139_original_order"] = range(len(work))
+    work = work.sort_values(
+        [*key_list, "_cr139_available_at_sort", "_cr139_original_order"],
+        kind="mergesort",
+    )
+    selected = work.drop_duplicates(key_list, keep="last")
+    return selected.drop(
+        columns=["_cr139_available_at_sort", "_cr139_original_order"],
+    ).reset_index(drop=True)
+
+
+def build_pit_adj_factor_lookup(
+    frame: pd.DataFrame,
+    *,
+    as_of: str | pd.Timestamp,
+) -> dict[tuple[str, str], tuple[float, str]]:
+    """Build a `(trade_date, symbol) -> (factor, policy)` lookup after PIT selection."""
+
+    selected = select_pit_adj_factor_frame(frame, as_of=as_of)
+    required = ("trade_date", "symbol", "adj_factor", "adjustment_policy")
+    missing_columns = [column for column in required if column not in selected.columns]
+    if missing_columns:
+        raise CanonicalSchemaError(
+            "schema_mismatch: adj_factor PIT lookup requires columns: "
+            + ",".join(missing_columns)
+        )
+    policies = set(str(item) for item in selected["adjustment_policy"].unique())
+    if len(policies) > 1:
+        raise CanonicalSchemaError(ADJUSTMENT_POLICY_CONFLICT)
+    return {
+        (str(row.trade_date), str(row.symbol)): (float(row.adj_factor), str(row.adjustment_policy))
+        for row in selected.itertuples(index=False)
+    }
+
+
 def _load_adj_factor_lookup(
     layout: LakeLayout,
     records: list[dict[str, Any]],
@@ -807,6 +1079,13 @@ def _canonical_path(layout: LakeLayout, dataset: str, run_id: str, batch_id: str
     return (
         layout.canonical_dataset_root(dataset, SCHEMA_VERSION)
         / f"run_id={run_id}"
+        / f"part-{batch_id}.parquet"
+    )
+
+
+def _canonical_current_path(layout: LakeLayout, dataset: str, batch_id: str) -> Path:
+    return (
+        layout.canonical_current_partition_path(dataset, SCHEMA_VERSION)
         / f"part-{batch_id}.parquet"
     )
 
@@ -1299,10 +1578,14 @@ def normalize_run(
     dataset: str = DATASET_PRICES,
     run_id: str | None = None,
     thresholds: object = None,
+    partition_layout: str = PARTITION_LAYOUT_CURRENT_ARCHIVE,
 ) -> NormalizationResult:
     del thresholds
     if dataset not in DATASET_SCHEMA_REGISTRY:
         raise DatasetMappingError(f"不支持的 dataset: {dataset}")
+    if partition_layout not in PARTITION_LAYOUTS:
+        allowed = ", ".join(sorted(PARTITION_LAYOUTS))
+        raise DatasetMappingError(f"不支持的 partition_layout: {partition_layout}; allowed={allowed}")
     layout = LakeLayout(lake_root)
     records = _load_manifest_records(Path(manifest_path))
     skipped: dict[str, int] = {}
@@ -1344,12 +1627,15 @@ def normalize_run(
         pending_writes.append((dict(record), frame))
 
     for record, frame in pending_writes:
-        target = _canonical_path(
-            layout,
-            dataset,
-            str(record["run_id"]),
-            str(record["batch_id"]),
-        )
+        if partition_layout == PARTITION_LAYOUT_LEGACY_RUN_ID:
+            target = _canonical_path(
+                layout,
+                dataset,
+                str(record["run_id"]),
+                str(record["batch_id"]),
+            )
+        else:
+            target = _canonical_current_path(layout, dataset, str(record["batch_id"]))
         _write_parquet_atomic(frame, target)
         canonical_paths.append(target)
         total_rows += len(frame)
@@ -1368,20 +1654,31 @@ def normalize_run(
 
 __all__ = [
     "ADJUSTMENT_POLICY_CONFLICT",
+    "CanonicalDeduplicationError",
     "CanonicalSchemaError",
     "DatasetMappingError",
+    "EventsSchemaRepairResult",
     "ManifestLineageError",
     "NormalizationResult",
+    "WriteDeduplicationResult",
+    "build_pit_adj_factor_lookup",
+    "build_canonical_run_id",
     "load_manifest_success_records",
     "map_raw_to_dataset",
     "CANDIDATE_UNPUBLISHED",
     "NORMALIZE_MANIFEST_INCOMPLETE",
     "NormalizeCandidate",
+    "PARTITION_LAYOUT_CURRENT_ARCHIVE",
+    "PARTITION_LAYOUT_LEGACY_RUN_ID",
     "normalize_run",
     "normalize_adjustment_derivation_candidate",
     "normalize_p0_candidate",
     "REPLAY_SOURCE_MISSING",
     "ReplayRequest",
     "ReplayResult",
+    "repair_events_schema",
     "replay_p0_candidate",
+    "select_pit_adj_factor_frame",
+    "validate_canonical_write_dedup",
+    "validate_partition_naming_contract",
 ]

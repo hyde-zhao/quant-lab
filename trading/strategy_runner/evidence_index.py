@@ -24,6 +24,13 @@ class RunEvidenceIndex:
     run_result_ref: str = ""
     evidence_summary_ref: str = "RunResult.evidence_summary"
     evidence_summary_excerpt: Mapping[str, Any] | None = None
+    data_run_id: str = ""
+    source_run_id: str = ""
+    publish_run_id: str = ""
+    manifest_ref: str = ""
+    lineage_checksum: str = ""
+    lineage_status: str = "not_provided"
+    lineage_breakpoints: tuple[Mapping[str, Any], ...] = ()
     forbidden_operation_counters: Mapping[str, int] = field(default_factory=zero_cr091_operation_counters)
     qmt_allowed: bool = False
     not_authorization: bool = True
@@ -36,6 +43,7 @@ class RunEvidenceIndex:
         *,
         run_result_path: str | Path | None = None,
     ) -> "RunEvidenceIndex":
+        lineage = _lineage_from_summary(result.evidence_summary)
         return cls(
             run_id=result.run_id,
             status=result.status,
@@ -43,6 +51,17 @@ class RunEvidenceIndex:
             package_id=result.package_id,
             run_result_ref="" if run_result_path is None else Path(run_result_path).as_posix(),
             evidence_summary_excerpt=_evidence_summary_excerpt(result.evidence_summary),
+            data_run_id=str(lineage.get("data_run_id") or ""),
+            source_run_id=str(lineage.get("source_run_id") or ""),
+            publish_run_id=str(lineage.get("publish_run_id") or ""),
+            manifest_ref=str(lineage.get("manifest_ref") or ""),
+            lineage_checksum=str(lineage.get("lineage_checksum") or ""),
+            lineage_status=str(lineage.get("lineage_status") or "not_provided"),
+            lineage_breakpoints=tuple(
+                dict(item)
+                for item in lineage.get("lineage_breakpoints", ())
+                if isinstance(item, Mapping)
+            ),
             forbidden_operation_counters=dict(result.forbidden_operation_counters),
             qmt_allowed=result.qmt_allowed,
             not_authorization=result.not_authorization,
@@ -60,6 +79,15 @@ class RunEvidenceIndex:
             "evidence_summary_excerpt": (
                 None if self.evidence_summary_excerpt is None else dict(self.evidence_summary_excerpt)
             ),
+            "data_lineage": {
+                "data_run_id": self.data_run_id,
+                "source_run_id": self.source_run_id,
+                "publish_run_id": self.publish_run_id,
+                "manifest_ref": self.manifest_ref,
+                "lineage_checksum": self.lineage_checksum,
+                "lineage_status": self.lineage_status,
+                "lineage_breakpoints": [dict(item) for item in self.lineage_breakpoints],
+            },
             "forbidden_operation_counters": dict(self.forbidden_operation_counters),
             "qmt_allowed": self.qmt_allowed,
             "not_authorization": self.not_authorization,
@@ -107,5 +135,29 @@ def _evidence_summary_excerpt(summary: Mapping[str, Any] | None) -> dict[str, An
         "redaction_assurance",
         "sensitive_field_hits",
         "not_authorization",
+        "data_lineage",
+        "data_run_id",
+        "source_run_id",
+        "publish_run_id",
+        "manifest_ref",
+        "lineage_checksum",
+        "lineage_status",
     )
     return {key: summary[key] for key in excerpt_keys if key in summary}
+
+
+def _lineage_from_summary(summary: Mapping[str, Any] | None) -> dict[str, Any]:
+    if summary is None:
+        return {"lineage_status": "not_provided"}
+    lineage = summary.get("data_lineage")
+    if isinstance(lineage, Mapping):
+        return dict(lineage)
+    return {
+        "data_run_id": summary.get("data_run_id", ""),
+        "source_run_id": summary.get("source_run_id", ""),
+        "publish_run_id": summary.get("publish_run_id", ""),
+        "manifest_ref": summary.get("manifest_ref", ""),
+        "lineage_checksum": summary.get("lineage_checksum", ""),
+        "lineage_status": summary.get("lineage_status", "not_provided"),
+        "lineage_breakpoints": summary.get("lineage_breakpoints", ()),
+    }

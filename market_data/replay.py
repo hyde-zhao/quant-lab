@@ -11,6 +11,11 @@ from .incremental import cr014_s06_zero_permission_counters
 
 REPLAY_SOURCE_MISSING = "replay_source_missing"
 REPLAY_CANDIDATE_UNPUBLISHED = "candidate_unpublished"
+PUBLISHED_ASOF_READY = "ready_for_replay"
+PUBLISHED_ASOF_BLOCKED = "blocked"
+PUBLISHED_ASOF_SNAPSHOT_MISSING = "published_asof_snapshot_missing"
+PUBLISHED_ASOF_NOT_PUBLISHED = "published_asof_not_published"
+PUBLISHED_ASOF_REF_INCOMPLETE = "published_asof_ref_incomplete"
 RESUME_CONFLICT = "resume_conflict"
 PARAMS_HASH_CONFLICT = "params_hash_conflict"
 MANIFEST_REF_CONFLICT = "manifest_ref_conflict"
@@ -101,6 +106,61 @@ class ReplaySideEffectCheck:
 
 
 @dataclass(frozen=True, slots=True)
+class PublishedAsOfReplayRequest:
+    dataset: str
+    as_of_trade_date: str
+    run_id: str = "published-asof-replay"
+    batch_id: str = "published-asof"
+
+
+@dataclass(frozen=True, slots=True)
+class PublishedAsOfReplayResult:
+    dataset: str
+    as_of_trade_date: str
+    run_id: str
+    batch_id: str
+    status: str
+    published_path: str = ""
+    manifest_ref: str = ""
+    replay_source: str = "published_asof_snapshot"
+    provider_fetches: int = 0
+    credential_reads: int = 0
+    lake_writes: int = 0
+    catalog_writes: int = 0
+    manifest_writes: int = 0
+    current_pointer_changes: int = 0
+    runtime_operations: int = 0
+    error_codes: tuple[str, ...] = ()
+    details: tuple[dict[str, Any], ...] = ()
+
+    @property
+    def ready(self) -> bool:
+        return self.status == PUBLISHED_ASOF_READY
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "dataset": self.dataset,
+            "as_of_trade_date": self.as_of_trade_date,
+            "run_id": self.run_id,
+            "batch_id": self.batch_id,
+            "status": self.status,
+            "ready": self.ready,
+            "published_path": self.published_path,
+            "manifest_ref": self.manifest_ref,
+            "replay_source": self.replay_source,
+            "provider_fetches": self.provider_fetches,
+            "credential_reads": self.credential_reads,
+            "lake_writes": self.lake_writes,
+            "catalog_writes": self.catalog_writes,
+            "manifest_writes": self.manifest_writes,
+            "current_pointer_changes": self.current_pointer_changes,
+            "runtime_operations": self.runtime_operations,
+            "error_codes": list(self.error_codes),
+            "details": [dict(item) for item in self.details],
+        }
+
+
+@dataclass(frozen=True, slots=True)
 class ResumeConflict:
     conflict_type: str
     run_id: str
@@ -156,6 +216,116 @@ def _payload(value: Any) -> dict[str, Any]:
     if hasattr(value, "__dict__"):
         return dict(vars(value))
     return {}
+
+
+def _published_asof_request(
+    value: PublishedAsOfReplayRequest | Mapping[str, Any],
+) -> PublishedAsOfReplayRequest:
+    if isinstance(value, PublishedAsOfReplayRequest):
+        return value
+    payload = dict(value)
+    return PublishedAsOfReplayRequest(
+        dataset=str(payload.get("dataset") or ""),
+        as_of_trade_date=str(payload.get("as_of_trade_date") or ""),
+        run_id=str(payload.get("run_id") or "published-asof-replay"),
+        batch_id=str(payload.get("batch_id") or "published-asof"),
+    )
+
+
+def _published_flag(payload: Mapping[str, Any]) -> bool:
+    status = str(payload.get("publish_status") or payload.get("status") or "").strip().lower()
+    if status in {"candidate", "candidate_unpublished", "unpublished"}:
+        return False
+    if status in {"published", "current", "current_truth"}:
+        return True
+    return bool(payload.get("published"))
+
+
+def _published_path(payload: Mapping[str, Any]) -> str:
+    for key in ("published_path", "current_pointer_path", "canonical_path", "path"):
+        value = payload.get(key)
+        if value is not None and str(value).strip():
+            return str(value)
+    return ""
+
+
+def _manifest_ref(payload: Mapping[str, Any]) -> str:
+    for key in ("manifest_ref", "manifest_path", "latest_manifest_ref", "latest_manifest_run_id"):
+        value = payload.get(key)
+        if value is not None and str(value).strip():
+            return str(value)
+    return ""
+
+
+def _published_asof_block(
+    request: PublishedAsOfReplayRequest,
+    code: str,
+    details: Mapping[str, Any],
+) -> PublishedAsOfReplayResult:
+    return PublishedAsOfReplayResult(
+        dataset=request.dataset,
+        as_of_trade_date=request.as_of_trade_date,
+        run_id=request.run_id,
+        batch_id=request.batch_id,
+        status=PUBLISHED_ASOF_BLOCKED,
+        error_codes=(code,),
+        details=(dict(details),),
+    )
+
+
+def build_published_asof_replay(
+    request: PublishedAsOfReplayRequest | Mapping[str, Any],
+    published_pointers: Iterable[Any],
+) -> PublishedAsOfReplayResult:
+    """Select an exact published as_of snapshot without lake/provider fallback."""
+
+    replay_request = _published_asof_request(request)
+    for item in published_pointers:
+        payload = _payload(item)
+        if str(payload.get("dataset") or payload.get("dataset_id") or "") != replay_request.dataset:
+            continue
+        if str(payload.get("as_of_trade_date") or payload.get("current_truth_as_of") or "") != replay_request.as_of_trade_date:
+            continue
+        if not _published_flag(payload):
+            return _published_asof_block(
+                replay_request,
+                PUBLISHED_ASOF_NOT_PUBLISHED,
+                {
+                    "dataset": replay_request.dataset,
+                    "as_of_trade_date": replay_request.as_of_trade_date,
+                    "unblock_condition": "provide_published_current_pointer_for_requested_as_of",
+                },
+            )
+        path = _published_path(payload)
+        manifest_ref = _manifest_ref(payload)
+        if not path or not manifest_ref:
+            return _published_asof_block(
+                replay_request,
+                PUBLISHED_ASOF_REF_INCOMPLETE,
+                {
+                    "published_path_present": bool(path),
+                    "manifest_ref_present": bool(manifest_ref),
+                    "unblock_condition": "provide_complete_published_pointer_refs",
+                },
+            )
+        return PublishedAsOfReplayResult(
+            dataset=replay_request.dataset,
+            as_of_trade_date=replay_request.as_of_trade_date,
+            run_id=replay_request.run_id,
+            batch_id=replay_request.batch_id,
+            status=PUBLISHED_ASOF_READY,
+            published_path=path,
+            manifest_ref=manifest_ref,
+        )
+    return _published_asof_block(
+        replay_request,
+        PUBLISHED_ASOF_SNAPSHOT_MISSING,
+        {
+            "dataset": replay_request.dataset,
+            "as_of_trade_date": replay_request.as_of_trade_date,
+            "provider_backfill": "forbidden",
+        },
+    )
 
 
 def _stable_hash(value: Any) -> str:
@@ -410,9 +580,16 @@ __all__ = [
     "MANIFEST_REF_CONFLICT",
     "PARAMS_HASH_CONFLICT",
     "PARTITION_LOCK_CONFLICT",
+    "PUBLISHED_ASOF_BLOCKED",
+    "PUBLISHED_ASOF_NOT_PUBLISHED",
+    "PUBLISHED_ASOF_READY",
+    "PUBLISHED_ASOF_REF_INCOMPLETE",
+    "PUBLISHED_ASOF_SNAPSHOT_MISSING",
     "REPLAY_CANDIDATE_UNPUBLISHED",
     "REPLAY_SOURCE_MISSING",
     "RESUME_CONFLICT",
+    "PublishedAsOfReplayRequest",
+    "PublishedAsOfReplayResult",
     "ReplayCandidate",
     "ReplayRequest",
     "ReplayResult",
@@ -420,6 +597,7 @@ __all__ = [
     "ResumeConflict",
     "ResumeConflictResult",
     "assert_no_replay_side_effects",
+    "build_published_asof_replay",
     "detect_resume_conflict",
     "run_replay_from_manifest",
 ]

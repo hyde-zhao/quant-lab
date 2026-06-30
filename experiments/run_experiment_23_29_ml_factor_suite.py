@@ -25,7 +25,8 @@ if str(PROJECT_ROOT) not in sys.path:
 from engine.metrics import calculate_metrics
 from engine.diagnostics import LOGGER_NAME
 from engine.research_paths import research_report_path
-from experiments.run_experiment_15_factor_framework import FactorFrameworkError, load_local_frames, markdown_table
+from experiments.lake_input_contract import add_experiment_lake_args, load_experiment_lake_frames
+from experiments.run_experiment_15_factor_framework import FactorFrameworkError, markdown_table
 from experiments.run_experiment_17_21_factor_suite import (
     MarketMatrices,
     assign_quantile_groups,
@@ -131,7 +132,7 @@ def main() -> None:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="运行实验二十三至二十九 ML 因子套件。")
-    parser.add_argument("--data-dir", required=True, help="显式传入本地标准 parquet 目录。")
+    add_experiment_lake_args(parser)
     parser.add_argument("--output-root", default=str(research_report_path()))
     parser.add_argument("--start-date", default=None)
     parser.add_argument("--end-date", default=None)
@@ -165,8 +166,8 @@ def run_stage4_suite(args: argparse.Namespace) -> Stage4Result:
         diagnostics_logger.disabled = True
 
     try:
-        log(args, f"读取数据目录: {args.data_dir}")
-        frames = load_local_frames(Path(args.data_dir))
+        log(args, f"读取 lake 输入: {args.lake_root} as_of={args.as_of}")
+        frames = load_experiment_lake_frames(args).frames
         definitions = select_factor_definitions(list(ALL_BASE_FACTORS))
         market = build_market_matrices(frames, args.start_date, args.end_date, max_symbols=int(args.max_symbols))
         raw_matrices = calculate_raw_factor_matrices(market, definitions)

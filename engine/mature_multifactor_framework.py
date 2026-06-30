@@ -236,6 +236,11 @@ class PortfolioRiskPolicy:
     fee_slippage_ref: str
     stop_conditions: tuple[str, ...]
     version: str = "stage2-v1"
+    effective_from: str = "2026-06-30"
+    release_id: str = "config-facts-cr139-v1"
+    universe_policy_ref: str = "config_facts/universe_policy/all_a_share/config-facts-cr139-v1"
+    delisting_policy: str = "exclude_delisted"
+    st_policy: str = "exclude_st"
     schema_version: str = PORTFOLIO_RISK_POLICY_SCHEMA
 
     def to_dict(self) -> dict[str, Any]:
@@ -1343,6 +1348,12 @@ def validate_portfolio_risk_policy(policy: PortfolioRiskPolicy | Mapping[str, An
             "capacity_assumption",
             "fee_slippage_ref",
             "stop_conditions",
+            "version",
+            "effective_from",
+            "release_id",
+            "universe_policy_ref",
+            "delisting_policy",
+            "st_policy",
         ),
         code=MF_STAGE2_RISK_POLICY_INVALID,
     )

@@ -1,6 +1,10 @@
 schema_version: policy_cycle_config_v1
+version: v1
+release_id: policy-cycle-release-2026-06-30
 cycles:
   - cycle_id: deleveraging_2018
+    version: v1
+    release_id: policy-cycle-release-2026-06-30
     name: Deleveraging and trade-friction cycle
     start: "2018-01-01"
     end: "2018-12-31"
@@ -8,6 +12,8 @@ cycles:
     market: CN_A
     source_ref: internal:policy-cycle-seed:v1
   - cycle_id: covid_policy_response_2020
+    version: v1
+    release_id: policy-cycle-release-2026-06-30
     name: COVID policy response
     start: "2020-01-01"
     end: "2020-12-31"
@@ -15,6 +21,8 @@ cycles:
     market: CN_A
     source_ref: internal:policy-cycle-seed:v1
   - cycle_id: post_reopen_recovery_2023
+    version: v1
+    release_id: policy-cycle-release-2026-06-30
     name: Post-reopen recovery and policy support
     start: "2023-01-01"
     end: "2023-12-31"
@@ -22,6 +30,8 @@ cycles:
     market: CN_A
     source_ref: internal:policy-cycle-seed:v1
   - cycle_id: market_support_2024_2026
+    version: v1
+    release_id: policy-cycle-release-2026-06-30
     name: Market support and structural reform cycle
     start: "2024-01-01"
     end: "2026-12-31"

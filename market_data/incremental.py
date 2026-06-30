@@ -14,6 +14,7 @@ INCREMENTAL_ACTION_SKIP = "skip"
 INCREMENTAL_ACTION_RETRY = "retry"
 INCREMENTAL_ACTION_PLAN_NEW = "plan_new"
 INCREMENTAL_ACTION_BLOCKED = "blocked"
+INCREMENTAL_APPEND_PLAN_SCHEMA = "cr139.incremental_append_plan.v1"
 
 
 def cr014_s06_zero_permission_counters() -> dict[str, int]:
@@ -97,6 +98,47 @@ class IncrementalRefreshPlan:
             "provider_fetches": self.provider_fetches,
             "lake_writes": self.lake_writes,
             "credential_reads": self.credential_reads,
+            "details": [dict(item) for item in self.details],
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class IncrementalAppendPlan:
+    """W2 append-only incremental plan; it never executes lake writes."""
+
+    dataset: str
+    schema_version: str
+    source_run_id: str
+    target_run_id: str
+    affected_partitions: tuple[AffectedPartition, ...]
+    append_actions: tuple[dict[str, Any], ...]
+    idempotency_key: str
+    pointer_advance_required: bool = True
+    execute_allowed: bool = False
+    lake_write_count: int = 0
+    current_pointer_publish_count: int = 0
+    manifest_write_count: int = 0
+    status: str = "planned"
+    permission_counters: dict[str, int] = field(default_factory=cr014_s06_zero_permission_counters)
+    details: tuple[dict[str, Any], ...] = field(default_factory=tuple)
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "schema_name": INCREMENTAL_APPEND_PLAN_SCHEMA,
+            "status": self.status,
+            "dataset": self.dataset,
+            "schema_version": self.schema_version,
+            "source_run_id": self.source_run_id,
+            "target_run_id": self.target_run_id,
+            "affected_partitions": [item.to_dict() for item in self.affected_partitions],
+            "append_actions": [dict(item) for item in self.append_actions],
+            "idempotency_key": self.idempotency_key,
+            "pointer_advance_required": self.pointer_advance_required,
+            "execute_allowed": self.execute_allowed,
+            "lake_write_count": self.lake_write_count,
+            "current_pointer_publish_count": self.current_pointer_publish_count,
+            "manifest_write_count": self.manifest_write_count,
+            "permission_counters": dict(self.permission_counters),
             "details": [dict(item) for item in self.details],
         }
 
@@ -336,6 +378,82 @@ def plan_incremental_refresh(
     )
 
 
+def build_incremental_append_plan(
+    *,
+    current_pointer: Mapping[str, Any] | object,
+    source_run_id: str,
+    target_run_id: str,
+    affected_partitions: Iterable[AffectedPartition | Mapping[str, Any]],
+    success_batches: Iterable[Any] = (),
+    failed_batches: Iterable[Any] = (),
+) -> IncrementalAppendPlan:
+    """Build W2 append plan from existing metadata; no write or publish execution."""
+
+    pointer = _payload(current_pointer)
+    dataset = str(pointer.get("dataset") or "")
+    schema_version = str(pointer.get("schema_version") or SCHEMA_VERSION)
+    partitions = tuple(
+        item
+        if isinstance(item, AffectedPartition)
+        else AffectedPartition(
+            dataset=str(item.get("dataset") or dataset),
+            schema_version=str(item.get("schema_version") or schema_version),
+            trade_date=_normalise_trade_date(item.get("trade_date") or ""),
+            exchange=item.get("exchange"),
+            board=item.get("board"),
+        )
+        for item in affected_partitions
+    )
+    actions = tuple(
+        action.to_dict()
+        for action in plan_recent_backfill(
+            partitions,
+            success_batches=success_batches,
+            failed_batches=failed_batches,
+        )
+    )
+    details: list[dict[str, Any]] = []
+    status = "planned"
+    if not dataset or not source_run_id or not target_run_id or not partitions:
+        status = INCREMENTAL_ACTION_BLOCKED
+        details.append(
+            {
+                "code": "incremental_append_plan_input_missing",
+                "dataset_present": bool(dataset),
+                "source_run_id_present": bool(source_run_id),
+                "target_run_id_present": bool(target_run_id),
+                "partition_count": len(partitions),
+            }
+        )
+    idempotency_key = _canonical_hash(
+        {
+            "dataset": dataset,
+            "schema_version": schema_version,
+            "current_pointer_ref": _current_pointer_ref(pointer),
+            "source_run_id": source_run_id,
+            "target_run_id": target_run_id,
+            "affected_partitions": [item.to_dict() for item in partitions],
+            "append_actions": actions,
+        }
+    )
+    return IncrementalAppendPlan(
+        dataset=dataset,
+        schema_version=schema_version,
+        source_run_id=str(source_run_id),
+        target_run_id=str(target_run_id),
+        affected_partitions=partitions,
+        append_actions=actions,
+        idempotency_key=idempotency_key,
+        execute_allowed=False,
+        lake_write_count=0,
+        current_pointer_publish_count=0,
+        manifest_write_count=0,
+        status=status,
+        permission_counters=cr014_s06_zero_permission_counters(),
+        details=tuple(details),
+    )
+
+
 __all__ = [
     "AffectedPartition",
     "INCREMENTAL_ACTION_BLOCKED",
@@ -343,7 +461,10 @@ __all__ = [
     "INCREMENTAL_ACTION_RETRY",
     "INCREMENTAL_ACTION_SKIP",
     "IncrementalBatchAction",
+    "IncrementalAppendPlan",
     "IncrementalRefreshPlan",
+    "INCREMENTAL_APPEND_PLAN_SCHEMA",
+    "build_incremental_append_plan",
     "cr014_s06_zero_permission_counters",
     "plan_incremental_refresh",
     "plan_recent_backfill",

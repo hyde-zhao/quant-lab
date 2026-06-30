@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable, Union
@@ -10,6 +11,10 @@ from .contracts import SCHEMA_VERSION
 
 PathLike = Union[str, Path]
 _GLOB_CHARS = frozenset("*?[")
+CR139_RUN_ID_PATTERN = re.compile(
+    r"^cr139-w2-[a-z0-9][a-z0-9_]*-[a-z0-9][a-z0-9_]*-\d{8}-[a-z0-9][a-z0-9_]*$"
+)
+LEGACY_RUN_ID_PATH_SEGMENT_PATTERN = re.compile(r"(^|/)run_id=[^/]+(/|$)")
 
 
 class MarketDataPathError(ValueError):
@@ -33,6 +38,52 @@ def _clean_partition_value(name: str, value: object) -> str:
         raise MarketDataPathError(f"{name} 路径片段不能包含目录分隔符: {text}")
     if any(char in text for char in _GLOB_CHARS):
         raise MarketDataPathError(f"{name} 路径片段不能包含 glob 字符: {text}")
+    return text
+
+
+def build_cr139_run_id(
+    *,
+    dataset: str,
+    source: str,
+    as_of_date: object,
+    purpose: str,
+) -> str:
+    """Build deterministic W2 run_id; no directory creation or storage touch."""
+
+    dataset_part = _clean_run_id_token("dataset", dataset)
+    source_part = _clean_run_id_token("source", source)
+    purpose_part = _clean_run_id_token("purpose", purpose)
+    return f"cr139-w2-{dataset_part}-{source_part}-{_compact_date(as_of_date)}-{purpose_part}"
+
+
+def validate_cr139_run_id(run_id: str) -> bool:
+    """Return whether a run_id follows the W2 naming contract."""
+
+    return bool(CR139_RUN_ID_PATTERN.fullmatch(str(run_id).strip()))
+
+
+def legacy_run_id_path_detected(path: PathLike) -> bool:
+    """Detect legacy run_id path segments for audit/planning only."""
+
+    return bool(LEGACY_RUN_ID_PATH_SEGMENT_PATTERN.search(Path(path).as_posix()))
+
+
+def ensure_path_outside_root(path: PathLike, root: PathLike, *, label: str = "输出路径") -> Path:
+    """Resolve path and fail when it would write inside the protected lake root."""
+
+    resolved_path = _normalise_for_allowlist(path)
+    resolved_root = _normalise_for_allowlist(root)
+    try:
+        resolved_path.relative_to(resolved_root)
+    except ValueError:
+        return resolved_path
+    raise MarketDataPathError(f"{label}不能位于 lake_root 内: {resolved_path}")
+
+
+def _clean_run_id_token(name: str, value: object) -> str:
+    text = _clean_partition_value(name, value).lower().replace("-", "_")
+    if not re.fullmatch(r"[a-z0-9][a-z0-9_]*", text):
+        raise MarketDataPathError(f"{name} run_id token 不合法: {text}")
     return text
 
 
@@ -86,6 +137,10 @@ class LakeLayout:
         return self.lake_root / "published"
 
     @property
+    def features_root(self) -> Path:
+        return self.lake_root / "features"
+
+    @property
     def orphan_raw_root(self) -> Path:
         return self.raw_root / "_orphan"
 
@@ -135,6 +190,93 @@ class LakeLayout:
     ) -> Path:
         return self.canonical_root / dataset / schema_version
 
+    def canonical_current_root(
+        self,
+        dataset: str,
+        schema_version: str = SCHEMA_VERSION,
+    ) -> Path:
+        """返回 canonical current 根路径，不隐式创建目录。"""
+
+        return (
+            self.canonical_root
+            / _clean_partition_value("dataset", dataset)
+            / _clean_partition_value("schema_version", schema_version)
+            / "current"
+        )
+
+    def canonical_archive_root(
+        self,
+        dataset: str,
+        schema_version: str = SCHEMA_VERSION,
+    ) -> Path:
+        """返回 canonical archive 根路径，不隐式创建目录。"""
+
+        return (
+            self.canonical_root
+            / _clean_partition_value("dataset", dataset)
+            / _clean_partition_value("schema_version", schema_version)
+            / "archive"
+        )
+
+    def canonical_current_partition_path(
+        self,
+        dataset: str,
+        schema_version: str = SCHEMA_VERSION,
+        *,
+        partition_date: object | None = None,
+        trade_date: object | None = None,
+        exchange: str | None = None,
+        board: str | None = None,
+    ) -> Path:
+        """返回 canonical current Hive-style 分区路径，不包含 run_id 段。"""
+
+        return self._canonical_versioned_partition_path(
+            self.canonical_current_root(dataset, schema_version),
+            partition_date=partition_date,
+            trade_date=trade_date,
+            exchange=exchange,
+            board=board,
+        )
+
+    def canonical_archive_partition_path(
+        self,
+        dataset: str,
+        schema_version: str = SCHEMA_VERSION,
+        *,
+        partition_date: object | None = None,
+        trade_date: object | None = None,
+        exchange: str | None = None,
+        board: str | None = None,
+    ) -> Path:
+        """返回 canonical archive Hive-style 分区路径，不包含 run_id 段。"""
+
+        return self._canonical_versioned_partition_path(
+            self.canonical_archive_root(dataset, schema_version),
+            partition_date=partition_date,
+            trade_date=trade_date,
+            exchange=exchange,
+            board=board,
+        )
+
+    def _canonical_versioned_partition_path(
+        self,
+        root: Path,
+        *,
+        partition_date: object | None = None,
+        trade_date: object | None = None,
+        exchange: str | None = None,
+        board: str | None = None,
+    ) -> Path:
+        path = root
+        effective_date = trade_date if trade_date is not None else partition_date
+        if effective_date is not None:
+            path = path / f"trade_date={_compact_date(effective_date)}"
+        if exchange is not None:
+            path = path / f"exchange={_clean_partition_value('exchange', exchange)}"
+        if board is not None:
+            path = path / f"board={_clean_partition_value('board', board)}"
+        return path
+
     def candidate_dataset_root(
         self,
         dataset: str,
@@ -163,6 +305,26 @@ class LakeLayout:
             / "parquet"
             / f"dataset={_clean_partition_value('dataset', dataset)}"
             / f"schema_version={_clean_partition_value('schema_version', schema_version)}"
+        )
+
+    def feature_artifact_path(
+        self,
+        feature_set_id: str,
+        schema_version: str,
+        artifact_version: str,
+        *,
+        as_of_trade_date: object,
+        run_id: str,
+    ) -> Path:
+        """Return the CR139 versioned features artifact path without creating it."""
+
+        return (
+            self.features_root
+            / f"feature_set={_clean_partition_value('feature_set_id', feature_set_id)}"
+            / f"schema_version={_clean_partition_value('schema_version', schema_version)}"
+            / f"artifact_version={_clean_partition_value('artifact_version', artifact_version)}"
+            / f"as_of_trade_date={_compact_date(as_of_trade_date)}"
+            / f"run_id={_clean_partition_value('run_id', run_id)}"
         )
 
     def candidate_partition_path(
@@ -363,9 +525,14 @@ def ensure_s09_lake_root_allowed(lake_root: PathLike) -> Path:
 
 
 __all__ = [
+    "CR139_RUN_ID_PATTERN",
+    "LEGACY_RUN_ID_PATH_SEGMENT_PATTERN",
     "LakeLayout",
     "MarketDataPathError",
+    "build_cr139_run_id",
     "ensure_parent_dirs_for_write",
     "ensure_s09_lake_root_allowed",
     "is_duckdb_read_path_allowed",
+    "legacy_run_id_path_detected",
+    "validate_cr139_run_id",
 ]

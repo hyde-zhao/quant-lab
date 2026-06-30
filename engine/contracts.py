@@ -3,6 +3,13 @@
 本模块只定义字段、状态和值列表，不执行 I/O、不访问网络，也不导入运行时依赖。
 """
 
+from __future__ import annotations
+
+from dataclasses import asdict, dataclass, field
+from datetime import datetime, timezone
+from enum import Enum
+from typing import Any, Mapping, Sequence
+
 PRICE_REQUIRED_COLUMNS = (
     "trade_date",
     "symbol",
@@ -159,6 +166,235 @@ QUALITY_REPORT_FORMATS = (
     "markdown",
 )
 
+DATA_LAKE_V4_CONTRACT_VERSION = "data_lake_v4"
+
+
+class SchemaChangeKind(str, Enum):
+    """Reader-facing schema compatibility decision."""
+
+    COMPATIBLE = "compatible"
+    ADDITIVE = "additive"
+    READER_FALLBACK = "reader_fallback"
+    BLOCKED = "blocked"
+
+
+@dataclass(frozen=True, slots=True)
+class FallbackRule:
+    field: str
+    fallback_kind: str = "default"
+    value: Any = None
+    source_field: str | None = None
+    reason: str = ""
+
+    def to_dict(self) -> dict[str, Any]:
+        return asdict(self)
+
+
+@dataclass(frozen=True, slots=True)
+class SchemaContractFreeze:
+    """Frozen dataset schema contract used by readers before accepting data."""
+
+    dataset: str
+    contract_version: str = DATA_LAKE_V4_CONTRACT_VERSION
+    required_fields: tuple[str, ...] = ()
+    field_types: Mapping[str, str] = field(default_factory=dict)
+    primary_key: tuple[str, ...] = ()
+    status: str = "frozen"
+    compatible_from: tuple[str, ...] = ()
+    breaking_changes: tuple[dict[str, Any], ...] = ()
+    allowed_reader_fallbacks: tuple[FallbackRule, ...] = ()
+    frozen_at: str = ""
+    owner_feature: str = ""
+
+    def to_dict(self) -> dict[str, Any]:
+        payload = asdict(self)
+        payload["allowed_reader_fallbacks"] = [
+            item.to_dict() for item in self.allowed_reader_fallbacks
+        ]
+        return payload
+
+
+@dataclass(frozen=True, slots=True)
+class SchemaCompatibilityResult:
+    dataset: str
+    contract_version: str
+    change_kind: SchemaChangeKind
+    compatible: bool
+    missing_required_fields: tuple[str, ...] = ()
+    type_mismatches: tuple[dict[str, str], ...] = ()
+    additive_fields: tuple[str, ...] = ()
+    fallback_fields: tuple[str, ...] = ()
+    fallback_rules: tuple[FallbackRule, ...] = ()
+    blocked_reasons: tuple[dict[str, Any], ...] = ()
+
+    @property
+    def reader_fallback_required(self) -> bool:
+        return self.change_kind == SchemaChangeKind.READER_FALLBACK
+
+    def to_dict(self) -> dict[str, Any]:
+        payload = asdict(self)
+        payload["change_kind"] = self.change_kind.value
+        payload["fallback_rules"] = [item.to_dict() for item in self.fallback_rules]
+        return payload
+
+
+def evaluate_schema_compatibility(
+    dataset_schema: Mapping[str, Any],
+    contract: SchemaContractFreeze,
+) -> SchemaCompatibilityResult:
+    """Classify dataset schema changes without touching storage or runtime."""
+
+    fields = _schema_fields(dataset_schema)
+    field_types = _schema_field_types(dataset_schema)
+    primary_key = tuple(str(item) for item in dataset_schema.get("primary_key", ()))
+    contract_versions = {contract.contract_version, *contract.compatible_from}
+    schema_version = str(dataset_schema.get("contract_version") or contract.contract_version)
+    fallback_by_field = {rule.field: rule for rule in contract.allowed_reader_fallbacks}
+
+    blocked_reasons: list[dict[str, Any]] = []
+    fallback_rules: list[FallbackRule] = []
+    if contract.status != "frozen":
+        blocked_reasons.append({"code": "schema_contract_not_frozen", "status": contract.status})
+    if schema_version not in contract_versions:
+        blocked_reasons.append(
+            {
+                "code": "schema_contract_version_mismatch",
+                "dataset_contract_version": schema_version,
+                "expected_contract_version": contract.contract_version,
+                "compatible_from": list(contract.compatible_from),
+            }
+        )
+
+    missing_required: list[str] = []
+    for field_name in contract.required_fields:
+        if field_name in fields:
+            continue
+        rule = fallback_by_field.get(field_name)
+        if rule is None:
+            missing_required.append(field_name)
+        else:
+            fallback_rules.append(rule)
+
+    type_mismatches: list[dict[str, str]] = []
+    for field_name, expected_type in contract.field_types.items():
+        actual_type = field_types.get(field_name)
+        if actual_type is None or _schema_type_compatible(actual_type, expected_type):
+            continue
+        rule = fallback_by_field.get(field_name)
+        if rule is None:
+            type_mismatches.append(
+                {
+                    "field": field_name,
+                    "expected": str(expected_type),
+                    "actual": str(actual_type),
+                }
+            )
+        else:
+            fallback_rules.append(rule)
+
+    if contract.primary_key and primary_key and tuple(primary_key) != tuple(contract.primary_key):
+        blocked_reasons.append(
+            {
+                "code": "schema_primary_key_mismatch",
+                "expected_primary_key": list(contract.primary_key),
+                "actual_primary_key": list(primary_key),
+            }
+        )
+
+    if missing_required:
+        blocked_reasons.append(
+            {
+                "code": "schema_required_fields_missing",
+                "missing_fields": list(missing_required),
+            }
+        )
+    if type_mismatches:
+        blocked_reasons.append(
+            {
+                "code": "schema_field_type_mismatch",
+                "type_mismatches": type_mismatches,
+            }
+        )
+
+    additive_fields = tuple(sorted(fields - set(contract.required_fields) - set(contract.field_types)))
+    unique_fallback_rules = tuple(_dedupe_fallback_rules(fallback_rules))
+    if blocked_reasons:
+        change_kind = SchemaChangeKind.BLOCKED
+        compatible = False
+    elif unique_fallback_rules:
+        change_kind = SchemaChangeKind.READER_FALLBACK
+        compatible = True
+    elif additive_fields:
+        change_kind = SchemaChangeKind.ADDITIVE
+        compatible = True
+    else:
+        change_kind = SchemaChangeKind.COMPATIBLE
+        compatible = True
+
+    return SchemaCompatibilityResult(
+        dataset=contract.dataset,
+        contract_version=contract.contract_version,
+        change_kind=change_kind,
+        compatible=compatible,
+        missing_required_fields=tuple(missing_required),
+        type_mismatches=tuple(type_mismatches),
+        additive_fields=additive_fields,
+        fallback_fields=tuple(rule.field for rule in unique_fallback_rules),
+        fallback_rules=unique_fallback_rules,
+        blocked_reasons=tuple(blocked_reasons),
+    )
+
+
+def _schema_fields(dataset_schema: Mapping[str, Any]) -> set[str]:
+    raw_fields = dataset_schema.get("fields")
+    if raw_fields is None:
+        raw_fields = dataset_schema.get("columns", ())
+    if isinstance(raw_fields, Mapping):
+        return {str(key) for key in raw_fields}
+    return {str(item) for item in raw_fields or ()}
+
+
+def _schema_field_types(dataset_schema: Mapping[str, Any]) -> dict[str, str]:
+    raw_fields = dataset_schema.get("fields")
+    if not isinstance(raw_fields, Mapping):
+        return {}
+    output: dict[str, str] = {}
+    for field_name, spec in raw_fields.items():
+        if isinstance(spec, Mapping):
+            output[str(field_name)] = str(spec.get("type") or spec.get("dtype") or "")
+        else:
+            output[str(field_name)] = str(spec)
+    return output
+
+
+def _schema_type_compatible(actual: str, expected: str) -> bool:
+    if not expected:
+        return True
+    actual_text = actual.lower()
+    expected_text = expected.lower()
+    if actual_text == expected_text:
+        return True
+    aliases = {
+        "string": {"object", "str", "string"},
+        "str": {"object", "str", "string"},
+        "int": {"int", "int64", "int32", "integer"},
+        "float": {"float", "float64", "float32", "double"},
+        "bool": {"bool", "boolean"},
+        "datetime": {"datetime", "datetime64[ns]", "timestamp"},
+    }
+    return actual_text in aliases.get(expected_text, {expected_text})
+
+
+def _dedupe_fallback_rules(rules: Sequence[FallbackRule]) -> list[FallbackRule]:
+    seen: set[str] = set()
+    output: list[FallbackRule] = []
+    for rule in rules:
+        if rule.field in seen:
+            continue
+        seen.add(rule.field)
+        output.append(rule)
+    return output
+
 DEFAULT_ADJUSTMENT_POLICY = "qfq"
 
 DEFAULT_AVAILABLE_AT_RULE = "trade_date_close_after"
@@ -269,6 +505,123 @@ LOADER_METADATA_FIELDS = (
 SURVIVORSHIP_BIAS_NOTE = (
     "第一版使用固定当前成分股快照，is_pit_universe=false，存在幸存者偏差。"
 )
+
+PIT_UNIVERSE_FIXED_SNAPSHOT_FORBIDDEN = "pit_universe_fixed_snapshot_forbidden"
+PIT_UNIVERSE_REQUIRED_FIELD_MISSING = "pit_universe_required_field_missing"
+PIT_UNIVERSE_AVAILABLE_AFTER_DECISION_TIME = "pit_universe_available_after_decision_time"
+
+
+@dataclass(frozen=True, slots=True)
+class PitUniverseConstituent:
+    symbol: str
+    effective_from: str
+    effective_to: str
+    available_at: str
+    source_run_id: str
+    lineage_checksum: str
+    membership_status: str = "member"
+
+    def to_dict(self) -> dict[str, Any]:
+        return asdict(self)
+
+
+@dataclass(frozen=True, slots=True)
+class PitUniverseConstituentChain:
+    universe_id: str
+    as_of_date: str
+    policy_version: str
+    universe_policy_ref: str
+    constituents: tuple[PitUniverseConstituent, ...]
+    is_pit_universe: bool = True
+    survivorship_bias_note: str = ""
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "universe_id": self.universe_id,
+            "as_of_date": self.as_of_date,
+            "policy_version": self.policy_version,
+            "universe_policy_ref": self.universe_policy_ref,
+            "constituents": [item.to_dict() for item in self.constituents],
+            "is_pit_universe": self.is_pit_universe,
+            "survivorship_bias_note": self.survivorship_bias_note,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class PitUniverseChainValidationResult:
+    passed: bool
+    issues: tuple[dict[str, Any], ...] = ()
+
+    def to_dict(self) -> dict[str, Any]:
+        return {"passed": self.passed, "issues": [dict(item) for item in self.issues]}
+
+
+def validate_pit_universe_constituent_chain(
+    chain: PitUniverseConstituentChain | Mapping[str, Any],
+    *,
+    decision_time: str | None = None,
+) -> PitUniverseChainValidationResult:
+    payload = chain.to_dict() if isinstance(chain, PitUniverseConstituentChain) else dict(chain)
+    issues: list[dict[str, Any]] = []
+    required = ("universe_id", "as_of_date", "policy_version", "universe_policy_ref", "constituents")
+    missing = [field_name for field_name in required if _is_missing(payload.get(field_name))]
+    if missing:
+        issues.append({"code": PIT_UNIVERSE_REQUIRED_FIELD_MISSING, "missing_fields": missing})
+    if not bool(payload.get("is_pit_universe")) or "固定当前" in str(payload.get("survivorship_bias_note") or ""):
+        issues.append({"code": PIT_UNIVERSE_FIXED_SNAPSHOT_FORBIDDEN, "field": "is_pit_universe"})
+
+    constituents = [dict(item) for item in payload.get("constituents") or ()]
+    required_constituent = (
+        "symbol",
+        "effective_from",
+        "effective_to",
+        "available_at",
+        "source_run_id",
+        "lineage_checksum",
+    )
+    for index, constituent in enumerate(constituents):
+        missing_constituent = [field_name for field_name in required_constituent if _is_missing(constituent.get(field_name))]
+        if missing_constituent:
+            issues.append(
+                {
+                    "code": PIT_UNIVERSE_REQUIRED_FIELD_MISSING,
+                    "row_index": index,
+                    "missing_fields": missing_constituent,
+                }
+            )
+    if decision_time:
+        decision = _parse_contract_timestamp(decision_time)
+        for index, constituent in enumerate(constituents):
+            available = _parse_contract_timestamp(constituent.get("available_at"))
+            if decision is not None and available is not None and available > decision:
+                issues.append(
+                    {
+                        "code": PIT_UNIVERSE_AVAILABLE_AFTER_DECISION_TIME,
+                        "row_index": index,
+                        "symbol": constituent.get("symbol"),
+                        "decision_time": str(decision_time),
+                        "available_at": str(constituent.get("available_at")),
+                    }
+                )
+    return PitUniverseChainValidationResult(passed=not issues, issues=tuple(issues))
+
+
+def _is_missing(value: Any) -> bool:
+    return value is None or str(value).strip() == "" or value == ()
+
+
+def _parse_contract_timestamp(value: Any) -> Any:
+    if _is_missing(value):
+        return None
+    try:
+        text = str(value).strip().replace("Z", "+00:00")
+        parsed = datetime.fromisoformat(text)
+        if parsed.tzinfo is None:
+            parsed = parsed.replace(tzinfo=timezone.utc)
+        return parsed.astimezone(timezone.utc)
+    except ValueError:
+        return None
+
 
 DATA_PREP_CONFIG_KEYS = (
     "request_interval_seconds",
@@ -397,6 +750,11 @@ AUDIT_REPORT_FIELDS = (
 )
 
 __all__ = (
+    "DATA_LAKE_V4_CONTRACT_VERSION",
+    "FallbackRule",
+    "SchemaChangeKind",
+    "SchemaCompatibilityResult",
+    "SchemaContractFreeze",
     "PRICE_REQUIRED_COLUMNS",
     "PRICE_OPTIONAL_COLUMNS",
     "PRICE_ALL_COLUMNS",
@@ -431,6 +789,13 @@ __all__ = (
     "LOADER_WARNING_CODES",
     "LOADER_METADATA_FIELDS",
     "SURVIVORSHIP_BIAS_NOTE",
+    "PIT_UNIVERSE_FIXED_SNAPSHOT_FORBIDDEN",
+    "PIT_UNIVERSE_REQUIRED_FIELD_MISSING",
+    "PIT_UNIVERSE_AVAILABLE_AFTER_DECISION_TIME",
+    "PitUniverseConstituent",
+    "PitUniverseConstituentChain",
+    "PitUniverseChainValidationResult",
+    "validate_pit_universe_constituent_chain",
     "DATA_PREP_CONFIG_KEYS",
     "BACKTEST_REPORT_FIELDS",
     "SWEEP_REPORT_FIELDS",
@@ -441,4 +806,5 @@ __all__ = (
     "LIMIT_PRICE_OPTIONAL_COLUMNS",
     "EVENT_REQUIRED_COLUMNS",
     "AUDIT_REPORT_FIELDS",
+    "evaluate_schema_compatibility",
 )

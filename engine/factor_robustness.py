@@ -397,6 +397,26 @@ def build_ml_leakage_audit(panel: pd.DataFrame, labels: pd.DataFrame, anomaly_pa
     }
 
 
+def build_offline_online_consistency_gate(
+    offline_features: pd.DataFrame,
+    online_features: pd.DataFrame,
+    *,
+    feature_columns: Sequence[str] | None = None,
+) -> dict[str, Any]:
+    from engine.factor_model_validation import offline_online_feature_consistency
+
+    result = dict(
+        offline_online_feature_consistency(
+            offline_features,
+            online_features,
+            feature_columns=feature_columns,
+        )
+    )
+    result["robustness_gate"] = "offline_online_feature_consistency"
+    result["operation_counts"] = dict(FORBIDDEN_OPERATION_COUNTS)
+    return result
+
+
 def build_robustness_admission_summary(
     robustness_returns: pd.DataFrame,
     rolling_ic: pd.DataFrame,

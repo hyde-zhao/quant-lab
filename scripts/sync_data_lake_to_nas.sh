@@ -75,14 +75,14 @@ if [ -z "$delete_flag" ]; then
   delete_flag="${MARKET_DATA_NAS_RSYNC_DELETE:-false}"
 fi
 
-local_root="${MARKET_DATA_LAKE_ROOT:-/home/hyde/data/quant-lab/lake}"
+local_root="${MARKET_DATA_LAKE_ROOT:-/home/hyde/data/quant-lab/data-lake}"
 research_root="${QUANT_LAB_RESEARCH_ROOT:-/home/hyde/data/quant-lab/research}"
 research_extra_sources="${QUANT_LAB_RESEARCH_EXTRA_SOURCES:-reports runs notebooks/outputs}"
 nas_ip="${MARKET_DATA_NAS_IP:-}"
 nas_user="${MARKET_DATA_NAS_USERNAME:-}"
 rsync_mode="${MARKET_DATA_NAS_RSYNC_MODE:-daemon}"
 rsync_port="${MARKET_DATA_NAS_RSYNC_PORT:-873}"
-lake_target="${MARKET_DATA_NAS_RSYNC_LAKE_TARGET:-${MARKET_DATA_NAS_RSYNC_TARGET:-/lake}}"
+lake_target="${MARKET_DATA_NAS_RSYNC_LAKE_TARGET:-${MARKET_DATA_NAS_RSYNC_TARGET:-/data-lake}}"
 research_target="${MARKET_DATA_NAS_RSYNC_RESEARCH_TARGET:-/research}"
 rsync_module="${MARKET_DATA_NAS_RSYNC_MODULE:-}"
 

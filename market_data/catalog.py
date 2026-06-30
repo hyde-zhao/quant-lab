@@ -67,6 +67,12 @@ class CatalogEntry:
     universe_scope: str | None = None
     as_of_trade_date: str | None = None
     catalog_pointer_path: str | None = None
+    data_run_id: str | None = None
+    publish_run_id: str | None = None
+    manifest_ref: str | None = None
+    triggered_by_cr: str | None = None
+    run_lineage: dict[str, Any] = field(default_factory=dict)
+    audit_refs: list[str] = field(default_factory=list)
 
     @property
     def catalog_id(self) -> str:
@@ -86,9 +92,12 @@ CR014_CATALOG_POINTER_REQUIRED_FIELDS: tuple[str, ...] = (
     "universe_scope",
     "as_of_trade_date",
 )
+CATALOG_POINTER_REQUIRED_FIELDS = CR014_CATALOG_POINTER_REQUIRED_FIELDS
+CATALOG_MANIFEST_SOURCE_OF_TRUTH_MISMATCH = "catalog_manifest_source_of_truth_mismatch"
 
 CATALOG_POINTER_INCOMPLETE = "catalog_pointer_incomplete"
 CATALOG_POINTER_DENOMINATOR_INVALID = "catalog_pointer_denominator_invalid"
+CATALOG_CURRENT_POINTER_NOT_PUBLISHED = "catalog_current_pointer_not_published"
 DUCKDB_READ_PATH_NOT_WHITELISTED = "duckdb_read_path_not_whitelisted"
 DUCKDB_GLOB_NOT_ALLOWED = "duckdb_glob_not_allowed"
 
@@ -343,6 +352,92 @@ def catalog_pointer_from_entry(entry: CatalogEntry) -> CatalogPointer:
     )
 
 
+def build_catalog_pointer_record(entry: CatalogEntry | Mapping[str, Any]) -> dict[str, Any]:
+    """Build a JSON-ready catalog pointer record from catalog source of truth."""
+
+    if isinstance(entry, CatalogEntry):
+        catalog_entry = entry
+    else:
+        entry_fields = {field.name for field in fields(CatalogEntry)}
+        values = {key: value for key, value in dict(entry).items() if key in entry_fields}
+        catalog_entry = CatalogEntry(**values)
+    pointer = catalog_pointer_from_entry(
+        catalog_entry
+    )
+    return pointer.to_dict()
+
+
+def build_catalog_manifest_pair(
+    entry: CatalogEntry | Mapping[str, Any],
+    *,
+    manifest_ref: str | None = None,
+    triggered_by_cr: str | None = None,
+) -> dict[str, Any]:
+    """Build catalog pointer + derived manifest records from one payload."""
+
+    payload = asdict(entry) if isinstance(entry, CatalogEntry) else dict(entry)
+    from .manifest import derive_manifest_from_catalog
+
+    return {
+        "source_of_truth": "catalog",
+        "catalog_pointer": build_catalog_pointer_record(payload),
+        "manifest_record": derive_manifest_from_catalog(
+            payload,
+            manifest_ref=manifest_ref,
+            triggered_by_cr=triggered_by_cr,
+        ),
+        "catalog_writes": 0,
+        "manifest_writes": 0,
+        "current_pointer_publish_count": 0,
+    }
+
+
+def validate_catalog_manifest_consistency(
+    catalog_record: CatalogEntry | Mapping[str, Any],
+    manifest_record: Mapping[str, Any],
+) -> CatalogPointerValidationResult:
+    """Validate catalog/manifest agree on dataset, run_id and checksum."""
+
+    catalog_payload = asdict(catalog_record) if isinstance(catalog_record, CatalogEntry) else dict(catalog_record)
+    manifest_payload = dict(manifest_record)
+    details: list[dict[str, Any]] = []
+    catalog_run_id = str(
+        catalog_payload.get("latest_manifest_run_id")
+        or catalog_payload.get("run_id")
+        or ""
+    )
+    manifest_run_id = str(manifest_payload.get("run_id") or "")
+    checks = {
+        "dataset": (
+            str(catalog_payload.get("dataset") or ""),
+            str(manifest_payload.get("dataset") or ""),
+        ),
+        "run_id": (catalog_run_id, manifest_run_id),
+        "lineage_checksum": (
+            str(catalog_payload.get("lineage_checksum") or ""),
+            str(manifest_payload.get("lineage_checksum") or ""),
+        ),
+    }
+    for field_name, (catalog_value, manifest_value) in checks.items():
+        if catalog_value and manifest_value and catalog_value == manifest_value:
+            continue
+        details.append(
+            {
+                "code": CATALOG_MANIFEST_SOURCE_OF_TRUTH_MISMATCH,
+                "field": field_name,
+                "catalog_value": catalog_value,
+                "manifest_value": manifest_value,
+            }
+        )
+    passed = not details
+    return CatalogPointerValidationResult(
+        passed=passed,
+        current_truth_visible=passed,
+        error_codes=() if passed else (CATALOG_MANIFEST_SOURCE_OF_TRUTH_MISMATCH,),
+        details=tuple(details),
+    )
+
+
 def validate_duckdb_read_path(
     path: str | Path,
     *,
@@ -435,6 +530,19 @@ class CatalogStore:
 
     def get_current_pointer(self, dataset: str, quality_policy: object = None) -> CatalogPointer:
         entry = self.get(dataset, quality_policy=quality_policy)
+        return catalog_pointer_from_entry(entry)
+
+    def get_published_current_pointer(self, dataset: str, quality_policy: object = None) -> CatalogPointer:
+        """Return the current pointer only when the catalog entry is published.
+
+        This is the CR139-S04 read selector entry point. `get_current_pointer`
+        stays backward-compatible for legacy callers that already validate
+        publish state separately.
+        """
+
+        entry = self.get(dataset, quality_policy=quality_policy)
+        if not entry.published:
+            raise CatalogError(f"{CATALOG_CURRENT_POINTER_NOT_PUBLISHED}: {dataset}")
         return catalog_pointer_from_entry(entry)
 
     def list(self, dataset: str | None = None) -> list[CatalogEntry]:
@@ -994,8 +1102,11 @@ def _cr018_rollback_evidence_refs(evidence_refs: Mapping[str, Any] | Sequence[st
 
 
 __all__ = [
+    "CATALOG_CURRENT_POINTER_NOT_PUBLISHED",
     "CATALOG_POINTER_DENOMINATOR_INVALID",
     "CATALOG_POINTER_INCOMPLETE",
+    "CATALOG_MANIFEST_SOURCE_OF_TRUTH_MISMATCH",
+    "CATALOG_POINTER_REQUIRED_FIELDS",
     "CR014_CATALOG_POINTER_REQUIRED_FIELDS",
     "CR018_ROLLBACK_DATASET_ONLY_BLOCKED",
     "CR018_ROLLBACK_HISTORICAL_EVIDENCE_DELETE_COUNTS",
@@ -1026,10 +1137,13 @@ __all__ = [
     "build_catalog_coverage_report",
     "build_cr018_current_pointer_update_plan",
     "build_cr018_publish_evidence_record",
+    "build_catalog_manifest_pair",
+    "build_catalog_pointer_record",
     "build_cr018_release_contract_metadata",
     "build_cr018_release_rollback_contract",
     "build_production_readiness_report",
     "catalog_pointer_from_entry",
     "validate_catalog_pointer",
+    "validate_catalog_manifest_consistency",
     "validate_duckdb_read_path",
 ]

@@ -130,6 +130,36 @@ class BrokerLakeWritePlan:
         return self.status is BrokerLakePlanStatus.BLOCKED
 
 
+@dataclass(frozen=True, slots=True)
+class BrokerLakeAuditChain:
+    """CR139 broker lake dry-run audit chain; never represents a real write."""
+
+    status: str
+    run_id: str
+    strategy_id: str
+    order_intent_id: str
+    event_plans: tuple[BrokerLakeWritePlan, ...]
+    errors: tuple[BrokerLakeError, ...] = ()
+    real_write: bool = False
+    safety_counters: Mapping[str, int] = field(default_factory=lambda: broker_lake_safety_counters())
+
+    @property
+    def passed(self) -> bool:
+        return self.status == "pass"
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "status": self.status,
+            "run_id": self.run_id,
+            "strategy_id": self.strategy_id,
+            "order_intent_id": self.order_intent_id,
+            "event_plans": [asdict(plan) for plan in self.event_plans],
+            "errors": [asdict(error) for error in self.errors],
+            "real_write": self.real_write,
+            "safety_counters": dict(self.safety_counters),
+        }
+
+
 BROKER_LAKE_SCHEMAS: Mapping[BrokerLakeEventType, BrokerLakeSchema] = {
     BrokerLakeEventType.ORDER_INTENT: BrokerLakeSchema(
         event_type=BrokerLakeEventType.ORDER_INTENT,
@@ -453,6 +483,66 @@ def dry_run_write_plan(
     )
 
 
+def build_broker_lake_audit_chain(
+    event_payloads: Iterable[Mapping[str, Any]],
+    *,
+    root_label: str,
+) -> BrokerLakeAuditChain:
+    """Build a CR139 dry-run broker lake audit chain without broker/lake writes."""
+
+    plans = tuple(dry_run_write_plan(payload, root_label=root_label) for payload in event_payloads)
+    return validate_broker_lake_audit_chain(plans)
+
+
+def validate_broker_lake_audit_chain(
+    event_plans: Iterable[BrokerLakeWritePlan],
+) -> BrokerLakeAuditChain:
+    plans = tuple(event_plans)
+    errors: list[BrokerLakeError] = []
+    run_ids = {_string_value(plan.sanitized_event.get("run_id")) for plan in plans if _string_value(plan.sanitized_event.get("run_id"))}
+    strategy_ids = {
+        _string_value(plan.sanitized_event.get("strategy_id"))
+        for plan in plans
+        if _string_value(plan.sanitized_event.get("strategy_id"))
+    }
+    order_intent_ids = {
+        _string_value(plan.sanitized_event.get("order_intent_id"))
+        for plan in plans
+        if _string_value(plan.sanitized_event.get("order_intent_id"))
+    }
+    if not plans:
+        errors.append(BrokerLakeError(BrokerLakeErrorCode.MISSING_REQUIRED_FIELD, field="event_plans"))
+    if len(run_ids) != 1:
+        errors.append(BrokerLakeError(BrokerLakeErrorCode.MISSING_REQUIRED_FIELD, field="run_id", blocked_reason="run_id_chain_mismatch"))
+    if len(strategy_ids) != 1:
+        errors.append(BrokerLakeError(BrokerLakeErrorCode.MISSING_REQUIRED_FIELD, field="strategy_id", blocked_reason="strategy_id_chain_mismatch"))
+    if len(order_intent_ids) != 1:
+        errors.append(BrokerLakeError(BrokerLakeErrorCode.MISSING_REQUIRED_FIELD, field="order_intent_id", blocked_reason="order_intent_id_chain_mismatch"))
+    for plan in plans:
+        errors.extend(plan.errors)
+        if plan.real_write:
+            errors.append(BrokerLakeError(BrokerLakeErrorCode.FORBIDDEN_TARGET, field="real_write", blocked_reason="real_write_forbidden"))
+        for counter_name, counter_value in plan.safety_counters.items():
+            if int(counter_value) != 0:
+                errors.append(
+                    BrokerLakeError(
+                        BrokerLakeErrorCode.FORBIDDEN_TARGET,
+                        field=counter_name,
+                        blocked_reason="safety_counter_non_zero",
+                    )
+                )
+    return BrokerLakeAuditChain(
+        status="pass" if not errors else "blocked",
+        run_id=next(iter(run_ids), ""),
+        strategy_id=next(iter(strategy_ids), ""),
+        order_intent_id=next(iter(order_intent_ids), ""),
+        event_plans=plans,
+        errors=tuple(errors),
+        real_write=False,
+        safety_counters=broker_lake_safety_counters(),
+    )
+
+
 def broker_lake_safety_counters() -> dict[str, int]:
     """返回 CR015-S05 必须保持为 0 的安全计数。"""
 
@@ -754,6 +844,7 @@ __all__ = [
     "REDACTED_VALUE",
     "BrokerLakeError",
     "BrokerLakeErrorCode",
+    "BrokerLakeAuditChain",
     "BrokerLakeEventType",
     "BrokerLakePlanStatus",
     "BrokerLakeSchema",
@@ -762,10 +853,12 @@ __all__ = [
     "RedactionResult",
     "RedactionStatus",
     "broker_lake_safety_counters",
+    "build_broker_lake_audit_chain",
     "build_schema_audit_summary",
     "dry_run_write_plan",
     "redact_event_payload",
     "schema_for_event",
     "sensitive_raw_value_output_count",
+    "validate_broker_lake_audit_chain",
     "validate_broker_lake_target",
 ]

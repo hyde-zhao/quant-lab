@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import hashlib
+import json
 from dataclasses import asdict, dataclass, field, is_dataclass
 from typing import Any, Mapping
 
@@ -246,6 +248,103 @@ def validate_s09_window_manifest_record(
     )
 
 
+def compute_lineage_checksum(payload: Mapping[str, Any]) -> str:
+    """Return stable sha256 lineage checksum for JSON-ready metadata."""
+
+    data = json.dumps(
+        dict(payload),
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+        default=str,
+    ).encode("utf-8")
+    return "sha256:" + hashlib.sha256(data).hexdigest()
+
+
+def build_run_lineage(
+    *,
+    source_run_id: str,
+    data_run_id: str | None = None,
+    publish_run_id: str | None = None,
+    manifest_ref: str | None = None,
+    triggered_by_cr: str | None = None,
+) -> dict[str, Any]:
+    """Build W2 run lineage metadata without reading or writing lake files."""
+
+    lineage = {
+        "source_run_id": source_run_id,
+        "data_run_id": data_run_id or source_run_id,
+        "publish_run_id": publish_run_id,
+        "manifest_ref": manifest_ref,
+        "triggered_by_cr": triggered_by_cr,
+    }
+    lineage["lineage_checksum"] = compute_lineage_checksum(
+        {key: value for key, value in lineage.items() if key != "lineage_checksum"}
+    )
+    return lineage
+
+
+def derive_manifest_from_catalog(
+    catalog_record: Mapping[str, Any] | Any,
+    *,
+    manifest_ref: str | None = None,
+    triggered_by_cr: str | None = None,
+) -> dict[str, Any]:
+    """Derive a manifest record from the catalog source-of-truth payload."""
+
+    payload = _as_mapping(catalog_record)
+    run_id = str(
+        payload.get("latest_manifest_run_id")
+        or payload.get("run_id")
+        or payload.get("source_run_id")
+        or ""
+    )
+    lineage = build_run_lineage(
+        source_run_id=run_id,
+        data_run_id=str(payload.get("data_run_id") or run_id),
+        publish_run_id=payload.get("publish_run_id"),
+        manifest_ref=manifest_ref or payload.get("manifest_ref"),
+        triggered_by_cr=triggered_by_cr or payload.get("triggered_by_cr"),
+    )
+    record = {
+        "run_id": run_id,
+        "dataset": payload.get("dataset"),
+        "source": payload.get("source"),
+        "source_interface": payload.get("source_interface"),
+        "schema_hash": payload.get("schema_hash") or payload.get("schema_version") or SCHEMA_VERSION,
+        "row_count": int(payload.get("row_count") or payload.get("coverage_denominator") or 0),
+        "quality_status": payload.get("quality_status"),
+        "readiness_status": payload.get("readiness_status"),
+        "lineage_checksum": payload.get("lineage_checksum") or lineage["lineage_checksum"],
+        "lifecycle_denominator_ref": payload.get("lifecycle_denominator_ref")
+        or payload.get("universe_scope")
+        or "catalog_coverage_denominator",
+        "candidate_path": payload.get("candidate_path")
+        or payload.get("canonical_path")
+        or payload.get("published_path"),
+        "schema_version": payload.get("schema_version") or SCHEMA_VERSION,
+        "partition": dict(payload.get("partition") or {}),
+        "metadata": {
+            "source_of_truth": "catalog",
+            "catalog_pointer_path": payload.get("catalog_pointer_path"),
+            "triggered_by_cr": triggered_by_cr or payload.get("triggered_by_cr"),
+            "run_lineage": lineage,
+        },
+    }
+    return record
+
+
+def validate_lineage_checksum(
+    payload: Mapping[str, Any],
+    expected_checksum: str,
+) -> bool:
+    """Validate checksum while accepting an embedded lineage_checksum field."""
+
+    comparable = dict(payload)
+    comparable.pop("lineage_checksum", None)
+    return compute_lineage_checksum(comparable) == expected_checksum
+
+
 __all__ = [
     "CR014_MANIFEST_REQUIRED_FIELDS",
     "CR014_S09_WINDOW_MANIFEST_REQUIRED_FIELDS",
@@ -257,6 +356,10 @@ __all__ = [
     "ManifestCompletenessResult",
     "ManifestRecord",
     "build_s09_window_manifest_record",
+    "build_run_lineage",
+    "compute_lineage_checksum",
+    "derive_manifest_from_catalog",
+    "validate_lineage_checksum",
     "validate_manifest_record",
     "validate_s09_window_manifest_record",
 ]

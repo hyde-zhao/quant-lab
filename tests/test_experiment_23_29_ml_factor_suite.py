@@ -6,6 +6,7 @@ from pathlib import Path
 import pandas as pd
 
 from experiments.run_experiment_23_29_ml_factor_suite import run_stage4_suite
+from experiments.run_experiment_15_factor_framework import load_local_frames
 
 
 def write_stage4_dataset(root: Path, *, days: int = 260, symbols: int = 10) -> Path:
@@ -58,7 +59,10 @@ def test_stage4_suite_generates_expected_reports_with_bounded_concurrency(tmp_pa
     data_dir = write_stage4_dataset(tmp_path)
     output_root = tmp_path / "reports"
     args = Namespace(
-        data_dir=str(data_dir),
+        lake_root=str(tmp_path / "lake"),
+        as_of="2024-12-31T23:59:59+08:00",
+        quality_policy="require_pass",
+        fixture_frames=load_local_frames(data_dir),
         output_root=str(output_root),
         start_date=None,
         end_date=None,

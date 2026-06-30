@@ -23,6 +23,11 @@ DATASET_STOCK_BASIC = "stock_basic"
 DATASET_TRADE_STATUS = "trade_status"
 DATASET_PRICES_LIMIT = "prices_limit"
 DATASET_EVENTS = "events"
+DATASET_LIQUIDITY_CAPACITY = "liquidity_capacity"
+DATASET_MARKET_CAP = "market_cap"
+DATASET_INDUSTRY_CLASSIFICATION = "industry_classification"
+DATASET_PRICES_LIMIT_CODE_CHANGE_FIXES = "prices_limit_code_change_fixes"
+DATASET_PRICES_LIMIT_COVERAGE_EXCLUSIONS = "prices_limit_coverage_exclusions"
 DATASETS: tuple[str, ...] = (
     DATASET_PRICES,
     DATASET_ADJ_FACTOR,
@@ -34,6 +39,11 @@ DATASETS: tuple[str, ...] = (
     DATASET_TRADE_STATUS,
     DATASET_PRICES_LIMIT,
     DATASET_EVENTS,
+    DATASET_LIQUIDITY_CAPACITY,
+    DATASET_MARKET_CAP,
+    DATASET_INDUSTRY_CLASSIFICATION,
+    DATASET_PRICES_LIMIT_CODE_CHANGE_FIXES,
+    DATASET_PRICES_LIMIT_COVERAGE_EXCLUSIONS,
 )
 
 CR018_BENCHMARK_HS300 = "HS300"
@@ -388,12 +398,23 @@ DATASET_KEY_COLUMNS: dict[str, tuple[str, ...]] = {
     DATASET_TRADE_STATUS: ("trade_date", "symbol"),
     DATASET_PRICES_LIMIT: ("trade_date", "symbol"),
     DATASET_EVENTS: ("symbol", "event_type", "event_date", "available_at"),
+    DATASET_LIQUIDITY_CAPACITY: ("trade_date", "symbol"),
+    DATASET_MARKET_CAP: ("trade_date", "symbol"),
+    DATASET_INDUSTRY_CLASSIFICATION: ("symbol", "classification_standard", "effective_date"),
+    DATASET_PRICES_LIMIT_CODE_CHANGE_FIXES: (
+        "trade_date",
+        "symbol",
+        "source_symbol",
+        "mapping_type",
+    ),
+    DATASET_PRICES_LIMIT_COVERAGE_EXCLUSIONS: ("trade_date", "symbol", "exclusion_reason"),
 }
 
 DATASET_PIT_FIELDS: dict[str, tuple[str, ...]] = {
     DATASET_INDEX_MEMBERS: ("effective_date", "available_date", "available_at"),
     DATASET_INDEX_WEIGHTS: ("effective_date", "available_date", "available_at"),
     DATASET_STOCK_BASIC: ("effective_date", "available_date", "available_at"),
+    DATASET_INDUSTRY_CLASSIFICATION: ("effective_date", "available_date", "available_at"),
 }
 
 CANONICAL_HS300_INDEX_COLUMNS: tuple[str, ...] = (
@@ -549,6 +570,100 @@ CANONICAL_EVENTS_COLUMNS: tuple[str, ...] = (
     "lineage_raw_checksum",
 )
 
+CANONICAL_LIQUIDITY_CAPACITY_COLUMNS: tuple[str, ...] = (
+    "trade_date",
+    "symbol",
+    "volume",
+    "amount",
+    "amount_unit",
+    "adv20_amount",
+    "adv20_volume",
+    "turnover_rate",
+    "turnover_rate_f",
+    "source",
+    "source_interface",
+    "source_run_id",
+    "available_at",
+    "available_at_rule",
+    "schema_version",
+    "lineage_raw_checksum",
+)
+
+CANONICAL_MARKET_CAP_COLUMNS: tuple[str, ...] = (
+    "trade_date",
+    "symbol",
+    "market_cap",
+    "float_market_cap",
+    "turnover_rate",
+    "turnover_rate_f",
+    "volume_ratio",
+    "pe",
+    "pe_ttm",
+    "pb",
+    "ps",
+    "ps_ttm",
+    "dv_ratio",
+    "dv_ttm",
+    "total_share",
+    "float_share",
+    "free_share",
+    "market_cap_unit",
+    "source",
+    "source_interface",
+    "source_run_id",
+    "available_at",
+    "available_at_rule",
+    "schema_version",
+    "lineage_raw_checksum",
+)
+
+CANONICAL_INDUSTRY_CLASSIFICATION_COLUMNS: tuple[str, ...] = (
+    "symbol",
+    "industry_code",
+    "industry_name",
+    "classification_standard",
+    "effective_date",
+    "available_date",
+    "available_at",
+    "available_at_rule",
+    "pit_status",
+    "readiness_status",
+    "source",
+    "source_interface",
+    "source_run_id",
+    "schema_version",
+    "lineage_raw_checksum",
+)
+
+CANONICAL_PRICES_LIMIT_CODE_CHANGE_FIXES_COLUMNS: tuple[str, ...] = (
+    "trade_date",
+    "symbol",
+    "source_symbol",
+    "limit_up",
+    "limit_down",
+    "mapping_type",
+    "mapping_effective_date",
+    "reason",
+    "source",
+    "source_interface",
+    "source_run_id",
+    "schema_version",
+    "lineage_raw_checksum",
+)
+
+CANONICAL_PRICES_LIMIT_COVERAGE_EXCLUSIONS_COLUMNS: tuple[str, ...] = (
+    "trade_date",
+    "symbol",
+    "exclusion_reason",
+    "reference_date",
+    "reference_symbol",
+    "source",
+    "source_interface",
+    "source_run_id",
+    "schema_version",
+    "lineage_raw_checksum",
+)
+
 DATASET_SCHEMA_REGISTRY: dict[str, dict[str, tuple[str, ...]]] = {
     DATASET_PRICES: {
         "columns": CR005_CANONICAL_PRICES_COLUMNS,
@@ -607,6 +722,33 @@ DATASET_SCHEMA_REGISTRY: dict[str, dict[str, tuple[str, ...]]] = {
         "columns": CANONICAL_EVENTS_COLUMNS,
         "key_columns": DATASET_KEY_COLUMNS[DATASET_EVENTS],
         "w3_required": ("available_at",),
+    },
+    DATASET_LIQUIDITY_CAPACITY: {
+        "columns": CANONICAL_LIQUIDITY_CAPACITY_COLUMNS,
+        "key_columns": DATASET_KEY_COLUMNS[DATASET_LIQUIDITY_CAPACITY],
+        "w3_required": ("source_interface", "available_at"),
+    },
+    DATASET_MARKET_CAP: {
+        "columns": CANONICAL_MARKET_CAP_COLUMNS,
+        "key_columns": DATASET_KEY_COLUMNS[DATASET_MARKET_CAP],
+        "w3_required": ("source_interface", "available_at"),
+    },
+    DATASET_INDUSTRY_CLASSIFICATION: {
+        "columns": CANONICAL_INDUSTRY_CLASSIFICATION_COLUMNS,
+        "key_columns": DATASET_KEY_COLUMNS[DATASET_INDUSTRY_CLASSIFICATION],
+        "pit_fields": DATASET_PIT_FIELDS[DATASET_INDUSTRY_CLASSIFICATION],
+        "readiness_status_values": READINESS_STATUS_VALUES,
+        "pit_status_values": PIT_STATUS_VALUES,
+    },
+    DATASET_PRICES_LIMIT_CODE_CHANGE_FIXES: {
+        "columns": CANONICAL_PRICES_LIMIT_CODE_CHANGE_FIXES_COLUMNS,
+        "key_columns": DATASET_KEY_COLUMNS[DATASET_PRICES_LIMIT_CODE_CHANGE_FIXES],
+        "w3_required": ("source_interface",),
+    },
+    DATASET_PRICES_LIMIT_COVERAGE_EXCLUSIONS: {
+        "columns": CANONICAL_PRICES_LIMIT_COVERAGE_EXCLUSIONS_COLUMNS,
+        "key_columns": DATASET_KEY_COLUMNS[DATASET_PRICES_LIMIT_COVERAGE_EXCLUSIONS],
+        "w3_required": ("source_interface",),
     },
 }
 
@@ -840,6 +982,11 @@ __all__ = [
     "DATASET_TRADE_STATUS",
     "DATASET_PRICES_LIMIT",
     "DATASET_EVENTS",
+    "DATASET_LIQUIDITY_CAPACITY",
+    "DATASET_MARKET_CAP",
+    "DATASET_INDUSTRY_CLASSIFICATION",
+    "DATASET_PRICES_LIMIT_CODE_CHANGE_FIXES",
+    "DATASET_PRICES_LIMIT_COVERAGE_EXCLUSIONS",
     "DATASETS",
     "CR018_BENCHMARK_HS300",
     "CR018_BENCHMARK_ZZ500",

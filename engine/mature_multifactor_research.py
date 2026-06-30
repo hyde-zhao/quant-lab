@@ -47,7 +47,7 @@ from trading.strategy_runner.target_portfolio import MultifactorSignalRow, build
 STAGE3_RUN_SCHEMA = "stage3_mature_multifactor_research_run_v1"
 DEFAULT_RESEARCH_ROOT = Path("/home/hyde/data/quant-lab/research/runs/stage3_mature_multifactor")
 DEFAULT_PROCESS_EVIDENCE_ROOT = Path("process/evidence/stage3-mature-multifactor")
-DEFAULT_LAKE_ROOT = Path("/home/hyde/data/quant-lab/lake")
+DEFAULT_LAKE_ROOT = Path("/home/hyde/data/quant-lab/data-lake")
 DEFAULT_START = "2021-01-01"
 DEFAULT_END = "2026-06-26"
 DEFAULT_TOP_N = 80

@@ -7,7 +7,7 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from experiments.run_experiment_15_factor_framework import FactorFrameworkError, run_factor_framework
+from experiments.run_experiment_15_factor_framework import FactorFrameworkError, load_local_frames, run_factor_framework
 
 
 def write_factor_dataset(root: Path, *, days: int = 45, symbols: tuple[str, ...] = ("AAA", "BBB", "CCC")) -> None:
@@ -55,7 +55,10 @@ def write_factor_dataset(root: Path, *, days: int = 45, symbols: tuple[str, ...]
 
 def args_for(root: Path, **overrides) -> Namespace:
     values = {
-        "data_dir": str(root / "data"),
+        "lake_root": str(root / "lake"),
+        "as_of": "2024-12-31T23:59:59+08:00",
+        "quality_policy": "require_pass",
+        "fixture_frames": load_local_frames(root / "data"),
         "output_dir": str(root / "reports" / "experiment_15"),
         "start_date": None,
         "end_date": None,

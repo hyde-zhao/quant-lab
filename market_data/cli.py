@@ -447,6 +447,29 @@ def cmd_p0_replay(args: argparse.Namespace) -> dict[str, Any]:
     return {"ok": not result.error_codes, "command": "p0-replay", **result.to_dict()}
 
 
+def cmd_published_asof_replay(args: argparse.Namespace) -> dict[str, Any]:
+    from .replay import PublishedAsOfReplayRequest, build_published_asof_replay
+
+    try:
+        pointer_payload = json.loads(getattr(args, "pointer_json", None) or "[]")
+    except json.JSONDecodeError as exc:
+        raise StructuredCliError("invalid_pointer_json", "pointer JSON 无法解析") from exc
+    if isinstance(pointer_payload, Mapping):
+        pointers = [pointer_payload]
+    elif isinstance(pointer_payload, list):
+        pointers = pointer_payload
+    else:
+        raise StructuredCliError("invalid_pointer_json", "pointer JSON 必须是 object 或 array")
+    request = PublishedAsOfReplayRequest(
+        dataset=getattr(args, "dataset", None) or DATASET_PRICES,
+        as_of_trade_date=getattr(args, "as_of_trade_date", None) or "",
+        run_id=getattr(args, "run_id", None) or "published-asof-replay",
+        batch_id=getattr(args, "batch_id", None) or "published-asof",
+    )
+    result = build_published_asof_replay(request, pointers)
+    return {"ok": result.ready, "command": "published-asof-replay", **result.to_dict()}
+
+
 def cmd_p0_validate(args: argparse.Namespace) -> dict[str, Any]:
     from .validation import validate_p0_candidate
 
@@ -1850,6 +1873,13 @@ def _canonical_paths_for_run(
     dataset: str,
     run_id: str | None,
 ) -> list[Path]:
+    current_root = layout.canonical_current_root(dataset)
+    current_paths = sorted(
+        path for path in current_root.rglob("*.parquet") if ".tmp" not in path.name
+    ) if current_root.exists() else []
+    if current_paths:
+        return current_paths
+
     root = layout.canonical_dataset_root(dataset)
     if run_id:
         root = root / f"run_id={run_id}"
@@ -1865,6 +1895,22 @@ def _catalog_canonical_path(
     run_id: str | None,
 ) -> Path | None:
     paths = list(canonical_paths)
+    current_root = layout.canonical_current_root(dataset)
+    current_paths = [
+        path for path in paths if _path_is_relative_to(path, current_root)
+    ]
+    if len(current_paths) == 1:
+        return current_paths[0]
+    if len(current_paths) > 1:
+        return current_root
+    if current_root.exists():
+        discovered = sorted(
+            path for path in current_root.rglob("*.parquet") if ".tmp" not in path.name
+        )
+        if len(discovered) == 1:
+            return discovered[0]
+        if len(discovered) > 1:
+            return current_root
     if len(paths) == 1:
         return paths[0]
     if run_id:
@@ -1872,6 +1918,14 @@ def _catalog_canonical_path(
         if run_root.exists():
             return run_root
     return None
+
+
+def _path_is_relative_to(path: Path, root: Path) -> bool:
+    try:
+        path.relative_to(root)
+    except ValueError:
+        return False
+    return True
 
 
 def _price_observed_expected_pairs(
@@ -3139,6 +3193,14 @@ def build_parser() -> argparse.ArgumentParser:
     replay.add_argument("--batch-id", required=True)
     replay.set_defaults(handler=cmd_replay)
 
+    published_asof_replay = subparsers.add_parser("published-asof-replay")
+    published_asof_replay.add_argument("--dataset", default=DATASET_PRICES)
+    published_asof_replay.add_argument("--as-of-trade-date", required=True)
+    published_asof_replay.add_argument("--run-id", default="published-asof-replay")
+    published_asof_replay.add_argument("--batch-id", default="published-asof")
+    published_asof_replay.add_argument("--pointer-json", required=True)
+    published_asof_replay.set_defaults(handler=cmd_published_asof_replay)
+
     read = subparsers.add_parser("read")
     read.add_argument("--lake-root")
     read.add_argument("--dataset", default=DATASET_PRICES)
@@ -3265,6 +3327,7 @@ __all__ = [
     "cmd_p0_query",
     "cmd_p0_read",
     "cmd_p0_replay",
+    "cmd_published_asof_replay",
     "cmd_p0_run",
     "cmd_p0_normalize",
     "cmd_p0_validate",

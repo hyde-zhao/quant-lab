@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import os
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any, Mapping, Sequence
 
@@ -60,6 +60,12 @@ from .contracts import (
     SCHEMA_VERSION,
 )
 from .contracts import DATASET_INDEX_MEMBERS, DATASET_TRADE_CALENDAR
+from engine.contracts import (
+    FallbackRule,
+    SchemaCompatibilityResult,
+    SchemaContractFreeze,
+    evaluate_schema_compatibility,
+)
 from .dataset_groups import PRIORITY_P0, list_dataset_groups
 from .lake_layout import LakeLayout
 from .release_scope import default_permission_counters, normalise_permission_counters
@@ -68,6 +74,14 @@ from .validation import validate_adjustment_consistency, validate_pit_asof
 
 class ReaderBoundaryError(RuntimeError):
     """reader 边界或读取请求不合法。"""
+
+
+class UnknownDatasetError(ReaderBoundaryError):
+    """read_panel received a dataset that has no registered reader."""
+
+
+class SchemaCompatibilityError(ReaderBoundaryError):
+    """Reader schema is incompatible with the frozen contract."""
 
 
 DATASET_CORPORATE_ACTIONS = "corporate_actions"
@@ -85,6 +99,13 @@ _CR018_CURRENT_READER_OPERATION_COUNTS: dict[str, int] = {
     "qmt_operation": 0,
     "duckdb_dependency_change": 0,
 }
+_CR139_S03_SAFETY_COUNTERS: dict[str, int] = {
+    "lake_write": 0,
+    "provider_fetch": 0,
+    "credential_read": 0,
+    "physical_partition_migration": 0,
+}
+_CR139_PARTITION_RUN_ID_COLUMN = "_cr139_partition_run_id"
 
 
 @dataclass(frozen=True, slots=True)
@@ -104,6 +125,24 @@ class ReaderResult:
     @property
     def available(self) -> bool:
         return self.status == "available"
+
+
+@dataclass(frozen=True, slots=True)
+class DuplicateFingerprintReport:
+    """CR139-S03 read-only duplicate fingerprint profile."""
+
+    dataset: str
+    total_partitions_scanned: int
+    duplicate_key_count: int
+    duplicate_keys: list[dict[str, Any]] = field(default_factory=list)
+    partition_run_map: list[dict[str, Any]] = field(default_factory=list)
+    cross_check_with_inventory: dict[str, Any] | None = None
+    safety_counters: dict[str, int] = field(default_factory=lambda: dict(_CR139_S03_SAFETY_COUNTERS))
+    issues: list[dict[str, Any]] = field(default_factory=list)
+    generated_at: str = "1970-01-01T00:00:00+00:00"
+
+    def to_dict(self) -> dict[str, Any]:
+        return asdict(self)
 
 
 @dataclass(frozen=True, slots=True)
@@ -406,7 +445,15 @@ def _entry_path(lake_root: Path, path: str | None) -> Path | None:
 def _read_paths(paths: Sequence[Path]) -> pd.DataFrame:
     if not paths:
         return pd.DataFrame()
-    return pd.concat([pd.read_parquet(path) for path in paths], ignore_index=True)
+    frames: list[pd.DataFrame] = []
+    for path in paths:
+        frame = pd.read_parquet(path)
+        run_id = _run_id_from_path(path)
+        if run_id:
+            frame = frame.copy()
+            frame[_CR139_PARTITION_RUN_ID_COLUMN] = run_id
+        frames.append(frame)
+    return pd.concat(frames, ignore_index=True)
 
 
 def _entry_paths(layout: LakeLayout, dataset: str, entry: CatalogEntry) -> list[Path]:
@@ -432,6 +479,260 @@ def _entry_paths(layout: LakeLayout, dataset: str, entry: CatalogEntry) -> list[
                 if ".tmp" not in path.name
             )
     return _canonical_paths(layout, dataset)
+
+
+def profile_duplicate_fingerprints(
+    dataset: str = DATASET_PRICES,
+    lake_root: str | Path | None = None,
+    *,
+    dedup_keys: Sequence[str] = ("symbol", "trade_date"),
+    filters: Mapping[str, Any] | None = None,
+    inventory_report: Any | None = None,
+    generated_at: str = "1970-01-01T00:00:00+00:00",
+) -> DuplicateFingerprintReport:
+    """Profile duplicate keys across canonical run_id partitions without changing reads."""
+
+    issues: list[dict[str, Any]] = []
+    root = _lake_root(lake_root)
+    if root is None:
+        return DuplicateFingerprintReport(
+            dataset=dataset,
+            total_partitions_scanned=0,
+            duplicate_key_count=0,
+            issues=[{"code": "lake_root_missing"}],
+            generated_at=generated_at,
+        )
+    if dataset not in DATASETS:
+        return DuplicateFingerprintReport(
+            dataset=dataset,
+            total_partitions_scanned=0,
+            duplicate_key_count=0,
+            issues=[{"code": "unknown_dataset", "dataset": dataset}],
+            generated_at=generated_at,
+        )
+
+    layout = LakeLayout(root)
+    canonical_root = layout.canonical_dataset_root(dataset, SCHEMA_VERSION)
+    if not canonical_root.exists():
+        return DuplicateFingerprintReport(
+            dataset=dataset,
+            total_partitions_scanned=0,
+            duplicate_key_count=0,
+            issues=[{"code": "canonical_missing", "path": str(canonical_root)}],
+            generated_at=generated_at,
+        )
+
+    paths = _canonical_paths(layout, dataset)
+    partition_run_map, frames, read_issues = _collect_partition_run_map(paths, dedup_keys, filters)
+    issues.extend(read_issues)
+    duplicate_keys = _duplicate_key_rows(frames, dedup_keys)
+    partition_count = len({row["run_id_from_path"] for row in partition_run_map if row.get("run_id_from_path")})
+    if partition_count == 0:
+        partition_count = len(partition_run_map)
+    profile_count = len(duplicate_keys)
+    cross_check = _cross_check_inventory(inventory_report, dataset, profile_count)
+    return DuplicateFingerprintReport(
+        dataset=dataset,
+        total_partitions_scanned=partition_count,
+        duplicate_key_count=profile_count,
+        duplicate_keys=duplicate_keys,
+        partition_run_map=partition_run_map,
+        cross_check_with_inventory=cross_check,
+        issues=issues,
+        generated_at=generated_at,
+    )
+
+
+def _collect_partition_run_map(
+    paths: Sequence[Path],
+    dedup_keys: Sequence[str],
+    filters: Mapping[str, Any] | None,
+) -> tuple[list[dict[str, Any]], list[pd.DataFrame], list[dict[str, Any]]]:
+    partition_run_map: list[dict[str, Any]] = []
+    frames: list[pd.DataFrame] = []
+    issues: list[dict[str, Any]] = []
+    for path in paths:
+        run_id_from_path = _run_id_from_path(path)
+        try:
+            frame = pd.read_parquet(path)
+        except Exception as exc:  # pragma: no cover - defensive read path
+            issues.append({"code": "partition_read_error", "path": str(path), "error": f"{type(exc).__name__}: {exc}"})
+            continue
+        source_run_ids, mismatch = _source_run_id_status(frame, run_id_from_path)
+        partition_run_map.append(
+            {
+                "path": str(path),
+                "run_id_from_path": run_id_from_path,
+                "source_run_id_from_data": source_run_ids,
+                "mismatch": mismatch,
+            }
+        )
+        required_columns = list(dict.fromkeys([*dedup_keys, "source_run_id"]))
+        present = [column for column in required_columns if column in frame.columns]
+        missing_keys = [column for column in dedup_keys if column not in frame.columns]
+        if missing_keys:
+            issues.append({"code": "dedup_key_missing", "path": str(path), "columns": missing_keys})
+            continue
+        work = frame[present].copy()
+        work["_partition_run_id"] = run_id_from_path or ""
+        if filters:
+            for key, value in filters.items():
+                if key in work.columns:
+                    work = work[work[key] == value]
+        frames.append(work)
+    return partition_run_map, frames, issues
+
+
+def _duplicate_key_rows(frames: Sequence[pd.DataFrame], dedup_keys: Sequence[str]) -> list[dict[str, Any]]:
+    if not frames:
+        return []
+    combined = pd.concat(frames, ignore_index=True)
+    if combined.empty:
+        return []
+    rows: list[dict[str, Any]] = []
+    grouped = combined.groupby(list(dedup_keys), dropna=False, sort=True)
+    for key_values, group in grouped:
+        if len(group) <= 1:
+            continue
+        key_tuple = key_values if isinstance(key_values, tuple) else (key_values,)
+        run_counts = group["_partition_run_id"].astype(str).value_counts().sort_index()
+        source_run_ids = (
+            sorted(str(value) for value in group["source_run_id"].dropna().unique().tolist())
+            if "source_run_id" in group.columns
+            else []
+        )
+        rows.append(
+            {
+                "key": {name: str(value) for name, value in zip(dedup_keys, key_tuple)},
+                "run_ids": sorted(value for value in group["_partition_run_id"].astype(str).unique().tolist() if value),
+                "row_counts": {str(run_id): int(count) for run_id, count in run_counts.items()},
+                "source_run_ids": source_run_ids,
+                "total_rows": int(len(group)),
+            }
+        )
+    return sorted(rows, key=lambda item: tuple(item["key"].get(name, "") for name in dedup_keys))
+
+
+def _source_run_id_status(frame: pd.DataFrame, run_id_from_path: str | None) -> tuple[list[str], str | None]:
+    if "source_run_id" not in frame.columns:
+        return [], "source_run_id_column_missing"
+    source_run_ids = sorted(str(value) for value in frame["source_run_id"].dropna().unique().tolist() if str(value))
+    if not source_run_ids:
+        return [], "source_run_id_empty"
+    if run_id_from_path and set(source_run_ids) != {run_id_from_path}:
+        return source_run_ids, "source_run_id_path_mismatch"
+    return source_run_ids, None
+
+
+def _run_id_from_path(path: Path) -> str | None:
+    for part in path.parts:
+        if part.startswith("run_id="):
+            return part.split("=", 1)[1]
+    return None
+
+
+def _dataset_dedup_keys(dataset: str) -> tuple[str, ...]:
+    if dataset == DATASET_PRICES:
+        return ("symbol", "trade_date")
+    return ()
+
+
+def _drop_internal_dedup_columns(frame: pd.DataFrame) -> pd.DataFrame:
+    internal_columns = [column for column in (_CR139_PARTITION_RUN_ID_COLUMN,) if column in frame.columns]
+    if not internal_columns:
+        return frame
+    return frame.drop(columns=internal_columns)
+
+
+def _dedup_by_latest_run(
+    frame: pd.DataFrame,
+    *,
+    entry: CatalogEntry | None,
+    dedup_keys: Sequence[str],
+    latest_by: str = "source_run_id",
+    dataset: str = "",
+    issues: list[dict[str, Any]] | None = None,
+) -> pd.DataFrame:
+    """Deduplicate a read frame by natural key, preferring the catalog current run."""
+
+    if frame.empty or not dedup_keys:
+        return _drop_internal_dedup_columns(frame)
+
+    key_list = list(dict.fromkeys(dedup_keys))
+    missing_keys = [column for column in key_list if column not in frame.columns]
+    if missing_keys:
+        if issues is not None:
+            issues.append({"code": "dedup_keys_missing", "dataset": dataset, "columns": missing_keys})
+        return _drop_internal_dedup_columns(frame)
+
+    work = frame.copy()
+    latest_values = (
+        work[latest_by].astype("string").fillna("")
+        if latest_by in work.columns
+        else pd.Series("", index=work.index, dtype="string")
+    )
+    partition_values = (
+        work[_CR139_PARTITION_RUN_ID_COLUMN].astype("string").fillna("")
+        if _CR139_PARTITION_RUN_ID_COLUMN in work.columns
+        else pd.Series("", index=work.index, dtype="string")
+    )
+    latest_empty_with_partition = latest_values.str.len().eq(0) & partition_values.str.len().gt(0)
+    latest_values = latest_values.where(latest_values.str.len() > 0, partition_values)
+    if latest_by not in work.columns and issues is not None:
+        issues.append({"code": "source_run_id_missing", "dataset": dataset, "fallback": "path_run_id"})
+    elif latest_by in work.columns and bool(latest_empty_with_partition.any()) and issues is not None:
+        issues.append({"code": "source_run_id_empty", "dataset": dataset, "fallback": "path_run_id"})
+
+    current_run_id = str(entry.latest_manifest_run_id or "") if entry is not None else ""
+    if not current_run_id and issues is not None:
+        issues.append({"code": "catalog_run_id_missing", "dataset": dataset})
+
+    work["_cr139_dedup_is_current"] = latest_values.eq(current_run_id).astype(int) if current_run_id else 0
+    work["_cr139_dedup_source_run_id"] = latest_values.astype(str)
+    work["_cr139_dedup_original_order"] = range(len(work))
+    ranked = work.sort_values(
+        [*key_list, "_cr139_dedup_is_current", "_cr139_dedup_source_run_id", "_cr139_dedup_original_order"],
+        ascending=[True] * len(key_list) + [False, False, True],
+        kind="mergesort",
+    )
+    deduped = ranked.drop_duplicates(key_list, keep="first")
+    deduped = deduped.sort_values("_cr139_dedup_original_order", kind="mergesort")
+    return deduped.drop(
+        columns=[
+            column
+            for column in (
+                "_cr139_dedup_is_current",
+                "_cr139_dedup_source_run_id",
+                "_cr139_dedup_original_order",
+                _CR139_PARTITION_RUN_ID_COLUMN,
+            )
+            if column in deduped.columns
+        ]
+    ).reset_index(drop=True)
+
+
+def _cross_check_inventory(inventory_report: Any | None, dataset: str, profile_count: int) -> dict[str, Any] | None:
+    if inventory_report is None:
+        return None
+    entries = inventory_report.get("entries", []) if isinstance(inventory_report, Mapping) else getattr(inventory_report, "entries", [])
+    for entry in entries:
+        entry_dataset = entry.get("dataset") if isinstance(entry, Mapping) else getattr(entry, "dataset", None)
+        if entry_dataset != dataset:
+            continue
+        inventory_count = entry.get("duplicate_key_count", 0) if isinstance(entry, Mapping) else getattr(entry, "duplicate_key_count", 0)
+        diff = int(profile_count) - int(inventory_count)
+        return {
+            "inventory_duplicate_keys": int(inventory_count),
+            "profile_duplicate_keys": int(profile_count),
+            "diff": diff,
+            "diff_reason": "matched" if diff == 0 else "inventory_profile_count_mismatch",
+        }
+    return {
+        "inventory_duplicate_keys": None,
+        "profile_duplicate_keys": int(profile_count),
+        "diff": None,
+        "diff_reason": "dataset_not_found_in_inventory",
+    }
 
 
 def _filter_frame(
@@ -2702,14 +3003,22 @@ def read_canonical(
         raise ReaderBoundaryError(f"本批次 reader 仅支持 exact dataset={DATASET_PRICES}: {dataset}")
     layout = LakeLayout(lake_root)
     # catalog 只用于确认 dataset 已登记；缺失时仍允许读取已存在 canonical，便于测试和后续恢复。
+    entry: CatalogEntry | None = None
     try:
-        CatalogStore(layout).get(dataset)
+        entry = CatalogStore(layout).get(dataset)
     except Exception:
         pass
     paths = _canonical_paths(layout, dataset)
     if not paths:
         raise ReaderBoundaryError(f"canonical parquet 不存在: {dataset}")
-    frame = pd.concat([pd.read_parquet(path) for path in paths], ignore_index=True)
+    frame = _read_paths(paths)
+    frame = _dedup_by_latest_run(
+        frame,
+        entry=entry,
+        dedup_keys=_dataset_dedup_keys(dataset),
+        latest_by="source_run_id",
+        dataset=dataset,
+    )
     if start is not None:
         frame = frame[frame["trade_date"].astype(str) >= str(start)]
     if end is not None:
@@ -2732,6 +3041,10 @@ def read_dataset(
     quality_policy: QualityPolicy | Mapping[str, Any] | str | None = None,
     *,
     required: bool = False,
+    schema_contract: SchemaContractFreeze | Mapping[str, Any] | None = None,
+    dataset_schema: Mapping[str, Any] | None = None,
+    pre_read_readiness_gate: Mapping[str, Any] | object | None = None,
+    decision_time: str | None = None,
 ) -> ReaderResult:
     policy = _policy(quality_policy, required)
     root = _lake_root(lake_root)
@@ -2812,6 +3125,17 @@ def read_dataset(
             issues=[{"code": "quality_warn_blocked", "dataset": dataset}],
             catalog_entry=entry,
         )
+    if pre_read_readiness_gate is not None:
+        from .readiness import evaluate_pre_read_readiness_gate
+
+        gate = evaluate_pre_read_readiness_gate(dataset, pre_read_readiness_gate, required=policy.required)
+        if not gate.passed:
+            return ReaderResult(
+                status=gate.status,
+                issues=[dict(item) for item in gate.issues],
+                catalog_entry=entry,
+                remediation_spec=gate.remediation_spec,
+            )
     paths = [path for path in _entry_paths(layout, dataset, entry) if path.exists()]
     if not paths:
         status = "required_missing" if policy.required else "unavailable"
@@ -2825,7 +3149,53 @@ def read_dataset(
                 "end_date": entry.end_date,
             },
         )
+    issues = [{"code": "quality_warn", "dataset": dataset}] if entry.quality_status == "warn" else []
     frame = _read_paths(paths)
+    frame = _dedup_by_latest_run(
+        frame,
+        entry=entry,
+        dedup_keys=_dataset_dedup_keys(dataset),
+        latest_by="source_run_id",
+        dataset=dataset,
+        issues=issues,
+    )
+    if schema_contract is not None:
+        try:
+            contract = _normalise_schema_contract(dataset, schema_contract)
+            schema = _reader_schema_from_frame(
+                frame,
+                dataset=dataset,
+                dataset_schema=dataset_schema,
+            )
+            compatibility = evaluate_reader_schema_contract(schema, contract)
+            frame = apply_reader_fallback(frame, compatibility)
+            if compatibility.reader_fallback_required:
+                issues.append(
+                    {
+                        "code": "schema_reader_fallback_applied",
+                        "dataset": dataset,
+                        "fallback_fields": list(compatibility.fallback_fields),
+                    }
+                )
+        except SchemaCompatibilityError as exc:
+            status = "required_missing" if policy.required else "unavailable"
+            return ReaderResult(
+                status=status,
+                issues=[
+                    {
+                        "code": "schema_contract_incompatible",
+                        "dataset": dataset,
+                        "reason": str(exc),
+                    }
+                ],
+                catalog_entry=entry,
+                remediation_spec={
+                    "action": "resolve_schema_contract_before_read",
+                    "dataset": dataset,
+                    "dry_run_default": True,
+                    "auto_execute": False,
+                },
+            )
     filters = dict(filters or {})
     frame = _filter_frame(
         frame,
@@ -2836,7 +3206,16 @@ def read_dataset(
         exchange=filters.get("exchange"),
         columns=filters.get("columns"),
     )
-    issues = [{"code": "quality_warn", "dataset": dataset}] if entry.quality_status == "warn" else []
+    lookahead_block = _decision_time_lookahead_gate(
+        dataset,
+        frame,
+        decision_time,
+        required=policy.required,
+        issues=issues,
+        entry=entry,
+    )
+    if lookahead_block is not None:
+        return lookahead_block
     w3_issues = _w3_contract_issues(dataset, frame, entry)
     if w3_issues:
         status = "required_missing" if policy.required else "unavailable"
@@ -2869,6 +3248,517 @@ def read_dataset(
             remediation_spec=_readiness_remediation(dataset),
         )
     return ReaderResult(status="available", frame=frame, issues=issues, catalog_entry=entry)
+
+
+def _decision_time_lookahead_gate(
+    dataset: str,
+    frame: pd.DataFrame,
+    decision_time: str | None,
+    *,
+    required: bool,
+    issues: list[dict[str, Any]],
+    entry: CatalogEntry,
+) -> ReaderResult | None:
+    if decision_time is None:
+        return None
+    if frame.empty:
+        return None
+
+    status = "required_missing" if required else "unavailable"
+    remediation = _readiness_remediation(dataset)
+    if "available_at" not in frame.columns:
+        return ReaderResult(
+            status=status,
+            issues=[
+                *issues,
+                {
+                    "code": "decision_time_available_at_missing",
+                    "dataset": dataset,
+                    "decision_time": str(decision_time),
+                },
+            ],
+            catalog_entry=entry,
+            remediation_spec={
+                **remediation,
+                "action": "provide_explicit_available_at",
+                "auto_execute": False,
+            },
+        )
+
+    decision = pd.to_datetime(decision_time, errors="coerce")
+    if pd.isna(decision):
+        return ReaderResult(
+            status=status,
+            issues=[
+                *issues,
+                {
+                    "code": "decision_time_unparseable",
+                    "dataset": dataset,
+                    "decision_time": str(decision_time),
+                },
+            ],
+            catalog_entry=entry,
+            remediation_spec={
+                **remediation,
+                "action": "fix_decision_time",
+                "auto_execute": False,
+            },
+        )
+
+    available_at = pd.to_datetime(frame["available_at"], errors="coerce")
+    if available_at.isna().any():
+        return ReaderResult(
+            status=status,
+            issues=[
+                *issues,
+                {
+                    "code": "decision_time_available_at_unparseable",
+                    "dataset": dataset,
+                    "decision_time": str(decision_time),
+                    "invalid_available_at_count": int(available_at.isna().sum()),
+                },
+            ],
+            catalog_entry=entry,
+            remediation_spec={
+                **remediation,
+                "action": "fix_available_at_timestamps",
+                "auto_execute": False,
+            },
+        )
+
+    future_mask = available_at > decision
+    if bool(future_mask.any()):
+        max_available_at = available_at.loc[future_mask].max()
+        return ReaderResult(
+            status=status,
+            issues=[
+                *issues,
+                {
+                    "code": "decision_time_lookahead_blocked",
+                    "dataset": dataset,
+                    "decision_time": str(decision_time),
+                    "future_row_count": int(future_mask.sum()),
+                    "max_available_at": max_available_at.isoformat(),
+                },
+            ],
+            catalog_entry=entry,
+            remediation_spec={
+                **remediation,
+                "action": "use_data_available_at_or_before_decision_time",
+                "auto_execute": False,
+            },
+        )
+    return None
+
+
+def evaluate_reader_schema_contract(
+    dataset_schema: Mapping[str, Any],
+    contract: SchemaContractFreeze,
+) -> SchemaCompatibilityResult:
+    """Evaluate frozen schema contract for reader consumption only."""
+
+    result = evaluate_schema_compatibility(dataset_schema, contract)
+    if not result.compatible:
+        raise SchemaCompatibilityError(str(result.to_dict()))
+    return result
+
+
+def apply_reader_fallback(
+    frame: pd.DataFrame,
+    compatibility: SchemaCompatibilityResult,
+) -> pd.DataFrame:
+    """Apply explicit reader fallback rules to an in-memory DataFrame."""
+
+    if not compatibility.compatible:
+        raise SchemaCompatibilityError(str(compatibility.to_dict()))
+    if not compatibility.fallback_rules:
+        return frame
+    output = frame.copy()
+    for rule in compatibility.fallback_rules:
+        if rule.field in output.columns:
+            continue
+        if rule.fallback_kind == "rename" and rule.source_field:
+            if rule.source_field not in output.columns:
+                raise SchemaCompatibilityError(f"fallback_source_missing:{rule.source_field}")
+            output[rule.field] = output[rule.source_field]
+        elif rule.fallback_kind in {"default", "constant"}:
+            output[rule.field] = rule.value
+        else:
+            raise SchemaCompatibilityError(f"unsupported_reader_fallback:{rule.fallback_kind}")
+    return output
+
+
+def _normalise_schema_contract(
+    dataset: str,
+    contract: SchemaContractFreeze | Mapping[str, Any],
+) -> SchemaContractFreeze:
+    if isinstance(contract, SchemaContractFreeze):
+        return contract
+    payload = dict(contract)
+    rules = tuple(
+        item
+        if isinstance(item, FallbackRule)
+        else FallbackRule(**dict(item))
+        for item in payload.get("allowed_reader_fallbacks", ())
+    )
+    return SchemaContractFreeze(
+        dataset=str(payload.get("dataset") or dataset),
+        contract_version=str(payload.get("contract_version") or "data_lake_v4"),
+        required_fields=tuple(str(item) for item in payload.get("required_fields", ())),
+        field_types=dict(payload.get("field_types") or {}),
+        primary_key=tuple(str(item) for item in payload.get("primary_key", ())),
+        status=str(payload.get("status") or "frozen"),
+        compatible_from=tuple(str(item) for item in payload.get("compatible_from", ())),
+        breaking_changes=tuple(dict(item) for item in payload.get("breaking_changes", ())),
+        allowed_reader_fallbacks=rules,
+        frozen_at=str(payload.get("frozen_at") or ""),
+        owner_feature=str(payload.get("owner_feature") or ""),
+    )
+
+
+def _reader_schema_from_frame(
+    frame: pd.DataFrame,
+    *,
+    dataset: str,
+    dataset_schema: Mapping[str, Any] | None = None,
+) -> dict[str, Any]:
+    schema = dict(dataset_schema or {})
+    fields = dict(schema.get("fields") or {})
+    for column, dtype in frame.dtypes.items():
+        fields.setdefault(str(column), str(dtype))
+    schema["fields"] = fields
+    schema.setdefault("dataset", dataset)
+    schema.setdefault("primary_key", _dataset_dedup_keys(dataset))
+    schema.setdefault("contract_version", "data_lake_v4")
+    return schema
+
+
+def read_panel_as_of(
+    dataset: str,
+    lake_root: str | Path | None = None,
+    *,
+    as_of: str | pd.Timestamp | None = None,
+    keys: Sequence[str] = ("symbol",),
+    filters: Mapping[str, Any] | None = None,
+    reader: Any = None,
+    quality_policy: QualityPolicy | Mapping[str, Any] | str | None = None,
+    required: bool = True,
+) -> ReaderResult:
+    """Read a single PIT dataset as of a decision time.
+
+    The default reader is `read_dataset`, so catalog published gating remains
+    the first boundary. Callers can pass a fixture/specialized reader for
+    auxiliary datasets that are not yet in `DATASETS`.
+    """
+
+    if as_of is None or str(as_of).strip() == "":
+        return ReaderResult(
+            status="required_missing" if required else "unavailable",
+            issues=[{"code": "as_of_missing", "dataset": dataset}],
+        )
+    reader_fn = reader or read_dataset
+    result = reader_fn(
+        dataset,
+        lake_root,
+        filters=filters,
+        quality_policy=quality_policy,
+        required=required,
+    )
+    if any(str(issue.get("code")) == "catalog_not_published" for issue in result.issues):
+        return ReaderResult(
+            status="unavailable",
+            frame=result.frame,
+            issues=list(result.issues),
+            catalog_entry=result.catalog_entry,
+            remediation_spec=result.remediation_spec,
+        )
+    if result.status != "available" or result.frame is None:
+        return result
+
+    frame = result.frame.copy()
+    missing_keys = [key for key in keys if key not in frame.columns]
+    missing_columns = [*missing_keys]
+    if "available_at" not in frame.columns:
+        missing_columns.append("available_at")
+    if missing_columns:
+        return ReaderResult(
+            status="required_missing" if required else "unavailable",
+            frame=None,
+            issues=[
+                *list(result.issues),
+                {
+                    "code": "pit_as_of_required_column_missing",
+                    "dataset": dataset,
+                    "columns": list(dict.fromkeys(missing_columns)),
+                },
+            ],
+            catalog_entry=result.catalog_entry,
+            remediation_spec={
+                **(result.remediation_spec or {}),
+                "action": "provide_explicit_available_at",
+                "dataset": dataset,
+                "auto_execute": False,
+            },
+        )
+
+    decision_time = pd.to_datetime(as_of, errors="coerce")
+    available_at = pd.to_datetime(frame["available_at"], errors="coerce")
+    if pd.isna(decision_time) or available_at.isna().any():
+        return ReaderResult(
+            status="required_missing" if required else "unavailable",
+            frame=None,
+            issues=[
+                *list(result.issues),
+                {
+                    "code": "pit_as_of_timestamp_unparseable",
+                    "dataset": dataset,
+                    "as_of": str(as_of),
+                },
+            ],
+            catalog_entry=result.catalog_entry,
+            remediation_spec={
+                **(result.remediation_spec or {}),
+                "action": "fix_available_at_timestamps",
+                "dataset": dataset,
+                "auto_execute": False,
+            },
+        )
+
+    work = frame.loc[available_at <= decision_time].copy()
+    if work.empty:
+        return ReaderResult(
+            status="required_missing" if required else "unavailable",
+            frame=work.reset_index(drop=True),
+            issues=[
+                *list(result.issues),
+                {
+                    "code": "pit_as_of_no_available_rows",
+                    "dataset": dataset,
+                    "as_of": str(as_of),
+                },
+            ],
+            catalog_entry=result.catalog_entry,
+            remediation_spec={
+                **(result.remediation_spec or {}),
+                "action": "provide_rows_available_at_or_before_as_of",
+                "dataset": dataset,
+                "auto_execute": False,
+            },
+        )
+
+    work["_cr139_available_at_sort"] = pd.to_datetime(work["available_at"], errors="coerce")
+    sort_columns = [*list(keys), "_cr139_available_at_sort"]
+    if "trade_date" in work.columns:
+        sort_columns.insert(len(keys), "trade_date")
+    work = work.sort_values(sort_columns).drop_duplicates(list(keys), keep="last")
+    work = work.drop(columns=["_cr139_available_at_sort"]).reset_index(drop=True)
+    return ReaderResult(
+        status="available",
+        frame=work,
+        issues=list(result.issues),
+        catalog_entry=result.catalog_entry,
+        remediation_spec=result.remediation_spec,
+    )
+
+
+def read_panel(
+    datasets: Sequence[str],
+    lake_root: str | Path | None = None,
+    *,
+    as_of: str | pd.Timestamp | None = None,
+    symbols: Sequence[str] | None = None,
+    start_date: str | None = None,
+    end_date: str | None = None,
+    adjustment_policy: str = "qfq",
+    columns: Mapping[str, Sequence[str]] | None = None,
+    filters: Mapping[str, Any] | None = None,
+    reader: Any = None,
+    quality_policy: QualityPolicy | Mapping[str, Any] | str | None = None,
+    required: bool = True,
+) -> ReaderResult:
+    """Read multiple datasets into a single as-of panel.
+
+    The function composes S05 `read_panel_as_of` results and keeps all catalog
+    selection inside the single-dataset reader boundary. Fixture callers can
+    provide `reader` as a mapping or callable for auxiliary datasets that are
+    not yet present in DATASETS.
+    """
+
+    dataset_ids = [str(dataset).strip() for dataset in datasets if str(dataset).strip()]
+    if not dataset_ids:
+        return ReaderResult(
+            status="required_missing" if required else "unavailable",
+            issues=[{"code": "panel_datasets_missing"}],
+        )
+    if as_of is None or str(as_of).strip() == "":
+        return ReaderResult(
+            status="required_missing" if required else "unavailable",
+            issues=[{"code": "as_of_missing", "datasets": dataset_ids}],
+        )
+    if not isinstance(adjustment_policy, str) or not adjustment_policy.strip():
+        raise ReaderBoundaryError("read_panel requires one adjustment_policy value per call")
+
+    panel_filters = dict(filters or {})
+    if symbols is not None:
+        panel_filters["symbols"] = symbols
+    if start_date is not None:
+        panel_filters["start_date"] = start_date
+    if end_date is not None:
+        panel_filters["end_date"] = end_date
+
+    issues: list[dict[str, Any]] = []
+    frames: list[tuple[str, pd.DataFrame]] = []
+    for dataset in dataset_ids:
+        if reader is None and dataset not in DATASETS:
+            raise UnknownDatasetError(f"unknown panel dataset: {dataset}")
+        single_reader = _panel_single_reader(reader, dataset) or read_dataset
+        result = read_panel_as_of(
+            dataset,
+            lake_root,
+            as_of=as_of,
+            keys=("symbol",),
+            filters=panel_filters,
+            reader=single_reader,
+            quality_policy=quality_policy,
+            required=False,
+        )
+        if result.status != "available" or result.frame is None or result.frame.empty:
+            issues.extend(_panel_dataset_issues(dataset, result))
+            continue
+        prefixed = _prefix_panel_frame(dataset, result.frame, columns.get(dataset) if columns else None)
+        if prefixed.empty:
+            issues.append({"code": "panel_dataset_empty_after_column_selection", "dataset": dataset})
+            continue
+        frames.append((dataset, prefixed))
+
+    if not frames:
+        status = "unavailable" if _contains_issue_code(issues, "catalog_not_published") else (
+            "required_missing" if required else "unavailable"
+        )
+        return ReaderResult(status=status, frame=pd.DataFrame(), issues=issues)
+
+    panel = frames[0][1]
+    for _, frame in frames[1:]:
+        join_keys = [key for key in ("symbol",) if key in panel.columns and key in frame.columns]
+        if not join_keys:
+            issues.append({"code": "panel_join_key_missing", "dataset": _panel_prefixed_dataset(frame)})
+            continue
+        panel = panel.merge(frame, on=join_keys, how="outer", sort=True)
+    panel.insert(0, "as_of", str(as_of))
+    return ReaderResult(status="available", frame=panel.reset_index(drop=True), issues=issues)
+
+
+def read_dataset_via_duckdb_contract(
+    dataset: str,
+    catalog_pointer: Any,
+    *,
+    sql_template_id: str = "projection_scan",
+    projections: Sequence[str] = (),
+    partition_filters: Mapping[str, Any] | None = None,
+    policy: Any = None,
+    adapter: Any = None,
+    fallback_rows: Sequence[Mapping[str, Any]] = (),
+):
+    """Run the S13 DuckDB readonly reader facade without a hard DuckDB dependency."""
+
+    from .duckdb_query import (
+        READ_MODE_PUBLISHED_CURRENT_TRUTH,
+        DuckDBBoundaryError,
+        build_readonly_query_request,
+        run_published_current_truth_query,
+    )
+
+    request = build_readonly_query_request(
+        mode=READ_MODE_PUBLISHED_CURRENT_TRUTH,
+        dataset=dataset,
+        sql_template_id=sql_template_id,
+        catalog_pointer=catalog_pointer,
+        projections=projections,
+        partition_filters=partition_filters,
+        policy=policy,
+    )
+    if isinstance(request, DuckDBBoundaryError):
+        return request
+    return run_published_current_truth_query(
+        request,
+        policy=policy,
+        adapter=adapter,
+        fallback_rows=fallback_rows,
+    )
+
+
+def build_reader_audit_record(
+    dataset: str,
+    result: ReaderResult,
+    *,
+    reader_name: str,
+    requested_as_of: str | pd.Timestamp | None = None,
+    strategy_run_id: str | None = None,
+):
+    from .read_audit import build_read_audit_record
+
+    return build_read_audit_record(
+        dataset,
+        result,
+        reader_name=reader_name,
+        requested_as_of=requested_as_of,
+        strategy_run_id=strategy_run_id,
+    )
+
+
+def _panel_single_reader(reader: Any, dataset: str) -> Any | None:
+    if reader is None:
+        return None
+    if isinstance(reader, Mapping):
+        if dataset not in reader:
+            raise UnknownDatasetError(f"unknown panel dataset: {dataset}")
+        source = reader[dataset]
+        if isinstance(source, ReaderResult):
+            return lambda *_args, **_kwargs: source
+        if isinstance(source, pd.DataFrame):
+            return lambda *_args, **_kwargs: ReaderResult(status="available", frame=source.copy())
+        if callable(source):
+            return source
+        raise ReaderBoundaryError(f"unsupported panel reader source for {dataset}: {type(source).__name__}")
+    if callable(reader):
+        return reader
+    raise ReaderBoundaryError(f"unsupported panel reader: {type(reader).__name__}")
+
+
+def _panel_dataset_issues(dataset: str, result: ReaderResult) -> list[dict[str, Any]]:
+    if result.issues:
+        return [dict(issue, dataset=issue.get("dataset", dataset)) for issue in result.issues]
+    return [{"code": "panel_dataset_unavailable", "dataset": dataset, "status": result.status}]
+
+
+def _prefix_panel_frame(
+    dataset: str,
+    frame: pd.DataFrame,
+    requested_columns: Sequence[str] | None,
+) -> pd.DataFrame:
+    keys = [key for key in ("symbol",) if key in frame.columns]
+    if not keys:
+        return pd.DataFrame()
+    requested = {str(column) for column in requested_columns or ()}
+    keep_columns = set(keys) | requested if requested else set(frame.columns)
+    output = frame[[column for column in frame.columns if column in keep_columns]].copy()
+    renamed = {
+        column: f"{dataset}__{column}"
+        for column in output.columns
+        if column not in keys
+    }
+    return output.rename(columns=renamed)
+
+
+def _contains_issue_code(issues: Sequence[Mapping[str, Any]], code: str) -> bool:
+    return any(str(issue.get("code")) == code for issue in issues)
+
+
+def _panel_prefixed_dataset(frame: pd.DataFrame) -> str:
+    for column in frame.columns:
+        if "__" in str(column):
+            return str(column).split("__", 1)[0]
+    return "unknown"
 
 
 def read_index_universe(
@@ -3170,6 +4060,7 @@ __all__ = [
     "CURRENT_READER_STATUS_PASS",
     "CurrentReaderSmokeResult",
     "DATASET_CORPORATE_ACTIONS",
+    "DuplicateFingerprintReport",
     "ExecutionFeedRequest",
     "ExposureInputRequest",
     "LightweightInputRequest",
@@ -3179,15 +4070,18 @@ __all__ = [
     "ReaderBoundaryError",
     "ReaderResult",
     "ResearchInputReaderRequest",
+    "SchemaCompatibilityError",
     "SinglePolicyGateResult",
     "TradabilityInputRequest",
     "assert_published_view_only",
+    "apply_reader_fallback",
     "build_qmt_policy_handoff",
     "build_cr018_adjustment_reader_policy_metadata",
     "build_cr018_p1_auxiliary_availability_metadata",
     "current_reader_smoke",
     "format_readiness_blocked_reason",
     "read_pit_tradability_readiness",
+    "profile_duplicate_fingerprints",
     "read_canonical",
     "read_backtrader_clean_feed",
     "read_auxiliary_inputs",
@@ -3195,14 +4089,20 @@ __all__ = [
     "read_execution_feed",
     "read_exposure_inputs",
     "read_adjustment_audit_inputs",
+    "build_reader_audit_record",
     "read_adjusted_view",
+    "read_dataset_via_duckdb_contract",
     "read_factor_panel",
     "read_index_universe",
     "read_lightweight_input",
+    "read_panel",
+    "read_panel_as_of",
     "read_research_inputs",
     "read_stock_lifecycle",
     "read_tradability_inputs",
     "single_policy_gate",
     "evaluate_corporate_action_availability",
     "extract_adj_factor_lineage",
+    "evaluate_reader_schema_contract",
+    "UnknownDatasetError",
 ]

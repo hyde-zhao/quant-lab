@@ -117,6 +117,10 @@ class BenchmarkDefinition:
     index_code: str
     provider_symbol: str
     required_for_publish: bool = CR018_BENCHMARK_REQUIRED_FOR_PUBLISH
+    version: str = "benchmark-config-v1"
+    effective_from: str = "2026-06-30"
+    release_id: str = "config-facts-cr139-v1"
+    risk_free_curve_ref: str = "config_facts/risk_free_curve/cn_cgb_1y/config-facts-cr139-v1"
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)

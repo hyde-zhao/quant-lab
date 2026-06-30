@@ -24,6 +24,14 @@ QMT_SIMULATION_SUBMIT_SCOPE = "qmt:simulation:submit"
 QMT_SIMULATION_CANCEL_ENDPOINT_ID = "cancel_simulation"
 QMT_SIMULATION_CANCEL_PATH = "/qmt/simulation/orders/cancel"
 QMT_SIMULATION_CANCEL_SCOPE = "qmt:simulation:cancel"
+COST_PRETRADE_GATE_ALLOWED = "allowed"
+COST_PRETRADE_GATE_BLOCKED = "blocked"
+COST_SCHEDULE_MISSING = "cost_schedule_missing"
+COST_SCHEDULE_VERSION_MISSING = "cost_schedule_version_missing"
+COST_MODEL_REF_MISSING = "cost_model_ref_missing"
+LIQUIDITY_REF_MISSING = "liquidity_ref_missing"
+TRADABILITY_UNAVAILABLE = "tradability_unavailable"
+ORDER_NOTIONAL_INVALID = "order_notional_invalid"
 
 QMT_GATEWAY_FORBIDDEN_COUNTER_FIELDS: tuple[str, ...] = (
     "dependency_change",
@@ -1001,6 +1009,12 @@ class CommissionSchedule:
     source: str
     authorization_ref: str = ""
     freshness: str = ""
+    version: str = "commission-config-v1"
+    effective_from: str = "2026-06-30"
+    release_id: str = "config-facts-cr139-v1"
+    slippage_bps: float = 0.0
+    stamp_duty_rate: float = 0.0
+    transfer_fee_rate: float = 0.0
     schema_version: str = CR138_GATEWAY_SERVICE_SCHEMA_VERSION
 
     def to_dict(self) -> dict[str, object]:
@@ -1012,6 +1026,12 @@ class CommissionSchedule:
             "source": self.source,
             "authorization_ref": self.authorization_ref,
             "freshness": self.freshness,
+            "version": self.version,
+            "effective_from": self.effective_from,
+            "release_id": self.release_id,
+            "slippage_bps": self.slippage_bps,
+            "stamp_duty_rate": self.stamp_duty_rate,
+            "transfer_fee_rate": self.transfer_fee_rate,
         }
 
 
@@ -1033,6 +1053,142 @@ class CostEstimate:
             "schedule_source": self.schedule_source,
             "broker_fact": self.broker_fact,
         }
+
+
+@dataclass(frozen=True, slots=True)
+class CostPretradeGateInput:
+    order_intent_ref: str
+    notional: float
+    side: str
+    tradability_status: str
+    schedule: CommissionSchedule | None = None
+    cost_model_ref: str = ""
+    liquidity_ref: str = ""
+    schema_version: str = CR138_GATEWAY_SERVICE_SCHEMA_VERSION
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "schema_version": self.schema_version,
+            "order_intent_ref": self.order_intent_ref,
+            "notional": self.notional,
+            "side": self.side,
+            "tradability_status": self.tradability_status,
+            "schedule": self.schedule.to_dict() if self.schedule else None,
+            "cost_model_ref": self.cost_model_ref,
+            "liquidity_ref": self.liquidity_ref,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class CostPretradeGateDecision:
+    order_intent_ref: str
+    status: str
+    blocked_reasons: tuple[str, ...] = ()
+    estimated_total_cost: float = 0.0
+    schedule_version: str = ""
+    schedule_release_id: str = ""
+    cost_model_ref: str = ""
+    liquidity_ref: str = ""
+    operation_counters: Mapping[str, int] = field(
+        default_factory=lambda: {key: 0 for key in QMT_GATEWAY_FORBIDDEN_COUNTER_FIELDS}
+    )
+    schema_version: str = CR138_GATEWAY_SERVICE_SCHEMA_VERSION
+
+    @property
+    def allowed(self) -> bool:
+        return self.status == COST_PRETRADE_GATE_ALLOWED
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "schema_version": self.schema_version,
+            "order_intent_ref": self.order_intent_ref,
+            "status": self.status,
+            "allowed": self.allowed,
+            "blocked_reasons": list(self.blocked_reasons),
+            "estimated_total_cost": self.estimated_total_cost,
+            "schedule_version": self.schedule_version,
+            "schedule_release_id": self.schedule_release_id,
+            "cost_model_ref": self.cost_model_ref,
+            "liquidity_ref": self.liquidity_ref,
+            "operation_counters": dict(self.operation_counters),
+        }
+
+
+def evaluate_cost_pretrade_gate(
+    gate_input: CostPretradeGateInput | Mapping[str, object],
+) -> CostPretradeGateDecision:
+    """Evaluate local cost/tradability evidence before any broker/runtime call."""
+
+    request = _cost_gate_input(gate_input)
+    schedule = request.schedule
+    reasons: list[str] = []
+    if schedule is None:
+        reasons.append(COST_SCHEDULE_MISSING)
+    elif not (schedule.version and schedule.release_id and schedule.effective_from):
+        reasons.append(COST_SCHEDULE_VERSION_MISSING)
+    if not request.cost_model_ref:
+        reasons.append(COST_MODEL_REF_MISSING)
+    if not request.liquidity_ref:
+        reasons.append(LIQUIDITY_REF_MISSING)
+    if str(request.tradability_status).strip().lower() not in {"available", "tradable", "pass", "ready"}:
+        reasons.append(TRADABILITY_UNAVAILABLE)
+    if request.notional <= 0:
+        reasons.append(ORDER_NOTIONAL_INVALID)
+
+    status = COST_PRETRADE_GATE_BLOCKED if reasons else COST_PRETRADE_GATE_ALLOWED
+    return CostPretradeGateDecision(
+        order_intent_ref=request.order_intent_ref,
+        status=status,
+        blocked_reasons=tuple(reasons),
+        estimated_total_cost=0.0 if reasons or schedule is None else _estimated_pretrade_cost(request),
+        schedule_version=schedule.version if schedule else "",
+        schedule_release_id=schedule.release_id if schedule else "",
+        cost_model_ref=request.cost_model_ref,
+        liquidity_ref=request.liquidity_ref,
+    )
+
+
+def _cost_gate_input(value: CostPretradeGateInput | Mapping[str, object]) -> CostPretradeGateInput:
+    if isinstance(value, CostPretradeGateInput):
+        return value
+    payload = dict(value)
+    raw_schedule = payload.get("schedule")
+    schedule = raw_schedule if isinstance(raw_schedule, CommissionSchedule) else None
+    if schedule is None and isinstance(raw_schedule, Mapping):
+        schedule = CommissionSchedule(
+            instrument_type=str(raw_schedule.get("instrument_type") or ""),
+            rate=float(raw_schedule.get("rate") or 0.0),
+            min_fee=float(raw_schedule.get("min_fee") or 0.0),
+            source=str(raw_schedule.get("source") or ""),
+            authorization_ref=str(raw_schedule.get("authorization_ref") or ""),
+            freshness=str(raw_schedule.get("freshness") or ""),
+            version=str(raw_schedule.get("version") or ""),
+            effective_from=str(raw_schedule.get("effective_from") or ""),
+            release_id=str(raw_schedule.get("release_id") or ""),
+            slippage_bps=float(raw_schedule.get("slippage_bps") or 0.0),
+            stamp_duty_rate=float(raw_schedule.get("stamp_duty_rate") or 0.0),
+            transfer_fee_rate=float(raw_schedule.get("transfer_fee_rate") or 0.0),
+        )
+    return CostPretradeGateInput(
+        order_intent_ref=str(payload.get("order_intent_ref") or ""),
+        notional=float(payload.get("notional") or 0.0),
+        side=str(payload.get("side") or ""),
+        tradability_status=str(payload.get("tradability_status") or ""),
+        schedule=schedule,
+        cost_model_ref=str(payload.get("cost_model_ref") or ""),
+        liquidity_ref=str(payload.get("liquidity_ref") or ""),
+    )
+
+
+def _estimated_pretrade_cost(request: CostPretradeGateInput) -> float:
+    schedule = request.schedule
+    if schedule is None:
+        return 0.0
+    base_fee = max(request.notional * schedule.rate, schedule.min_fee)
+    slippage = request.notional * schedule.slippage_bps / 10_000
+    stamp_duty = request.notional * schedule.stamp_duty_rate if request.side.strip().lower() == "sell" else 0.0
+    transfer_fee = request.notional * schedule.transfer_fee_rate
+    return round(base_fee + slippage + stamp_duty + transfer_fee, 6)
 
 
 @dataclass(frozen=True, slots=True)

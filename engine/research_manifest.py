@@ -27,8 +27,10 @@ from engine.research_paths import research_report_path
 
 MANIFEST_SCHEMA_VERSION = "experiment_manifest_v1"
 CATALOG_SCHEMA_VERSION = "research_report_catalog_v1"
+CR139_CLOSURE_SCHEMA_VERSION = "cr139_experiment_manifest_closure_v1"
 ARTIFACT_SCHEMA_VERSION = "v1"
 INTERNAL_TRUTH_SOURCE = "project_json_csv_markdown_artifacts"
+CR139_S29_CORRECTNESS_STANDARD_REF = "process/stories/CR139-S29-pit-dedup-correctness-standard-LLD.md"
 
 MF_SCHEMA_REQUIRED_FIELD_MISSING = "MF_SCHEMA_REQUIRED_FIELD_MISSING"
 MF_CONFIG_HASH_MISSING = "MF_CONFIG_HASH_MISSING"
@@ -38,6 +40,8 @@ MF_REPORT_ARTIFACT_PATH_FORBIDDEN = "MF_REPORT_ARTIFACT_PATH_FORBIDDEN"
 MF_REPORT_ARTIFACT_EXISTS = "MF_REPORT_ARTIFACT_EXISTS"
 MF_PROVIDER_OR_LAKE_NOT_AUTHORIZED = "MF_PROVIDER_OR_LAKE_NOT_AUTHORIZED"
 MF_ADMISSION_NOT_READY = "MF_ADMISSION_NOT_READY"
+MF_CR139_S29_STANDARD_MISSING = "MF_CR139_S29_STANDARD_MISSING"
+MF_CR139_SNAPSHOT_MISMATCH = "MF_CR139_SNAPSHOT_MISMATCH"
 
 MANIFEST_P0_FIELDS = (
     "run_id",
@@ -149,6 +153,70 @@ class ManifestValidationResult:
 
 
 @dataclass(frozen=True, slots=True)
+class PublishedDatasetSnapshotRef:
+    snapshot_id: str
+    dataset: str
+    published_path: str
+    as_of_trade_date: str
+    as_of_timestamp: str
+    lineage_checksum: str
+    content_hash: str
+    primary_keys: tuple[str, ...] = ()
+    duplicate_policy: str = "fail_closed"
+
+    def to_dict(self) -> dict[str, Any]:
+        return _json_safe(asdict(self))
+
+
+@dataclass(frozen=True, slots=True)
+class ExperimentSplitPolicy:
+    split_id: str
+    train_start: str
+    train_end: str
+    validation_start: str
+    validation_end: str
+    test_start: str
+    test_end: str
+    cutoff_date: str
+    embargo_days: int
+    label_horizon_days: int
+
+    def to_dict(self) -> dict[str, Any]:
+        return _json_safe(asdict(self))
+
+
+@dataclass(frozen=True, slots=True)
+class ModelArtifactRef:
+    model_id: str
+    artifact_path: str
+    artifact_hash: str
+    dataset_snapshot_hash: str
+    feature_artifact_refs: tuple[str, ...] = ()
+
+    def to_dict(self) -> dict[str, Any]:
+        return _json_safe(asdict(self))
+
+
+@dataclass(frozen=True, slots=True)
+class ExperimentManifestClosure:
+    closure_id: str
+    run_id: str
+    published_dataset_snapshot: PublishedDatasetSnapshotRef
+    split_policy: ExperimentSplitPolicy
+    model_artifact: ModelArtifactRef
+    feature_artifact_refs: tuple[str, ...]
+    lineage_refs: tuple[str, ...]
+    s29_correctness_standard_ref: str = CR139_S29_CORRECTNESS_STANDARD_REF
+    schema_version: str = CR139_CLOSURE_SCHEMA_VERSION
+    source_of_truth: str = INTERNAL_TRUTH_SOURCE
+    permission_counters: Mapping[str, int] = field(default_factory=dict)
+    metadata: Mapping[str, Any] = field(default_factory=dict)
+
+    def to_dict(self) -> dict[str, Any]:
+        return _json_safe(asdict(self))
+
+
+@dataclass(frozen=True, slots=True)
 class ExperimentManifest:
     run_id: str
     strategy_id: str
@@ -236,6 +304,84 @@ def compute_experiment_config_hash(payload: Mapping[str, Any] | Any) -> str:
     """复用项目稳定 JSON hash，确保字段顺序不影响 manifest config_hash。"""
 
     return compute_config_hash(payload)
+
+
+def build_experiment_manifest_closure(
+    *,
+    closure_id: str,
+    run_id: str,
+    published_dataset_snapshot: PublishedDatasetSnapshotRef | Mapping[str, Any],
+    split_policy: ExperimentSplitPolicy | Mapping[str, Any],
+    model_artifact: ModelArtifactRef | Mapping[str, Any],
+    feature_artifact_refs: Sequence[str],
+    lineage_refs: Sequence[str],
+    s29_correctness_standard_ref: str = CR139_S29_CORRECTNESS_STANDARD_REF,
+    permission_counters: PermissionCounters | Mapping[str, Any] | None = None,
+    metadata: Mapping[str, Any] | None = None,
+) -> ExperimentManifestClosure:
+    return ExperimentManifestClosure(
+        closure_id=str(closure_id),
+        run_id=str(run_id),
+        published_dataset_snapshot=_snapshot_ref(published_dataset_snapshot),
+        split_policy=_split_policy(split_policy),
+        model_artifact=_model_artifact_ref(model_artifact),
+        feature_artifact_refs=tuple(str(item) for item in feature_artifact_refs),
+        lineage_refs=tuple(str(item) for item in lineage_refs),
+        s29_correctness_standard_ref=str(s29_correctness_standard_ref),
+        permission_counters=_normalise_permission_counters(permission_counters),
+        metadata=_json_safe(dict(metadata or {})),
+    )
+
+
+def validate_experiment_manifest_closure(
+    closure: ExperimentManifestClosure | Mapping[str, Any] | Any,
+) -> ManifestValidationResult:
+    data = _as_mapping(closure)
+    if data is None:
+        return _validation_result(
+            "ExperimentManifestClosure",
+            "",
+            (
+                _reason(
+                    MF_SCHEMA_REQUIRED_FIELD_MISSING,
+                    "ExperimentManifestClosure 必须是 dataclass 或 mapping",
+                    field="closure",
+                ),
+            ),
+        )
+
+    reasons: list[ManifestBlockedReason] = []
+    reasons.extend(_required_field_reasons(data, ("closure_id", "run_id", "published_dataset_snapshot", "split_policy", "model_artifact", "feature_artifact_refs", "lineage_refs", "s29_correctness_standard_ref")))
+    snapshot = _mapping_or_empty(data.get("published_dataset_snapshot"))
+    split = _mapping_or_empty(data.get("split_policy"))
+    model = _mapping_or_empty(data.get("model_artifact"))
+    reasons.extend(_required_field_reasons(snapshot, ("snapshot_id", "dataset", "published_path", "as_of_trade_date", "as_of_timestamp", "lineage_checksum", "content_hash", "primary_keys", "duplicate_policy")))
+    reasons.extend(_required_field_reasons(split, ("split_id", "train_start", "train_end", "validation_start", "validation_end", "test_start", "test_end", "cutoff_date", "embargo_days", "label_horizon_days")))
+    reasons.extend(_required_field_reasons(model, ("model_id", "artifact_path", "artifact_hash", "dataset_snapshot_hash", "feature_artifact_refs")))
+    if not str(data.get("s29_correctness_standard_ref") or "").endswith("CR139-S29-pit-dedup-correctness-standard-LLD.md"):
+        reasons.append(
+            _reason(
+                MF_CR139_S29_STANDARD_MISSING,
+                "S12 manifest closure 必须引用 S29 PIT/dedup correctness standard",
+                field="s29_correctness_standard_ref",
+            )
+        )
+    if snapshot.get("content_hash") and model.get("dataset_snapshot_hash") and snapshot["content_hash"] != model["dataset_snapshot_hash"]:
+        reasons.append(
+            _reason(
+                MF_CR139_SNAPSHOT_MISMATCH,
+                "model artifact 必须引用同一个 published dataset snapshot hash",
+                field="model_artifact.dataset_snapshot_hash",
+            )
+        )
+    if int(split.get("embargo_days") or 0) < 0:
+        reasons.append(_reason(MF_SCHEMA_REQUIRED_FIELD_MISSING, "embargo_days 不得为负数", field="split_policy.embargo_days"))
+    if int(split.get("label_horizon_days") or 0) <= 0:
+        reasons.append(_reason(MF_SCHEMA_REQUIRED_FIELD_MISSING, "label_horizon_days 必须为正数", field="split_policy.label_horizon_days"))
+    reasons.extend(_forbidden_truth_reasons(data))
+    counters = _normalise_permission_counters(data.get("permission_counters"))
+    reasons.extend(_permission_counter_reasons(counters))
+    return _validation_result("ExperimentManifestClosure", str(data.get("closure_id") or ""), tuple(reasons), counters)
 
 
 def build_experiment_manifest(
@@ -513,6 +659,54 @@ def write_research_catalog_artifacts(
 
     paths.markdown_path.write_text(_render_catalog_markdown(entry_tuple), encoding="utf-8")
     return ResearchCatalogWriteResult(status=CatalogStatus.PASS.value, artifact_refs=tuple(paths.to_dict().values()))
+
+
+def _snapshot_ref(value: PublishedDatasetSnapshotRef | Mapping[str, Any] | Any) -> PublishedDatasetSnapshotRef:
+    if isinstance(value, PublishedDatasetSnapshotRef):
+        return value
+    data = _as_mapping(value) or {}
+    return PublishedDatasetSnapshotRef(
+        snapshot_id=str(data.get("snapshot_id") or ""),
+        dataset=str(data.get("dataset") or ""),
+        published_path=str(data.get("published_path") or ""),
+        as_of_trade_date=str(data.get("as_of_trade_date") or ""),
+        as_of_timestamp=str(data.get("as_of_timestamp") or ""),
+        lineage_checksum=str(data.get("lineage_checksum") or ""),
+        content_hash=str(data.get("content_hash") or ""),
+        primary_keys=tuple(str(item) for item in data.get("primary_keys") or ()),
+        duplicate_policy=str(data.get("duplicate_policy") or "fail_closed"),
+    )
+
+
+def _split_policy(value: ExperimentSplitPolicy | Mapping[str, Any] | Any) -> ExperimentSplitPolicy:
+    if isinstance(value, ExperimentSplitPolicy):
+        return value
+    data = _as_mapping(value) or {}
+    return ExperimentSplitPolicy(
+        split_id=str(data.get("split_id") or ""),
+        train_start=str(data.get("train_start") or ""),
+        train_end=str(data.get("train_end") or ""),
+        validation_start=str(data.get("validation_start") or ""),
+        validation_end=str(data.get("validation_end") or ""),
+        test_start=str(data.get("test_start") or ""),
+        test_end=str(data.get("test_end") or ""),
+        cutoff_date=str(data.get("cutoff_date") or ""),
+        embargo_days=int(data.get("embargo_days") or 0),
+        label_horizon_days=int(data.get("label_horizon_days") or 0),
+    )
+
+
+def _model_artifact_ref(value: ModelArtifactRef | Mapping[str, Any] | Any) -> ModelArtifactRef:
+    if isinstance(value, ModelArtifactRef):
+        return value
+    data = _as_mapping(value) or {}
+    return ModelArtifactRef(
+        model_id=str(data.get("model_id") or ""),
+        artifact_path=str(data.get("artifact_path") or ""),
+        artifact_hash=str(data.get("artifact_hash") or ""),
+        dataset_snapshot_hash=str(data.get("dataset_snapshot_hash") or ""),
+        feature_artifact_refs=tuple(str(item) for item in data.get("feature_artifact_refs") or ()),
+    )
 
 
 def _catalog_entries(
