@@ -1,0 +1,11 @@
+dataset,final_status,issue_code,issue_category,remediation,evidence_path,target_window_covered,old_baseline_preserved
+prices,limited_window_only,target_window_not_covered_prices,data_gap,Backfill 2020-01-01..2024-12-31 after authorization,reports/data_lake_readiness_2020_2024/readiness_summary.md,False,True
+adj_factor,limited_window_only,target_window_not_covered_adj_factor,data_gap,Backfill 2020-01-01..2024-12-31 after authorization,reports/data_lake_readiness_2020_2024/readiness_summary.md,False,True
+hs300_index,limited_window_only,target_window_not_covered_hs300_index,data_gap,Backfill 2020-01-01..2024-12-31 after authorization,reports/data_lake_readiness_2020_2024/readiness_summary.md,False,True
+trade_calendar,limited_window_only,target_window_not_covered_trade_calendar,data_gap,Backfill 2020-01-01..2024-12-31 after authorization,reports/data_lake_readiness_2020_2024/readiness_summary.md,False,True
+index_members,limited_window_only,target_window_not_covered_index_members,data_gap,Backfill 2020-01-01..2024-12-31 after authorization,reports/data_lake_readiness_2020_2024/readiness_summary.md,False,True
+index_weights,limited_window_only,target_window_not_covered_index_weights,data_gap,Backfill 2020-01-01..2024-12-31 after authorization,reports/data_lake_readiness_2020_2024/readiness_summary.md,False,True
+stock_basic,limited_window_only,target_window_not_covered_stock_basic,data_gap,Backfill 2020-01-01..2024-12-31 after authorization,reports/data_lake_readiness_2020_2024/readiness_summary.md,False,True
+trade_status,limited_window_only,target_window_not_covered_trade_status,data_gap,Backfill 2020-01-01..2024-12-31 after authorization,reports/data_lake_readiness_2020_2024/readiness_summary.md,False,True
+prices_limit,limited_window_only,target_window_not_covered_prices_limit,data_gap,Backfill 2020-01-01..2024-12-31 after authorization,reports/data_lake_readiness_2020_2024/readiness_summary.md,False,True
+events,limited_window_only,target_window_not_covered_events,data_gap,Backfill 2020-01-01..2024-12-31 after authorization,reports/data_lake_readiness_2020_2024/readiness_summary.md,False,True

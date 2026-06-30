@@ -4,7 +4,7 @@ import csv
 from pathlib import Path
 
 
-REPORT_DIR = Path("reports/data_lake_readiness_2020_2024_cr013")
+REPORT_DIR = Path("tests/fixtures/cr013/data_lake_readiness_2020_2024_cr013")
 GAP_REGISTER = REPORT_DIR / "full_history_gap_register.csv"
 GAP_SUMMARY = REPORT_DIR / "full_history_gap_summary.md"
 
@@ -65,4 +65,3 @@ def test_full_history_forbidden_operation_counters_are_zero() -> None:
         "old_report_overwrites",
     ):
         assert f"| {counter} | 0 |" in summary
-

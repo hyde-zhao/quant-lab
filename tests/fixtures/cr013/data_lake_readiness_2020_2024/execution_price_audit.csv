@@ -1,0 +1,2 @@
+logical_dataset,source_dataset,reader_status,execution_price_status,missing_ohlcv_columns,true_vwap_available_count,vwap_status,blocked_claims,remediation
+execution_price,prices,required_missing,required_missing,open;high;low;vwap,0,required_missing,real_vwap_execution;vwap_fill_claim;minute_execution;order_match_execution,Publish real OHLCV/VWAP fields and pass execution audit before any production claim.

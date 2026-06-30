@@ -1,0 +1,10 @@
+data_item,status,reason,pass_denominator
+industry_classification,research_contract_only,No production current truth for industry classification in full-history window,excluded
+market_cap,research_contract_only,No production current truth for market cap in full-history window,excluded
+style_exposure_beta_size_value_quality,unsupported,No style exposure model artifact authorized,excluded
+capacity_inputs_turnover_adv_constraints,research_contract_only,Capacity inputs remain research-only,excluded
+corporate_actions_full,contract_supported_but_unavailable,Full corporate action audit is not available for the blocked window,excluded
+non_hs300_benchmark,research_contract_only,Only proxy/non-production benchmark handling is available,excluded
+minute_tick_level2_order_match,unsupported,Minute/tick/level2/order-match execution data is unavailable,excluded
+microstructure_impact_cost,unsupported,Microstructure impact-cost model is unavailable,excluded
+real_vwap_execution,contract_supported_but_unavailable,Real VWAP execution audit is unavailable,excluded

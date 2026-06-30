@@ -11,8 +11,8 @@ from engine.research_dataset import (
 )
 
 
-AUDIT_PATH = Path("reports/data_lake_readiness_2020_2024/execution_price_audit.csv")
-BOUNDARY_REPORT = Path("reports/data_lake_readiness_2020_2024_cr013/execution_claim_boundary.md")
+AUDIT_PATH = Path("tests/fixtures/cr013/data_lake_readiness_2020_2024/execution_price_audit.csv")
+BOUNDARY_REPORT = Path("tests/fixtures/cr013/data_lake_readiness_2020_2024_cr013/execution_claim_boundary.md")
 
 
 def test_execution_audit_resolves_real_vwap_and_fill_as_blocked() -> None:
@@ -60,4 +60,3 @@ def test_execution_claim_metadata_and_report_preserve_boundaries() -> None:
     assert "amount/volume` 不得派生为真实 VWAP" in report
     for counter in ("provider_fetches", "lake_writes", "credential_reads", "legacy_data_reads", "old_report_overwrites"):
         assert f"| {counter} | 0 |" in report
-

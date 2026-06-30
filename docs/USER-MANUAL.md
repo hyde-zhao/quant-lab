@@ -344,6 +344,12 @@ CR-015 只覆盖 QMT foundation 的 `shadow`、`dry_run`、`mock` 和 [QMT-TRADI
 
 缺少任一 gate 时，真实 QMT、真实发单、撤单、账户查询、凭据读取、真实 broker lake 写入、真实抓取、真实 lake 写入和 publish 都保持 blocked。
 
+### 7.6 CR-013 full-history / unsupported 声明边界
+
+CR-013 将 limited-window 研究证据和 full-history 声明边界分开：`2025-02-11..2026-02-18` 只表示 supported limited window；`2020-01-01..2024-12-31` 仍保持 blocked window，当前 full-history 状态为 `research_limited_only`，不能声明为 production strict pass。
+
+unsupported register 中的 research_only / research-only、unsupported 和 blocked 项不进入正式 pass denominator。`real_vwap_execution`、VWAP fill、minute / tick / Level2 / order-match execution 和 microstructure impact cost 都保持 blocked / unsupported；任何解除 blocked 状态都需要独立 Story、CP5 和用户显式授权。
+
 ## 8. 模块七：日常运维
 
 ### 8.1 盘前

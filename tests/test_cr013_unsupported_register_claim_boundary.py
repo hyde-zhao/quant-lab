@@ -13,8 +13,8 @@ from engine.research_reporting import (
 )
 
 
-REGISTER_PATH = Path("reports/data_lake_readiness_limited_2025_2026/unsupported_data_register.csv")
-SUMMARY_PATH = Path("reports/data_lake_readiness_2020_2024_cr013/unsupported_claim_boundary_summary.md")
+REGISTER_PATH = Path("tests/fixtures/cr013/data_lake_readiness_limited_2025_2026/unsupported_data_register.csv")
+SUMMARY_PATH = Path("tests/fixtures/cr013/data_lake_readiness_2020_2024_cr013/unsupported_claim_boundary_summary.md")
 README_PATH = Path("README.md")
 USER_MANUAL_PATH = Path("docs/USER-MANUAL.md")
 
@@ -42,7 +42,7 @@ def test_unsupported_register_exact_rows_and_excluded_denominator() -> None:
 
 def test_claim_boundary_summary_merges_s01_s02_and_excludes_denominator() -> None:
     rows = read_unsupported_data_register(REGISTER_PATH)
-    audit = read_execution_price_audit("reports/data_lake_readiness_2020_2024/execution_price_audit.csv")
+    audit = read_execution_price_audit("tests/fixtures/cr013/data_lake_readiness_2020_2024/execution_price_audit.csv")
     execution_boundary = resolve_execution_claim_boundary(audit)
     summary = build_claim_boundary_summary(
         rows,
@@ -88,4 +88,3 @@ def test_docs_and_report_show_supported_research_only_unsupported_blocked_bounda
     assert '"unsupported_data_item_count": 9' in summary
     for counter in ("provider_fetches", "lake_writes", "credential_reads", "legacy_data_reads", "old_report_overwrites"):
         assert f"| {counter} | 0 |" in summary
-

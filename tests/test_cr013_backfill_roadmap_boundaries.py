@@ -6,7 +6,7 @@ from engine.research_paths import RESEARCH_REPORT_ROOT
 
 
 ROADMAP_DOC = Path("process/docs/source-archive/docs/DATA-LAKE-FULL-HISTORY-BACKFILL-ROADMAP.md")
-ROADMAP_REPORT = RESEARCH_REPORT_ROOT / "data_lake_readiness_2020_2024_cr013" / "backfill_roadmap.md"
+ROADMAP_REPORT = Path("tests/fixtures/cr013/data_lake_readiness_2020_2024_cr013/backfill_roadmap.md")
 
 FORMAL_DATASETS = (
     "prices",
