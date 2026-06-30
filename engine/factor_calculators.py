@@ -69,6 +69,9 @@ def compute_equity_factor_matrices(
     """计算通用权益因子矩阵。
 
     调用方负责提供已经离线准备好的价格、收益、股票池和可交易性矩阵。
+    `additional_definitions` 会参与 factor direction 解析；当 custom calculator
+    与 additional definition 同名时，`directional_matrices` 会按该 definition.direction
+    应用方向转换。
     本函数不读取凭据、不抓取 provider、不写 lake。
     """
 
