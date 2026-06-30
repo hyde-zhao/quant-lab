@@ -284,14 +284,17 @@ def fama_macbeth_regression(
 
 
 def _quantile_groups(values: pd.Series, groups: int) -> pd.Series:
-    ranks = values.rank(method="first")
-    if ranks.notna().sum() < groups:
+    clean = values.dropna()
+    if len(clean) < groups or clean.nunique() < 2:
         return pd.Series(index=values.index, dtype="float64")
+    ranks = clean.rank(method="first")
     try:
         labels = pd.qcut(ranks, groups, labels=False, duplicates="drop")
     except ValueError:
         return pd.Series(index=values.index, dtype="float64")
-    return pd.Series(labels, index=values.index, dtype="float64") + 1
+    result = pd.Series(index=values.index, dtype="float64")
+    result.loc[labels.index] = labels.astype(float) + 1.0
+    return result
 
 
 def _t_stat(values: pd.Series) -> float | None:

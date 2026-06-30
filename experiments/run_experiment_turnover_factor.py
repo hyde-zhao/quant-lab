@@ -38,6 +38,12 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
+from engine.factor_calculators import calculate_abnormal_turnover_21_252
+from engine.factor_statistics import (
+    conditional_double_sort_returns,
+    independent_double_sort_returns,
+    single_sort_returns,
+)
 from engine.research_paths import research_report_path, research_run_path
 
 # ---------------------------------------------------------------------------
@@ -344,12 +350,14 @@ def calculate_abnormal_turnover(
 
     abnormal_turnover = mean(turnover, short_window) / mean(turnover, long_window)
     """
-    short_mean = turnover_df.rolling(short_window, min_periods=short_min_periods).mean()
-    long_mean = turnover_df.rolling(long_window, min_periods=long_min_periods).mean()
-    result = short_mean / long_mean
-    # 剔除极端值（>10 倍或 <0.1 倍视为异常）
-    result = result.clip(lower=0.01, upper=10.0)
-    return result
+    return calculate_abnormal_turnover_21_252(
+        turnover_df,
+        short_window=short_window,
+        long_window=long_window,
+        short_min_periods=short_min_periods,
+        long_min_periods=long_min_periods,
+        clip_bounds=(0.01, 10.0),
+    )
 
 
 def build_forward_return_20d(close_df: pd.DataFrame) -> pd.DataFrame:
@@ -579,34 +587,19 @@ def run_experiment_a(
 ) -> GroupResult:
     """实验A：单变量排序."""
     print(f"\n[实验A] 单变量排序，调仓日: {len(rebalance_dates)}")
-    rows: list[dict[str, Any]] = []
-
-    for td in rebalance_dates:
-        if td not in abnormal_turnover.index:
-            continue
-        factor = abnormal_turnover.loc[td]
-        fwd = forward_returns.loc[td]
-        mask = valid_mask.loc[td] if td in valid_mask.index else pd.Series(True, index=factor.index)
-
-        valid = pd.DataFrame({"factor": factor, "forward_return": fwd})
-        valid = valid[mask.reindex(valid.index, fill_value=False)]
-        valid = valid.dropna()
-
-        if len(valid) < group_count * 2:
-            continue
-
-        valid["group"] = assign_quantile_groups(valid["factor"], group_count)
-        valid = valid.dropna(subset=["group"])
-
-        for gid, grp in valid.groupby("group"):
-            rows.append({
-                "date": td,
-                "group": int(gid),
-                "mean_return": float(grp["forward_return"].mean()),
-                "n_stocks": len(grp),
-            })
-
-    ts = pd.DataFrame(rows)
+    factor_matrix, forward_matrix, _ = _masked_rebalance_matrices(
+        abnormal_turnover,
+        forward_returns,
+        valid_mask,
+        rebalance_dates,
+    )
+    sort_returns = single_sort_returns(
+        factor_matrix,
+        forward_matrix,
+        quantiles=group_count,
+        min_cross_section=group_count * 2,
+    )
+    ts = _single_sort_to_legacy(sort_returns)
     if ts.empty:
         raise RuntimeError("实验A：无有效分组数据")
 
@@ -644,6 +637,105 @@ def run_experiment_a(
     )
 
 
+def _masked_rebalance_matrices(
+    factor: pd.DataFrame,
+    forward_returns: pd.DataFrame,
+    valid_mask: pd.DataFrame,
+    rebalance_dates: list[date],
+    *,
+    market_cap_df: pd.DataFrame | None = None,
+) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame | None]:
+    selected_dates = [
+        td
+        for td in rebalance_dates
+        if td in factor.index
+        and td in forward_returns.index
+        and (market_cap_df is None or td in market_cap_df.index)
+    ]
+    mask = valid_mask.reindex(
+        index=factor.index,
+        columns=factor.columns,
+        fill_value=False,
+    ).astype(bool)
+    factor_matrix = factor.where(mask).loc[selected_dates]
+    forward_mask = mask.reindex(
+        index=forward_returns.index,
+        columns=forward_returns.columns,
+        fill_value=False,
+    )
+    forward_matrix = forward_returns.where(forward_mask).loc[selected_dates]
+    if market_cap_df is None:
+        return factor_matrix, forward_matrix, None
+    size_mask = mask.reindex(
+        index=market_cap_df.index,
+        columns=market_cap_df.columns,
+        fill_value=False,
+    )
+    size_matrix = market_cap_df.where(size_mask).loc[selected_dates]
+    return factor_matrix, forward_matrix, size_matrix
+
+
+def _single_sort_to_legacy(sort_returns: pd.DataFrame) -> pd.DataFrame:
+    if sort_returns.empty:
+        return pd.DataFrame(columns=["date", "group", "mean_return", "n_stocks"])
+    output = sort_returns.rename(
+        columns={
+            "trade_date": "date",
+            "mean_forward_return": "mean_return",
+            "symbol_count": "n_stocks",
+        }
+    )[["date", "group", "mean_return", "n_stocks"]].copy()
+    output["date"] = pd.to_datetime(output["date"]).dt.date
+    output["group"] = output["group"].astype(int)
+    return output
+
+
+def _double_sort_to_legacy(sort_returns: pd.DataFrame, *, conditional: bool) -> pd.DataFrame:
+    if sort_returns.empty:
+        return pd.DataFrame(columns=["date", "size_group", "turnover_group", "mean_return", "n_stocks"])
+    size_column = "conditioning_group" if conditional else "size_group"
+    output = sort_returns.rename(
+        columns={
+            "trade_date": "date",
+            size_column: "size_group",
+            "factor_group": "turnover_group",
+            "mean_forward_return": "mean_return",
+            "symbol_count": "n_stocks",
+        }
+    )[["date", "size_group", "turnover_group", "mean_return", "n_stocks"]].copy()
+    output["date"] = pd.to_datetime(output["date"]).dt.date
+    output["size_group"] = output["size_group"].astype(int)
+    output["turnover_group"] = output["turnover_group"].astype(int)
+    return output
+
+
+def _double_sort_spreads(cell_df: pd.DataFrame, group_count: int) -> pd.DataFrame:
+    rows: list[dict[str, Any]] = []
+    columns = ["date", "size_group", "turnover_spread"]
+    if cell_df.empty:
+        return pd.DataFrame(columns=columns)
+    pivot = cell_df.pivot_table(
+        index=["date", "size_group"],
+        columns="turnover_group",
+        values="mean_return",
+        aggfunc="mean",
+    )
+    for (trade_date, size_group), row in pivot.iterrows():
+        if 1 not in row.index or group_count not in row.index:
+            continue
+        low = row[1]
+        high = row[group_count]
+        if pd.notna(low) and pd.notna(high):
+            rows.append(
+                {
+                    "date": trade_date,
+                    "size_group": int(size_group),
+                    "turnover_spread": float(low - high),
+                }
+            )
+    return pd.DataFrame(rows, columns=columns)
+
+
 def _double_sort_core(
     abnormal_turnover: pd.DataFrame,
     market_cap_df: pd.DataFrame,
@@ -660,75 +752,31 @@ def _double_sort_core(
     """
     mode = "条件" if conditional else "独立"
     print(f"\n[实验{'C' if conditional else 'B'}] {mode}双重排序，调仓日: {len(rebalance_dates)}")
-    cell_rows: list[dict[str, Any]] = []
-    spread_rows: list[dict[str, Any]] = []
-
-    for td in rebalance_dates:
-        if td not in abnormal_turnover.index or td not in market_cap_df.index:
-            continue
-        factor = abnormal_turnover.loc[td]
-        cap = market_cap_df.loc[td]
-        fwd = forward_returns.loc[td]
-        mask = valid_mask.loc[td] if td in valid_mask.index else pd.Series(True, index=factor.index)
-
-        valid = pd.DataFrame({"factor": factor, "market_cap": cap, "forward_return": fwd})
-        valid = valid[mask.reindex(valid.index, fill_value=False)]
-        valid = valid.dropna()
-
-        if len(valid) < group_count * 2:
-            continue
-
-        # 第一步：市值分组（全市场）
-        valid["size_group"] = assign_quantile_groups(valid["market_cap"], group_count)
-        valid = valid.dropna(subset=["size_group"])
-
-        # 第二步：换手率分组
-        if conditional:
-            # 条件排序：在每个市值组内部按换手率分组
-            valid["turnover_group"] = pd.NA
-            for sg in range(1, group_count + 1):
-                mask_sg = valid["size_group"] == sg
-                idx_sg = valid.index[mask_sg]
-                if len(idx_sg) < group_count:
-                    continue
-                sub_groups = assign_quantile_groups(
-                    valid.loc[idx_sg, "factor"], group_count
-                )
-                valid.loc[idx_sg, "turnover_group"] = sub_groups
-        else:
-            # 独立排序：全市场统一按换手率分组
-            valid["turnover_group"] = assign_quantile_groups(valid["factor"], group_count)
-
-        valid = valid.dropna(subset=["turnover_group"])
-        valid["turnover_group"] = valid["turnover_group"].astype(int)
-        valid["size_group"] = valid["size_group"].astype(int)
-
-        # 计算 25 个格子的平均收益
-        for (sg, tg), grp in valid.groupby(["size_group", "turnover_group"]):
-            cell_rows.append({
-                "date": td,
-                "size_group": int(sg),
-                "turnover_group": int(tg),
-                "mean_return": float(grp["forward_return"].mean()),
-                "n_stocks": len(grp),
-            })
-
-        # 每个市值组内换手率价差 (G1 - G5)
-        for sg in range(1, group_count + 1):
-            sub = valid[valid["size_group"] == sg]
-            if sub.empty:
-                continue
-            low = sub[sub["turnover_group"] == 1]["forward_return"]
-            high = sub[sub["turnover_group"] == group_count]["forward_return"]
-            if len(low) > 0 and len(high) > 0:
-                spread_rows.append({
-                    "date": td,
-                    "size_group": int(sg),
-                    "turnover_spread": float(low.mean() - high.mean()),
-                })
-
-    cell_df = pd.DataFrame(cell_rows)
-    spread_df = pd.DataFrame(spread_rows)
+    factor_matrix, forward_matrix, size_matrix = _masked_rebalance_matrices(
+        abnormal_turnover,
+        forward_returns,
+        valid_mask,
+        rebalance_dates,
+        market_cap_df=market_cap_df,
+    )
+    if conditional:
+        sort_returns = conditional_double_sort_returns(
+            size_matrix,
+            factor_matrix,
+            forward_matrix,
+            groups=group_count,
+            min_cross_section=group_count * 2,
+        )
+    else:
+        sort_returns = independent_double_sort_returns(
+            factor_matrix,
+            size_matrix,
+            forward_matrix,
+            groups=group_count,
+            min_cross_section=group_count * 2,
+        )
+    cell_df = _double_sort_to_legacy(sort_returns, conditional=conditional)
+    spread_df = _double_sort_spreads(cell_df, group_count)
 
     if cell_df.empty:
         raise RuntimeError(f"实验{'C' if conditional else 'B'}：无有效双重排序数据")

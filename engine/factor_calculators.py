@@ -180,12 +180,35 @@ def _calculate_investment_asset_growth(context: FactorCalculationContext) -> pd.
 def _calculate_abnormal_turnover_21_252(context: FactorCalculationContext) -> pd.DataFrame | None:
     if context.turnover_matrix is None:
         return None
-    short_window = _window_min_periods(21, context.min_period_ratio)
-    long_window = _window_min_periods(252, context.min_period_ratio)
-    return (
-        context.turnover_matrix.rolling(21, min_periods=short_window).mean()
-        / context.turnover_matrix.rolling(252, min_periods=long_window).mean()
+    return calculate_abnormal_turnover_21_252(
+        context.turnover_matrix,
+        min_period_ratio=context.min_period_ratio,
     )
+
+
+def calculate_abnormal_turnover_21_252(
+    turnover_matrix: pd.DataFrame,
+    *,
+    short_window: int = 21,
+    long_window: int = 252,
+    short_min_periods: int | None = None,
+    long_min_periods: int | None = None,
+    min_period_ratio: float = 2.0 / 3.0,
+    clip_bounds: tuple[float, float] | None = None,
+) -> pd.DataFrame:
+    """计算 abnormal turnover 矩阵，不读取外部数据。"""
+
+    if short_min_periods is None:
+        short_min_periods = _window_min_periods(short_window, min_period_ratio)
+    if long_min_periods is None:
+        long_min_periods = _window_min_periods(long_window, min_period_ratio)
+    result = (
+        turnover_matrix.rolling(short_window, min_periods=short_min_periods).mean()
+        / turnover_matrix.rolling(long_window, min_periods=long_min_periods).mean()
+    )
+    if clip_bounds is not None:
+        result = result.clip(lower=clip_bounds[0], upper=clip_bounds[1])
+    return result
 
 
 def _missing_input_message(factor_id: str) -> str:
