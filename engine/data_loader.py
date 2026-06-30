@@ -32,6 +32,8 @@ from engine.research_paths import research_report_path
 from engine.source_registry import require_resolved_registry_key, SourceRegistryError
 from market_data.readers import LightweightInputRequest, read_lightweight_input
 
+DEFAULT_MANIFEST_PATH = Path("data/manifests/data_prep_manifest.jsonl")
+
 
 class DataLoaderError(Exception):
     """Data Loader 基础异常。"""
@@ -48,7 +50,7 @@ class DataQualityGateError(DataContractError):
 @dataclass(slots=True)
 class LoaderConfig:
     data_dir: str | Path = "data"
-    manifest_path: str | Path = "data/manifests/data_prep_manifest.jsonl"
+    manifest_path: str | Path = DEFAULT_MANIFEST_PATH
     quality_report_path: str | Path = research_report_path("data_quality_report.csv")
     input_mode: str = "legacy_flat"
     market_data_lake_root: str | Path | None = None
@@ -102,9 +104,10 @@ def load_backtest_data(config: LoaderConfig | dict[str, Any]) -> LoadedBacktestD
         for dataset, path in paths.items():
             if not path.exists():
                 raise DataContractError(f"缺少标准 parquet: dataset={dataset}, path={path}")
-        manifest_path = Path(cfg.manifest_path)
+        manifest_path = _resolve_manifest_path(cfg, data_dir)
         if not manifest_path.exists():
             raise DataContractError(f"缺少 manifest: {manifest_path}")
+        cfg.manifest_path = manifest_path
 
         frames = {
             dataset: _read_parquet_with_required_columns(dataset, path)
@@ -235,6 +238,16 @@ def _validate_legacy_flat_path(cfg: LoaderConfig) -> None:
 def _is_repo_data_default(value: str | Path) -> bool:
     path = Path(value)
     return not path.is_absolute() and (path.parts == ("data",) or path.parts[:1] == ("data",))
+
+
+def _resolve_manifest_path(cfg: LoaderConfig, data_dir: Path) -> Path:
+    manifest_path = Path(cfg.manifest_path)
+    if manifest_path != DEFAULT_MANIFEST_PATH or manifest_path.exists():
+        return manifest_path
+    data_dir_manifest = data_dir / "manifests" / DEFAULT_MANIFEST_PATH.name
+    if data_dir_manifest.exists():
+        return data_dir_manifest
+    return manifest_path
 
 
 def _coerce_config(config: LoaderConfig | dict[str, Any]) -> LoaderConfig:

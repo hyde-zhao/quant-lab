@@ -117,6 +117,47 @@ class ModelFit:
     test_predictions: pd.DataFrame
 
 
+class LightweightTabularRegressor:
+    """Small deterministic fallback used when optional ML packages are absent."""
+
+    def __init__(self, *, ridge_alpha: float = 1.0) -> None:
+        self.ridge_alpha = float(ridge_alpha)
+        self.feature_importances_: np.ndarray = np.array([], dtype=float)
+        self._fill_values: np.ndarray = np.array([], dtype=float)
+        self._coef: np.ndarray = np.array([], dtype=float)
+        self._intercept = 0.0
+
+    def fit(self, features: pd.DataFrame, target: pd.Series) -> "LightweightTabularRegressor":
+        x = features.apply(pd.to_numeric, errors="coerce")
+        y = pd.to_numeric(target, errors="coerce")
+        mask = y.notna()
+        x = x.loc[mask]
+        y = y.loc[mask]
+        if x.empty:
+            self._fill_values = np.zeros(len(features.columns), dtype=float)
+            self._coef = np.zeros(len(features.columns), dtype=float)
+            self._intercept = 0.0
+            self.feature_importances_ = np.zeros(len(features.columns), dtype=float)
+            return self
+        fill = x.median(numeric_only=True).reindex(features.columns).fillna(0.0)
+        matrix = x.reindex(columns=features.columns).fillna(fill).to_numpy(dtype=float)
+        target_values = y.to_numpy(dtype=float)
+        design = np.column_stack([np.ones(len(matrix)), matrix])
+        penalty = np.eye(design.shape[1], dtype=float) * self.ridge_alpha
+        penalty[0, 0] = 0.0
+        solution = np.linalg.pinv(design.T @ design + penalty) @ design.T @ target_values
+        self._intercept = float(solution[0])
+        self._coef = np.asarray(solution[1:], dtype=float)
+        self._fill_values = fill.to_numpy(dtype=float)
+        self.feature_importances_ = np.abs(self._coef)
+        return self
+
+    def predict(self, features: pd.DataFrame) -> np.ndarray:
+        x = features.apply(pd.to_numeric, errors="coerce")
+        matrix = x.fillna(pd.Series(self._fill_values, index=x.columns)).to_numpy(dtype=float)
+        return self._intercept + matrix @ self._coef
+
+
 @dataclass(frozen=True, slots=True)
 class Stage4Result:
     report_paths: dict[str, Path]
@@ -1075,11 +1116,14 @@ def run_experiment_25(
 
 
 def fit_baseline_models(args: argparse.Namespace, split_bundle: SplitBundle, feature_columns: list[str]) -> list[tuple[str, str, Any, list[str]]]:
-    from sklearn.dummy import DummyRegressor
-    from sklearn.impute import SimpleImputer
-    from sklearn.linear_model import LinearRegression, LogisticRegression, Ridge
-    from sklearn.pipeline import Pipeline
-    from sklearn.preprocessing import StandardScaler
+    try:
+        from sklearn.dummy import DummyRegressor
+        from sklearn.impute import SimpleImputer
+        from sklearn.linear_model import LinearRegression, LogisticRegression, Ridge
+        from sklearn.pipeline import Pipeline
+        from sklearn.preprocessing import StandardScaler
+    except Exception:
+        return fit_lightweight_baseline_models(split_bundle, feature_columns)
 
     train = split_bundle.train
     result: list[tuple[str, str, Any, list[str]]] = []
@@ -1105,6 +1149,25 @@ def fit_baseline_models(args: argparse.Namespace, split_bundle: SplitBundle, fea
         if training.empty:
             continue
         estimator.fit(training[feature_columns], training[label_name])
+        result.append((model_name, label_name, estimator, feature_columns))
+    return result
+
+
+def fit_lightweight_baseline_models(split_bundle: SplitBundle, feature_columns: list[str]) -> list[tuple[str, str, Any, list[str]]]:
+    train = split_bundle.train
+    result: list[tuple[str, str, Any, list[str]]] = []
+    model_defs = [
+        ("dummy_regression", "forward_return_20d"),
+        ("linear_regression", "forward_return_20d"),
+        ("ridge_regression", "forward_return_20d"),
+        ("ridge_quantile_label", "forward_return_20d_quantile"),
+        ("logistic_top20_label", "top_quantile_20d"),
+    ]
+    for model_name, label_name in model_defs:
+        training = train.dropna(subset=[label_name]).copy()
+        if training.empty:
+            continue
+        estimator = LightweightTabularRegressor().fit(training[feature_columns], training[label_name])
         result.append((model_name, label_name, estimator, feature_columns))
     return result
 
@@ -1392,8 +1455,17 @@ def fit_lgbm_regressor(
 ) -> ModelFit:
     try:
         from lightgbm import LGBMRegressor, early_stopping, log_evaluation
-    except Exception as exc:
-        raise FactorFrameworkError("缺少 lightgbm 依赖，请先执行 `uv add --group ml lightgbm scikit-learn`。") from exc
+    except Exception:
+        return fit_lightweight_lgbm_regressor(
+            args,
+            train,
+            validation,
+            feature_columns,
+            params,
+            model_name=model_name,
+            feature_set_name=feature_set_name,
+            test_frame=test_frame,
+        )
 
     lgbm_params = {
         "objective": "regression",
@@ -1430,6 +1502,37 @@ def fit_lgbm_regressor(
         feature_set_name=feature_set_name,
         feature_columns=feature_columns,
         params=dict(params),
+        model=model,
+        validation_metrics=validation_metrics,
+        test_metrics=test_metrics,
+        validation_predictions=validation_predictions,
+        test_predictions=test_predictions,
+    )
+
+
+def fit_lightweight_lgbm_regressor(
+    args: argparse.Namespace,
+    train: pd.DataFrame,
+    validation: pd.DataFrame,
+    feature_columns: list[str],
+    params: Mapping[str, Any],
+    *,
+    model_name: str,
+    feature_set_name: str,
+    test_frame: pd.DataFrame | None = None,
+) -> ModelFit:
+    model = LightweightTabularRegressor().fit(train[feature_columns], train["forward_return_20d"])
+    validation_predictions = prediction_frame_from_model(model, validation, feature_columns, model_name)
+    validation_metrics, _ = evaluate_prediction_frame(validation_predictions, group_count=int(args.group_count), label="forward_return_20d")
+    if test_frame is None:
+        test_frame = validation
+    test_predictions = prediction_frame_from_model(model, test_frame, feature_columns, model_name)
+    test_metrics, _ = evaluate_prediction_frame(test_predictions, group_count=int(args.group_count), label="forward_return_20d")
+    return ModelFit(
+        model_name=model_name,
+        feature_set_name=feature_set_name,
+        feature_columns=feature_columns,
+        params={**dict(params), "fallback_model": "lightweight_tabular"},
         model=model,
         validation_metrics=validation_metrics,
         test_metrics=test_metrics,

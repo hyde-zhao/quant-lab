@@ -98,6 +98,8 @@ scripts/sync_data_lake_to_nas.sh push all --execute
 | 质量 | 明确 `quality_status` 和质量检查结论。 |
 | 追溯 | 明确 `catalog/lineage`，能追到发布来源和输入版本。 |
 
+Tushare backfill remediation 只生成人工执行规格，不自动联网、不自动 backfill、不自动写湖。规格必须列出 `dataset`、`source`、`interface`、`index_code`、`date range`、`lake root`、`run_id`、`resume_policy`、`dry_run`、输出 `path` 和 `error enum`。
+
 ### 3.3 质量真相边界
 
 legacy quality report、legacy old report、lake quality/catalog current truth、current quality truth、coverage proof forbidden 是固定边界词：
