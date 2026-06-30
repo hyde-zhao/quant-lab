@@ -28,6 +28,7 @@ REQUIRED_STABLE_ENTRYPOINTS = {
     "scripts/data_lake/cleanup_price_limit_lifecycle.py",
     "scripts/data_lake/publish_market_data_release.py",
     "scripts/data_lake/repair_market_data.py",
+    "scripts/data_lake/run_data_lake_readiness_audit.py",
     "scripts/research/run_anomaly_discovery.py",
     "scripts/research/run_anomaly_research.py",
     "scripts/research/run_factor_empirical_research.py",

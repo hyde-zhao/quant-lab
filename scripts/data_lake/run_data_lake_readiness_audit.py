@@ -18,7 +18,7 @@ from typing import Any, Mapping, Sequence
 
 import pandas as pd
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
@@ -1787,7 +1787,7 @@ def run_audit(config: AuditConfig) -> dict[str, Any]:
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        prog="uv run python experiments/run_data_lake_readiness_audit.py",
+        prog="uv run python scripts/data_lake/run_data_lake_readiness_audit.py",
         description="只读审计真实数据湖在目标窗口的生产级 readiness。",
     )
     parser.add_argument("--lake-root", required=True, type=Path)

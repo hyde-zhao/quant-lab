@@ -37,6 +37,7 @@
 | 市场数据回填 | `scripts/data_lake/backfill_market_data.py` | `scripts/legacy/cr/cr034_chapter3_backfill.py` |
 | 缺口补数 | `scripts/data_lake/backfill_missing_market_data.py` | `scripts/legacy/cr/cr018_real_backfill_missing_data.py` |
 | 数据 readiness | `scripts/data_lake/check_market_data_readiness.py` | `scripts/legacy/cr/chapter3_real_data_readiness.py` |
+| production_strict readiness audit | `scripts/data_lake/run_data_lake_readiness_audit.py` | CR140 迁移前的实验侧审计脚本 |
 | 价格涨跌停清理 | `scripts/data_lake/cleanup_price_limit_lifecycle.py` | `scripts/legacy/cr/cr018_price_limit_lifecycle_cleanup.py` |
 | release 发布 | `scripts/data_lake/publish_market_data_release.py` | `scripts/legacy/cr/cr018_release_catalog_publish.py` |
 | 数据修复 | `scripts/data_lake/repair_market_data.py` | `scripts/legacy/cr/cr012_limited_window_lake_repair.py` |

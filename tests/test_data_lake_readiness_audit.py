@@ -5,7 +5,7 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from experiments.run_data_lake_readiness_audit import (
+from scripts.data_lake.run_data_lake_readiness_audit import (
     AuditConfig,
     INDEX_MEMBERS_AUDIT_MODE_DAILY_MATERIALIZED,
     INDEX_MEMBERS_AUDIT_MODE_SNAPSHOT_ASOF,

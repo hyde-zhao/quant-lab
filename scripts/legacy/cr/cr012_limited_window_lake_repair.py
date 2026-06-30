@@ -21,11 +21,11 @@ from typing import Any, Mapping, Sequence
 
 import pandas as pd
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
+REPO_ROOT = Path(__file__).resolve().parents[3]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from experiments.run_data_lake_readiness_audit import (
+from scripts.data_lake.run_data_lake_readiness_audit import (
     AuditConfig,
     DATASET_ADJ_FACTOR,
     DATASET_INDEX_MEMBERS,
