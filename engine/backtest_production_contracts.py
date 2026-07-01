@@ -8,12 +8,15 @@ pointers.
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass, field
+import hashlib
+import json
 from typing import Any, Mapping
 
 from engine.multifactor_contracts import FORBIDDEN_OPERATION_COUNTERS
 
 
 BACKTEST_FOUNDATION_ASSET_MAP_SCHEMA = "backtest_foundation_asset_map_v1"
+BACKTEST_RUN_SPEC_SCHEMA = "backtest_run_spec_v1"
 PHASE3_SCOPE_GUARD_SCHEMA = "phase3_scope_guard_v1"
 STATUS_PASS = "pass"
 STATUS_BLOCKED = "blocked"
@@ -113,6 +116,56 @@ class BacktestFoundationAssetMap:
         }
 
 
+@dataclass(frozen=True, slots=True)
+class BacktestRunSpec:
+    run_id: str
+    experiment_id: str
+    strategy_id: str
+    dataset_snapshot_ref: str
+    signal_set_ref: str
+    portfolio_policy_ref: str
+    benchmark_ref: str
+    cost_model_ref: str
+    slippage_model_ref: str
+    backtest_engine: str
+    frequency: str
+    start_date: str
+    end_date: str
+    as_of: str
+    config_hash: str
+    code_version: str
+    metrics_schema: tuple[str, ...]
+    report_pack_ref: str
+    scope_guard: Phase3ScopeGuard = field(default_factory=Phase3ScopeGuard)
+    operation_counts: Mapping[str, int] = field(default_factory=dict)
+    schema_version: str = BACKTEST_RUN_SPEC_SCHEMA
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "schema_version": self.schema_version,
+            "run_id": self.run_id,
+            "experiment_id": self.experiment_id,
+            "strategy_id": self.strategy_id,
+            "dataset_snapshot_ref": self.dataset_snapshot_ref,
+            "signal_set_ref": self.signal_set_ref,
+            "portfolio_policy_ref": self.portfolio_policy_ref,
+            "benchmark_ref": self.benchmark_ref,
+            "cost_model_ref": self.cost_model_ref,
+            "slippage_model_ref": self.slippage_model_ref,
+            "backtest_engine": self.backtest_engine,
+            "frequency": self.frequency,
+            "start_date": self.start_date,
+            "end_date": self.end_date,
+            "as_of": self.as_of,
+            "config_hash": self.config_hash,
+            "code_version": self.code_version,
+            "metrics_schema": list(self.metrics_schema),
+            "report_pack_ref": self.report_pack_ref,
+            "scope_guard": self.scope_guard.to_dict(),
+            "operation_counts": dict(self.operation_counts),
+        }
+
+
 def build_backtest_foundation_asset_map() -> BacktestFoundationAssetMap:
     assets = (
         BacktestFoundationAsset(
@@ -130,14 +183,6 @@ def build_backtest_foundation_asset_map() -> BacktestFoundationAssetMap:
             maturity="existing_runtime_asset_needs_metadata_foundation_bridge",
             current_contracts=("schedule", "portfolio_result", "metrics", "execution_policy_metadata"),
             required_capabilities=("backtest_run_spec", "experiment_link", "report_pack_ref"),
-            gaps=(
-                BacktestFoundationGap(
-                    gap_id="backtest_run_spec_missing",
-                    severity="medium",
-                    description="Backtest execution has config and metadata, but not yet a stable metadata-only BacktestRunSpec.",
-                    phase="Phase 3",
-                ),
-            ),
         ),
         BacktestFoundationAsset(
             asset_id="mature_multifactor_framework",
@@ -220,6 +265,124 @@ def build_backtest_foundation_asset_map() -> BacktestFoundationAssetMap:
     )
 
 
+def build_backtest_run_spec(
+    *,
+    run_id: str,
+    experiment_id: str,
+    strategy_id: str,
+    dataset_snapshot_ref: str,
+    signal_set_ref: str,
+    portfolio_policy_ref: str,
+    benchmark_ref: str,
+    cost_model_ref: str,
+    slippage_model_ref: str,
+    start_date: str,
+    end_date: str,
+    as_of: str,
+    code_version: str,
+    backtest_config: Mapping[str, Any] | Any | None = None,
+    backtest_engine: str = "lightweight",
+    frequency: str = "daily",
+    metrics_schema: tuple[str, ...] = (
+        "total_return",
+        "annual_return",
+        "max_drawdown",
+        "sharpe",
+        "turnover",
+        "final_nav",
+    ),
+    report_pack_ref: str = "",
+) -> BacktestRunSpec:
+    config_payload = _backtest_config_payload(backtest_config)
+    fingerprint_payload = {
+        "run_id": run_id,
+        "experiment_id": experiment_id,
+        "strategy_id": strategy_id,
+        "dataset_snapshot_ref": dataset_snapshot_ref,
+        "signal_set_ref": signal_set_ref,
+        "portfolio_policy_ref": portfolio_policy_ref,
+        "benchmark_ref": benchmark_ref,
+        "cost_model_ref": cost_model_ref,
+        "slippage_model_ref": slippage_model_ref,
+        "start_date": start_date,
+        "end_date": end_date,
+        "as_of": as_of,
+        "code_version": code_version,
+        "backtest_engine": backtest_engine,
+        "frequency": frequency,
+        "metrics_schema": list(metrics_schema),
+        "backtest_config": config_payload,
+    }
+    config_hash = _stable_sha256(fingerprint_payload)
+    return BacktestRunSpec(
+        run_id=str(run_id or ""),
+        experiment_id=str(experiment_id or ""),
+        strategy_id=str(strategy_id or ""),
+        dataset_snapshot_ref=str(dataset_snapshot_ref or ""),
+        signal_set_ref=str(signal_set_ref or ""),
+        portfolio_policy_ref=str(portfolio_policy_ref or ""),
+        benchmark_ref=str(benchmark_ref or ""),
+        cost_model_ref=str(cost_model_ref or ""),
+        slippage_model_ref=str(slippage_model_ref or ""),
+        backtest_engine=str(backtest_engine or ""),
+        frequency=str(frequency or ""),
+        start_date=str(start_date or ""),
+        end_date=str(end_date or ""),
+        as_of=str(as_of or ""),
+        config_hash=config_hash,
+        code_version=str(code_version or ""),
+        metrics_schema=tuple(str(item) for item in metrics_schema),
+        report_pack_ref=str(report_pack_ref or f"report-pack://{run_id}"),
+        operation_counts=_zero_operation_counts(),
+    )
+
+
+def validate_backtest_run_spec(spec: BacktestRunSpec | Mapping[str, Any]) -> tuple[dict[str, Any], ...]:
+    value = spec if isinstance(spec, BacktestRunSpec) else _backtest_run_spec_from_mapping(spec)
+    issues: list[dict[str, Any]] = list(validate_phase3_scope_guard(value.scope_guard))
+    for field_name in (
+        "run_id",
+        "experiment_id",
+        "strategy_id",
+        "dataset_snapshot_ref",
+        "signal_set_ref",
+        "portfolio_policy_ref",
+        "benchmark_ref",
+        "cost_model_ref",
+        "slippage_model_ref",
+        "backtest_engine",
+        "frequency",
+        "start_date",
+        "end_date",
+        "as_of",
+        "config_hash",
+        "code_version",
+        "metrics_schema",
+        "report_pack_ref",
+    ):
+        item = getattr(value, field_name)
+        if item is None or item == "" or item == ():
+            issues.append({"code": "backtest_run_spec_required_field_missing", "field": field_name})
+    if value.frequency != "daily":
+        issues.append({"code": "backtest_run_spec_frequency_not_phase3_daily", "field": "frequency"})
+    if value.backtest_engine not in {"lightweight", "backtrader"}:
+        issues.append({"code": "backtest_run_spec_engine_invalid", "field": "backtest_engine"})
+    if value.backtest_engine == "backtrader":
+        issues.append({"code": "backtest_run_spec_backtrader_deep_integration_deferred", "field": "backtest_engine"})
+    mutable_text = " ".join([value.dataset_snapshot_ref, value.signal_set_ref, value.report_pack_ref]).lower()
+    if "latest" in mutable_text or "current" in mutable_text:
+        issues.append({"code": "backtest_run_spec_mutable_ref_forbidden", "field": "dataset_snapshot_ref"})
+    if not value.config_hash.startswith("sha256:"):
+        issues.append({"code": "backtest_run_spec_config_hash_invalid", "field": "config_hash"})
+    for metric in ("total_return", "max_drawdown", "turnover"):
+        if metric not in set(value.metrics_schema):
+            issues.append({"code": "backtest_run_spec_metric_required", "metric": metric})
+    for key, count in _normalise_operation_counts(value.operation_counts).items():
+        if count != 0:
+            issues.append({"code": "backtest_run_spec_operation_counter_nonzero", "field": key, "value": count})
+    return tuple(issues)
+
+
 def validate_phase3_scope_guard(scope_guard: Phase3ScopeGuard | Mapping[str, Any]) -> tuple[dict[str, Any], ...]:
     guard = scope_guard if isinstance(scope_guard, Phase3ScopeGuard) else _phase3_scope_guard_from_mapping(scope_guard)
     issues: list[dict[str, Any]] = []
@@ -276,6 +439,54 @@ def _asset_map_from_mapping(data: Mapping[str, Any]) -> BacktestFoundationAssetM
     )
 
 
+def _backtest_run_spec_from_mapping(data: Mapping[str, Any]) -> BacktestRunSpec:
+    return BacktestRunSpec(
+        run_id=str(data.get("run_id") or ""),
+        experiment_id=str(data.get("experiment_id") or ""),
+        strategy_id=str(data.get("strategy_id") or ""),
+        dataset_snapshot_ref=str(data.get("dataset_snapshot_ref") or ""),
+        signal_set_ref=str(data.get("signal_set_ref") or ""),
+        portfolio_policy_ref=str(data.get("portfolio_policy_ref") or ""),
+        benchmark_ref=str(data.get("benchmark_ref") or ""),
+        cost_model_ref=str(data.get("cost_model_ref") or ""),
+        slippage_model_ref=str(data.get("slippage_model_ref") or ""),
+        backtest_engine=str(data.get("backtest_engine") or ""),
+        frequency=str(data.get("frequency") or ""),
+        start_date=str(data.get("start_date") or ""),
+        end_date=str(data.get("end_date") or ""),
+        as_of=str(data.get("as_of") or ""),
+        config_hash=str(data.get("config_hash") or ""),
+        code_version=str(data.get("code_version") or ""),
+        metrics_schema=tuple(str(item) for item in data.get("metrics_schema") or ()),
+        report_pack_ref=str(data.get("report_pack_ref") or ""),
+        scope_guard=_phase3_scope_guard_from_mapping(data.get("scope_guard") or {}),
+        operation_counts=_normalise_operation_counts(data.get("operation_counts")),
+        schema_version=str(data.get("schema_version") or BACKTEST_RUN_SPEC_SCHEMA),
+    )
+
+
+def _backtest_config_payload(config: Mapping[str, Any] | Any | None) -> dict[str, Any]:
+    if config is None:
+        return {}
+    if isinstance(config, Mapping):
+        return {str(key): _json_ready(value) for key, value in config.items()}
+    if hasattr(config, "__dataclass_fields__"):
+        return {str(key): _json_ready(value) for key, value in asdict(config).items()}
+    return {"repr": repr(config)}
+
+
+def _json_ready(value: Any) -> Any:
+    if isinstance(value, Mapping):
+        return {str(key): _json_ready(item) for key, item in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_json_ready(item) for item in value]
+    if hasattr(value, "__dataclass_fields__"):
+        return {str(key): _json_ready(item) for key, item in asdict(value).items()}
+    if isinstance(value, (str, int, float, bool)) or value is None:
+        return value
+    return repr(value)
+
+
 def _asset_from_mapping(data: Mapping[str, Any]) -> BacktestFoundationAsset:
     return BacktestFoundationAsset(
         asset_id=str(data.get("asset_id") or ""),
@@ -321,14 +532,23 @@ def _normalise_operation_counts(counters: Mapping[str, Any] | None = None) -> di
     return {key: int(source.get(key, 0) or 0) for key in FORBIDDEN_OPERATION_COUNTERS}
 
 
+def _stable_sha256(payload: Mapping[str, Any]) -> str:
+    data = json.dumps(payload, sort_keys=True, separators=(",", ":"), default=str)
+    return "sha256:" + hashlib.sha256(data.encode("utf-8")).hexdigest()
+
+
 __all__ = [
     "BACKTEST_FOUNDATION_ASSET_MAP_SCHEMA",
+    "BACKTEST_RUN_SPEC_SCHEMA",
     "PHASE3_SCOPE_GUARD_SCHEMA",
     "BacktestFoundationAsset",
     "BacktestFoundationAssetMap",
     "BacktestFoundationGap",
+    "BacktestRunSpec",
     "Phase3ScopeGuard",
     "build_backtest_foundation_asset_map",
+    "build_backtest_run_spec",
     "validate_backtest_foundation_asset_map",
+    "validate_backtest_run_spec",
     "validate_phase3_scope_guard",
 ]
