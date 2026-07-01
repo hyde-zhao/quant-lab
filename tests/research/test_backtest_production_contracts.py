@@ -3,9 +3,11 @@ from __future__ import annotations
 from engine.backtest_production_contracts import (
     BacktestFoundationAssetMap,
     Phase3ScopeGuard,
+    build_backtest_cost_risk_attribution_pack,
     build_backtest_foundation_asset_map,
     build_backtest_report_pack,
     build_backtest_run_spec,
+    validate_backtest_cost_risk_attribution_pack,
     validate_backtest_foundation_asset_map,
     validate_backtest_report_pack,
     validate_backtest_run_spec,
@@ -26,7 +28,7 @@ def test_cr148_backtest_foundation_asset_map_covers_existing_assets_without_runt
         "backtest_report_row",
         "portfolio_and_metrics_core",
     }.issubset(asset_ids)
-    assert asset_map.gap_count == 1
+    assert asset_map.gap_count == 0
     assert asset_map.gate_required_gap_count == 0
     assert asset_map.scope_guard.phase3_exit_strategy_families == ("multifactor",)
     assert {"machine_learning", "event_driven"}.issubset(set(asset_map.scope_guard.deferred_strategy_families))
@@ -172,3 +174,63 @@ def test_cr148_backtest_report_pack_blocks_mutable_refs_missing_metrics_and_oper
     assert "backtest_report_pack_mutable_ref_forbidden" in codes
     assert "backtest_report_pack_metric_required" in codes
     assert "backtest_report_pack_operation_counter_nonzero" in codes
+
+
+def _cost_risk_pack(**overrides: object):
+    payload = {
+        "run_spec": _run_spec(),
+        "metrics": {
+            "total_return": 0.184,
+            "annual_return": 0.071,
+            "max_drawdown": -0.083,
+            "sharpe": 1.21,
+            "turnover": 0.37,
+            "final_nav": 1.184,
+        },
+        "cost_summary": {
+            "total_cost": 1840.0,
+            "commission_rate": 0.0003,
+            "slippage_rate": 0.0002,
+            "sell_tax_rate": 0.001,
+        },
+        "risk_summary": {
+            "volatility": 0.142,
+            "tracking_error": 0.061,
+            "beta": 0.91,
+        },
+    }
+    payload.update(overrides)
+    return build_backtest_cost_risk_attribution_pack(**payload)  # type: ignore[arg-type]
+
+
+def test_cr148_cost_risk_attribution_pack_is_stable_and_metadata_only() -> None:
+    first = _cost_risk_pack()
+    second = _cost_risk_pack()
+
+    assert first.content_hash == second.content_hash
+    assert first.content_hash.startswith("sha256:")
+    assert first.run_spec_hash.startswith("sha256:")
+    assert first.attribution_ref == "cost-risk-attribution://bt-alpha-core-20260528-v1"
+    assert {"cost_model_ref", "slippage_model_ref", "turnover", "total_cost"} <= set(first.cost_fields)
+    assert {"benchmark_ref", "max_drawdown", "sharpe", "volatility"} <= set(first.risk_metrics)
+    assert first.attribution_refs == ("attribution://backtest-cost-risk/bt-alpha-core-20260528-v1",)
+    assert all(value == 0 for value in first.operation_counts.values())
+    assert validate_backtest_cost_risk_attribution_pack(first) == ()
+
+
+def test_cr148_cost_risk_attribution_pack_blocks_mutable_refs_missing_coverage_and_operations() -> None:
+    pack = _cost_risk_pack(attribution_refs=("attribution://current/cost-risk",))
+    payload = pack.to_dict()
+    payload["risk_policy_ref"] = ""
+    payload["content_hash"] = "bad"
+    payload["cost_fields"] = ["cost_model_ref"]
+    payload["risk_metrics"] = ["sharpe"]
+    payload["operation_counts"] = {"simulation_or_live": 1}
+
+    codes = {issue["code"] for issue in validate_backtest_cost_risk_attribution_pack(payload)}
+    assert "backtest_cost_risk_required_field_missing" in codes
+    assert "backtest_cost_risk_content_hash_invalid" in codes
+    assert "backtest_cost_risk_mutable_ref_forbidden" in codes
+    assert "backtest_cost_risk_cost_field_required" in codes
+    assert "backtest_cost_risk_metric_required" in codes
+    assert "backtest_cost_risk_operation_counter_nonzero" in codes

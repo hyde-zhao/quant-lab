@@ -17,6 +17,7 @@ from engine.reporting import build_backtest_report_row
 
 
 BACKTEST_FOUNDATION_ASSET_MAP_SCHEMA = "backtest_foundation_asset_map_v1"
+BACKTEST_COST_RISK_ATTRIBUTION_SCHEMA = "backtest_cost_risk_attribution_v1"
 BACKTEST_REPORT_PACK_SCHEMA = "backtest_report_pack_v1"
 BACKTEST_RUN_SPEC_SCHEMA = "backtest_run_spec_v1"
 PHASE3_SCOPE_GUARD_SCHEMA = "phase3_scope_guard_v1"
@@ -205,6 +206,48 @@ class BacktestReportPack:
         }
 
 
+@dataclass(frozen=True, slots=True)
+class BacktestCostRiskAttributionPack:
+    attribution_ref: str
+    run_id: str
+    experiment_id: str
+    strategy_id: str
+    run_spec_hash: str
+    content_hash: str
+    cost_model_ref: str
+    slippage_model_ref: str
+    risk_policy_ref: str
+    benchmark_ref: str
+    cost_fields: tuple[str, ...]
+    risk_metrics: tuple[str, ...]
+    attribution_refs: tuple[str, ...]
+    source_refs: tuple[str, ...]
+    scope_guard: Phase3ScopeGuard = field(default_factory=Phase3ScopeGuard)
+    operation_counts: Mapping[str, int] = field(default_factory=dict)
+    schema_version: str = BACKTEST_COST_RISK_ATTRIBUTION_SCHEMA
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "schema_version": self.schema_version,
+            "attribution_ref": self.attribution_ref,
+            "run_id": self.run_id,
+            "experiment_id": self.experiment_id,
+            "strategy_id": self.strategy_id,
+            "run_spec_hash": self.run_spec_hash,
+            "content_hash": self.content_hash,
+            "cost_model_ref": self.cost_model_ref,
+            "slippage_model_ref": self.slippage_model_ref,
+            "risk_policy_ref": self.risk_policy_ref,
+            "benchmark_ref": self.benchmark_ref,
+            "cost_fields": list(self.cost_fields),
+            "risk_metrics": list(self.risk_metrics),
+            "attribution_refs": list(self.attribution_refs),
+            "source_refs": list(self.source_refs),
+            "scope_guard": self.scope_guard.to_dict(),
+            "operation_counts": dict(self.operation_counts),
+        }
+
+
 def build_backtest_foundation_asset_map() -> BacktestFoundationAssetMap:
     assets = (
         BacktestFoundationAsset(
@@ -276,17 +319,9 @@ def build_backtest_foundation_asset_map() -> BacktestFoundationAssetMap:
             module="engine.portfolio|engine.metrics",
             object_names=("run_portfolio", "calculate_metrics", "PortfolioConfig", "PortfolioResult"),
             role="Existing portfolio path and metrics core consumed by the lightweight backtest engine.",
-            maturity="existing_runtime_asset_needs_metadata_refs",
+            maturity="existing_asset_ready_for_cost_risk_attribution_bridge",
             current_contracts=("portfolio_result", "equity_curve", "drawdown", "returns_metrics"),
             required_capabilities=("cost_fields", "risk_metrics", "attribution_refs"),
-            gaps=(
-                BacktestFoundationGap(
-                    gap_id="cost_risk_attribution_contract_missing",
-                    severity="medium",
-                    description="Portfolio and metrics exist, but Phase 3 needs explicit cost, risk and attribution metadata coverage.",
-                    phase="Phase 3",
-                ),
-            ),
         ),
     )
     return BacktestFoundationAssetMap(
@@ -294,6 +329,105 @@ def build_backtest_foundation_asset_map() -> BacktestFoundationAssetMap:
         scope_guard=Phase3ScopeGuard(),
         operation_counts=_zero_operation_counts(),
     )
+
+
+def build_backtest_cost_risk_attribution_pack(
+    *,
+    run_spec: BacktestRunSpec | Mapping[str, Any],
+    metrics: Mapping[str, Any],
+    cost_summary: Mapping[str, Any] | None = None,
+    risk_summary: Mapping[str, Any] | None = None,
+    attribution_refs: tuple[str, ...] | None = None,
+    risk_policy_ref: str = "",
+) -> BacktestCostRiskAttributionPack:
+    spec = run_spec if isinstance(run_spec, BacktestRunSpec) else _backtest_run_spec_from_mapping(run_spec)
+    cost_payload = {
+        "cost_model_ref": spec.cost_model_ref,
+        "slippage_model_ref": spec.slippage_model_ref,
+        "turnover": metrics.get("turnover"),
+        "total_cost": (cost_summary or {}).get("total_cost"),
+        "commission_rate": (cost_summary or {}).get("commission_rate"),
+        "slippage_rate": (cost_summary or {}).get("slippage_rate"),
+        "sell_tax_rate": (cost_summary or {}).get("sell_tax_rate"),
+    }
+    risk_payload = {
+        "benchmark_ref": spec.benchmark_ref,
+        "max_drawdown": metrics.get("max_drawdown"),
+        "sharpe": metrics.get("sharpe"),
+        "volatility": (risk_summary or {}).get("volatility"),
+        "tracking_error": (risk_summary or {}).get("tracking_error"),
+        "beta": (risk_summary or {}).get("beta"),
+    }
+    refs = attribution_refs or (f"attribution://backtest-cost-risk/{spec.run_id}",)
+    policy_ref = risk_policy_ref or f"risk-policy://{spec.strategy_id}/phase3-daily-baseline/v1"
+    content_payload = {
+        "run_id": spec.run_id,
+        "run_spec_hash": spec.config_hash,
+        "cost": cost_payload,
+        "risk": risk_payload,
+        "risk_policy_ref": policy_ref,
+        "attribution_refs": list(refs),
+    }
+    return BacktestCostRiskAttributionPack(
+        attribution_ref=f"cost-risk-attribution://{spec.run_id}",
+        run_id=spec.run_id,
+        experiment_id=spec.experiment_id,
+        strategy_id=spec.strategy_id,
+        run_spec_hash=spec.config_hash,
+        content_hash=_stable_sha256(content_payload),
+        cost_model_ref=spec.cost_model_ref,
+        slippage_model_ref=spec.slippage_model_ref,
+        risk_policy_ref=policy_ref,
+        benchmark_ref=spec.benchmark_ref,
+        cost_fields=tuple(sorted(str(key) for key, value in cost_payload.items() if value is not None)),
+        risk_metrics=tuple(sorted(str(key) for key, value in risk_payload.items() if value is not None)),
+        attribution_refs=tuple(str(item) for item in refs),
+        source_refs=(spec.report_pack_ref, spec.dataset_snapshot_ref, spec.signal_set_ref),
+        operation_counts=_zero_operation_counts(),
+    )
+
+
+def validate_backtest_cost_risk_attribution_pack(
+    pack: BacktestCostRiskAttributionPack | Mapping[str, Any],
+) -> tuple[dict[str, Any], ...]:
+    value = pack if isinstance(pack, BacktestCostRiskAttributionPack) else _cost_risk_attribution_pack_from_mapping(pack)
+    issues: list[dict[str, Any]] = list(validate_phase3_scope_guard(value.scope_guard))
+    for field_name in (
+        "attribution_ref",
+        "run_id",
+        "experiment_id",
+        "strategy_id",
+        "run_spec_hash",
+        "content_hash",
+        "cost_model_ref",
+        "slippage_model_ref",
+        "risk_policy_ref",
+        "benchmark_ref",
+        "cost_fields",
+        "risk_metrics",
+        "attribution_refs",
+        "source_refs",
+    ):
+        item = getattr(value, field_name)
+        if item is None or item == "" or item == ():
+            issues.append({"code": "backtest_cost_risk_required_field_missing", "field": field_name})
+    if not value.run_spec_hash.startswith("sha256:"):
+        issues.append({"code": "backtest_cost_risk_run_spec_hash_invalid", "field": "run_spec_hash"})
+    if not value.content_hash.startswith("sha256:"):
+        issues.append({"code": "backtest_cost_risk_content_hash_invalid", "field": "content_hash"})
+    mutable_text = " ".join([value.attribution_ref, *value.attribution_refs, *value.source_refs]).lower()
+    if "latest" in mutable_text or "current" in mutable_text:
+        issues.append({"code": "backtest_cost_risk_mutable_ref_forbidden", "field": "attribution_refs"})
+    for field_name in ("cost_model_ref", "slippage_model_ref", "turnover", "total_cost"):
+        if field_name not in set(value.cost_fields):
+            issues.append({"code": "backtest_cost_risk_cost_field_required", "field": field_name})
+    for metric in ("benchmark_ref", "max_drawdown", "sharpe", "volatility"):
+        if metric not in set(value.risk_metrics):
+            issues.append({"code": "backtest_cost_risk_metric_required", "metric": metric})
+    for key, count in _normalise_operation_counts(value.operation_counts).items():
+        if count != 0:
+            issues.append({"code": "backtest_cost_risk_operation_counter_nonzero", "field": key, "value": count})
+    return tuple(issues)
 
 
 def build_backtest_report_pack(
@@ -599,6 +733,28 @@ def _backtest_report_pack_from_mapping(data: Mapping[str, Any]) -> BacktestRepor
     )
 
 
+def _cost_risk_attribution_pack_from_mapping(data: Mapping[str, Any]) -> BacktestCostRiskAttributionPack:
+    return BacktestCostRiskAttributionPack(
+        attribution_ref=str(data.get("attribution_ref") or ""),
+        run_id=str(data.get("run_id") or ""),
+        experiment_id=str(data.get("experiment_id") or ""),
+        strategy_id=str(data.get("strategy_id") or ""),
+        run_spec_hash=str(data.get("run_spec_hash") or ""),
+        content_hash=str(data.get("content_hash") or ""),
+        cost_model_ref=str(data.get("cost_model_ref") or ""),
+        slippage_model_ref=str(data.get("slippage_model_ref") or ""),
+        risk_policy_ref=str(data.get("risk_policy_ref") or ""),
+        benchmark_ref=str(data.get("benchmark_ref") or ""),
+        cost_fields=tuple(str(item) for item in data.get("cost_fields") or ()),
+        risk_metrics=tuple(str(item) for item in data.get("risk_metrics") or ()),
+        attribution_refs=tuple(str(item) for item in data.get("attribution_refs") or ()),
+        source_refs=tuple(str(item) for item in data.get("source_refs") or ()),
+        scope_guard=_phase3_scope_guard_from_mapping(data.get("scope_guard") or {}),
+        operation_counts=_normalise_operation_counts(data.get("operation_counts")),
+        schema_version=str(data.get("schema_version") or BACKTEST_COST_RISK_ATTRIBUTION_SCHEMA),
+    )
+
+
 def _backtest_config_payload(config: Mapping[str, Any] | Any | None) -> dict[str, Any]:
     if config is None:
         return {}
@@ -672,6 +828,7 @@ def _stable_sha256(payload: Mapping[str, Any]) -> str:
 
 
 __all__ = [
+    "BACKTEST_COST_RISK_ATTRIBUTION_SCHEMA",
     "BACKTEST_FOUNDATION_ASSET_MAP_SCHEMA",
     "BACKTEST_REPORT_PACK_SCHEMA",
     "BACKTEST_RUN_SPEC_SCHEMA",
@@ -679,12 +836,15 @@ __all__ = [
     "BacktestFoundationAsset",
     "BacktestFoundationAssetMap",
     "BacktestFoundationGap",
+    "BacktestCostRiskAttributionPack",
     "BacktestReportPack",
     "BacktestRunSpec",
     "Phase3ScopeGuard",
+    "build_backtest_cost_risk_attribution_pack",
     "build_backtest_foundation_asset_map",
     "build_backtest_report_pack",
     "build_backtest_run_spec",
+    "validate_backtest_cost_risk_attribution_pack",
     "validate_backtest_foundation_asset_map",
     "validate_backtest_report_pack",
     "validate_backtest_run_spec",
