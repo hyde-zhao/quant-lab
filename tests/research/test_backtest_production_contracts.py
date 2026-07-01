@@ -4,8 +4,10 @@ from engine.backtest_production_contracts import (
     BacktestFoundationAssetMap,
     Phase3ScopeGuard,
     build_backtest_foundation_asset_map,
+    build_backtest_report_pack,
     build_backtest_run_spec,
     validate_backtest_foundation_asset_map,
+    validate_backtest_report_pack,
     validate_backtest_run_spec,
     validate_phase3_scope_guard,
 )
@@ -24,7 +26,7 @@ def test_cr148_backtest_foundation_asset_map_covers_existing_assets_without_runt
         "backtest_report_row",
         "portfolio_and_metrics_core",
     }.issubset(asset_ids)
-    assert asset_map.gap_count == 2
+    assert asset_map.gap_count == 1
     assert asset_map.gate_required_gap_count == 0
     assert asset_map.scope_guard.phase3_exit_strategy_families == ("multifactor",)
     assert {"machine_learning", "event_driven"}.issubset(set(asset_map.scope_guard.deferred_strategy_families))
@@ -120,3 +122,53 @@ def test_cr148_backtest_run_spec_blocks_mutable_refs_runtime_scope_and_missing_f
     assert "backtest_run_spec_frequency_not_phase3_daily" in codes
     assert "backtest_run_spec_metric_required" in codes
     assert "backtest_run_spec_operation_counter_nonzero" in codes
+
+
+def _report_pack(**overrides: object):
+    payload = {
+        "run_spec": _run_spec(),
+        "metrics": {
+            "total_return": 0.184,
+            "annual_return": 0.071,
+            "max_drawdown": -0.083,
+            "sharpe": 1.21,
+            "turnover": 0.37,
+            "final_nav": 1.184,
+        },
+        "metadata": {
+            "strategy_name": "=alpha_formula",
+            "quality_status": "pass",
+        },
+    }
+    payload.update(overrides)
+    return build_backtest_report_pack(**payload)  # type: ignore[arg-type]
+
+
+def test_cr148_backtest_report_pack_is_stable_metadata_only_and_sanitized() -> None:
+    first = _report_pack()
+    second = _report_pack()
+
+    assert first.content_hash == second.content_hash
+    assert first.content_hash.startswith("sha256:")
+    assert first.run_spec_hash.startswith("sha256:")
+    assert first.row_count == 1
+    assert first.artifact_refs == ("inline://backtest-report-row/bt-alpha-core-20260528-v1",)
+    assert {"total_return", "max_drawdown", "turnover"}.issubset(set(first.metric_names))
+    assert first.report_rows[0]["strategy_name"] == "'=alpha_formula"
+    assert all(value == 0 for value in first.operation_counts.values())
+    assert validate_backtest_report_pack(first) == ()
+
+
+def test_cr148_backtest_report_pack_blocks_mutable_refs_missing_metrics_and_operations() -> None:
+    pack = _report_pack(metrics={"sharpe": 1.2}, artifact_refs=("artifact://current/report",))
+    payload = pack.to_dict()
+    payload["report_pack_ref"] = ""
+    payload["content_hash"] = "bad"
+    payload["operation_counts"] = {"reports_overwrite": 1}
+
+    codes = {issue["code"] for issue in validate_backtest_report_pack(payload)}
+    assert "backtest_report_pack_required_field_missing" in codes
+    assert "backtest_report_pack_content_hash_invalid" in codes
+    assert "backtest_report_pack_mutable_ref_forbidden" in codes
+    assert "backtest_report_pack_metric_required" in codes
+    assert "backtest_report_pack_operation_counter_nonzero" in codes

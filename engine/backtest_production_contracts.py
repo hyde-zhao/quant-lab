@@ -13,9 +13,11 @@ import json
 from typing import Any, Mapping
 
 from engine.multifactor_contracts import FORBIDDEN_OPERATION_COUNTERS
+from engine.reporting import build_backtest_report_row
 
 
 BACKTEST_FOUNDATION_ASSET_MAP_SCHEMA = "backtest_foundation_asset_map_v1"
+BACKTEST_REPORT_PACK_SCHEMA = "backtest_report_pack_v1"
 BACKTEST_RUN_SPEC_SCHEMA = "backtest_run_spec_v1"
 PHASE3_SCOPE_GUARD_SCHEMA = "phase3_scope_guard_v1"
 STATUS_PASS = "pass"
@@ -166,6 +168,43 @@ class BacktestRunSpec:
         }
 
 
+@dataclass(frozen=True, slots=True)
+class BacktestReportPack:
+    report_pack_ref: str
+    run_id: str
+    experiment_id: str
+    strategy_id: str
+    run_spec_hash: str
+    content_hash: str
+    metric_names: tuple[str, ...]
+    report_rows: tuple[Mapping[str, Any], ...]
+    artifact_refs: tuple[str, ...]
+    scope_guard: Phase3ScopeGuard = field(default_factory=Phase3ScopeGuard)
+    operation_counts: Mapping[str, int] = field(default_factory=dict)
+    schema_version: str = BACKTEST_REPORT_PACK_SCHEMA
+
+    @property
+    def row_count(self) -> int:
+        return len(self.report_rows)
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "schema_version": self.schema_version,
+            "report_pack_ref": self.report_pack_ref,
+            "run_id": self.run_id,
+            "experiment_id": self.experiment_id,
+            "strategy_id": self.strategy_id,
+            "run_spec_hash": self.run_spec_hash,
+            "content_hash": self.content_hash,
+            "metric_names": list(self.metric_names),
+            "report_rows": [dict(row) for row in self.report_rows],
+            "row_count": self.row_count,
+            "artifact_refs": list(self.artifact_refs),
+            "scope_guard": self.scope_guard.to_dict(),
+            "operation_counts": dict(self.operation_counts),
+        }
+
+
 def build_backtest_foundation_asset_map() -> BacktestFoundationAssetMap:
     assets = (
         BacktestFoundationAsset(
@@ -227,17 +266,9 @@ def build_backtest_foundation_asset_map() -> BacktestFoundationAssetMap:
             module="engine.reporting",
             object_names=("build_backtest_report_row",),
             role="Existing report row builder for stable backtest result summaries.",
-            maturity="existing_asset_needs_report_pack_contract",
+            maturity="existing_asset_ready_for_report_pack_bridge",
             current_contracts=("metrics", "metadata", "json_ready_row"),
             required_capabilities=("report_pack_schema", "artifact_refs", "checksum_or_metric_stability"),
-            gaps=(
-                BacktestFoundationGap(
-                    gap_id="report_pack_contract_missing",
-                    severity="medium",
-                    description="Backtest report rows exist, but Phase 3 still needs a formal report pack contract.",
-                    phase="Phase 3",
-                ),
-            ),
         ),
         BacktestFoundationAsset(
             asset_id="portfolio_and_metrics_core",
@@ -263,6 +294,92 @@ def build_backtest_foundation_asset_map() -> BacktestFoundationAssetMap:
         scope_guard=Phase3ScopeGuard(),
         operation_counts=_zero_operation_counts(),
     )
+
+
+def build_backtest_report_pack(
+    *,
+    run_spec: BacktestRunSpec | Mapping[str, Any],
+    metrics: Mapping[str, Any],
+    metadata: Mapping[str, Any] | None = None,
+    artifact_refs: tuple[str, ...] | None = None,
+) -> BacktestReportPack:
+    spec = run_spec if isinstance(run_spec, BacktestRunSpec) else _backtest_run_spec_from_mapping(run_spec)
+    metadata_payload = {
+        "run_id": spec.run_id,
+        "experiment_id": spec.experiment_id,
+        "strategy_id": spec.strategy_id,
+        "dataset_snapshot_ref": spec.dataset_snapshot_ref,
+        "signal_set_ref": spec.signal_set_ref,
+        "benchmark_ref": spec.benchmark_ref,
+        "cost_model_ref": spec.cost_model_ref,
+        "slippage_model_ref": spec.slippage_model_ref,
+        "backtest_engine": spec.backtest_engine,
+        "frequency": spec.frequency,
+        "start_date": spec.start_date,
+        "end_date": spec.end_date,
+        "as_of": spec.as_of,
+        "config_hash": spec.config_hash,
+        "code_version": spec.code_version,
+        "report_pack_ref": spec.report_pack_ref,
+        **dict(metadata or {}),
+    }
+    row = build_backtest_report_row(dict(metrics), metadata_payload)
+    refs = artifact_refs or (f"inline://backtest-report-row/{spec.run_id}",)
+    content_payload = {
+        "report_pack_ref": spec.report_pack_ref,
+        "run_id": spec.run_id,
+        "run_spec_hash": spec.config_hash,
+        "metric_names": sorted(str(key) for key in metrics.keys()),
+        "report_rows": [row],
+        "artifact_refs": list(refs),
+    }
+    return BacktestReportPack(
+        report_pack_ref=spec.report_pack_ref,
+        run_id=spec.run_id,
+        experiment_id=spec.experiment_id,
+        strategy_id=spec.strategy_id,
+        run_spec_hash=spec.config_hash,
+        content_hash=_stable_sha256(content_payload),
+        metric_names=tuple(sorted(str(key) for key in metrics.keys())),
+        report_rows=(row,),
+        artifact_refs=tuple(str(item) for item in refs),
+        operation_counts=_zero_operation_counts(),
+    )
+
+
+def validate_backtest_report_pack(pack: BacktestReportPack | Mapping[str, Any]) -> tuple[dict[str, Any], ...]:
+    value = pack if isinstance(pack, BacktestReportPack) else _backtest_report_pack_from_mapping(pack)
+    issues: list[dict[str, Any]] = list(validate_phase3_scope_guard(value.scope_guard))
+    for field_name in (
+        "report_pack_ref",
+        "run_id",
+        "experiment_id",
+        "strategy_id",
+        "run_spec_hash",
+        "content_hash",
+        "metric_names",
+        "report_rows",
+        "artifact_refs",
+    ):
+        item = getattr(value, field_name)
+        if item is None or item == "" or item == ():
+            issues.append({"code": "backtest_report_pack_required_field_missing", "field": field_name})
+    if value.row_count != len(value.report_rows) or value.row_count <= 0:
+        issues.append({"code": "backtest_report_pack_row_count_invalid", "field": "row_count"})
+    if not value.run_spec_hash.startswith("sha256:"):
+        issues.append({"code": "backtest_report_pack_run_spec_hash_invalid", "field": "run_spec_hash"})
+    if not value.content_hash.startswith("sha256:"):
+        issues.append({"code": "backtest_report_pack_content_hash_invalid", "field": "content_hash"})
+    mutable_text = " ".join([value.report_pack_ref, *value.artifact_refs]).lower()
+    if "latest" in mutable_text or "current" in mutable_text:
+        issues.append({"code": "backtest_report_pack_mutable_ref_forbidden", "field": "artifact_refs"})
+    for metric in ("total_return", "max_drawdown", "turnover"):
+        if metric not in set(value.metric_names):
+            issues.append({"code": "backtest_report_pack_metric_required", "metric": metric})
+    for key, count in _normalise_operation_counts(value.operation_counts).items():
+        if count != 0:
+            issues.append({"code": "backtest_report_pack_operation_counter_nonzero", "field": key, "value": count})
+    return tuple(issues)
 
 
 def build_backtest_run_spec(
@@ -465,6 +582,23 @@ def _backtest_run_spec_from_mapping(data: Mapping[str, Any]) -> BacktestRunSpec:
     )
 
 
+def _backtest_report_pack_from_mapping(data: Mapping[str, Any]) -> BacktestReportPack:
+    return BacktestReportPack(
+        report_pack_ref=str(data.get("report_pack_ref") or ""),
+        run_id=str(data.get("run_id") or ""),
+        experiment_id=str(data.get("experiment_id") or ""),
+        strategy_id=str(data.get("strategy_id") or ""),
+        run_spec_hash=str(data.get("run_spec_hash") or ""),
+        content_hash=str(data.get("content_hash") or ""),
+        metric_names=tuple(str(item) for item in data.get("metric_names") or ()),
+        report_rows=tuple(dict(item) for item in data.get("report_rows") or ()),
+        artifact_refs=tuple(str(item) for item in data.get("artifact_refs") or ()),
+        scope_guard=_phase3_scope_guard_from_mapping(data.get("scope_guard") or {}),
+        operation_counts=_normalise_operation_counts(data.get("operation_counts")),
+        schema_version=str(data.get("schema_version") or BACKTEST_REPORT_PACK_SCHEMA),
+    )
+
+
 def _backtest_config_payload(config: Mapping[str, Any] | Any | None) -> dict[str, Any]:
     if config is None:
         return {}
@@ -539,16 +673,20 @@ def _stable_sha256(payload: Mapping[str, Any]) -> str:
 
 __all__ = [
     "BACKTEST_FOUNDATION_ASSET_MAP_SCHEMA",
+    "BACKTEST_REPORT_PACK_SCHEMA",
     "BACKTEST_RUN_SPEC_SCHEMA",
     "PHASE3_SCOPE_GUARD_SCHEMA",
     "BacktestFoundationAsset",
     "BacktestFoundationAssetMap",
     "BacktestFoundationGap",
+    "BacktestReportPack",
     "BacktestRunSpec",
     "Phase3ScopeGuard",
     "build_backtest_foundation_asset_map",
+    "build_backtest_report_pack",
     "build_backtest_run_spec",
     "validate_backtest_foundation_asset_map",
+    "validate_backtest_report_pack",
     "validate_backtest_run_spec",
     "validate_phase3_scope_guard",
 ]
