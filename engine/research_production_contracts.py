@@ -22,6 +22,7 @@ RESEARCH_DATASET_SPEC_SCHEMA = "research_dataset_spec_v1"
 RESEARCH_PRODUCTION_AUDIT_SCHEMA = "research_production_foundation_audit_v1"
 STATUS_PASS = "pass"
 STATUS_BLOCKED = "blocked"
+ASSET_MAP_SCHEMA = "research_production_asset_map_v1"
 
 
 @dataclass(frozen=True, slots=True)
@@ -93,6 +94,71 @@ class ResearchProductionAudit:
             "issues": [dict(item) for item in self.issues],
             "operation_counts": dict(self.operation_counts),
             "asset_refs": dict(self.asset_refs),
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class ResearchProductionGap:
+    gap_id: str
+    severity: str
+    description: str
+    phase: str
+    gate_required: bool = False
+
+    def to_dict(self) -> dict[str, Any]:
+        return asdict(self)
+
+
+@dataclass(frozen=True, slots=True)
+class ResearchProductionAsset:
+    asset_id: str
+    layer: str
+    module: str
+    object_names: tuple[str, ...]
+    role: str
+    maturity: str
+    current_contracts: tuple[str, ...]
+    required_capabilities: tuple[str, ...]
+    gaps: tuple[ResearchProductionGap, ...] = ()
+    downstream_phase: str = "Phase 2"
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "asset_id": self.asset_id,
+            "layer": self.layer,
+            "module": self.module,
+            "object_names": list(self.object_names),
+            "role": self.role,
+            "maturity": self.maturity,
+            "current_contracts": list(self.current_contracts),
+            "required_capabilities": list(self.required_capabilities),
+            "gaps": [gap.to_dict() for gap in self.gaps],
+            "downstream_phase": self.downstream_phase,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class ResearchProductionAssetMap:
+    assets: tuple[ResearchProductionAsset, ...]
+    operation_counts: Mapping[str, int]
+    schema_version: str = ASSET_MAP_SCHEMA
+
+    @property
+    def gap_count(self) -> int:
+        return sum(len(asset.gaps) for asset in self.assets)
+
+    @property
+    def gate_required_gap_count(self) -> int:
+        return sum(1 for asset in self.assets for gap in asset.gaps if gap.gate_required)
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "schema_version": self.schema_version,
+            "assets": [asset.to_dict() for asset in self.assets],
+            "asset_count": len(self.assets),
+            "gap_count": self.gap_count,
+            "gate_required_gap_count": self.gate_required_gap_count,
+            "operation_counts": dict(self.operation_counts),
         }
 
 
@@ -212,6 +278,124 @@ def audit_research_production_contract(
     )
 
 
+def build_research_production_asset_map() -> ResearchProductionAssetMap:
+    assets = (
+        ResearchProductionAsset(
+            asset_id="research_dataset_builder",
+            layer="research_dataset",
+            module="engine.research_dataset",
+            object_names=("ResearchDatasetRequest", "build_research_dataset"),
+            role="PIT-safe research dataset request and fixture builder entry point.",
+            maturity="existing_contract_needs_production_metadata_bridge",
+            current_contracts=("date_window", "universe", "forward_return_horizon", "research_report_kind"),
+            required_capabilities=("snapshot_metadata", "stable_replay_checksum", "feature_label_lineage"),
+            gaps=(
+                ResearchProductionGap(
+                    gap_id="research_dataset_snapshot_registry_missing",
+                    severity="medium",
+                    description="Dataset outputs need a registry entry with content hash, feature versions and label versions.",
+                    phase="Phase 2",
+                ),
+            ),
+        ),
+        ResearchProductionAsset(
+            asset_id="feature_label_artifact_contracts",
+            layer="feature_label_store",
+            module="market_data.features.artifacts",
+            object_names=("FeatureArtifactSpec", "LabelArtifactSpec", "FeatureStoreSwitchPolicy"),
+            role="Versioned feature and label metadata contract for in-lake feature artifacts.",
+            maturity="existing_contract_ready_for_phase2_bridge",
+            current_contracts=("feature_set_id", "artifact_version", "as_of_trade_date", "source_view_refs", "lineage_checksum"),
+            required_capabilities=("available_at_policy", "primary_key_alignment", "feature_store_switch_gate"),
+            gaps=(
+                ResearchProductionGap(
+                    gap_id="feature_available_at_policy_not_enforced_by_builder",
+                    severity="medium",
+                    description="Feature metadata exposes enough fields for PIT policy, but dataset building must enforce available_at <= decision_time.",
+                    phase="Phase 2",
+                ),
+            ),
+        ),
+        ResearchProductionAsset(
+            asset_id="training_snapshot_contract",
+            layer="experiment_snapshot",
+            module="engine.training_snapshot_contract",
+            object_names=("TrainingSnapshotSpec", "validate_training_snapshot_cutoff"),
+            role="Training snapshot metadata and cutoff validation.",
+            maturity="existing_contract_ready_for_phase2_bridge",
+            current_contracts=("published_path", "content_hash", "as_of", "training_cutoff", "split_policy_id"),
+            required_capabilities=("cutoff_validation", "published_only_source", "lineage_refs"),
+        ),
+        ResearchProductionAsset(
+            asset_id="experiment_manifest_registry",
+            layer="experiment_registry",
+            module="engine.research_manifest",
+            object_names=("ExperimentManifest", "ResearchReportCatalog", "ExperimentManifestClosure"),
+            role="Experiment and report manifest registry with internal truth-source policy.",
+            maturity="existing_contract_ready_for_phase2_bridge",
+            current_contracts=("config_hash", "dataset_release", "factor_versions", "report_paths", "allowed_blocked_claims"),
+            required_capabilities=("experiment_lineage", "report_catalog", "admission_evidence_refs"),
+        ),
+        ResearchProductionAsset(
+            asset_id="strategy_admission_package",
+            layer="promotion_gate",
+            module="engine.strategy_admission_package",
+            object_names=("StrategyAdmissionPackage", "OrderIntentDraftRef"),
+            role="Offline promotion/admission package; explicitly not runtime or broker authorization.",
+            maturity="downstream_phase_existing_contract",
+            current_contracts=("manifest_ref", "catalog_ref", "stage6_gate_summary", "not_authorized_counters"),
+            required_capabilities=("promotion_gate_inputs", "runtime_claim_blocking", "order_draft_ref_only"),
+            downstream_phase="Phase 4/5",
+        ),
+        ResearchProductionAsset(
+            asset_id="strategy_readiness_admission",
+            layer="promotion_gate",
+            module="engine.strategy_readiness_admission",
+            object_names=("AdmissionPackage", "GateResult", "Stage6GateId"),
+            role="Stage6 P0 gate matrix for later strategy promotion.",
+            maturity="downstream_phase_existing_contract",
+            current_contracts=("10_p0_gates", "blocked_claims", "permission_counters"),
+            required_capabilities=("gate_matrix", "missing_evidence_fail_closed", "forbidden_operation_counters"),
+            downstream_phase="Phase 4/5",
+        ),
+        ResearchProductionAsset(
+            asset_id="cr147_contract_bridge",
+            layer="research_production_foundation",
+            module="engine.research_production_contracts",
+            object_names=("ResearchDatasetSpec", "ResearchProductionAudit", "ResearchProductionAssetMap"),
+            role="CR147 bridge that ties existing assets into a metadata-only research production foundation.",
+            maturity="new_phase2_contract_bridge",
+            current_contracts=("leakage_policy", "source_of_truth_guard", "snapshot_id_guard", "operation_counts_zero"),
+            required_capabilities=("asset_map", "contract_audit", "stable_fingerprint"),
+        ),
+    )
+    return ResearchProductionAssetMap(assets=assets, operation_counts=_zero_operation_counts())
+
+
+def validate_research_production_asset_map(asset_map: ResearchProductionAssetMap) -> tuple[dict[str, Any], ...]:
+    issues: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    for asset in asset_map.assets:
+        if not asset.asset_id:
+            issues.append({"code": "asset_id_missing"})
+        if asset.asset_id in seen:
+            issues.append({"code": "asset_id_duplicate", "asset_id": asset.asset_id})
+        seen.add(asset.asset_id)
+        for field_name in ("layer", "module", "role", "maturity"):
+            if not str(getattr(asset, field_name) or "").strip():
+                issues.append({"code": "asset_required_field_missing", "asset_id": asset.asset_id, "field": field_name})
+        if not asset.object_names:
+            issues.append({"code": "asset_object_names_missing", "asset_id": asset.asset_id})
+        if not asset.required_capabilities:
+            issues.append({"code": "asset_required_capabilities_missing", "asset_id": asset.asset_id})
+    issues.extend(
+        {"code": "asset_map_operation_counter_nonzero", "field": key, "value": value}
+        for key, value in asset_map.operation_counts.items()
+        if int(value) != 0
+    )
+    return tuple(issues)
+
+
 def research_dataset_spec_fingerprint(spec: ResearchDatasetSpec | Mapping[str, Any]) -> str:
     value = spec if isinstance(spec, ResearchDatasetSpec) else research_dataset_spec_from_mapping(spec)
     payload = json.dumps(value.to_dict(), sort_keys=True, separators=(",", ":"), default=str)
@@ -304,14 +488,20 @@ def _zero_operation_counts() -> dict[str, int]:
 
 
 __all__ = [
+    "ASSET_MAP_SCHEMA",
     "LeakagePolicy",
     "RESEARCH_DATASET_SPEC_SCHEMA",
     "RESEARCH_PRODUCTION_AUDIT_SCHEMA",
+    "ResearchProductionAsset",
+    "ResearchProductionAssetMap",
     "ResearchDatasetSpec",
+    "ResearchProductionGap",
     "ResearchProductionAudit",
     "audit_research_production_contract",
+    "build_research_production_asset_map",
     "research_dataset_request_from_spec",
     "research_dataset_spec_fingerprint",
     "research_dataset_spec_from_mapping",
+    "validate_research_production_asset_map",
     "validate_research_dataset_spec",
 ]

@@ -2,10 +2,13 @@ from __future__ import annotations
 
 from engine.research_production_contracts import (
     LeakagePolicy,
+    ResearchProductionAssetMap,
     ResearchDatasetSpec,
     audit_research_production_contract,
+    build_research_production_asset_map,
     research_dataset_request_from_spec,
     research_dataset_spec_fingerprint,
+    validate_research_production_asset_map,
     validate_research_dataset_spec,
 )
 from engine.training_snapshot_contract import TrainingSnapshotSpec
@@ -99,6 +102,36 @@ def test_cr147_research_dataset_spec_fingerprint_is_stable() -> None:
 
     assert first == second
     assert first.startswith("sha256:")
+
+
+def test_cr147_research_production_asset_map_covers_existing_assets_without_runtime() -> None:
+    asset_map = build_research_production_asset_map()
+
+    asset_ids = {asset.asset_id for asset in asset_map.assets}
+    assert {
+        "research_dataset_builder",
+        "feature_label_artifact_contracts",
+        "training_snapshot_contract",
+        "experiment_manifest_registry",
+        "strategy_admission_package",
+        "strategy_readiness_admission",
+        "cr147_contract_bridge",
+    }.issubset(asset_ids)
+    assert asset_map.gap_count == 2
+    assert asset_map.gate_required_gap_count == 0
+    assert all(value == 0 for value in asset_map.operation_counts.values())
+    assert validate_research_production_asset_map(asset_map) == ()
+
+
+def test_cr147_research_production_asset_map_validation_blocks_duplicate_ids() -> None:
+    asset_map = build_research_production_asset_map()
+    duplicated = ResearchProductionAssetMap(
+        assets=(asset_map.assets[0], asset_map.assets[0]),
+        operation_counts=asset_map.operation_counts,
+    )
+
+    codes = {issue["code"] for issue in validate_research_production_asset_map(duplicated)}
+    assert "asset_id_duplicate" in codes
 
 
 def test_cr147_research_dataset_request_maps_existing_builder_contract() -> None:
