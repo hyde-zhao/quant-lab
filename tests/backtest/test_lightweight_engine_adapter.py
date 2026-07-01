@@ -103,7 +103,7 @@ def test_canonical_gold_ok_feeds_data_loader_and_backtest(tmp_path: Path) -> Non
     assert backtest.metadata["input_mode"] == "canonical_gold"
 
 
-def test_validate_catalog_allows_multi_part_canonical_reader(tmp_path: Path) -> None:
+def test_validate_catalog_without_canonical_path_fails_closed_even_with_multipart_history(tmp_path: Path) -> None:
     layout = LakeLayout(tmp_path)
     frame = _prices_frame()
     for symbol, part in frame.groupby("symbol"):
@@ -139,8 +139,9 @@ def test_validate_catalog_allows_multi_part_canonical_reader(tmp_path: Path) -> 
             quality_policy="allow_warn",
         )
     )
-    assert result.status == "ok"
-    assert result.universe == ["000001.SZ", "000002.SZ"]
+    assert result.status == "required_missing"
+    assert result.issues == [{"code": "canonical_missing", "dataset": DATASET_PRICES}]
+    assert result.close_df is None
 
 
 def test_quality_fail_and_missing_canonical_are_structured(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
