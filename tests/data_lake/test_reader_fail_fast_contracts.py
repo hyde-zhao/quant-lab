@@ -146,6 +146,131 @@ def test_trade_status_and_prices_limit_do_not_default_to_available(tmp_path: Pat
     assert prices_limit.remediation_spec["auto_execute"] is False
 
 
+def test_reader_does_not_rglob_historical_when_catalog_path_is_missing(tmp_path: Path) -> None:
+    layout = LakeLayout(tmp_path)
+    historical_path = layout.canonical_dataset_root(DATASET_PRICES) / "run_id=run-old" / "part.parquet"
+    historical_path.parent.mkdir(parents=True, exist_ok=True)
+    pd.DataFrame(
+        {
+            "symbol": ["000001.SZ"],
+            "trade_date": ["20260102"],
+            "source_run_id": ["run-old"],
+            "close": [10.0],
+        }
+    ).to_parquet(historical_path, index=False)
+    CatalogStore(layout).upsert(
+        CatalogEntry(
+            dataset=DATASET_PRICES,
+            quality_status="pass",
+            dataset_status="available",
+            published=True,
+            readiness_status=READINESS_STATUS_AVAILABLE,
+            latest_manifest_run_id="run-current",
+            canonical_path="canonical/prices/1.0/run_id=run-current",
+        )
+    )
+
+    result = read_dataset(DATASET_PRICES, tmp_path, required=True)
+
+    assert result.status == "required_missing"
+    assert result.issues[0]["code"] == "canonical_missing"
+    assert result.frame is None
+
+
+def test_reader_does_not_read_unpublished_catalog_entry(tmp_path: Path) -> None:
+    layout = LakeLayout(tmp_path)
+    path = layout.canonical_dataset_root(DATASET_PRICES) / "run_id=run-a" / "part.parquet"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    pd.DataFrame(
+        {
+            "symbol": ["000001.SZ"],
+            "trade_date": ["20260102"],
+            "source_run_id": ["run-a"],
+            "close": [10.0],
+        }
+    ).to_parquet(path, index=False)
+    CatalogStore(layout).upsert(
+        CatalogEntry(
+            dataset=DATASET_PRICES,
+            quality_status="pass",
+            dataset_status="available",
+            published=False,
+            readiness_status=READINESS_STATUS_AVAILABLE,
+            latest_manifest_run_id="run-a",
+            canonical_path=str(path.parent.relative_to(tmp_path)),
+        )
+    )
+
+    result = read_dataset(DATASET_PRICES, tmp_path, required=True)
+
+    assert result.status == "required_missing"
+    assert result.issues[0]["code"] == "catalog_not_published"
+    assert result.frame is None
+
+
+def test_reader_blocks_duplicate_keys_when_catalog_run_id_is_missing(tmp_path: Path) -> None:
+    layout = LakeLayout(tmp_path)
+    path = layout.canonical_dataset_root(DATASET_PRICES) / "run_id=run-a" / "part.parquet"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    pd.DataFrame(
+        {
+            "symbol": ["000001.SZ", "000001.SZ"],
+            "trade_date": ["20260102", "20260102"],
+            "source_run_id": ["run-a", "run-b"],
+            "close": [10.0, 11.0],
+        }
+    ).to_parquet(path, index=False)
+    CatalogStore(layout).upsert(
+        CatalogEntry(
+            dataset=DATASET_PRICES,
+            quality_status="pass",
+            dataset_status="available",
+            published=True,
+            readiness_status=READINESS_STATUS_AVAILABLE,
+            latest_manifest_run_id=None,
+            canonical_path=str(path.parent.relative_to(tmp_path)),
+        )
+    )
+
+    result = read_dataset(DATASET_PRICES, tmp_path, required=True)
+
+    assert result.status == "required_missing"
+    assert result.issues[0]["code"] == "catalog_run_id_missing_for_duplicate_dedup"
+    assert result.remediation_spec["auto_execute"] is False
+
+
+def test_reader_blocks_duplicate_keys_when_catalog_run_id_is_not_in_sources(tmp_path: Path) -> None:
+    layout = LakeLayout(tmp_path)
+    path = layout.canonical_dataset_root(DATASET_PRICES) / "run_id=run-a" / "part.parquet"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    pd.DataFrame(
+        {
+            "symbol": ["000001.SZ", "000001.SZ"],
+            "trade_date": ["20260102", "20260102"],
+            "source_run_id": ["run-a", "run-b"],
+            "close": [10.0, 11.0],
+        }
+    ).to_parquet(path, index=False)
+    CatalogStore(layout).upsert(
+        CatalogEntry(
+            dataset=DATASET_PRICES,
+            quality_status="pass",
+            dataset_status="available",
+            published=True,
+            readiness_status=READINESS_STATUS_AVAILABLE,
+            latest_manifest_run_id="run-current",
+            canonical_path=str(path.parent.relative_to(tmp_path)),
+        )
+    )
+
+    result = read_dataset(DATASET_PRICES, tmp_path, required=True)
+
+    assert result.status == "required_missing"
+    assert result.issues[0]["code"] == "catalog_run_id_not_found_for_duplicate_dedup"
+    assert result.issues[0]["latest_manifest_run_id"] == "run-current"
+    assert result.remediation_spec["auto_execute"] is False
+
+
 def test_production_strict_passes_when_p0_and_w3_are_published_with_pit(tmp_path: Path) -> None:
     store = CatalogStore(tmp_path)
     for dataset in (

@@ -465,6 +465,8 @@ def _entry_paths(layout: LakeLayout, dataset: str, entry: CatalogEntry) -> list[
                 if ".tmp" not in path.name
             )
         return [canonical_path]
+    if canonical_path:
+        return []
     if entry.latest_manifest_run_id:
         run_root = (
             layout.canonical_dataset_root(dataset, SCHEMA_VERSION)
@@ -476,7 +478,43 @@ def _entry_paths(layout: LakeLayout, dataset: str, entry: CatalogEntry) -> list[
                 for path in run_root.rglob("*.parquet")
                 if ".tmp" not in path.name
             )
-    return _canonical_paths(layout, dataset)
+        return []
+    return []
+
+
+def _duplicate_dedup_run_id_issue(
+    frame: pd.DataFrame,
+    *,
+    entry: CatalogEntry,
+    dedup_keys: Sequence[str],
+    dataset: str,
+) -> dict[str, Any] | None:
+    if frame.empty or not dedup_keys:
+        return None
+    key_list = list(dict.fromkeys(dedup_keys))
+    if any(column not in frame.columns for column in key_list):
+        return None
+    if not bool(frame.duplicated(key_list, keep=False).any()):
+        return None
+    current_run_id = str(entry.latest_manifest_run_id or "")
+    if not current_run_id:
+        return {
+            "code": "catalog_run_id_missing_for_duplicate_dedup",
+            "dataset": dataset,
+            "reason": "duplicate natural keys require explicit catalog latest_manifest_run_id",
+        }
+    run_sources: set[str] = set()
+    for column in ("source_run_id", _CR139_PARTITION_RUN_ID_COLUMN):
+        if column in frame.columns:
+            run_sources.update(str(value) for value in frame[column].dropna().astype(str).tolist() if str(value))
+    if current_run_id not in run_sources:
+        return {
+            "code": "catalog_run_id_not_found_for_duplicate_dedup",
+            "dataset": dataset,
+            "latest_manifest_run_id": current_run_id,
+            "reason": "duplicate natural keys require a row or partition matching catalog latest_manifest_run_id",
+        }
+    return None
 
 
 def profile_duplicate_fingerprints(
@@ -3149,10 +3187,30 @@ def read_dataset(
         )
     issues = [{"code": "quality_warn", "dataset": dataset}] if entry.quality_status == "warn" else []
     frame = _read_paths(paths)
+    dedup_keys = _dataset_dedup_keys(dataset)
+    dedup_issue = _duplicate_dedup_run_id_issue(
+        frame,
+        entry=entry,
+        dedup_keys=dedup_keys,
+        dataset=dataset,
+    )
+    if dedup_issue is not None:
+        status = "required_missing" if policy.required else "unavailable"
+        return ReaderResult(
+            status=status,
+            issues=[dedup_issue],
+            catalog_entry=entry,
+            remediation_spec={
+                "action": "repair_catalog_run_id_before_read",
+                "dataset": dataset,
+                "dry_run_default": True,
+                "auto_execute": False,
+            },
+        )
     frame = _dedup_by_latest_run(
         frame,
         entry=entry,
-        dedup_keys=_dataset_dedup_keys(dataset),
+        dedup_keys=dedup_keys,
         latest_by="source_run_id",
         dataset=dataset,
         issues=issues,

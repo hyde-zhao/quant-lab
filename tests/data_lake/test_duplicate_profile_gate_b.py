@@ -9,7 +9,7 @@ import pandas as pd
 from market_data.catalog import CatalogEntry, CatalogStore
 from market_data.contracts import SCHEMA_VERSION
 from market_data.lake_layout import LakeLayout
-from scripts.legacy.cr.cr139_gateb_batch0_duplicate_profile import build_duplicate_profile
+from scripts.data_lake.profile_duplicate_keys import build_duplicate_profile
 
 
 def test_duplicate_profile_reports_metadata_and_sample_conflicts(tmp_path: Path) -> None:
@@ -46,7 +46,7 @@ def test_duplicate_profile_cli_rejects_output_inside_lake_root(tmp_path: Path) -
     result = subprocess.run(
         [
             sys.executable,
-            "scripts/legacy/cr/cr139_gateb_batch0_duplicate_profile.py",
+            "scripts/data_lake/profile_duplicate_keys.py",
             "--lake-root",
             str(lake),
             "--out",

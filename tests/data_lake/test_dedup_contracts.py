@@ -151,7 +151,7 @@ def test_read_dataset_deduplicates_prices_by_catalog_current_run(tmp_path: Path)
     assert kept["close"] == 12.0
 
 
-def test_read_dataset_uses_deterministic_run_id_fallback_when_catalog_current_missing(tmp_path: Path) -> None:
+def test_read_dataset_blocks_duplicate_dedup_when_catalog_current_missing(tmp_path: Path) -> None:
     lake = _lake_with_runs(
         tmp_path,
         {
@@ -167,11 +167,11 @@ def test_read_dataset_uses_deterministic_run_id_fallback_when_catalog_current_mi
 
     result = read_dataset(DATASET_PRICES, lake)
 
-    assert result.status == "available"
-    assert result.frame is not None
-    assert _duplicate_key_count(result.frame) == 0
-    assert result.frame.iloc[0]["source_run_id"] == "run-cr139-s07-002"
-    assert any(issue["code"] == "catalog_run_id_missing" for issue in result.issues)
+    assert result.status == "unavailable"
+    assert result.frame is None
+    assert result.issues[0]["code"] == "catalog_run_id_missing_for_duplicate_dedup"
+    assert result.remediation_spec["action"] == "repair_catalog_run_id_before_read"
+    assert result.remediation_spec["auto_execute"] is False
 
 
 def test_read_dataset_falls_back_to_partition_run_when_source_run_id_missing(tmp_path: Path) -> None:

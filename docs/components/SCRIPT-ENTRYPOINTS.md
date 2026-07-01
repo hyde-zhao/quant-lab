@@ -38,6 +38,11 @@
 | 缺口补数 | `scripts/data_lake/backfill_missing_market_data.py` | `scripts/legacy/cr/cr018_real_backfill_missing_data.py` |
 | 数据 readiness | `scripts/data_lake/check_market_data_readiness.py` | `scripts/legacy/cr/chapter3_real_data_readiness.py` |
 | production_strict readiness audit | `scripts/data_lake/run_data_lake_readiness_audit.py` | CR140 迁移前的实验侧审计脚本 |
+| 重复键画像 | `scripts/data_lake/profile_duplicate_keys.py` | `scripts/legacy/cr/cr139_gateb_batch0_duplicate_profile.py` |
+| 重复键拆分规划 | `scripts/data_lake/plan_duplicate_resolution.py` | `scripts/legacy/cr/cr139_gateb_batch2_remaining_split_planning.py` |
+| catalog current truth 画像 | `scripts/data_lake/profile_current_truth.py` | 新稳定入口；不扫描历史 run_id，除非 catalog 显式指向 |
+| 物理分区迁移规划 | `scripts/data_lake/plan_physical_partition_migration.py` | 新稳定入口；不依赖 legacy |
+| 物理分区迁移执行 | `scripts/data_lake/execute_physical_partition_migration.py` | 新稳定入口；默认 dry-run；执行 copy/catalog 更新必须带 approval id 和 created_at；支持 `--datasets` canary 分批执行 |
 | 价格涨跌停清理 | `scripts/data_lake/cleanup_price_limit_lifecycle.py` | `scripts/legacy/cr/cr018_price_limit_lifecycle_cleanup.py` |
 | release 发布 | `scripts/data_lake/publish_market_data_release.py` | `scripts/legacy/cr/cr018_release_catalog_publish.py` |
 | 数据修复 | `scripts/data_lake/repair_market_data.py` | `scripts/legacy/cr/cr012_limited_window_lake_repair.py` |
