@@ -34,6 +34,7 @@ from .contracts import (
 
 
 GOVERNED_LAKE_READINESS_SCHEMA = "governed_lake_readiness_matrix_v1"
+GOVERNED_LAKE_VALIDATION_PLAN_SCHEMA = "governed_lake_validation_plan_v1"
 GOVERNED_LAKE_DATASETS: tuple[str, ...] = (
     DATASET_ADJ_FACTOR,
     "bse_code_mapping",
@@ -88,6 +89,23 @@ ZERO_OPERATION_COUNTERS = {
     "simulation_or_live": 0,
     "broker_write": 0,
 }
+VALIDATION_TASK_REQUIRED_IDS = (
+    "inventory_catalog_physical_existence",
+    "golden_current_truth_profile",
+    "pit_reader_smoke",
+    "duplicate_profile",
+    "governed_readiness_matrix",
+    "published_pointer_local_consistency",
+    "nas_multinode_pointer_consistency",
+)
+VALIDATION_TASK_CADENCES = ("per_write", "daily", "weekly", "monthly", "on_demand", "gated")
+VALIDATION_TASK_EXECUTION_MODES = (
+    "metadata_only",
+    "read_only_local",
+    "dry_run_only",
+    "human_gate_required",
+)
+STABLE_ENTRYPOINT_PREFIXES = ("scripts/data_lake/", "market_data.")
 
 
 @dataclass(frozen=True, slots=True)
@@ -165,6 +183,63 @@ class GovernedLakeReadinessMatrix:
         }
 
 
+@dataclass(frozen=True, slots=True)
+class GovernedLakeValidationTask:
+    task_id: str
+    category: str
+    command_ref: str
+    cadence: str
+    execution_mode: str
+    dataset_scope: str
+    requires_human_gate: bool = False
+    expected_artifact: str = ""
+    side_effects: tuple[str, ...] = ()
+    notes: str = ""
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "task_id": self.task_id,
+            "category": self.category,
+            "command_ref": self.command_ref,
+            "cadence": self.cadence,
+            "execution_mode": self.execution_mode,
+            "dataset_scope": self.dataset_scope,
+            "requires_human_gate": self.requires_human_gate,
+            "expected_artifact": self.expected_artifact,
+            "side_effects": list(self.side_effects),
+            "notes": self.notes,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class GovernedLakeValidationPlan:
+    tasks: tuple[GovernedLakeValidationTask, ...]
+    operation_counts: Mapping[str, int]
+    schema_version: str = GOVERNED_LAKE_VALIDATION_PLAN_SCHEMA
+
+    @property
+    def task_count(self) -> int:
+        return len(self.tasks)
+
+    @property
+    def auto_runnable_count(self) -> int:
+        return sum(1 for task in self.tasks if not task.requires_human_gate)
+
+    @property
+    def gated_count(self) -> int:
+        return sum(1 for task in self.tasks if task.requires_human_gate)
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "schema_version": self.schema_version,
+            "task_count": self.task_count,
+            "auto_runnable_count": self.auto_runnable_count,
+            "gated_count": self.gated_count,
+            "tasks": [task.to_dict() for task in self.tasks],
+            "operation_counts": dict(self.operation_counts),
+        }
+
+
 def build_governed_lake_readiness_matrix(
     catalog_entries: Sequence[Mapping[str, Any] | object],
     *,
@@ -179,6 +254,95 @@ def build_governed_lake_readiness_matrix(
         for dataset in tuple(expected_datasets)
     )
     return GovernedLakeReadinessMatrix(rows=rows, operation_counts=_operation_counts(operation_counts))
+
+
+def build_governed_lake_validation_plan(
+    readiness_matrix: GovernedLakeReadinessMatrix | Mapping[str, Any] | None = None,
+    *,
+    operation_counts: Mapping[str, Any] | None = None,
+) -> GovernedLakeValidationPlan:
+    matrix = None
+    if readiness_matrix is not None:
+        matrix = (
+            readiness_matrix
+            if isinstance(readiness_matrix, GovernedLakeReadinessMatrix)
+            else _matrix_from_mapping(readiness_matrix)
+        )
+    dataset_scope = _dataset_scope(matrix)
+    tasks = (
+        GovernedLakeValidationTask(
+            task_id="inventory_catalog_physical_existence",
+            category="inventory",
+            command_ref="scripts/data_lake/run_data_lake_readiness_audit.py",
+            cadence="daily",
+            execution_mode="read_only_local",
+            dataset_scope=dataset_scope,
+            expected_artifact="inventory physical_missing_count and catalog coverage summary",
+            notes="Read-only lake inventory; no catalog or parquet mutation.",
+        ),
+        GovernedLakeValidationTask(
+            task_id="golden_current_truth_profile",
+            category="golden_baseline",
+            command_ref="scripts/data_lake/profile_current_truth.py",
+            cadence="per_write",
+            execution_mode="read_only_local",
+            dataset_scope=dataset_scope,
+            expected_artifact="row count and checksum profile for current truth",
+            notes="Must compare with prior baseline before accepting a content-neutral migration.",
+        ),
+        GovernedLakeValidationTask(
+            task_id="pit_reader_smoke",
+            category="pit_reader",
+            command_ref="scripts/data_lake/collect_reader_runtime_smoke.py",
+            cadence="daily",
+            execution_mode="read_only_local",
+            dataset_scope=dataset_scope,
+            expected_artifact="PIT/panel/current reader smoke evidence",
+            notes="Reader-only runtime smoke; no provider, broker, NAS sync or write.",
+        ),
+        GovernedLakeValidationTask(
+            task_id="duplicate_profile",
+            category="duplicate_profile",
+            command_ref="scripts/data_lake/profile_duplicate_keys.py",
+            cadence="weekly",
+            execution_mode="read_only_local",
+            dataset_scope="business-conflict datasets plus current-truth exact-copy candidates",
+            expected_artifact="duplicate key group and metadata conflict profile",
+            notes="Classifies conflict pressure; does not select survivor rows.",
+        ),
+        GovernedLakeValidationTask(
+            task_id="governed_readiness_matrix",
+            category="readiness_matrix",
+            command_ref="market_data.governed_lake.build_governed_lake_readiness_matrix",
+            cadence="per_write",
+            execution_mode="metadata_only",
+            dataset_scope=dataset_scope,
+            expected_artifact=GOVERNED_LAKE_READINESS_SCHEMA,
+            notes="Metadata-only status/PIT/run-registry bridge.",
+        ),
+        GovernedLakeValidationTask(
+            task_id="published_pointer_local_consistency",
+            category="published_pointer",
+            command_ref="market_data.catalog.CatalogStore.get_published_current_pointer",
+            cadence="per_write",
+            execution_mode="read_only_local",
+            dataset_scope=dataset_scope,
+            expected_artifact="17/17 local published pointer run_id/checksum/current path consistency",
+            notes="Local catalog/pointer read; pointer mutation remains out of scope.",
+        ),
+        GovernedLakeValidationTask(
+            task_id="nas_multinode_pointer_consistency",
+            category="multi_node_consistency",
+            command_ref="human_gate_required:nas_shared_read_consistency_check",
+            cadence="gated",
+            execution_mode="human_gate_required",
+            dataset_scope=dataset_scope,
+            requires_human_gate=True,
+            expected_artifact="at least two nodes read identical published pointer run_id/checksum",
+            notes="Requires explicit NAS/shared-node authorization; no implicit credential read or sync.",
+        ),
+    )
+    return GovernedLakeValidationPlan(tasks=tasks, operation_counts=_operation_counts(operation_counts))
 
 
 def validate_governed_lake_readiness_matrix(
@@ -213,6 +377,40 @@ def validate_governed_lake_readiness_matrix(
     for key, count in _operation_counts(value.operation_counts).items():
         if count != 0:
             issues.append({"code": "governed_lake_operation_counter_nonzero", "field": key, "value": count})
+    return tuple(issues)
+
+
+def validate_governed_lake_validation_plan(
+    plan: GovernedLakeValidationPlan | Mapping[str, Any],
+    *,
+    required_task_ids: Sequence[str] = VALIDATION_TASK_REQUIRED_IDS,
+) -> tuple[dict[str, Any], ...]:
+    value = plan if isinstance(plan, GovernedLakeValidationPlan) else _validation_plan_from_mapping(plan)
+    issues: list[dict[str, Any]] = []
+    actual = tuple(task.task_id for task in value.tasks)
+    if len(actual) != len(set(actual)):
+        issues.append({"code": "governed_lake_validation_task_duplicate"})
+    for task_id in tuple(str(item) for item in required_task_ids):
+        if task_id not in actual:
+            issues.append({"code": "governed_lake_validation_task_missing", "task_id": task_id})
+    for task in value.tasks:
+        if task.cadence not in VALIDATION_TASK_CADENCES:
+            issues.append({"code": "governed_lake_validation_cadence_invalid", "task_id": task.task_id})
+        if task.execution_mode not in VALIDATION_TASK_EXECUTION_MODES:
+            issues.append({"code": "governed_lake_validation_execution_mode_invalid", "task_id": task.task_id})
+        if "scripts/legacy/" in task.command_ref or task.command_ref.startswith("scripts/legacy"):
+            issues.append({"code": "governed_lake_validation_legacy_script_forbidden", "task_id": task.task_id})
+        if not task.requires_human_gate and not _is_stable_entrypoint(task.command_ref):
+            issues.append({"code": "governed_lake_validation_unstable_entrypoint", "task_id": task.task_id})
+        if not task.requires_human_gate and task.side_effects:
+            issues.append({"code": "governed_lake_validation_auto_task_has_side_effects", "task_id": task.task_id})
+        if task.requires_human_gate and task.execution_mode != "human_gate_required":
+            issues.append({"code": "governed_lake_validation_gate_mode_mismatch", "task_id": task.task_id})
+        if task.category == "multi_node_consistency" and not task.requires_human_gate:
+            issues.append({"code": "governed_lake_validation_multinode_requires_gate", "task_id": task.task_id})
+    for key, count in _operation_counts(value.operation_counts).items():
+        if count != 0:
+            issues.append({"code": "governed_lake_validation_operation_counter_nonzero", "field": key, "value": count})
     return tuple(issues)
 
 
@@ -342,11 +540,45 @@ def _operation_counts(values: Mapping[str, Any] | None = None) -> dict[str, int]
     return counts
 
 
+def _dataset_scope(matrix: GovernedLakeReadinessMatrix | None) -> str:
+    if matrix is None:
+        return f"{len(GOVERNED_LAKE_DATASETS)}/{len(GOVERNED_LAKE_DATASETS)} governed catalog datasets"
+    return f"{matrix.dataset_count}/{len(GOVERNED_LAKE_DATASETS)} governed catalog datasets"
+
+
+def _is_stable_entrypoint(command_ref: str) -> bool:
+    value = str(command_ref)
+    return value.startswith(STABLE_ENTRYPOINT_PREFIXES)
+
+
 def _matrix_from_mapping(data: Mapping[str, Any]) -> GovernedLakeReadinessMatrix:
     return GovernedLakeReadinessMatrix(
         rows=tuple(_row_from_mapping(item) for item in data.get("rows") or ()),
         operation_counts=_operation_counts(data.get("operation_counts")),
         schema_version=str(data.get("schema_version") or GOVERNED_LAKE_READINESS_SCHEMA),
+    )
+
+
+def _validation_plan_from_mapping(data: Mapping[str, Any]) -> GovernedLakeValidationPlan:
+    return GovernedLakeValidationPlan(
+        tasks=tuple(_validation_task_from_mapping(item) for item in data.get("tasks") or ()),
+        operation_counts=_operation_counts(data.get("operation_counts")),
+        schema_version=str(data.get("schema_version") or GOVERNED_LAKE_VALIDATION_PLAN_SCHEMA),
+    )
+
+
+def _validation_task_from_mapping(data: Mapping[str, Any]) -> GovernedLakeValidationTask:
+    return GovernedLakeValidationTask(
+        task_id=str(data.get("task_id") or ""),
+        category=str(data.get("category") or ""),
+        command_ref=str(data.get("command_ref") or ""),
+        cadence=str(data.get("cadence") or ""),
+        execution_mode=str(data.get("execution_mode") or ""),
+        dataset_scope=str(data.get("dataset_scope") or ""),
+        requires_human_gate=bool(data.get("requires_human_gate", False)),
+        expected_artifact=str(data.get("expected_artifact") or ""),
+        side_effects=tuple(str(item) for item in data.get("side_effects") or ()),
+        notes=str(data.get("notes") or ""),
     )
 
 
@@ -377,17 +609,22 @@ __all__ = [
     "BUSINESS_CONFLICT_DATASETS",
     "GOVERNED_LAKE_DATASETS",
     "GOVERNED_LAKE_READINESS_SCHEMA",
+    "GOVERNED_LAKE_VALIDATION_PLAN_SCHEMA",
     "GOVERNED_STATUS_PRODUCTION_READY",
     "GOVERNED_STATUS_QUARANTINED",
     "GOVERNED_STATUS_RESEARCH_READY",
     "GOVERNED_STATUS_UNSUPPORTED",
     "GovernedLakeDatasetReadiness",
     "GovernedLakeReadinessMatrix",
+    "GovernedLakeValidationPlan",
+    "GovernedLakeValidationTask",
     "GovernedRunRegistryRow",
     "PIT_REQUIRED_DATASETS",
     "PIT_STATUS_NOT_APPLICABLE",
     "PIT_STATUS_UNSUPPORTED_WITH_REASON",
     "ZERO_OPERATION_COUNTERS",
+    "build_governed_lake_validation_plan",
     "build_governed_lake_readiness_matrix",
     "validate_governed_lake_readiness_matrix",
+    "validate_governed_lake_validation_plan",
 ]

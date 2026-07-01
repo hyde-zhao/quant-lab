@@ -11,7 +11,9 @@ from market_data.governed_lake import (
     PIT_REQUIRED_DATASETS,
     PIT_STATUS_NOT_APPLICABLE,
     PIT_STATUS_UNSUPPORTED_WITH_REASON,
+    build_governed_lake_validation_plan,
     build_governed_lake_readiness_matrix,
+    validate_governed_lake_validation_plan,
     validate_governed_lake_readiness_matrix,
 )
 
@@ -98,3 +100,50 @@ def test_cr149_governed_lake_matrix_blocks_missing_dataset_and_nonzero_operation
     codes = {issue["code"] for issue in validate_governed_lake_readiness_matrix(matrix)}
     assert "governed_lake_dataset_missing" in codes
     assert "governed_lake_operation_counter_nonzero" in codes
+
+
+def test_cr149_validation_plan_covers_recurring_checks_and_gates_nas_multinode() -> None:
+    matrix = build_governed_lake_readiness_matrix(_catalog_entries())
+    plan = build_governed_lake_validation_plan(matrix)
+
+    assert plan.task_count == 7
+    assert plan.auto_runnable_count == 6
+    assert plan.gated_count == 1
+    assert validate_governed_lake_validation_plan(plan) == ()
+
+    tasks = {task.task_id: task for task in plan.tasks}
+    assert tasks["inventory_catalog_physical_existence"].command_ref.startswith("scripts/data_lake/")
+    assert tasks["golden_current_truth_profile"].command_ref == "scripts/data_lake/profile_current_truth.py"
+    assert tasks["pit_reader_smoke"].command_ref == "scripts/data_lake/collect_reader_runtime_smoke.py"
+    assert tasks["duplicate_profile"].command_ref == "scripts/data_lake/profile_duplicate_keys.py"
+    assert tasks["governed_readiness_matrix"].command_ref.startswith("market_data.")
+    assert tasks["published_pointer_local_consistency"].requires_human_gate is False
+    assert tasks["nas_multinode_pointer_consistency"].requires_human_gate is True
+    assert tasks["nas_multinode_pointer_consistency"].execution_mode == "human_gate_required"
+    assert all(value == 0 for value in plan.operation_counts.values())
+
+
+def test_cr149_validation_plan_rejects_legacy_auto_side_effects_and_missing_task() -> None:
+    plan = build_governed_lake_validation_plan().to_dict()
+    plan["tasks"] = [task for task in plan["tasks"] if task["task_id"] != "duplicate_profile"]
+    plan["tasks"][0]["command_ref"] = "scripts/legacy/cr139/old_inventory.py"
+    plan["tasks"][0]["side_effects"] = ["lake_write"]
+    plan["operation_counts"]["nas_sync_or_write"] = 1
+
+    codes = {issue["code"] for issue in validate_governed_lake_validation_plan(plan)}
+    assert "governed_lake_validation_task_missing" in codes
+    assert "governed_lake_validation_legacy_script_forbidden" in codes
+    assert "governed_lake_validation_unstable_entrypoint" in codes
+    assert "governed_lake_validation_auto_task_has_side_effects" in codes
+    assert "governed_lake_validation_operation_counter_nonzero" in codes
+
+
+def test_cr149_validation_plan_rejects_multinode_without_human_gate() -> None:
+    plan = build_governed_lake_validation_plan().to_dict()
+    multinode = next(task for task in plan["tasks"] if task["task_id"] == "nas_multinode_pointer_consistency")
+    multinode["requires_human_gate"] = False
+    multinode["execution_mode"] = "read_only_local"
+    multinode["command_ref"] = "scripts/data_lake/run_data_lake_readiness_audit.py"
+
+    codes = {issue["code"] for issue in validate_governed_lake_validation_plan(plan)}
+    assert "governed_lake_validation_multinode_requires_gate" in codes
