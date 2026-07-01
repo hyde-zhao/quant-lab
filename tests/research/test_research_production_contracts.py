@@ -5,10 +5,12 @@ from engine.research_production_contracts import (
     ResearchProductionAssetMap,
     ResearchDatasetSpec,
     audit_research_production_contract,
+    build_feature_availability_contract,
     build_research_production_asset_map,
     build_research_dataset_snapshot_spec,
     research_dataset_request_from_spec,
     research_dataset_spec_fingerprint,
+    validate_feature_availability_contract,
     validate_research_production_asset_map,
     validate_research_dataset_snapshot_spec,
     validate_research_dataset_spec,
@@ -115,11 +117,12 @@ def test_cr147_research_production_asset_map_covers_existing_assets_without_runt
         "feature_label_artifact_contracts",
         "training_snapshot_contract",
         "experiment_manifest_registry",
+        "factor_model_validation_leakage_gate",
         "strategy_admission_package",
         "strategy_readiness_admission",
         "cr147_contract_bridge",
     }.issubset(asset_ids)
-    assert asset_map.gap_count == 1
+    assert asset_map.gap_count == 0
     assert asset_map.gate_required_gap_count == 0
     assert all(value == 0 for value in asset_map.operation_counts.values())
     assert validate_research_production_asset_map(asset_map) == ()
@@ -182,6 +185,36 @@ def test_cr147_research_dataset_snapshot_spec_blocks_mutable_refs_and_mismatches
     assert "research_dataset_snapshot_spec_id_mismatch" in codes
     assert "research_dataset_snapshot_feature_refs_missing" in codes
     assert "research_dataset_snapshot_operation_counter_nonzero" in codes
+
+
+def test_cr147_feature_availability_contract_references_existing_leakage_gate() -> None:
+    contract = build_feature_availability_contract(_spec(), _feature_artifact())
+
+    assert contract.feature_set_id == "alpha_core"
+    assert contract.enforcement_ref == "engine.factor_model_validation.label_cutoff_gate"
+    assert contract.decision_time_field == "decision_time"
+    assert contract.feature_available_at_field == "available_at"
+    assert contract.label_available_at_field == "label_available_at"
+    assert {"trade_date", "symbol", "decision_time", "available_at", "label_available_at"}.issubset(
+        set(contract.required_columns)
+    )
+    assert all(value == 0 for value in contract.operation_counts.values())
+    assert validate_feature_availability_contract(contract, spec=_spec(), feature_artifact=_feature_artifact()) == ()
+
+
+def test_cr147_feature_availability_contract_blocks_missing_columns_and_runtime_ops() -> None:
+    contract = build_feature_availability_contract(_spec(), _feature_artifact()).to_dict()
+    contract["required_columns"] = ["trade_date", "symbol"]
+    contract["enforcement_ref"] = "custom.unapproved_gate"
+    contract["operation_counts"] = {"provider_fetch": 1}
+
+    codes = {
+        issue["code"]
+        for issue in validate_feature_availability_contract(contract, spec=_spec(), feature_artifact=_feature_artifact())
+    }
+    assert "feature_availability_required_columns_missing" in codes
+    assert "feature_availability_enforcement_ref_invalid" in codes
+    assert "feature_availability_operation_counter_nonzero" in codes
 
 
 def test_cr147_audit_accepts_mapping_feature_artifact_with_label_mapping() -> None:

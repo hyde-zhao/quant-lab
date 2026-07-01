@@ -106,6 +106,34 @@ class ResearchDatasetSnapshotSpec:
 
 
 @dataclass(frozen=True, slots=True)
+class FeatureAvailabilityContract:
+    feature_set_id: str
+    decision_time_field: str
+    feature_available_at_field: str
+    label_available_at_field: str
+    label_horizon_days: int
+    primary_keys: tuple[str, ...]
+    required_columns: tuple[str, ...]
+    enforcement_ref: str = "engine.factor_model_validation.label_cutoff_gate"
+    operation_counts: Mapping[str, int] = field(default_factory=dict)
+    schema_version: str = "feature_availability_contract_v1"
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "schema_version": self.schema_version,
+            "feature_set_id": self.feature_set_id,
+            "decision_time_field": self.decision_time_field,
+            "feature_available_at_field": self.feature_available_at_field,
+            "label_available_at_field": self.label_available_at_field,
+            "label_horizon_days": self.label_horizon_days,
+            "primary_keys": list(self.primary_keys),
+            "required_columns": list(self.required_columns),
+            "enforcement_ref": self.enforcement_ref,
+            "operation_counts": dict(self.operation_counts),
+        }
+
+
+@dataclass(frozen=True, slots=True)
 class ResearchProductionAudit:
     status: str
     spec: ResearchDatasetSpec
@@ -261,6 +289,106 @@ def build_research_dataset_snapshot_spec(
         output_ref=f"research-dataset-snapshot://{value.output_snapshot_id}",
         operation_counts=_zero_operation_counts(),
     )
+
+
+def build_feature_availability_contract(
+    spec: ResearchDatasetSpec | Mapping[str, Any],
+    feature_artifact: FeatureArtifactSpec | Mapping[str, Any],
+) -> FeatureAvailabilityContract:
+    value = spec if isinstance(spec, ResearchDatasetSpec) else research_dataset_spec_from_mapping(spec)
+    artifact = feature_artifact if isinstance(feature_artifact, FeatureArtifactSpec) else _feature_artifact_from_mapping(feature_artifact)
+    policy = value.leakage_policy
+    required_columns = tuple(
+        dict.fromkeys(
+            (
+                *value.primary_keys,
+                policy.decision_time_field,
+                policy.feature_available_at_field,
+                policy.label_available_at_field,
+                *artifact.feature_columns,
+            )
+        )
+    )
+    return FeatureAvailabilityContract(
+        feature_set_id=artifact.feature_set_id,
+        decision_time_field=policy.decision_time_field,
+        feature_available_at_field=policy.feature_available_at_field,
+        label_available_at_field=policy.label_available_at_field,
+        label_horizon_days=policy.label_horizon_days,
+        primary_keys=value.primary_keys,
+        required_columns=required_columns,
+        operation_counts=_zero_operation_counts(),
+    )
+
+
+def validate_feature_availability_contract(
+    contract: FeatureAvailabilityContract | Mapping[str, Any],
+    *,
+    spec: ResearchDatasetSpec | Mapping[str, Any] | None = None,
+    feature_artifact: FeatureArtifactSpec | Mapping[str, Any] | None = None,
+) -> tuple[dict[str, Any], ...]:
+    value = contract if isinstance(contract, FeatureAvailabilityContract) else _feature_availability_contract_from_mapping(contract)
+    issues: list[dict[str, Any]] = []
+    for field_name in (
+        "feature_set_id",
+        "decision_time_field",
+        "feature_available_at_field",
+        "label_available_at_field",
+        "primary_keys",
+        "required_columns",
+        "enforcement_ref",
+    ):
+        item = getattr(value, field_name)
+        if item is None or item == "" or item == ():
+            issues.append({"code": "feature_availability_required_field_missing", "field": field_name})
+    if value.label_horizon_days <= 0:
+        issues.append({"code": "feature_availability_label_horizon_invalid", "field": "label_horizon_days"})
+    required = {
+        *value.primary_keys,
+        value.decision_time_field,
+        value.feature_available_at_field,
+        value.label_available_at_field,
+    }
+    missing_columns = sorted(required - set(value.required_columns))
+    if missing_columns:
+        issues.append({"code": "feature_availability_required_columns_missing", "missing_columns": missing_columns})
+    if value.enforcement_ref != "engine.factor_model_validation.label_cutoff_gate":
+        issues.append({"code": "feature_availability_enforcement_ref_invalid", "field": "enforcement_ref"})
+    for key, count in _normalise_operation_counts(value.operation_counts).items():
+        if count != 0:
+            issues.append({"code": "feature_availability_operation_counter_nonzero", "field": key, "value": count})
+    if spec is not None:
+        spec_value = spec if isinstance(spec, ResearchDatasetSpec) else research_dataset_spec_from_mapping(spec)
+        if value.feature_set_id not in set(spec_value.feature_artifact_refs):
+            issues.append(
+                {
+                    "code": "feature_availability_feature_ref_not_in_spec",
+                    "feature_set_id": value.feature_set_id,
+                    "expected_refs": list(spec_value.feature_artifact_refs),
+                }
+            )
+        if value.label_horizon_days != spec_value.leakage_policy.label_horizon_days:
+            issues.append(
+                {
+                    "code": "feature_availability_label_horizon_mismatch",
+                    "expected": spec_value.leakage_policy.label_horizon_days,
+                    "actual": value.label_horizon_days,
+                }
+            )
+    if feature_artifact is not None:
+        artifact = feature_artifact if isinstance(feature_artifact, FeatureArtifactSpec) else _feature_artifact_from_mapping(feature_artifact)
+        if value.feature_set_id != artifact.feature_set_id:
+            issues.append(
+                {
+                    "code": "feature_availability_artifact_id_mismatch",
+                    "expected": artifact.feature_set_id,
+                    "actual": value.feature_set_id,
+                }
+            )
+        missing_features = sorted(set(artifact.feature_columns) - set(value.required_columns))
+        if missing_features:
+            issues.append({"code": "feature_availability_feature_columns_missing", "missing_columns": missing_features})
+    return tuple(issues)
 
 
 def validate_research_dataset_snapshot_spec(
@@ -447,14 +575,6 @@ def build_research_production_asset_map() -> ResearchProductionAssetMap:
             maturity="existing_contract_ready_for_phase2_bridge",
             current_contracts=("feature_set_id", "artifact_version", "as_of_trade_date", "source_view_refs", "lineage_checksum"),
             required_capabilities=("available_at_policy", "primary_key_alignment", "feature_store_switch_gate"),
-            gaps=(
-                ResearchProductionGap(
-                    gap_id="feature_available_at_policy_not_enforced_by_builder",
-                    severity="medium",
-                    description="Feature metadata exposes enough fields for PIT policy, but dataset building must enforce available_at <= decision_time.",
-                    phase="Phase 2",
-                ),
-            ),
         ),
         ResearchProductionAsset(
             asset_id="training_snapshot_contract",
@@ -475,6 +595,16 @@ def build_research_production_asset_map() -> ResearchProductionAssetMap:
             maturity="existing_contract_ready_for_phase2_bridge",
             current_contracts=("config_hash", "dataset_release", "factor_versions", "report_paths", "allowed_blocked_claims"),
             required_capabilities=("experiment_lineage", "report_catalog", "admission_evidence_refs"),
+        ),
+        ResearchProductionAsset(
+            asset_id="factor_model_validation_leakage_gate",
+            layer="feature_label_leakage_gate",
+            module="engine.factor_model_validation",
+            object_names=("label_cutoff_gate", "data_bias_audit"),
+            role="Existing row-level leakage and label cutoff validation entry points for later runtime sample validation.",
+            maturity="existing_validation_asset_referenced_by_phase2_contract",
+            current_contracts=("available_at", "label_available_at", "cutoff_time", "label_horizon_days"),
+            required_capabilities=("label_cutoff_gate", "data_bias_audit", "operation_counts_zero"),
         ),
         ResearchProductionAsset(
             asset_id="strategy_admission_package",
@@ -614,6 +744,21 @@ def _snapshot_spec_from_mapping(data: Mapping[str, Any]) -> ResearchDatasetSnaps
     )
 
 
+def _feature_availability_contract_from_mapping(data: Mapping[str, Any]) -> FeatureAvailabilityContract:
+    return FeatureAvailabilityContract(
+        feature_set_id=str(data.get("feature_set_id") or ""),
+        decision_time_field=str(data.get("decision_time_field") or ""),
+        feature_available_at_field=str(data.get("feature_available_at_field") or ""),
+        label_available_at_field=str(data.get("label_available_at_field") or ""),
+        label_horizon_days=int(data.get("label_horizon_days", 0) or 0),
+        primary_keys=tuple(str(item) for item in data.get("primary_keys") or ()),
+        required_columns=tuple(str(item) for item in data.get("required_columns") or ()),
+        enforcement_ref=str(data.get("enforcement_ref") or ""),
+        operation_counts=_normalise_operation_counts(data.get("operation_counts")),
+        schema_version=str(data.get("schema_version") or "feature_availability_contract_v1"),
+    )
+
+
 def _date_order_issues(spec: ResearchDatasetSpec) -> list[dict[str, Any]]:
     parsed = {name: _parse_date(getattr(spec, name)) for name in ("start_date", "end_date", "as_of")}
     issues = [
@@ -670,6 +815,7 @@ def _stable_sha256(payload: Mapping[str, Any]) -> str:
 
 __all__ = [
     "ASSET_MAP_SCHEMA",
+    "FeatureAvailabilityContract",
     "LeakagePolicy",
     "RESEARCH_DATASET_SPEC_SCHEMA",
     "RESEARCH_PRODUCTION_AUDIT_SCHEMA",
@@ -680,12 +826,14 @@ __all__ = [
     "ResearchProductionGap",
     "ResearchProductionAudit",
     "audit_research_production_contract",
+    "build_feature_availability_contract",
     "build_research_production_asset_map",
     "build_research_dataset_snapshot_spec",
     "research_dataset_request_from_spec",
     "research_dataset_spec_fingerprint",
     "research_dataset_spec_from_mapping",
     "validate_research_production_asset_map",
+    "validate_feature_availability_contract",
     "validate_research_dataset_snapshot_spec",
     "validate_research_dataset_spec",
 ]
