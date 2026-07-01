@@ -4,6 +4,11 @@ from market_data.catalog import CatalogEntry
 from market_data.contracts import PIT_STATUS_AVAILABLE, QUALITY_STATUS_PASS, READINESS_STATUS_AVAILABLE
 from market_data.governed_lake import (
     BUSINESS_CONFLICT_DATASETS,
+    CONFLICT_ACTION_FULL_GROUP_QUARANTINE,
+    CONFLICT_ACTION_METADATA_PRECEDENCE_GATE,
+    CONFLICT_CLASS_BUSINESS_CONFLICT,
+    CONFLICT_CLASS_EXACT_OR_METADATA,
+    CONFLICT_POLICY_DATASETS,
     GOVERNED_LAKE_DATASETS,
     GOVERNED_STATUS_PRODUCTION_READY,
     GOVERNED_STATUS_QUARANTINED,
@@ -11,8 +16,10 @@ from market_data.governed_lake import (
     PIT_REQUIRED_DATASETS,
     PIT_STATUS_NOT_APPLICABLE,
     PIT_STATUS_UNSUPPORTED_WITH_REASON,
+    build_governed_lake_conflict_policy,
     build_governed_lake_validation_plan,
     build_governed_lake_readiness_matrix,
+    validate_governed_lake_conflict_policy,
     validate_governed_lake_validation_plan,
     validate_governed_lake_readiness_matrix,
 )
@@ -147,3 +154,123 @@ def test_cr149_validation_plan_rejects_multinode_without_human_gate() -> None:
 
     codes = {issue["code"] for issue in validate_governed_lake_validation_plan(plan)}
     assert "governed_lake_validation_multinode_requires_gate" in codes
+
+
+def test_cr149_conflict_policy_classifies_all_business_conflicts_as_quarantine() -> None:
+    policy = build_governed_lake_conflict_policy(_duplicate_split_summary())
+
+    assert policy.dataset_count == len(CONFLICT_POLICY_DATASETS)
+    assert policy.business_conflict_dataset_count == 4
+    assert policy.business_conflict_group_count == 4_272_624
+    assert policy.business_conflict_groups_classified_count == 4_272_624
+    assert validate_governed_lake_conflict_policy(
+        policy,
+        expected_business_conflict_group_count=4_272_624,
+    ) == ()
+
+    rows = {row.dataset: row for row in policy.rows}
+    assert rows["adj_factor"].business_conflict_group_count == 0
+    assert rows["adj_factor"].conflict_classification == CONFLICT_CLASS_EXACT_OR_METADATA
+    assert rows["adj_factor"].default_action == CONFLICT_ACTION_METADATA_PRECEDENCE_GATE
+    for dataset in BUSINESS_CONFLICT_DATASETS:
+        assert rows[dataset].conflict_classification == CONFLICT_CLASS_BUSINESS_CONFLICT
+        assert rows[dataset].default_action == CONFLICT_ACTION_FULL_GROUP_QUARANTINE
+        assert rows[dataset].semantic_selection_authorized is False
+        assert rows[dataset].cleanup_authorized is False
+        assert rows[dataset].write_authorization_required is True
+    assert "approve prices schema normalization policy before write" in rows["prices"].decision_required
+
+
+def test_cr149_conflict_policy_rejects_semantic_selection_and_unclassified_groups() -> None:
+    policy = build_governed_lake_conflict_policy(_duplicate_split_summary()).to_dict()
+    prices = next(row for row in policy["rows"] if row["dataset"] == "prices")
+    prices["semantic_selection_authorized"] = True
+    prices["default_action"] = "semantic_select_latest"
+    trade_status = next(row for row in policy["rows"] if row["dataset"] == "trade_status")
+    trade_status["conflict_classification"] = "unknown"
+    policy["operation_counts"]["business_conflict_cleanup"] = 1
+
+    codes = {
+        issue["code"]
+        for issue in validate_governed_lake_conflict_policy(
+            policy,
+            expected_business_conflict_group_count=4_272_624,
+        )
+    }
+    assert "governed_lake_business_conflict_groups_not_fully_classified" in codes
+    assert "governed_lake_business_conflict_quarantine_missing" in codes
+    assert "governed_lake_business_conflict_semantic_selection_forbidden" in codes
+    assert "governed_lake_business_conflict_classification_missing" in codes
+    assert "governed_lake_conflict_policy_operation_counter_nonzero" in codes
+
+
+def test_cr149_conflict_policy_rejects_total_mismatch_and_missing_prices_schema_gate() -> None:
+    policy = build_governed_lake_conflict_policy(_duplicate_split_summary()).to_dict()
+    prices = next(row for row in policy["rows"] if row["dataset"] == "prices")
+    prices["decision_required"] = [
+        item
+        for item in prices["decision_required"]
+        if item != "approve prices schema normalization policy before write"
+    ]
+
+    codes = {
+        issue["code"]
+        for issue in validate_governed_lake_conflict_policy(
+            policy,
+            expected_business_conflict_group_count=4_272_625,
+        )
+    }
+    assert "governed_lake_conflict_policy_total_mismatch" in codes
+    assert "governed_lake_prices_schema_policy_gate_missing" in codes
+
+
+def _duplicate_split_summary() -> dict[str, object]:
+    return {
+        "dataset_summary": [
+            {
+                "dataset": "adj_factor",
+                "source_row_count": 47_876_790,
+                "duplicate_key_group_count": 17_905_960,
+                "exact_copy_groups": 17_824_108,
+                "metadata_only_groups": 81_852,
+                "business_conflict_groups": 0,
+                "schema_normalization_required": False,
+            },
+            {
+                "dataset": "prices",
+                "source_row_count": 45_660_430,
+                "duplicate_key_group_count": 17_093_658,
+                "exact_copy_groups": 17_011_870,
+                "metadata_only_groups": 1_830,
+                "business_conflict_groups": 79_958,
+                "schema_normalization_required": True,
+            },
+            {
+                "dataset": "prices_limit",
+                "source_row_count": 60_172_542,
+                "duplicate_key_group_count": 19_709_804,
+                "exact_copy_groups": 12_264_009,
+                "metadata_only_groups": 6_946_008,
+                "business_conflict_groups": 499_787,
+                "schema_normalization_required": False,
+            },
+            {
+                "dataset": "events",
+                "source_row_count": 713_640,
+                "duplicate_key_group_count": 351_527,
+                "exact_copy_groups": 340_170,
+                "metadata_only_groups": 10_583,
+                "business_conflict_groups": 774,
+                "schema_normalization_required": False,
+            },
+            {
+                "dataset": "trade_status",
+                "source_row_count": 35_527_310,
+                "duplicate_key_group_count": 17_649_508,
+                "exact_copy_groups": 13_887_316,
+                "metadata_only_groups": 70_087,
+                "business_conflict_groups": 3_692_105,
+                "schema_normalization_required": False,
+            },
+        ]
+    }

@@ -35,6 +35,7 @@ from .contracts import (
 
 GOVERNED_LAKE_READINESS_SCHEMA = "governed_lake_readiness_matrix_v1"
 GOVERNED_LAKE_VALIDATION_PLAN_SCHEMA = "governed_lake_validation_plan_v1"
+GOVERNED_LAKE_CONFLICT_POLICY_SCHEMA = "governed_lake_conflict_policy_v1"
 GOVERNED_LAKE_DATASETS: tuple[str, ...] = (
     DATASET_ADJ_FACTOR,
     "bse_code_mapping",
@@ -106,6 +107,19 @@ VALIDATION_TASK_EXECUTION_MODES = (
     "human_gate_required",
 )
 STABLE_ENTRYPOINT_PREFIXES = ("scripts/data_lake/", "market_data.")
+CONFLICT_POLICY_DATASETS = (
+    DATASET_ADJ_FACTOR,
+    DATASET_PRICES,
+    DATASET_PRICES_LIMIT,
+    DATASET_EVENTS,
+    DATASET_TRADE_STATUS,
+)
+CONFLICT_CLASS_EXACT_OR_METADATA = "exact_or_metadata_only"
+CONFLICT_CLASS_BUSINESS_CONFLICT = "business_conflict"
+CONFLICT_CLASS_NO_DUPLICATE_PRESSURE = "no_duplicate_pressure"
+CONFLICT_ACTION_METADATA_PRECEDENCE_GATE = "metadata_precedence_or_exact_dedup_requires_gate"
+CONFLICT_ACTION_FULL_GROUP_QUARANTINE = "full_group_quarantine"
+CONFLICT_ACTION_NO_ACTION = "no_action"
 
 
 @dataclass(frozen=True, slots=True)
@@ -240,6 +254,80 @@ class GovernedLakeValidationPlan:
         }
 
 
+@dataclass(frozen=True, slots=True)
+class GovernedLakeConflictPolicyRow:
+    dataset: str
+    source_row_count: int
+    duplicate_key_group_count: int
+    exact_copy_group_count: int
+    metadata_only_group_count: int
+    business_conflict_group_count: int
+    conflict_classification: str
+    default_action: str
+    schema_normalization_required: bool = False
+    write_authorization_required: bool = True
+    semantic_selection_authorized: bool = False
+    cleanup_authorized: bool = False
+    decision_required: tuple[str, ...] = ()
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "dataset": self.dataset,
+            "source_row_count": self.source_row_count,
+            "duplicate_key_group_count": self.duplicate_key_group_count,
+            "exact_copy_group_count": self.exact_copy_group_count,
+            "metadata_only_group_count": self.metadata_only_group_count,
+            "business_conflict_group_count": self.business_conflict_group_count,
+            "conflict_classification": self.conflict_classification,
+            "default_action": self.default_action,
+            "schema_normalization_required": self.schema_normalization_required,
+            "write_authorization_required": self.write_authorization_required,
+            "semantic_selection_authorized": self.semantic_selection_authorized,
+            "cleanup_authorized": self.cleanup_authorized,
+            "decision_required": list(self.decision_required),
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class GovernedLakeConflictPolicy:
+    rows: tuple[GovernedLakeConflictPolicyRow, ...]
+    operation_counts: Mapping[str, int]
+    schema_version: str = GOVERNED_LAKE_CONFLICT_POLICY_SCHEMA
+
+    @property
+    def dataset_count(self) -> int:
+        return len(self.rows)
+
+    @property
+    def business_conflict_dataset_count(self) -> int:
+        return sum(1 for row in self.rows if row.business_conflict_group_count > 0)
+
+    @property
+    def business_conflict_group_count(self) -> int:
+        return sum(row.business_conflict_group_count for row in self.rows)
+
+    @property
+    def business_conflict_groups_classified_count(self) -> int:
+        return sum(
+            row.business_conflict_group_count
+            for row in self.rows
+            if row.business_conflict_group_count > 0
+            and row.conflict_classification == CONFLICT_CLASS_BUSINESS_CONFLICT
+            and row.default_action == CONFLICT_ACTION_FULL_GROUP_QUARANTINE
+        )
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "schema_version": self.schema_version,
+            "dataset_count": self.dataset_count,
+            "business_conflict_dataset_count": self.business_conflict_dataset_count,
+            "business_conflict_group_count": self.business_conflict_group_count,
+            "business_conflict_groups_classified_count": self.business_conflict_groups_classified_count,
+            "rows": [row.to_dict() for row in self.rows],
+            "operation_counts": dict(self.operation_counts),
+        }
+
+
 def build_governed_lake_readiness_matrix(
     catalog_entries: Sequence[Mapping[str, Any] | object],
     *,
@@ -345,6 +433,21 @@ def build_governed_lake_validation_plan(
     return GovernedLakeValidationPlan(tasks=tasks, operation_counts=_operation_counts(operation_counts))
 
 
+def build_governed_lake_conflict_policy(
+    duplicate_split_summary: Mapping[str, Any],
+    *,
+    expected_datasets: Sequence[str] = CONFLICT_POLICY_DATASETS,
+    operation_counts: Mapping[str, Any] | None = None,
+) -> GovernedLakeConflictPolicy:
+    dataset_rows = {
+        str(item.get("dataset") or ""): dict(item)
+        for item in duplicate_split_summary.get("dataset_summary") or ()
+        if isinstance(item, Mapping)
+    }
+    rows = tuple(_conflict_policy_row(str(dataset), dataset_rows.get(str(dataset), {})) for dataset in expected_datasets)
+    return GovernedLakeConflictPolicy(rows=rows, operation_counts=_operation_counts(operation_counts))
+
+
 def validate_governed_lake_readiness_matrix(
     matrix: GovernedLakeReadinessMatrix | Mapping[str, Any],
     *,
@@ -380,6 +483,59 @@ def validate_governed_lake_readiness_matrix(
     return tuple(issues)
 
 
+def validate_governed_lake_conflict_policy(
+    policy: GovernedLakeConflictPolicy | Mapping[str, Any],
+    *,
+    expected_datasets: Sequence[str] = CONFLICT_POLICY_DATASETS,
+    expected_business_conflict_group_count: int | None = None,
+) -> tuple[dict[str, Any], ...]:
+    value = policy if isinstance(policy, GovernedLakeConflictPolicy) else _conflict_policy_from_mapping(policy)
+    issues: list[dict[str, Any]] = []
+    expected = tuple(str(item) for item in expected_datasets)
+    actual = tuple(row.dataset for row in value.rows)
+    if len(actual) != len(set(actual)):
+        issues.append({"code": "governed_lake_conflict_policy_dataset_duplicate"})
+    for dataset in expected:
+        if dataset not in actual:
+            issues.append({"code": "governed_lake_conflict_policy_dataset_missing", "dataset": dataset})
+    if expected_business_conflict_group_count is not None:
+        if value.business_conflict_group_count != int(expected_business_conflict_group_count):
+            issues.append(
+                {
+                    "code": "governed_lake_conflict_policy_total_mismatch",
+                    "expected": int(expected_business_conflict_group_count),
+                    "actual": value.business_conflict_group_count,
+                }
+            )
+    if value.business_conflict_group_count != value.business_conflict_groups_classified_count:
+        issues.append(
+            {
+                "code": "governed_lake_business_conflict_groups_not_fully_classified",
+                "business_conflict_group_count": value.business_conflict_group_count,
+                "classified_count": value.business_conflict_groups_classified_count,
+            }
+        )
+    for row in value.rows:
+        if row.business_conflict_group_count > 0:
+            if row.conflict_classification != CONFLICT_CLASS_BUSINESS_CONFLICT:
+                issues.append({"code": "governed_lake_business_conflict_classification_missing", "dataset": row.dataset})
+            if row.default_action != CONFLICT_ACTION_FULL_GROUP_QUARANTINE:
+                issues.append({"code": "governed_lake_business_conflict_quarantine_missing", "dataset": row.dataset})
+            if row.semantic_selection_authorized:
+                issues.append({"code": "governed_lake_business_conflict_semantic_selection_forbidden", "dataset": row.dataset})
+            if row.cleanup_authorized:
+                issues.append({"code": "governed_lake_business_conflict_cleanup_forbidden", "dataset": row.dataset})
+        if row.dataset == DATASET_PRICES and row.schema_normalization_required:
+            if "approve prices schema normalization policy before write" not in row.decision_required:
+                issues.append({"code": "governed_lake_prices_schema_policy_gate_missing", "dataset": row.dataset})
+        if row.business_conflict_group_count == 0 and row.conflict_classification == CONFLICT_CLASS_BUSINESS_CONFLICT:
+            issues.append({"code": "governed_lake_zero_conflict_dataset_misclassified", "dataset": row.dataset})
+    for key, count in _operation_counts(value.operation_counts).items():
+        if count != 0:
+            issues.append({"code": "governed_lake_conflict_policy_operation_counter_nonzero", "field": key, "value": count})
+    return tuple(issues)
+
+
 def validate_governed_lake_validation_plan(
     plan: GovernedLakeValidationPlan | Mapping[str, Any],
     *,
@@ -412,6 +568,53 @@ def validate_governed_lake_validation_plan(
         if count != 0:
             issues.append({"code": "governed_lake_validation_operation_counter_nonzero", "field": key, "value": count})
     return tuple(issues)
+
+
+def _conflict_policy_row(dataset: str, source: Mapping[str, Any]) -> GovernedLakeConflictPolicyRow:
+    source_row_count = int(source.get("source_row_count") or 0)
+    duplicate_key_group_count = int(source.get("duplicate_key_group_count") or 0)
+    exact_copy_group_count = int(source.get("exact_copy_groups") or source.get("exact_copy_group_count") or 0)
+    metadata_only_group_count = int(source.get("metadata_only_groups") or source.get("metadata_only_group_count") or 0)
+    business_conflict_group_count = int(
+        source.get("business_conflict_groups") or source.get("business_conflict_group_count") or 0
+    )
+    if business_conflict_group_count > 0:
+        conflict_classification = CONFLICT_CLASS_BUSINESS_CONFLICT
+        default_action = CONFLICT_ACTION_FULL_GROUP_QUARANTINE
+        decisions = (
+            "approve exact-copy dedup drop policy",
+            "approve source_run_id precedence for metadata-only groups",
+            "approve full-group quarantine or semantic resolution for business-conflict groups",
+        )
+    elif duplicate_key_group_count > 0:
+        conflict_classification = CONFLICT_CLASS_EXACT_OR_METADATA
+        default_action = CONFLICT_ACTION_METADATA_PRECEDENCE_GATE
+        decisions = (
+            "approve exact-copy dedup drop policy",
+            "approve source_run_id precedence for metadata-only groups",
+        )
+    else:
+        conflict_classification = CONFLICT_CLASS_NO_DUPLICATE_PRESSURE
+        default_action = CONFLICT_ACTION_NO_ACTION
+        decisions = ()
+    schema_normalization_required = bool(source.get("schema_normalization_required", False))
+    if dataset == DATASET_PRICES and schema_normalization_required:
+        decisions = (*decisions, "approve prices schema normalization policy before write")
+    return GovernedLakeConflictPolicyRow(
+        dataset=dataset,
+        source_row_count=source_row_count,
+        duplicate_key_group_count=duplicate_key_group_count,
+        exact_copy_group_count=exact_copy_group_count,
+        metadata_only_group_count=metadata_only_group_count,
+        business_conflict_group_count=business_conflict_group_count,
+        conflict_classification=conflict_classification,
+        default_action=default_action,
+        schema_normalization_required=schema_normalization_required,
+        write_authorization_required=bool(decisions),
+        semantic_selection_authorized=False,
+        cleanup_authorized=False,
+        decision_required=decisions,
+    )
 
 
 def _readiness_row(
@@ -567,6 +770,32 @@ def _validation_plan_from_mapping(data: Mapping[str, Any]) -> GovernedLakeValida
     )
 
 
+def _conflict_policy_from_mapping(data: Mapping[str, Any]) -> GovernedLakeConflictPolicy:
+    return GovernedLakeConflictPolicy(
+        rows=tuple(_conflict_policy_row_from_mapping(item) for item in data.get("rows") or ()),
+        operation_counts=_operation_counts(data.get("operation_counts")),
+        schema_version=str(data.get("schema_version") or GOVERNED_LAKE_CONFLICT_POLICY_SCHEMA),
+    )
+
+
+def _conflict_policy_row_from_mapping(data: Mapping[str, Any]) -> GovernedLakeConflictPolicyRow:
+    return GovernedLakeConflictPolicyRow(
+        dataset=str(data.get("dataset") or ""),
+        source_row_count=int(data.get("source_row_count") or 0),
+        duplicate_key_group_count=int(data.get("duplicate_key_group_count") or 0),
+        exact_copy_group_count=int(data.get("exact_copy_group_count") or 0),
+        metadata_only_group_count=int(data.get("metadata_only_group_count") or 0),
+        business_conflict_group_count=int(data.get("business_conflict_group_count") or 0),
+        conflict_classification=str(data.get("conflict_classification") or ""),
+        default_action=str(data.get("default_action") or ""),
+        schema_normalization_required=bool(data.get("schema_normalization_required", False)),
+        write_authorization_required=bool(data.get("write_authorization_required", False)),
+        semantic_selection_authorized=bool(data.get("semantic_selection_authorized", False)),
+        cleanup_authorized=bool(data.get("cleanup_authorized", False)),
+        decision_required=tuple(str(item) for item in data.get("decision_required") or ()),
+    )
+
+
 def _validation_task_from_mapping(data: Mapping[str, Any]) -> GovernedLakeValidationTask:
     return GovernedLakeValidationTask(
         task_id=str(data.get("task_id") or ""),
@@ -607,7 +836,15 @@ def _row_from_mapping(data: Mapping[str, Any]) -> GovernedLakeDatasetReadiness:
 
 __all__ = [
     "BUSINESS_CONFLICT_DATASETS",
+    "CONFLICT_ACTION_FULL_GROUP_QUARANTINE",
+    "CONFLICT_ACTION_METADATA_PRECEDENCE_GATE",
+    "CONFLICT_ACTION_NO_ACTION",
+    "CONFLICT_CLASS_BUSINESS_CONFLICT",
+    "CONFLICT_CLASS_EXACT_OR_METADATA",
+    "CONFLICT_CLASS_NO_DUPLICATE_PRESSURE",
+    "CONFLICT_POLICY_DATASETS",
     "GOVERNED_LAKE_DATASETS",
+    "GOVERNED_LAKE_CONFLICT_POLICY_SCHEMA",
     "GOVERNED_LAKE_READINESS_SCHEMA",
     "GOVERNED_LAKE_VALIDATION_PLAN_SCHEMA",
     "GOVERNED_STATUS_PRODUCTION_READY",
@@ -615,6 +852,8 @@ __all__ = [
     "GOVERNED_STATUS_RESEARCH_READY",
     "GOVERNED_STATUS_UNSUPPORTED",
     "GovernedLakeDatasetReadiness",
+    "GovernedLakeConflictPolicy",
+    "GovernedLakeConflictPolicyRow",
     "GovernedLakeReadinessMatrix",
     "GovernedLakeValidationPlan",
     "GovernedLakeValidationTask",
@@ -623,8 +862,10 @@ __all__ = [
     "PIT_STATUS_NOT_APPLICABLE",
     "PIT_STATUS_UNSUPPORTED_WITH_REASON",
     "ZERO_OPERATION_COUNTERS",
+    "build_governed_lake_conflict_policy",
     "build_governed_lake_validation_plan",
     "build_governed_lake_readiness_matrix",
+    "validate_governed_lake_conflict_policy",
     "validate_governed_lake_readiness_matrix",
     "validate_governed_lake_validation_plan",
 ]
