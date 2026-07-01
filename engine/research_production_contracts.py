@@ -70,6 +70,42 @@ class ResearchDatasetSpec:
 
 
 @dataclass(frozen=True, slots=True)
+class ResearchDatasetSnapshotSpec:
+    snapshot_id: str
+    research_dataset_spec_id: str
+    content_hash: str
+    as_of: str
+    universe: str
+    feature_artifact_refs: tuple[str, ...]
+    label_artifact_refs: tuple[str, ...]
+    source_snapshot_refs: tuple[str, ...]
+    primary_keys: tuple[str, ...]
+    lineage_refs: tuple[str, ...]
+    output_ref: str
+    source_of_truth: str = "research_dataset_spec_snapshot"
+    operation_counts: Mapping[str, int] = field(default_factory=dict)
+    schema_version: str = "research_dataset_snapshot_spec_v1"
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "schema_version": self.schema_version,
+            "snapshot_id": self.snapshot_id,
+            "research_dataset_spec_id": self.research_dataset_spec_id,
+            "content_hash": self.content_hash,
+            "as_of": self.as_of,
+            "universe": self.universe,
+            "feature_artifact_refs": list(self.feature_artifact_refs),
+            "label_artifact_refs": list(self.label_artifact_refs),
+            "source_snapshot_refs": list(self.source_snapshot_refs),
+            "primary_keys": list(self.primary_keys),
+            "lineage_refs": list(self.lineage_refs),
+            "output_ref": self.output_ref,
+            "source_of_truth": self.source_of_truth,
+            "operation_counts": dict(self.operation_counts),
+        }
+
+
+@dataclass(frozen=True, slots=True)
 class ResearchProductionAudit:
     status: str
     spec: ResearchDatasetSpec
@@ -194,6 +230,118 @@ def research_dataset_request_from_spec(spec: ResearchDatasetSpec) -> ResearchDat
     )
 
 
+def build_research_dataset_snapshot_spec(
+    spec: ResearchDatasetSpec | Mapping[str, Any],
+    *,
+    feature_artifacts: Sequence[FeatureArtifactSpec | Mapping[str, Any]] = (),
+    source_snapshot_refs: Sequence[str] = (),
+) -> ResearchDatasetSnapshotSpec:
+    value = spec if isinstance(spec, ResearchDatasetSpec) else research_dataset_spec_from_mapping(spec)
+    feature_refs = _feature_refs_from_inputs(value, feature_artifacts)
+    label_refs = tuple(value.label_artifact_refs or value.labels)
+    lineage_refs = tuple(dict.fromkeys((*source_snapshot_refs, *feature_refs, *label_refs)))
+    content_payload = {
+        "spec": value.to_dict(),
+        "feature_artifact_refs": list(feature_refs),
+        "label_artifact_refs": list(label_refs),
+        "source_snapshot_refs": [str(item) for item in source_snapshot_refs],
+    }
+    content_hash = _stable_sha256(content_payload)
+    return ResearchDatasetSnapshotSpec(
+        snapshot_id=value.output_snapshot_id,
+        research_dataset_spec_id=value.spec_id,
+        content_hash=content_hash,
+        as_of=value.as_of,
+        universe=value.universe,
+        feature_artifact_refs=feature_refs,
+        label_artifact_refs=label_refs,
+        source_snapshot_refs=tuple(str(item) for item in source_snapshot_refs),
+        primary_keys=value.primary_keys,
+        lineage_refs=lineage_refs,
+        output_ref=f"research-dataset-snapshot://{value.output_snapshot_id}",
+        operation_counts=_zero_operation_counts(),
+    )
+
+
+def validate_research_dataset_snapshot_spec(
+    snapshot: ResearchDatasetSnapshotSpec | Mapping[str, Any],
+    *,
+    spec: ResearchDatasetSpec | Mapping[str, Any] | None = None,
+) -> tuple[dict[str, Any], ...]:
+    value = snapshot if isinstance(snapshot, ResearchDatasetSnapshotSpec) else _snapshot_spec_from_mapping(snapshot)
+    issues: list[dict[str, Any]] = []
+    for field_name in (
+        "snapshot_id",
+        "research_dataset_spec_id",
+        "content_hash",
+        "as_of",
+        "universe",
+        "feature_artifact_refs",
+        "label_artifact_refs",
+        "primary_keys",
+        "lineage_refs",
+        "output_ref",
+    ):
+        item = getattr(value, field_name)
+        if item is None or item == "" or item == ():
+            issues.append({"code": "research_dataset_snapshot_required_field_missing", "field": field_name})
+    mutable_text = " ".join([value.snapshot_id, value.output_ref, value.source_of_truth]).lower()
+    if "latest" in mutable_text or "current" in mutable_text:
+        issues.append({"code": "mutable_research_dataset_snapshot_ref_forbidden", "field": "snapshot_id"})
+    if not value.content_hash.startswith("sha256:"):
+        issues.append({"code": "research_dataset_snapshot_content_hash_invalid", "field": "content_hash"})
+    if value.source_of_truth != "research_dataset_spec_snapshot":
+        issues.append({"code": "research_dataset_snapshot_source_of_truth_invalid", "field": "source_of_truth"})
+    for key, count in _normalise_operation_counts(value.operation_counts).items():
+        if count != 0:
+            issues.append({"code": "research_dataset_snapshot_operation_counter_nonzero", "field": key, "value": count})
+    if spec is not None:
+        spec_value = spec if isinstance(spec, ResearchDatasetSpec) else research_dataset_spec_from_mapping(spec)
+        if value.snapshot_id != spec_value.output_snapshot_id:
+            issues.append(
+                {
+                    "code": "research_dataset_snapshot_id_mismatch",
+                    "field": "snapshot_id",
+                    "expected": spec_value.output_snapshot_id,
+                    "actual": value.snapshot_id,
+                }
+            )
+        if value.research_dataset_spec_id != spec_value.spec_id:
+            issues.append(
+                {
+                    "code": "research_dataset_snapshot_spec_id_mismatch",
+                    "field": "research_dataset_spec_id",
+                    "expected": spec_value.spec_id,
+                    "actual": value.research_dataset_spec_id,
+                }
+            )
+        if tuple(value.primary_keys) != tuple(spec_value.primary_keys):
+            issues.append(
+                {
+                    "code": "research_dataset_snapshot_primary_keys_mismatch",
+                    "expected": list(spec_value.primary_keys),
+                    "actual": list(value.primary_keys),
+                }
+            )
+        if not set(spec_value.feature_artifact_refs).issubset(set(value.feature_artifact_refs)):
+            issues.append(
+                {
+                    "code": "research_dataset_snapshot_feature_refs_missing",
+                    "expected": list(spec_value.feature_artifact_refs),
+                    "actual": list(value.feature_artifact_refs),
+                }
+            )
+        if not set(spec_value.label_artifact_refs).issubset(set(value.label_artifact_refs)):
+            issues.append(
+                {
+                    "code": "research_dataset_snapshot_label_refs_missing",
+                    "expected": list(spec_value.label_artifact_refs),
+                    "actual": list(value.label_artifact_refs),
+                }
+            )
+    return tuple(issues)
+
+
 def audit_research_production_contract(
     spec: ResearchDatasetSpec | Mapping[str, Any],
     *,
@@ -289,14 +437,6 @@ def build_research_production_asset_map() -> ResearchProductionAssetMap:
             maturity="existing_contract_needs_production_metadata_bridge",
             current_contracts=("date_window", "universe", "forward_return_horizon", "research_report_kind"),
             required_capabilities=("snapshot_metadata", "stable_replay_checksum", "feature_label_lineage"),
-            gaps=(
-                ResearchProductionGap(
-                    gap_id="research_dataset_snapshot_registry_missing",
-                    severity="medium",
-                    description="Dataset outputs need a registry entry with content hash, feature versions and label versions.",
-                    phase="Phase 2",
-                ),
-            ),
         ),
         ResearchProductionAsset(
             asset_id="feature_label_artifact_contracts",
@@ -398,8 +538,7 @@ def validate_research_production_asset_map(asset_map: ResearchProductionAssetMap
 
 def research_dataset_spec_fingerprint(spec: ResearchDatasetSpec | Mapping[str, Any]) -> str:
     value = spec if isinstance(spec, ResearchDatasetSpec) else research_dataset_spec_from_mapping(spec)
-    payload = json.dumps(value.to_dict(), sort_keys=True, separators=(",", ":"), default=str)
-    return "sha256:" + hashlib.sha256(payload.encode("utf-8")).hexdigest()
+    return _stable_sha256(value.to_dict())
 
 
 def research_dataset_spec_from_mapping(data: Mapping[str, Any]) -> ResearchDatasetSpec:
@@ -440,6 +579,38 @@ def _feature_artifact_from_mapping(data: Mapping[str, Any]) -> FeatureArtifactSp
         feature_columns=tuple(str(item) for item in data.get("feature_columns") or ()),
         primary_keys=tuple(str(item) for item in data.get("primary_keys") or ("trade_date", "symbol")),
         label_spec=label_spec,
+    )
+
+
+def _feature_refs_from_inputs(
+    spec: ResearchDatasetSpec,
+    feature_artifacts: Sequence[FeatureArtifactSpec | Mapping[str, Any]],
+) -> tuple[str, ...]:
+    if not feature_artifacts:
+        return tuple(spec.feature_artifact_refs)
+    refs = []
+    for artifact in feature_artifacts:
+        value = artifact if isinstance(artifact, FeatureArtifactSpec) else _feature_artifact_from_mapping(artifact)
+        refs.append(value.feature_set_id)
+    return tuple(dict.fromkeys((*spec.feature_artifact_refs, *refs)))
+
+
+def _snapshot_spec_from_mapping(data: Mapping[str, Any]) -> ResearchDatasetSnapshotSpec:
+    return ResearchDatasetSnapshotSpec(
+        snapshot_id=str(data.get("snapshot_id") or ""),
+        research_dataset_spec_id=str(data.get("research_dataset_spec_id") or ""),
+        content_hash=str(data.get("content_hash") or ""),
+        as_of=str(data.get("as_of") or ""),
+        universe=str(data.get("universe") or ""),
+        feature_artifact_refs=tuple(str(item) for item in data.get("feature_artifact_refs") or ()),
+        label_artifact_refs=tuple(str(item) for item in data.get("label_artifact_refs") or ()),
+        source_snapshot_refs=tuple(str(item) for item in data.get("source_snapshot_refs") or ()),
+        primary_keys=tuple(str(item) for item in data.get("primary_keys") or ()),
+        lineage_refs=tuple(str(item) for item in data.get("lineage_refs") or ()),
+        output_ref=str(data.get("output_ref") or ""),
+        source_of_truth=str(data.get("source_of_truth") or "research_dataset_spec_snapshot"),
+        operation_counts=_normalise_operation_counts(data.get("operation_counts")),
+        schema_version=str(data.get("schema_version") or "research_dataset_snapshot_spec_v1"),
     )
 
 
@@ -487,6 +658,16 @@ def _zero_operation_counts() -> dict[str, int]:
     return {key: 0 for key in FORBIDDEN_OPERATION_COUNTERS}
 
 
+def _normalise_operation_counts(counters: Mapping[str, Any] | None = None) -> dict[str, int]:
+    source = dict(counters or {})
+    return {key: int(source.get(key, 0) or 0) for key in FORBIDDEN_OPERATION_COUNTERS}
+
+
+def _stable_sha256(payload: Mapping[str, Any]) -> str:
+    data = json.dumps(payload, sort_keys=True, separators=(",", ":"), default=str)
+    return "sha256:" + hashlib.sha256(data.encode("utf-8")).hexdigest()
+
+
 __all__ = [
     "ASSET_MAP_SCHEMA",
     "LeakagePolicy",
@@ -494,14 +675,17 @@ __all__ = [
     "RESEARCH_PRODUCTION_AUDIT_SCHEMA",
     "ResearchProductionAsset",
     "ResearchProductionAssetMap",
+    "ResearchDatasetSnapshotSpec",
     "ResearchDatasetSpec",
     "ResearchProductionGap",
     "ResearchProductionAudit",
     "audit_research_production_contract",
     "build_research_production_asset_map",
+    "build_research_dataset_snapshot_spec",
     "research_dataset_request_from_spec",
     "research_dataset_spec_fingerprint",
     "research_dataset_spec_from_mapping",
     "validate_research_production_asset_map",
+    "validate_research_dataset_snapshot_spec",
     "validate_research_dataset_spec",
 ]
