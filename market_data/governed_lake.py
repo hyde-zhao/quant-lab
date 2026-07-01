@@ -36,6 +36,7 @@ from .contracts import (
 GOVERNED_LAKE_READINESS_SCHEMA = "governed_lake_readiness_matrix_v1"
 GOVERNED_LAKE_VALIDATION_PLAN_SCHEMA = "governed_lake_validation_plan_v1"
 GOVERNED_LAKE_CONFLICT_POLICY_SCHEMA = "governed_lake_conflict_policy_v1"
+GOVERNED_LAKE_PHASE1_EXIT_SCHEMA = "governed_lake_phase1_exit_matrix_v1"
 GOVERNED_LAKE_DATASETS: tuple[str, ...] = (
     DATASET_ADJ_FACTOR,
     "bse_code_mapping",
@@ -120,6 +121,19 @@ CONFLICT_CLASS_NO_DUPLICATE_PRESSURE = "no_duplicate_pressure"
 CONFLICT_ACTION_METADATA_PRECEDENCE_GATE = "metadata_precedence_or_exact_dedup_requires_gate"
 CONFLICT_ACTION_FULL_GROUP_QUARANTINE = "full_group_quarantine"
 CONFLICT_ACTION_NO_ACTION = "no_action"
+PHASE1_EXIT_REQUIRED_CRITERIA = (
+    "readiness_matrix_17_of_17",
+    "pit_status_classified_17_of_17",
+    "run_registry_no_source_run_id_lexical_ordering",
+    "business_conflict_policy_classified",
+    "recurring_validation_plan_defined",
+    "published_pointer_local_consistency",
+    "nas_multinode_consistency_gate",
+    "operation_boundary_zero",
+)
+PHASE1_EXIT_STATUS_PASS = "pass"
+PHASE1_EXIT_STATUS_BLOCKED_HUMAN_GATE = "blocked_human_gate"
+PHASE1_EXIT_STATUS_FAIL = "fail"
 
 
 @dataclass(frozen=True, slots=True)
@@ -328,6 +342,58 @@ class GovernedLakeConflictPolicy:
         }
 
 
+@dataclass(frozen=True, slots=True)
+class GovernedLakePhase1ExitCriterion:
+    criterion_id: str
+    status: str
+    evidence_ref: str
+    requires_human_gate: bool = False
+    notes: str = ""
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "criterion_id": self.criterion_id,
+            "status": self.status,
+            "evidence_ref": self.evidence_ref,
+            "requires_human_gate": self.requires_human_gate,
+            "notes": self.notes,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class GovernedLakePhase1ExitMatrix:
+    criteria: tuple[GovernedLakePhase1ExitCriterion, ...]
+    operation_counts: Mapping[str, int]
+    schema_version: str = GOVERNED_LAKE_PHASE1_EXIT_SCHEMA
+
+    @property
+    def criterion_count(self) -> int:
+        return len(self.criteria)
+
+    @property
+    def pass_count(self) -> int:
+        return sum(1 for row in self.criteria if row.status == PHASE1_EXIT_STATUS_PASS)
+
+    @property
+    def blocked_human_gate_count(self) -> int:
+        return sum(1 for row in self.criteria if row.status == PHASE1_EXIT_STATUS_BLOCKED_HUMAN_GATE)
+
+    @property
+    def fail_count(self) -> int:
+        return sum(1 for row in self.criteria if row.status == PHASE1_EXIT_STATUS_FAIL)
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "schema_version": self.schema_version,
+            "criterion_count": self.criterion_count,
+            "pass_count": self.pass_count,
+            "blocked_human_gate_count": self.blocked_human_gate_count,
+            "fail_count": self.fail_count,
+            "criteria": [row.to_dict() for row in self.criteria],
+            "operation_counts": dict(self.operation_counts),
+        }
+
+
 def build_governed_lake_readiness_matrix(
     catalog_entries: Sequence[Mapping[str, Any] | object],
     *,
@@ -448,6 +514,93 @@ def build_governed_lake_conflict_policy(
     return GovernedLakeConflictPolicy(rows=rows, operation_counts=_operation_counts(operation_counts))
 
 
+def build_governed_lake_phase1_exit_matrix(
+    readiness_matrix: GovernedLakeReadinessMatrix | Mapping[str, Any],
+    validation_plan: GovernedLakeValidationPlan | Mapping[str, Any],
+    conflict_policy: GovernedLakeConflictPolicy | Mapping[str, Any],
+    *,
+    multinode_consistency_verified: bool = False,
+    operation_counts: Mapping[str, Any] | None = None,
+) -> GovernedLakePhase1ExitMatrix:
+    readiness = (
+        readiness_matrix
+        if isinstance(readiness_matrix, GovernedLakeReadinessMatrix)
+        else _matrix_from_mapping(readiness_matrix)
+    )
+    plan = validation_plan if isinstance(validation_plan, GovernedLakeValidationPlan) else _validation_plan_from_mapping(validation_plan)
+    conflict = (
+        conflict_policy
+        if isinstance(conflict_policy, GovernedLakeConflictPolicy)
+        else _conflict_policy_from_mapping(conflict_policy)
+    )
+    readiness_issues = validate_governed_lake_readiness_matrix(readiness)
+    plan_issues = validate_governed_lake_validation_plan(plan)
+    conflict_issues = validate_governed_lake_conflict_policy(conflict)
+    criteria = (
+        _exit_criterion(
+            "readiness_matrix_17_of_17",
+            not readiness_issues and readiness.dataset_count == len(GOVERNED_LAKE_DATASETS),
+            "process/evidence/CR149-GOVERNED-LAKE-READINESS-MATRIX.index.json",
+            notes=f"{readiness.dataset_count}/{len(GOVERNED_LAKE_DATASETS)} governed datasets represented.",
+        ),
+        _exit_criterion(
+            "pit_status_classified_17_of_17",
+            all(row.pit_status not in {"", "null", "unknown"} for row in readiness.rows),
+            "process/evidence/CR149-GOVERNED-LAKE-READINESS-MATRIX.index.json",
+            notes="All governed datasets expose pit_available, not_applicable or unsupported-with-reason.",
+        ),
+        _exit_criterion(
+            "run_registry_no_source_run_id_lexical_ordering",
+            all(
+                row.run_registry.ordering_policy != "source_run_id_lexical_desc"
+                and not row.run_registry.deterministic_fallback_allowed
+                for row in readiness.rows
+            ),
+            "process/evidence/CR149-GOVERNED-LAKE-READINESS-MATRIX.index.json",
+            notes="Production ordering uses catalog current pointer order key.",
+        ),
+        _exit_criterion(
+            "business_conflict_policy_classified",
+            not conflict_issues and conflict.business_conflict_group_count == conflict.business_conflict_groups_classified_count,
+            "process/evidence/CR149-BUSINESS-CONFLICT-POLICY.index.json",
+            notes=(
+                f"{conflict.business_conflict_groups_classified_count}/"
+                f"{conflict.business_conflict_group_count} business-conflict groups classified."
+            ),
+        ),
+        _exit_criterion(
+            "recurring_validation_plan_defined",
+            not plan_issues and plan.task_count == len(VALIDATION_TASK_REQUIRED_IDS),
+            "process/evidence/CR149-GOVERNED-LAKE-VALIDATION-PLAN.index.json",
+            notes=f"{plan.task_count} validation tasks defined; {plan.gated_count} requires human gate.",
+        ),
+        _exit_criterion(
+            "published_pointer_local_consistency",
+            all(row.publish_status == "published" and row.catalog_current_path and row.run_registry.run_id for row in readiness.rows),
+            "process/evidence/CR149-GOVERNED-LAKE-READINESS-MATRIX.index.json",
+            notes="Local catalog current pointer fields are present for all governed datasets.",
+        ),
+        GovernedLakePhase1ExitCriterion(
+            criterion_id="nas_multinode_consistency_gate",
+            status=PHASE1_EXIT_STATUS_PASS if multinode_consistency_verified else PHASE1_EXIT_STATUS_BLOCKED_HUMAN_GATE,
+            evidence_ref="process/evidence/CR149-GOVERNED-LAKE-VALIDATION-PLAN.index.json",
+            requires_human_gate=not multinode_consistency_verified,
+            notes=(
+                "At least two nodes have matching published pointer run_id/checksum."
+                if multinode_consistency_verified
+                else "Real NAS/shared-node read consistency requires explicit human gate before credential or node access."
+            ),
+        ),
+        _exit_criterion(
+            "operation_boundary_zero",
+            all(count == 0 for count in _operation_counts(operation_counts).values()),
+            "process/evidence/CR149-GOVERNED-LAKE-VALIDATION-PLAN.index.json",
+            notes="Provider/NAS/lake-write/catalog-pointer/trading operation counters remain zero.",
+        ),
+    )
+    return GovernedLakePhase1ExitMatrix(criteria=criteria, operation_counts=_operation_counts(operation_counts))
+
+
 def validate_governed_lake_readiness_matrix(
     matrix: GovernedLakeReadinessMatrix | Mapping[str, Any],
     *,
@@ -480,6 +633,36 @@ def validate_governed_lake_readiness_matrix(
     for key, count in _operation_counts(value.operation_counts).items():
         if count != 0:
             issues.append({"code": "governed_lake_operation_counter_nonzero", "field": key, "value": count})
+    return tuple(issues)
+
+
+def validate_governed_lake_phase1_exit_matrix(
+    matrix: GovernedLakePhase1ExitMatrix | Mapping[str, Any],
+    *,
+    required_criteria: Sequence[str] = PHASE1_EXIT_REQUIRED_CRITERIA,
+) -> tuple[dict[str, Any], ...]:
+    value = matrix if isinstance(matrix, GovernedLakePhase1ExitMatrix) else _phase1_exit_matrix_from_mapping(matrix)
+    issues: list[dict[str, Any]] = []
+    actual = tuple(row.criterion_id for row in value.criteria)
+    if len(actual) != len(set(actual)):
+        issues.append({"code": "governed_lake_phase1_exit_criterion_duplicate"})
+    for criterion_id in tuple(str(item) for item in required_criteria):
+        if criterion_id not in actual:
+            issues.append({"code": "governed_lake_phase1_exit_criterion_missing", "criterion_id": criterion_id})
+    for row in value.criteria:
+        if row.status not in {
+            PHASE1_EXIT_STATUS_PASS,
+            PHASE1_EXIT_STATUS_BLOCKED_HUMAN_GATE,
+            PHASE1_EXIT_STATUS_FAIL,
+        }:
+            issues.append({"code": "governed_lake_phase1_exit_status_invalid", "criterion_id": row.criterion_id})
+        if row.status == PHASE1_EXIT_STATUS_FAIL:
+            issues.append({"code": "governed_lake_phase1_exit_failed", "criterion_id": row.criterion_id})
+        if row.status == PHASE1_EXIT_STATUS_BLOCKED_HUMAN_GATE and not row.requires_human_gate:
+            issues.append({"code": "governed_lake_phase1_exit_gate_flag_missing", "criterion_id": row.criterion_id})
+    for key, count in _operation_counts(value.operation_counts).items():
+        if count != 0:
+            issues.append({"code": "governed_lake_phase1_exit_operation_counter_nonzero", "field": key, "value": count})
     return tuple(issues)
 
 
@@ -568,6 +751,22 @@ def validate_governed_lake_validation_plan(
         if count != 0:
             issues.append({"code": "governed_lake_validation_operation_counter_nonzero", "field": key, "value": count})
     return tuple(issues)
+
+
+def _exit_criterion(
+    criterion_id: str,
+    passed: bool,
+    evidence_ref: str,
+    *,
+    notes: str,
+) -> GovernedLakePhase1ExitCriterion:
+    return GovernedLakePhase1ExitCriterion(
+        criterion_id=criterion_id,
+        status=PHASE1_EXIT_STATUS_PASS if passed else PHASE1_EXIT_STATUS_FAIL,
+        evidence_ref=evidence_ref,
+        requires_human_gate=False,
+        notes=notes,
+    )
 
 
 def _conflict_policy_row(dataset: str, source: Mapping[str, Any]) -> GovernedLakeConflictPolicyRow:
@@ -778,6 +977,24 @@ def _conflict_policy_from_mapping(data: Mapping[str, Any]) -> GovernedLakeConfli
     )
 
 
+def _phase1_exit_matrix_from_mapping(data: Mapping[str, Any]) -> GovernedLakePhase1ExitMatrix:
+    return GovernedLakePhase1ExitMatrix(
+        criteria=tuple(_phase1_exit_criterion_from_mapping(item) for item in data.get("criteria") or ()),
+        operation_counts=_operation_counts(data.get("operation_counts")),
+        schema_version=str(data.get("schema_version") or GOVERNED_LAKE_PHASE1_EXIT_SCHEMA),
+    )
+
+
+def _phase1_exit_criterion_from_mapping(data: Mapping[str, Any]) -> GovernedLakePhase1ExitCriterion:
+    return GovernedLakePhase1ExitCriterion(
+        criterion_id=str(data.get("criterion_id") or ""),
+        status=str(data.get("status") or ""),
+        evidence_ref=str(data.get("evidence_ref") or ""),
+        requires_human_gate=bool(data.get("requires_human_gate", False)),
+        notes=str(data.get("notes") or ""),
+    )
+
+
 def _conflict_policy_row_from_mapping(data: Mapping[str, Any]) -> GovernedLakeConflictPolicyRow:
     return GovernedLakeConflictPolicyRow(
         dataset=str(data.get("dataset") or ""),
@@ -845,6 +1062,7 @@ __all__ = [
     "CONFLICT_POLICY_DATASETS",
     "GOVERNED_LAKE_DATASETS",
     "GOVERNED_LAKE_CONFLICT_POLICY_SCHEMA",
+    "GOVERNED_LAKE_PHASE1_EXIT_SCHEMA",
     "GOVERNED_LAKE_READINESS_SCHEMA",
     "GOVERNED_LAKE_VALIDATION_PLAN_SCHEMA",
     "GOVERNED_STATUS_PRODUCTION_READY",
@@ -855,17 +1073,24 @@ __all__ = [
     "GovernedLakeConflictPolicy",
     "GovernedLakeConflictPolicyRow",
     "GovernedLakeReadinessMatrix",
+    "GovernedLakePhase1ExitCriterion",
+    "GovernedLakePhase1ExitMatrix",
     "GovernedLakeValidationPlan",
     "GovernedLakeValidationTask",
     "GovernedRunRegistryRow",
+    "PHASE1_EXIT_STATUS_BLOCKED_HUMAN_GATE",
+    "PHASE1_EXIT_STATUS_FAIL",
+    "PHASE1_EXIT_STATUS_PASS",
     "PIT_REQUIRED_DATASETS",
     "PIT_STATUS_NOT_APPLICABLE",
     "PIT_STATUS_UNSUPPORTED_WITH_REASON",
     "ZERO_OPERATION_COUNTERS",
     "build_governed_lake_conflict_policy",
+    "build_governed_lake_phase1_exit_matrix",
     "build_governed_lake_validation_plan",
     "build_governed_lake_readiness_matrix",
     "validate_governed_lake_conflict_policy",
+    "validate_governed_lake_phase1_exit_matrix",
     "validate_governed_lake_readiness_matrix",
     "validate_governed_lake_validation_plan",
 ]

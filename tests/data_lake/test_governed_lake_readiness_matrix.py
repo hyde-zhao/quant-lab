@@ -10,6 +10,9 @@ from market_data.governed_lake import (
     CONFLICT_CLASS_EXACT_OR_METADATA,
     CONFLICT_POLICY_DATASETS,
     GOVERNED_LAKE_DATASETS,
+    PHASE1_EXIT_STATUS_BLOCKED_HUMAN_GATE,
+    PHASE1_EXIT_STATUS_FAIL,
+    PHASE1_EXIT_STATUS_PASS,
     GOVERNED_STATUS_PRODUCTION_READY,
     GOVERNED_STATUS_QUARANTINED,
     GOVERNED_STATUS_RESEARCH_READY,
@@ -17,9 +20,11 @@ from market_data.governed_lake import (
     PIT_STATUS_NOT_APPLICABLE,
     PIT_STATUS_UNSUPPORTED_WITH_REASON,
     build_governed_lake_conflict_policy,
+    build_governed_lake_phase1_exit_matrix,
     build_governed_lake_validation_plan,
     build_governed_lake_readiness_matrix,
     validate_governed_lake_conflict_policy,
+    validate_governed_lake_phase1_exit_matrix,
     validate_governed_lake_validation_plan,
     validate_governed_lake_readiness_matrix,
 )
@@ -222,6 +227,61 @@ def test_cr149_conflict_policy_rejects_total_mismatch_and_missing_prices_schema_
     }
     assert "governed_lake_conflict_policy_total_mismatch" in codes
     assert "governed_lake_prices_schema_policy_gate_missing" in codes
+
+
+def test_cr149_phase1_exit_matrix_passes_no_risk_items_and_gates_nas_multinode() -> None:
+    readiness = build_governed_lake_readiness_matrix(_catalog_entries())
+    validation_plan = build_governed_lake_validation_plan(readiness)
+    conflict_policy = build_governed_lake_conflict_policy(_duplicate_split_summary())
+    matrix = build_governed_lake_phase1_exit_matrix(readiness, validation_plan, conflict_policy)
+
+    assert matrix.criterion_count == 8
+    assert matrix.pass_count == 7
+    assert matrix.blocked_human_gate_count == 1
+    assert matrix.fail_count == 0
+    assert validate_governed_lake_phase1_exit_matrix(matrix) == ()
+
+    criteria = {row.criterion_id: row for row in matrix.criteria}
+    assert criteria["readiness_matrix_17_of_17"].status == PHASE1_EXIT_STATUS_PASS
+    assert criteria["business_conflict_policy_classified"].status == PHASE1_EXIT_STATUS_PASS
+    assert criteria["published_pointer_local_consistency"].status == PHASE1_EXIT_STATUS_PASS
+    assert criteria["nas_multinode_consistency_gate"].status == PHASE1_EXIT_STATUS_BLOCKED_HUMAN_GATE
+    assert criteria["nas_multinode_consistency_gate"].requires_human_gate is True
+
+
+def test_cr149_phase1_exit_matrix_can_close_when_multinode_evidence_is_verified() -> None:
+    readiness = build_governed_lake_readiness_matrix(_catalog_entries())
+    validation_plan = build_governed_lake_validation_plan(readiness)
+    conflict_policy = build_governed_lake_conflict_policy(_duplicate_split_summary())
+    matrix = build_governed_lake_phase1_exit_matrix(
+        readiness,
+        validation_plan,
+        conflict_policy,
+        multinode_consistency_verified=True,
+    )
+
+    assert matrix.pass_count == 8
+    assert matrix.blocked_human_gate_count == 0
+    assert validate_governed_lake_phase1_exit_matrix(matrix) == ()
+
+
+def test_cr149_phase1_exit_matrix_rejects_failed_or_unsafe_status() -> None:
+    readiness = build_governed_lake_readiness_matrix(_catalog_entries()[:-1])
+    validation_plan = build_governed_lake_validation_plan(readiness)
+    conflict_policy = build_governed_lake_conflict_policy(_duplicate_split_summary())
+    matrix = build_governed_lake_phase1_exit_matrix(
+        readiness,
+        validation_plan,
+        conflict_policy,
+        operation_counts={"catalog_pointer_mutation": 1},
+    ).to_dict()
+    matrix["criteria"][0]["status"] = PHASE1_EXIT_STATUS_FAIL
+    matrix["criteria"][-2]["requires_human_gate"] = False
+
+    codes = {issue["code"] for issue in validate_governed_lake_phase1_exit_matrix(matrix)}
+    assert "governed_lake_phase1_exit_failed" in codes
+    assert "governed_lake_phase1_exit_gate_flag_missing" in codes
+    assert "governed_lake_phase1_exit_operation_counter_nonzero" in codes
 
 
 def _duplicate_split_summary() -> dict[str, object]:
