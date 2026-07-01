@@ -38,6 +38,7 @@ from engine.mature_multifactor_framework import (
 )
 from engine.multifactor_contracts import (
     BLOCKED_CLAIMS_DEFAULT,
+    FORBIDDEN_OPERATION_COUNTERS,
     FactorSpec,
 )
 from engine.serialization import json_safe
@@ -45,6 +46,7 @@ from trading.strategy_runner.target_portfolio import MultifactorSignalRow, build
 
 
 STAGE3_RUN_SCHEMA = "stage3_mature_multifactor_research_run_v1"
+CR150_COMPLETION_MAP_SCHEMA = "cr150_multifactor_framework_completion_map_v1"
 DEFAULT_RESEARCH_ROOT = Path("/home/hyde/data/quant-lab/research/runs/stage3_mature_multifactor")
 DEFAULT_PROCESS_EVIDENCE_ROOT = Path("process/evidence/stage3-mature-multifactor")
 DEFAULT_LAKE_ROOT = Path("/home/hyde/data/quant-lab/data-lake")
@@ -67,6 +69,29 @@ FORBIDDEN_OPERATION_COUNTS = {
     "account_or_order_operation": 0,
     "credential_read": 0,
 }
+CR150_FORBIDDEN_OPERATION_COUNTS = {key: 0 for key in FORBIDDEN_OPERATION_COUNTERS}
+CR150_LINKAGE_NODE_ORDER = (
+    "factor_spec",
+    "factor_run",
+    "factor_panel",
+    "label_window_gate",
+    "signal_set",
+    "portfolio_policy",
+    "backtest_run_spec",
+    "backtest_report_pack",
+    "cost_risk_attribution",
+    "strategy_admission_package",
+)
+CR150_DEFAULT_DEFERRED_ROUTES = (
+    "machine_learning",
+    "event_driven",
+    "runtime_live_trading",
+    "nas_sync",
+    "qmt_runtime",
+    "broker_order",
+    "credential_access",
+    "external_framework_execution",
+)
 
 DATASET_REFS = {
     "data_release_ref": "catalog://market-data/stage3-data-update/2026-06-26",
@@ -1084,6 +1109,199 @@ def summarize_metrics(
     }
 
 
+def build_cr150_multifactor_framework_completion_map(
+    *,
+    run_id: str,
+    factor_specs: Sequence[FactorSpec | Mapping[str, Any]],
+    signal_set: SignalSet | Mapping[str, Any],
+    evidence_index: ResearchEvidenceIndex | Mapping[str, Any],
+    risk_policy: PortfolioRiskPolicy | Mapping[str, Any],
+    admission_package: Mapping[str, Any] | Any,
+    factor_run_refs: Sequence[str] | None = None,
+    factor_panel_ref: str = "",
+    label_window_ref: str = "",
+    backtest_run_spec: Mapping[str, Any] | Any | None = None,
+    backtest_report_pack: Mapping[str, Any] | Any | None = None,
+    cost_risk_attribution_pack: Mapping[str, Any] | Any | None = None,
+    operation_counts: Mapping[str, Any] | None = None,
+    external_basis_refs: Mapping[str, str] | None = None,
+    deferred_routes: Sequence[str] | None = None,
+) -> dict[str, Any]:
+    operations = _normalise_cr150_operation_counts(operation_counts)
+    signal_payload = _cr150_payload(signal_set)
+    evidence_payload = _cr150_payload(evidence_index)
+    risk_payload = _cr150_payload(risk_policy)
+    admission_payload = _cr150_payload(admission_package)
+    run_spec_payload = _cr150_payload(backtest_run_spec)
+    report_pack_payload = _cr150_payload(backtest_report_pack)
+    attribution_payload = _cr150_payload(cost_risk_attribution_pack)
+    factor_payloads = tuple(_cr150_payload(item) for item in factor_specs)
+
+    metric_refs = evidence_payload.get("metric_refs") if isinstance(evidence_payload.get("metric_refs"), Mapping) else {}
+    resolved_factor_panel_ref = str(factor_panel_ref or metric_refs.get("factor_panel_ref") or signal_payload.get("lineage_ref") or "")
+    resolved_label_window_ref = str(label_window_ref or metric_refs.get("label_window_ref") or "")
+
+    nodes = (
+        _cr150_node(
+            "factor_spec",
+            "engine.multifactor_contracts.FactorSpec",
+            _cr150_factor_spec_refs(factor_payloads),
+            {"factor_specs": factor_payloads},
+        ),
+        _cr150_node(
+            "factor_run",
+            "engine.multifactor_contracts.FactorRunSpec",
+            tuple(str(item) for item in factor_run_refs or ()),
+            {"factor_run_refs": tuple(str(item) for item in factor_run_refs or ())},
+        ),
+        _cr150_node("factor_panel", "factor_panel_artifact", (resolved_factor_panel_ref,), {"ref": resolved_factor_panel_ref}),
+        _cr150_node(
+            "label_window_gate",
+            "engine.factor_panel_contracts.LabelWindowSpec",
+            (resolved_label_window_ref,),
+            {"ref": resolved_label_window_ref, "gate": "pit_leakage_label_window"},
+        ),
+        _cr150_node(
+            "signal_set",
+            "engine.mature_multifactor_framework.SignalSet",
+            (str(signal_payload.get("signal_set_id") or ""),),
+            signal_payload,
+        ),
+        _cr150_node(
+            "portfolio_policy",
+            "engine.mature_multifactor_framework.PortfolioRiskPolicy",
+            (str(risk_payload.get("policy_id") or ""),),
+            risk_payload,
+        ),
+        _cr150_node(
+            "backtest_run_spec",
+            "engine.backtest_production_contracts.BacktestRunSpec",
+            (_cr150_backtest_run_ref(run_spec_payload),),
+            run_spec_payload,
+        ),
+        _cr150_node(
+            "backtest_report_pack",
+            "engine.backtest_production_contracts.BacktestReportPack",
+            (str(report_pack_payload.get("report_pack_ref") or ""),),
+            report_pack_payload,
+        ),
+        _cr150_node(
+            "cost_risk_attribution",
+            "engine.backtest_production_contracts.BacktestCostRiskAttributionPack",
+            (str(attribution_payload.get("attribution_ref") or ""),),
+            attribution_payload,
+        ),
+        _cr150_node(
+            "strategy_admission_package",
+            "engine.mature_multifactor_research.stage3_mature_strategy_admission_package_v1",
+            (_cr150_admission_ref(admission_payload),),
+            admission_payload,
+        ),
+    )
+    gaps = _cr150_linkage_gaps(nodes, operations)
+    deferred = tuple(str(item) for item in (deferred_routes or CR150_DEFAULT_DEFERRED_ROUTES))
+    node_hashes = {str(node["node_id"]): str(node["content_hash"]) for node in nodes}
+    chain_hash = _cr150_hash(
+        {
+            "schema_version": CR150_COMPLETION_MAP_SCHEMA,
+            "run_id": run_id,
+            "node_order": CR150_LINKAGE_NODE_ORDER,
+            "node_hashes": node_hashes,
+            "operation_counts": operations,
+            "deferred_routes": deferred,
+        }
+    )
+    return {
+        "schema_version": CR150_COMPLETION_MAP_SCHEMA,
+        "run_id": str(run_id or ""),
+        "status": "PASS" if not gaps else "BLOCKED",
+        "strategy_family": StrategyFamily.MULTIFACTOR.value,
+        "authorized_scope": (
+            "local_metadata_linkage",
+            "local_tests",
+            "process_evidence",
+        ),
+        "not_authorized": (
+            "real_lake_read_or_write",
+            "nas_sync_or_write",
+            "provider_fetch",
+            "qmt_runtime",
+            "simulation_live_or_trading",
+            "broker_or_order_operation",
+            "credential_access",
+            "git_remote_write",
+            "external_framework_execution",
+        ),
+        "external_basis_refs": dict(external_basis_refs or {}),
+        "deferred_routes": list(deferred),
+        "node_order": list(CR150_LINKAGE_NODE_ORDER),
+        "nodes": [dict(node) for node in nodes],
+        "linkage_gaps": list(gaps),
+        "hash_chain": {
+            "node_hashes": node_hashes,
+            "chain_hash": chain_hash,
+        },
+        "operation_counts": operations,
+    }
+
+
+def validate_cr150_multifactor_framework_completion_map(completion_map: Mapping[str, Any]) -> tuple[dict[str, Any], ...]:
+    issues: list[dict[str, Any]] = []
+    if completion_map.get("schema_version") != CR150_COMPLETION_MAP_SCHEMA:
+        issues.append({"code": "cr150_completion_schema_invalid", "field": "schema_version"})
+    if not str(completion_map.get("run_id") or "").strip():
+        issues.append({"code": "cr150_completion_run_id_missing", "field": "run_id"})
+    nodes = tuple(dict(item) for item in completion_map.get("nodes") or ())
+    node_order = tuple(str(item) for item in completion_map.get("node_order") or ())
+    actual_order = tuple(str(node.get("node_id") or "") for node in nodes)
+    if node_order != CR150_LINKAGE_NODE_ORDER or actual_order != CR150_LINKAGE_NODE_ORDER:
+        issues.append(
+            {
+                "code": "cr150_completion_node_order_invalid",
+                "expected": list(CR150_LINKAGE_NODE_ORDER),
+                "actual": list(actual_order),
+            }
+        )
+    for node in nodes:
+        if bool(node.get("required", True)) and node.get("status") != "PASS":
+            issues.append(
+                {
+                    "code": "cr150_completion_required_node_not_passed",
+                    "node_id": node.get("node_id"),
+                    "status": node.get("status"),
+                }
+            )
+        if not str(node.get("content_hash") or "").startswith("sha256:"):
+            issues.append({"code": "cr150_completion_node_hash_invalid", "node_id": node.get("node_id")})
+    operations = _normalise_cr150_operation_counts(completion_map.get("operation_counts"))
+    for key, count in operations.items():
+        if count != 0:
+            issues.append({"code": "cr150_completion_operation_counter_nonzero", "field": key, "value": count})
+    deferred = set(str(item) for item in completion_map.get("deferred_routes") or ())
+    for route in CR150_DEFAULT_DEFERRED_ROUTES:
+        if route not in deferred:
+            issues.append({"code": "cr150_completion_deferred_route_missing", "route": route})
+    expected_chain_hash = _cr150_hash(
+        {
+            "schema_version": CR150_COMPLETION_MAP_SCHEMA,
+            "run_id": completion_map.get("run_id"),
+            "node_order": CR150_LINKAGE_NODE_ORDER,
+            "node_hashes": dict((completion_map.get("hash_chain") or {}).get("node_hashes") or {}),
+            "operation_counts": operations,
+            "deferred_routes": tuple(str(item) for item in completion_map.get("deferred_routes") or ()),
+        }
+    )
+    actual_chain_hash = str((completion_map.get("hash_chain") or {}).get("chain_hash") or "")
+    if actual_chain_hash != expected_chain_hash:
+        issues.append({"code": "cr150_completion_chain_hash_invalid", "field": "hash_chain.chain_hash"})
+    has_gaps = bool(completion_map.get("linkage_gaps"))
+    if has_gaps and completion_map.get("status") != "BLOCKED":
+        issues.append({"code": "cr150_completion_status_should_be_blocked", "field": "status"})
+    if not has_gaps and completion_map.get("status") != "PASS":
+        issues.append({"code": "cr150_completion_status_should_be_pass", "field": "status"})
+    return tuple(issues)
+
+
 def render_stage3_report(report: Mapping[str, Any]) -> str:
     metrics = report.get("portfolio_summary", {})
     lines = [
@@ -1110,6 +1328,123 @@ def render_stage3_report(report: Mapping[str, Any]) -> str:
     lines.extend(f"- {item}" for item in report.get("limitations", []))
     lines.append("")
     return "\n".join(lines)
+
+
+def _cr150_payload(value: Mapping[str, Any] | Any | None) -> dict[str, Any]:
+    if value is None:
+        return {}
+    if hasattr(value, "to_dict") and callable(value.to_dict):
+        payload = value.to_dict()
+    elif isinstance(value, Mapping):
+        payload = dict(value)
+    elif hasattr(value, "__dataclass_fields__"):
+        payload = asdict(value)
+    else:
+        payload = {"repr": repr(value)}
+    safe = _json_safe(payload)
+    return dict(safe) if isinstance(safe, Mapping) else {"value": safe}
+
+
+def _cr150_factor_spec_refs(factor_payloads: Sequence[Mapping[str, Any]]) -> tuple[str, ...]:
+    refs: list[str] = []
+    for payload in factor_payloads:
+        factor_id = str(payload.get("factor_id") or "")
+        version = str(payload.get("version") or "")
+        if factor_id and version:
+            refs.append(f"factor-spec://{factor_id}/{version}")
+    return tuple(refs)
+
+
+def _cr150_backtest_run_ref(payload: Mapping[str, Any]) -> str:
+    run_id = str(payload.get("run_id") or "")
+    config_hash = str(payload.get("config_hash") or "")
+    if not run_id:
+        return ""
+    return f"backtest-run-spec://{run_id}#{config_hash}" if config_hash else f"backtest-run-spec://{run_id}"
+
+
+def _cr150_admission_ref(payload: Mapping[str, Any]) -> str:
+    package_id = str(payload.get("package_id") or payload.get("admission_package_id") or "")
+    if package_id:
+        return f"strategy-admission-package://{package_id}"
+    run_id = str(payload.get("run_id") or "")
+    return f"strategy-admission-package://{run_id}" if run_id else ""
+
+
+def _cr150_node(
+    node_id: str,
+    object_type: str,
+    refs: Sequence[str],
+    payload: Mapping[str, Any],
+    *,
+    required: bool = True,
+) -> dict[str, Any]:
+    clean_refs = tuple(str(item) for item in refs if not _cr150_ref_is_missing(item))
+    payload_data = _cr150_payload(payload)
+    payload_missing = not payload_data or all(_cr150_ref_is_missing(value) for value in payload_data.values())
+    passed = bool(clean_refs) and not payload_missing
+    return {
+        "node_id": node_id,
+        "object_type": object_type,
+        "required": required,
+        "status": "PASS" if passed else "MISSING",
+        "refs": list(clean_refs),
+        "content_hash": _cr150_hash(
+            {
+                "node_id": node_id,
+                "object_type": object_type,
+                "refs": clean_refs,
+                "payload": payload_data,
+            }
+        ),
+    }
+
+
+def _cr150_linkage_gaps(
+    nodes: Sequence[Mapping[str, Any]],
+    operations: Mapping[str, int],
+) -> tuple[dict[str, Any], ...]:
+    gaps: list[dict[str, Any]] = []
+    for node in nodes:
+        if bool(node.get("required", True)) and node.get("status") != "PASS":
+            node_id = str(node.get("node_id") or "unknown")
+            gaps.append(
+                {
+                    "gap_id": f"CR150-LINKAGE-{node_id.upper()}-MISSING",
+                    "node_id": node_id,
+                    "severity": "blocker",
+                    "reason": "Required local metadata linkage node is missing a stable reference or payload.",
+                }
+            )
+    for key, count in operations.items():
+        if count != 0:
+            gaps.append(
+                {
+                    "gap_id": f"CR150-OPERATION-{key.upper()}-NONZERO",
+                    "node_id": "operation_counts",
+                    "severity": "blocker",
+                    "reason": f"Forbidden operation counter {key} is {count}; CR150 only authorizes local metadata linkage.",
+                }
+            )
+    return tuple(gaps)
+
+
+def _normalise_cr150_operation_counts(counters: Mapping[str, Any] | None = None) -> dict[str, int]:
+    source = dict(counters or {})
+    return {key: int(source.get(key, 0) or 0) for key in FORBIDDEN_OPERATION_COUNTERS}
+
+
+def _cr150_hash(payload: Mapping[str, Any]) -> str:
+    data = json.dumps(_json_safe(payload), ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+    return "sha256:" + hashlib.sha256(data.encode("utf-8")).hexdigest()
+
+
+def _cr150_ref_is_missing(value: Any) -> bool:
+    text = str(value or "").strip()
+    if not text:
+        return True
+    lowered = text.lower()
+    return lowered in {"none", "null"} or lowered.startswith("typed_unavailable:")
 
 
 def _load_inputs(lake: Path, catalog: Mapping[str, Any], *, start: str, end: str) -> dict[str, pd.DataFrame]:
