@@ -18,8 +18,24 @@ from engine.research_manifest import ExperimentManifestClosure
 
 
 TRAINING_SNAPSHOT_SCHEMA = "cr139_training_snapshot_cutoff_v1"
+ML_TRAINING_SNAPSHOT_METADATA_SCHEMA = "ml_training_snapshot_metadata_v1"
 STATUS_PASS = "pass"
 STATUS_BLOCKED = "blocked"
+CR152_ML_FORBIDDEN_OPERATION_COUNTERS = tuple(
+    dict.fromkeys(
+        (
+            *FORBIDDEN_OPERATION_COUNTERS,
+            "real_model_training",
+            "real_data_validation",
+            "feature_store_write",
+            "label_store_write",
+            "model_store_write",
+            "model_registry_write",
+            "prediction_store_write",
+            "catalog_pointer_mutation",
+        )
+    )
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -61,6 +77,21 @@ class TrainingSnapshotValidation:
         }
 
 
+@dataclass(frozen=True, slots=True)
+class MLTrainingSnapshotMetadata:
+    training_snapshot_id: str
+    pit_feature_matrix_id: str
+    label_policy_id: str
+    cv_policy_id: str
+    feature_schema_hash: str
+    lineage_refs: tuple[str, ...]
+    operation_counts: Mapping[str, int] = field(default_factory=dict)
+    schema_version: str = ML_TRAINING_SNAPSHOT_METADATA_SCHEMA
+
+    def to_dict(self) -> dict[str, Any]:
+        return json_safe(asdict(self))
+
+
 def build_training_snapshot_spec(
     *,
     closure: ExperimentManifestClosure | Mapping[str, Any],
@@ -80,6 +111,25 @@ def build_training_snapshot_spec(
         feature_schema_hash=str(feature_schema_hash or ""),
         lineage_refs=tuple(str(item) for item in lineage_refs),
         permission_counters=_zero_permission_counters(),
+    )
+
+
+def build_ml_training_snapshot_metadata(
+    snapshot: TrainingSnapshotSpec | Mapping[str, Any],
+    *,
+    pit_feature_matrix_id: str,
+    label_policy_id: str,
+    cv_policy_id: str,
+) -> MLTrainingSnapshotMetadata:
+    value = snapshot if isinstance(snapshot, TrainingSnapshotSpec) else _spec_from_mapping(snapshot)
+    return MLTrainingSnapshotMetadata(
+        training_snapshot_id=value.snapshot_id,
+        pit_feature_matrix_id=str(pit_feature_matrix_id or ""),
+        label_policy_id=str(label_policy_id or ""),
+        cv_policy_id=str(cv_policy_id or ""),
+        feature_schema_hash=value.feature_schema_hash,
+        lineage_refs=value.lineage_refs,
+        operation_counts=_zero_ml_permission_counters(),
     )
 
 
@@ -111,6 +161,27 @@ def validate_training_snapshot_cutoff(spec: TrainingSnapshotSpec | Mapping[str, 
     )
 
 
+def validate_ml_training_snapshot_metadata(metadata: MLTrainingSnapshotMetadata | Mapping[str, Any]) -> tuple[dict[str, Any], ...]:
+    value = metadata if isinstance(metadata, MLTrainingSnapshotMetadata) else _ml_metadata_from_mapping(metadata)
+    issues: list[dict[str, Any]] = []
+    for field_name in (
+        "training_snapshot_id",
+        "pit_feature_matrix_id",
+        "label_policy_id",
+        "cv_policy_id",
+        "feature_schema_hash",
+        "lineage_refs",
+    ):
+        item = getattr(value, field_name)
+        if item is None or item == "" or item == ():
+            issues.append({"code": "ml_training_snapshot_metadata_required_field_missing", "field": field_name})
+    if not value.feature_schema_hash.startswith("sha256:"):
+        issues.append({"code": "ml_training_snapshot_feature_schema_hash_invalid", "field": "feature_schema_hash"})
+    counters = _normalise_ml_counters(value.operation_counts)
+    issues.extend({"code": "ml_training_snapshot_operation_counter_nonzero", "field": key, "value": val} for key, val in counters.items() if val != 0)
+    return tuple(issues)
+
+
 def _spec_from_mapping(data: Mapping[str, Any]) -> TrainingSnapshotSpec:
     return TrainingSnapshotSpec(
         snapshot_id=str(data.get("snapshot_id") or ""),
@@ -127,19 +198,46 @@ def _spec_from_mapping(data: Mapping[str, Any]) -> TrainingSnapshotSpec:
     )
 
 
+def _ml_metadata_from_mapping(data: Mapping[str, Any]) -> MLTrainingSnapshotMetadata:
+    return MLTrainingSnapshotMetadata(
+        training_snapshot_id=str(data.get("training_snapshot_id") or ""),
+        pit_feature_matrix_id=str(data.get("pit_feature_matrix_id") or ""),
+        label_policy_id=str(data.get("label_policy_id") or ""),
+        cv_policy_id=str(data.get("cv_policy_id") or ""),
+        feature_schema_hash=str(data.get("feature_schema_hash") or ""),
+        lineage_refs=tuple(str(item) for item in data.get("lineage_refs") or ()),
+        operation_counts=_normalise_ml_counters(data.get("operation_counts")),
+        schema_version=str(data.get("schema_version") or ML_TRAINING_SNAPSHOT_METADATA_SCHEMA),
+    )
+
+
 def _normalise_counters(counters: Mapping[str, Any] | None = None) -> dict[str, int]:
     source = dict(counters or {})
     return {key: int(source.get(key, 0) or 0) for key in FORBIDDEN_OPERATION_COUNTERS}
+
+
+def _normalise_ml_counters(counters: Mapping[str, Any] | None = None) -> dict[str, int]:
+    source = dict(counters or {})
+    return {key: int(source.get(key, 0) or 0) for key in CR152_ML_FORBIDDEN_OPERATION_COUNTERS}
 
 
 def _zero_permission_counters() -> dict[str, int]:
     return {key: 0 for key in FORBIDDEN_OPERATION_COUNTERS}
 
 
+def _zero_ml_permission_counters() -> dict[str, int]:
+    return {key: 0 for key in CR152_ML_FORBIDDEN_OPERATION_COUNTERS}
+
+
 __all__ = [
+    "ML_TRAINING_SNAPSHOT_METADATA_SCHEMA",
+    "MLTrainingSnapshotMetadata",
+    "CR152_ML_FORBIDDEN_OPERATION_COUNTERS",
     "TRAINING_SNAPSHOT_SCHEMA",
     "TrainingSnapshotSpec",
     "TrainingSnapshotValidation",
+    "build_ml_training_snapshot_metadata",
     "build_training_snapshot_spec",
+    "validate_ml_training_snapshot_metadata",
     "validate_training_snapshot_cutoff",
 ]

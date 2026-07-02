@@ -28,6 +28,23 @@ from engine.research_paths import research_report_path
 MANIFEST_SCHEMA_VERSION = "experiment_manifest_v1"
 CATALOG_SCHEMA_VERSION = "research_report_catalog_v1"
 CR139_CLOSURE_SCHEMA_VERSION = "cr139_experiment_manifest_closure_v1"
+ML_MODEL_ARTIFACT_METADATA_SCHEMA = "ml_model_artifact_metadata_v1"
+ML_PREDICTION_ARTIFACT_METADATA_SCHEMA = "ml_prediction_artifact_metadata_v1"
+CR152_ML_FORBIDDEN_OPERATION_COUNTERS = tuple(
+    dict.fromkeys(
+        (
+            *FORBIDDEN_OPERATION_COUNTERS,
+            "real_model_training",
+            "real_data_validation",
+            "feature_store_write",
+            "label_store_write",
+            "model_store_write",
+            "model_registry_write",
+            "prediction_store_write",
+            "catalog_pointer_mutation",
+        )
+    )
+)
 ARTIFACT_SCHEMA_VERSION = "v1"
 INTERNAL_TRUTH_SOURCE = "project_json_csv_markdown_artifacts"
 CR139_S29_CORRECTNESS_STANDARD_REF = "process/stories/CR139-S29-pit-dedup-correctness-standard-LLD.md"
@@ -198,6 +215,45 @@ class ModelArtifactRef:
 
 
 @dataclass(frozen=True, slots=True)
+class MLModelArtifactMetadata:
+    model_id: str
+    model_artifact_ref: ModelArtifactRef | Mapping[str, Any]
+    training_snapshot_id: str
+    pit_feature_matrix_id: str
+    label_policy_id: str
+    cv_policy_id: str
+    feature_schema_hash: str
+    lineage_refs: tuple[str, ...]
+    operation_counts: Mapping[str, int] = field(default_factory=dict)
+    schema_version: str = ML_MODEL_ARTIFACT_METADATA_SCHEMA
+    metadata_only: bool = True
+
+    def to_dict(self) -> dict[str, Any]:
+        payload = asdict(self)
+        if isinstance(self.model_artifact_ref, ModelArtifactRef):
+            payload["model_artifact_ref"] = self.model_artifact_ref.to_dict()
+        return _json_safe(payload)
+
+
+@dataclass(frozen=True, slots=True)
+class MLPredictionArtifactMetadata:
+    prediction_id: str
+    model_id: str
+    prediction_timestamp_field: str
+    decision_time_field: str
+    entity_id_field: str
+    prediction_columns: tuple[str, ...]
+    source_feature_matrix_id: str
+    lineage_refs: tuple[str, ...]
+    operation_counts: Mapping[str, int] = field(default_factory=dict)
+    schema_version: str = ML_PREDICTION_ARTIFACT_METADATA_SCHEMA
+    metadata_only: bool = True
+
+    def to_dict(self) -> dict[str, Any]:
+        return _json_safe(asdict(self))
+
+
+@dataclass(frozen=True, slots=True)
 class ExperimentManifestClosure:
     closure_id: str
     run_id: str
@@ -331,6 +387,71 @@ def build_experiment_manifest_closure(
         permission_counters=_normalise_permission_counters(permission_counters),
         metadata=_json_safe(dict(metadata or {})),
     )
+
+
+def validate_ml_model_artifact_metadata(metadata: MLModelArtifactMetadata | Mapping[str, Any] | Any) -> tuple[dict[str, Any], ...]:
+    data = _as_mapping(metadata) or {}
+    issues: list[dict[str, Any]] = []
+    for field_name in (
+        "model_id",
+        "model_artifact_ref",
+        "training_snapshot_id",
+        "pit_feature_matrix_id",
+        "label_policy_id",
+        "cv_policy_id",
+        "feature_schema_hash",
+        "lineage_refs",
+    ):
+        if _is_blank(data.get(field_name)):
+            issues.append({"code": "ml_model_artifact_metadata_required_field_missing", "field": field_name})
+    if data.get("metadata_only") is not True:
+        issues.append({"code": "ml_model_artifact_metadata_only_required", "field": "metadata_only"})
+    model_ref = _mapping_or_empty(data.get("model_artifact_ref"))
+    if model_ref and model_ref.get("model_id") and data.get("model_id") and model_ref["model_id"] != data["model_id"]:
+        issues.append(
+            {
+                "code": "ml_model_artifact_metadata_model_id_mismatch",
+                "expected": model_ref["model_id"],
+                "actual": data["model_id"],
+            }
+        )
+    if not str(data.get("feature_schema_hash") or "").startswith("sha256:"):
+        issues.append({"code": "ml_model_artifact_feature_schema_hash_invalid", "field": "feature_schema_hash"})
+    counters = _normalise_ml_operation_counts(data.get("operation_counts"))
+    issues.extend(
+        {"code": "ml_model_artifact_operation_counter_nonzero", "field": key, "value": value}
+        for key, value in counters.items()
+        if value != 0
+    )
+    return tuple(issues)
+
+
+def validate_ml_prediction_artifact_metadata(metadata: MLPredictionArtifactMetadata | Mapping[str, Any] | Any) -> tuple[dict[str, Any], ...]:
+    data = _as_mapping(metadata) or {}
+    issues: list[dict[str, Any]] = []
+    for field_name in (
+        "prediction_id",
+        "model_id",
+        "prediction_timestamp_field",
+        "decision_time_field",
+        "entity_id_field",
+        "prediction_columns",
+        "source_feature_matrix_id",
+        "lineage_refs",
+    ):
+        if _is_blank(data.get(field_name)):
+            issues.append({"code": "ml_prediction_artifact_metadata_required_field_missing", "field": field_name})
+    if data.get("metadata_only") is not True:
+        issues.append({"code": "ml_prediction_artifact_metadata_only_required", "field": "metadata_only"})
+    if data.get("prediction_timestamp_field") == data.get("decision_time_field"):
+        issues.append({"code": "ml_prediction_timestamp_not_distinct", "field": "prediction_timestamp_field"})
+    counters = _normalise_ml_operation_counts(data.get("operation_counts"))
+    issues.extend(
+        {"code": "ml_prediction_artifact_operation_counter_nonzero", "field": key, "value": value}
+        for key, value in counters.items()
+        if value != 0
+    )
+    return tuple(issues)
 
 
 def validate_experiment_manifest_closure(
@@ -1034,6 +1155,11 @@ def _normalise_permission_counters(counters: PermissionCounters | Mapping[str, A
     else:
         source = {}
     return {key: int(source.get(key, 0) or 0) for key in FORBIDDEN_OPERATION_COUNTERS}
+
+
+def _normalise_ml_operation_counts(counters: Mapping[str, Any] | None = None) -> dict[str, int]:
+    source = dict(counters or {})
+    return {key: int(source.get(key, 0) or 0) for key in CR152_ML_FORBIDDEN_OPERATION_COUNTERS}
 
 
 def _zero_permission_counters() -> dict[str, int]:

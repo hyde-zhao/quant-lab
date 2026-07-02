@@ -7,7 +7,7 @@ feature artifacts, fetch providers, touch NAS, run QMT, or start trading.
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass, field
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 import hashlib
 import json
 from typing import Any, Mapping, Sequence
@@ -23,6 +23,29 @@ RESEARCH_PRODUCTION_AUDIT_SCHEMA = "research_production_foundation_audit_v1"
 STATUS_PASS = "pass"
 STATUS_BLOCKED = "blocked"
 ASSET_MAP_SCHEMA = "research_production_asset_map_v1"
+ML_PIT_FEATURE_MATRIX_SCHEMA = "ml_pit_feature_matrix_contract_v1"
+ML_LABEL_POLICY_SCHEMA = "ml_label_policy_v1"
+ML_PURGED_EMBARGO_CV_SCHEMA = "ml_purged_embargo_cv_policy_v1"
+ML_LABEL_METHOD_FIXED_WINDOW = "fixed_window"
+ML_LABEL_METHOD_TRIPLE_BARRIER = "triple_barrier"
+ML_LABEL_METHOD_META_LABEL = "meta_label"
+ML_SUPPORTED_LABEL_METHODS = (ML_LABEL_METHOD_FIXED_WINDOW,)
+ML_RESERVED_LABEL_METHODS = (ML_LABEL_METHOD_TRIPLE_BARRIER, ML_LABEL_METHOD_META_LABEL)
+CR152_ML_FORBIDDEN_OPERATION_COUNTERS = tuple(
+    dict.fromkeys(
+        (
+            *FORBIDDEN_OPERATION_COUNTERS,
+            "real_model_training",
+            "real_data_validation",
+            "feature_store_write",
+            "label_store_write",
+            "model_store_write",
+            "model_registry_write",
+            "prediction_store_write",
+            "catalog_pointer_mutation",
+        )
+    )
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -129,6 +152,91 @@ class FeatureAvailabilityContract:
             "primary_keys": list(self.primary_keys),
             "required_columns": list(self.required_columns),
             "enforcement_ref": self.enforcement_ref,
+            "operation_counts": dict(self.operation_counts),
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class MLPITFeatureMatrixContract:
+    matrix_id: str
+    research_dataset_spec_id: str
+    entity_id_field: str
+    decision_time_field: str
+    feature_available_at_field: str
+    feature_columns: tuple[str, ...]
+    primary_keys: tuple[str, ...]
+    as_of: str
+    lineage_refs: tuple[str, ...]
+    source_snapshot_refs: tuple[str, ...] = ()
+    operation_counts: Mapping[str, int] = field(default_factory=dict)
+    schema_version: str = ML_PIT_FEATURE_MATRIX_SCHEMA
+
+    def to_dict(self) -> dict[str, Any]:
+        payload = asdict(self)
+        payload["feature_columns"] = list(self.feature_columns)
+        payload["primary_keys"] = list(self.primary_keys)
+        payload["lineage_refs"] = list(self.lineage_refs)
+        payload["source_snapshot_refs"] = list(self.source_snapshot_refs)
+        payload["operation_counts"] = dict(self.operation_counts)
+        return payload
+
+
+@dataclass(frozen=True, slots=True)
+class MLLabelPolicySpec:
+    policy_id: str
+    label_method: str
+    label_field: str
+    decision_time_field: str
+    label_available_at_field: str
+    label_horizon_days: int
+    leakage_guard_ref: str = "engine.research_production_contracts.validate_ml_label_policy_spec"
+    triple_barrier_spec: Mapping[str, Any] = field(default_factory=dict)
+    meta_labeling_config: Mapping[str, Any] = field(default_factory=dict)
+    operation_counts: Mapping[str, int] = field(default_factory=dict)
+    schema_version: str = ML_LABEL_POLICY_SCHEMA
+
+    def to_dict(self) -> dict[str, Any]:
+        payload = asdict(self)
+        payload["triple_barrier_spec"] = dict(self.triple_barrier_spec)
+        payload["meta_labeling_config"] = dict(self.meta_labeling_config)
+        payload["operation_counts"] = dict(self.operation_counts)
+        return payload
+
+
+@dataclass(frozen=True, slots=True)
+class MLCVFoldSpec:
+    fold_id: str
+    train_start: str
+    train_end: str
+    validation_start: str
+    validation_end: str
+    test_start: str = ""
+    test_end: str = ""
+
+    def to_dict(self) -> dict[str, Any]:
+        return asdict(self)
+
+
+@dataclass(frozen=True, slots=True)
+class MLPurgedEmbargoCVPolicy:
+    policy_id: str
+    folds: tuple[MLCVFoldSpec, ...]
+    purge_window_days: int
+    embargo_days: int
+    label_horizon_days: int
+    decision_time_field: str = "decision_time"
+    operation_counts: Mapping[str, int] = field(default_factory=dict)
+    schema_version: str = ML_PURGED_EMBARGO_CV_SCHEMA
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "schema_version": self.schema_version,
+            "policy_id": self.policy_id,
+            "folds": [fold.to_dict() for fold in self.folds],
+            "purge_window_days": self.purge_window_days,
+            "embargo_days": self.embargo_days,
+            "label_horizon_days": self.label_horizon_days,
+            "decision_time_field": self.decision_time_field,
             "operation_counts": dict(self.operation_counts),
         }
 
@@ -354,7 +462,7 @@ def validate_feature_availability_contract(
         issues.append({"code": "feature_availability_required_columns_missing", "missing_columns": missing_columns})
     if value.enforcement_ref != "engine.factor_model_validation.label_cutoff_gate":
         issues.append({"code": "feature_availability_enforcement_ref_invalid", "field": "enforcement_ref"})
-    for key, count in _normalise_operation_counts(value.operation_counts).items():
+    for key, count in _normalise_ml_operation_counts(value.operation_counts).items():
         if count != 0:
             issues.append({"code": "feature_availability_operation_counter_nonzero", "field": key, "value": count})
     if spec is not None:
@@ -420,7 +528,7 @@ def validate_research_dataset_snapshot_spec(
         issues.append({"code": "research_dataset_snapshot_content_hash_invalid", "field": "content_hash"})
     if value.source_of_truth != "research_dataset_spec_snapshot":
         issues.append({"code": "research_dataset_snapshot_source_of_truth_invalid", "field": "source_of_truth"})
-    for key, count in _normalise_operation_counts(value.operation_counts).items():
+    for key, count in _normalise_ml_operation_counts(value.operation_counts).items():
         if count != 0:
             issues.append({"code": "research_dataset_snapshot_operation_counter_nonzero", "field": key, "value": count})
     if spec is not None:
@@ -467,6 +575,122 @@ def validate_research_dataset_snapshot_spec(
                     "actual": list(value.label_artifact_refs),
                 }
             )
+    return tuple(issues)
+
+
+def validate_ml_pit_feature_matrix_contract(
+    contract: MLPITFeatureMatrixContract | Mapping[str, Any],
+    *,
+    spec: ResearchDatasetSpec | Mapping[str, Any] | None = None,
+) -> tuple[dict[str, Any], ...]:
+    value = contract if isinstance(contract, MLPITFeatureMatrixContract) else _ml_pit_feature_matrix_from_mapping(contract)
+    issues: list[dict[str, Any]] = []
+    for field_name in (
+        "matrix_id",
+        "research_dataset_spec_id",
+        "entity_id_field",
+        "decision_time_field",
+        "feature_available_at_field",
+        "feature_columns",
+        "primary_keys",
+        "as_of",
+        "lineage_refs",
+    ):
+        item = getattr(value, field_name)
+        if item is None or item == "" or item == ():
+            issues.append({"code": "ml_pit_feature_matrix_required_field_missing", "field": field_name})
+    if value.decision_time_field == value.feature_available_at_field:
+        issues.append({"code": "ml_pit_feature_available_field_not_distinct", "field": "feature_available_at_field"})
+    for key, count in _normalise_ml_operation_counts(value.operation_counts).items():
+        if count != 0:
+            issues.append({"code": "ml_pit_feature_matrix_operation_counter_nonzero", "field": key, "value": count})
+    if spec is not None:
+        spec_value = spec if isinstance(spec, ResearchDatasetSpec) else research_dataset_spec_from_mapping(spec)
+        if value.research_dataset_spec_id != spec_value.spec_id:
+            issues.append(
+                {
+                    "code": "ml_pit_feature_matrix_dataset_spec_id_mismatch",
+                    "expected": spec_value.spec_id,
+                    "actual": value.research_dataset_spec_id,
+                }
+            )
+        if not set(value.feature_columns).issubset(set(spec_value.features)):
+            issues.append(
+                {
+                    "code": "ml_pit_feature_matrix_feature_not_in_dataset_spec",
+                    "expected": list(spec_value.features),
+                    "actual": list(value.feature_columns),
+                }
+            )
+        if tuple(value.primary_keys) != tuple(spec_value.primary_keys):
+            issues.append(
+                {
+                    "code": "ml_pit_feature_matrix_primary_keys_mismatch",
+                    "expected": list(spec_value.primary_keys),
+                    "actual": list(value.primary_keys),
+                }
+            )
+    return tuple(issues)
+
+
+def validate_ml_label_policy_spec(policy: MLLabelPolicySpec | Mapping[str, Any]) -> tuple[dict[str, Any], ...]:
+    value = policy if isinstance(policy, MLLabelPolicySpec) else _ml_label_policy_from_mapping(policy)
+    issues: list[dict[str, Any]] = []
+    for field_name in ("policy_id", "label_method", "label_field", "decision_time_field", "label_available_at_field", "leakage_guard_ref"):
+        item = getattr(value, field_name)
+        if item is None or item == "":
+            issues.append({"code": "ml_label_policy_required_field_missing", "field": field_name})
+    if value.label_horizon_days <= 0:
+        issues.append({"code": "ml_label_policy_horizon_invalid", "field": "label_horizon_days"})
+    method = value.label_method.strip().lower()
+    if method in ML_RESERVED_LABEL_METHODS:
+        issues.append(
+            {
+                "code": "ml_label_method_not_implemented",
+                "field": "label_method",
+                "label_method": method,
+                "status": "BLOCKED",
+            }
+        )
+    elif method not in ML_SUPPORTED_LABEL_METHODS:
+        issues.append({"code": "ml_label_method_unknown", "field": "label_method", "label_method": method})
+    if value.decision_time_field == value.label_available_at_field:
+        issues.append({"code": "ml_label_available_field_not_distinct", "field": "label_available_at_field"})
+    if method == ML_LABEL_METHOD_TRIPLE_BARRIER and not value.triple_barrier_spec:
+        issues.append({"code": "ml_triple_barrier_spec_reserved_slot_missing", "field": "triple_barrier_spec"})
+    if method == ML_LABEL_METHOD_META_LABEL and not value.meta_labeling_config:
+        issues.append({"code": "ml_meta_labeling_config_reserved_slot_missing", "field": "meta_labeling_config"})
+    for key, count in _normalise_operation_counts(value.operation_counts).items():
+        if count != 0:
+            issues.append({"code": "ml_label_policy_operation_counter_nonzero", "field": key, "value": count})
+    return tuple(issues)
+
+
+def validate_ml_purged_embargo_cv_policy(policy: MLPurgedEmbargoCVPolicy | Mapping[str, Any]) -> tuple[dict[str, Any], ...]:
+    value = policy if isinstance(policy, MLPurgedEmbargoCVPolicy) else _ml_cv_policy_from_mapping(policy)
+    issues: list[dict[str, Any]] = []
+    if not value.policy_id:
+        issues.append({"code": "ml_cv_policy_required_field_missing", "field": "policy_id"})
+    if not value.folds:
+        issues.append({"code": "ml_cv_folds_missing", "field": "folds"})
+    if value.purge_window_days < value.label_horizon_days:
+        issues.append(
+            {
+                "code": "ml_cv_purge_window_below_label_horizon",
+                "field": "purge_window_days",
+                "expected_at_least": value.label_horizon_days,
+                "actual": value.purge_window_days,
+            }
+        )
+    if value.embargo_days < 0:
+        issues.append({"code": "ml_cv_embargo_days_negative", "field": "embargo_days"})
+    if value.label_horizon_days <= 0:
+        issues.append({"code": "ml_cv_label_horizon_invalid", "field": "label_horizon_days"})
+    for index, fold in enumerate(value.folds):
+        issues.extend(_ml_cv_fold_issues(fold, index=index, embargo_days=value.embargo_days))
+    for key, count in _normalise_operation_counts(value.operation_counts).items():
+        if count != 0:
+            issues.append({"code": "ml_cv_operation_counter_nonzero", "field": key, "value": count})
     return tuple(issues)
 
 
@@ -739,7 +963,7 @@ def _snapshot_spec_from_mapping(data: Mapping[str, Any]) -> ResearchDatasetSnaps
         lineage_refs=tuple(str(item) for item in data.get("lineage_refs") or ()),
         output_ref=str(data.get("output_ref") or ""),
         source_of_truth=str(data.get("source_of_truth") or "research_dataset_spec_snapshot"),
-        operation_counts=_normalise_operation_counts(data.get("operation_counts")),
+        operation_counts=_normalise_ml_operation_counts(data.get("operation_counts")),
         schema_version=str(data.get("schema_version") or "research_dataset_snapshot_spec_v1"),
     )
 
@@ -754,9 +978,95 @@ def _feature_availability_contract_from_mapping(data: Mapping[str, Any]) -> Feat
         primary_keys=tuple(str(item) for item in data.get("primary_keys") or ()),
         required_columns=tuple(str(item) for item in data.get("required_columns") or ()),
         enforcement_ref=str(data.get("enforcement_ref") or ""),
-        operation_counts=_normalise_operation_counts(data.get("operation_counts")),
+        operation_counts=_normalise_ml_operation_counts(data.get("operation_counts")),
         schema_version=str(data.get("schema_version") or "feature_availability_contract_v1"),
     )
+
+
+def _ml_pit_feature_matrix_from_mapping(data: Mapping[str, Any]) -> MLPITFeatureMatrixContract:
+    return MLPITFeatureMatrixContract(
+        matrix_id=str(data.get("matrix_id") or ""),
+        research_dataset_spec_id=str(data.get("research_dataset_spec_id") or ""),
+        entity_id_field=str(data.get("entity_id_field") or ""),
+        decision_time_field=str(data.get("decision_time_field") or ""),
+        feature_available_at_field=str(data.get("feature_available_at_field") or ""),
+        feature_columns=tuple(str(item) for item in data.get("feature_columns") or ()),
+        primary_keys=tuple(str(item) for item in data.get("primary_keys") or ()),
+        as_of=str(data.get("as_of") or ""),
+        lineage_refs=tuple(str(item) for item in data.get("lineage_refs") or ()),
+        source_snapshot_refs=tuple(str(item) for item in data.get("source_snapshot_refs") or ()),
+        operation_counts=_normalise_ml_operation_counts(data.get("operation_counts")),
+        schema_version=str(data.get("schema_version") or ML_PIT_FEATURE_MATRIX_SCHEMA),
+    )
+
+
+def _ml_label_policy_from_mapping(data: Mapping[str, Any]) -> MLLabelPolicySpec:
+    return MLLabelPolicySpec(
+        policy_id=str(data.get("policy_id") or ""),
+        label_method=str(data.get("label_method") or ""),
+        label_field=str(data.get("label_field") or ""),
+        decision_time_field=str(data.get("decision_time_field") or ""),
+        label_available_at_field=str(data.get("label_available_at_field") or ""),
+        label_horizon_days=int(data.get("label_horizon_days", 0) or 0),
+        leakage_guard_ref=str(data.get("leakage_guard_ref") or "engine.research_production_contracts.validate_ml_label_policy_spec"),
+        triple_barrier_spec=dict(data.get("triple_barrier_spec") or {}),
+        meta_labeling_config=dict(data.get("meta_labeling_config") or {}),
+        operation_counts=_normalise_operation_counts(data.get("operation_counts")),
+        schema_version=str(data.get("schema_version") or ML_LABEL_POLICY_SCHEMA),
+    )
+
+
+def _ml_cv_policy_from_mapping(data: Mapping[str, Any]) -> MLPurgedEmbargoCVPolicy:
+    return MLPurgedEmbargoCVPolicy(
+        policy_id=str(data.get("policy_id") or ""),
+        folds=tuple(_ml_cv_fold_from_mapping(item) for item in data.get("folds") or ()),
+        purge_window_days=int(data.get("purge_window_days", 0) or 0),
+        embargo_days=int(data.get("embargo_days", 0) or 0),
+        label_horizon_days=int(data.get("label_horizon_days", 0) or 0),
+        decision_time_field=str(data.get("decision_time_field") or "decision_time"),
+        operation_counts=_normalise_operation_counts(data.get("operation_counts")),
+        schema_version=str(data.get("schema_version") or ML_PURGED_EMBARGO_CV_SCHEMA),
+    )
+
+
+def _ml_cv_fold_from_mapping(data: Mapping[str, Any]) -> MLCVFoldSpec:
+    return MLCVFoldSpec(
+        fold_id=str(data.get("fold_id") or ""),
+        train_start=str(data.get("train_start") or ""),
+        train_end=str(data.get("train_end") or ""),
+        validation_start=str(data.get("validation_start") or ""),
+        validation_end=str(data.get("validation_end") or ""),
+        test_start=str(data.get("test_start") or ""),
+        test_end=str(data.get("test_end") or ""),
+    )
+
+
+def _ml_cv_fold_issues(fold: MLCVFoldSpec, *, index: int, embargo_days: int) -> list[dict[str, Any]]:
+    issues: list[dict[str, Any]] = []
+    for field_name in ("fold_id", "train_start", "train_end", "validation_start", "validation_end"):
+        if not str(getattr(fold, field_name) or ""):
+            issues.append({"code": "ml_cv_fold_required_field_missing", "fold_index": index, "field": field_name})
+    parsed = {name: _parse_date(getattr(fold, name)) for name in ("train_start", "train_end", "validation_start", "validation_end")}
+    if any(value is None for value in parsed.values()):
+        issues.append({"code": "ml_cv_fold_date_unparseable", "fold_index": index})
+        return issues
+    if parsed["train_start"] > parsed["train_end"]:  # type: ignore[operator]
+        issues.append({"code": "ml_cv_fold_train_start_after_end", "fold_index": index})
+    if parsed["validation_start"] > parsed["validation_end"]:  # type: ignore[operator]
+        issues.append({"code": "ml_cv_fold_validation_start_after_end", "fold_index": index})
+    if parsed["train_end"] >= parsed["validation_start"]:  # type: ignore[operator]
+        issues.append({"code": "ml_cv_train_validation_overlap", "fold_index": index})
+    min_validation_start = parsed["train_end"] + timedelta(days=embargo_days)  # type: ignore[operator]
+    if parsed["validation_start"] < min_validation_start:  # type: ignore[operator]
+        issues.append(
+            {
+                "code": "ml_cv_embargo_gap_too_small",
+                "fold_index": index,
+                "expected_validation_start_at_or_after": min_validation_start.isoformat(),
+                "actual_validation_start": fold.validation_start,
+            }
+        )
+    return issues
 
 
 def _date_order_issues(spec: ResearchDatasetSpec) -> list[dict[str, Any]]:
@@ -808,6 +1118,11 @@ def _normalise_operation_counts(counters: Mapping[str, Any] | None = None) -> di
     return {key: int(source.get(key, 0) or 0) for key in FORBIDDEN_OPERATION_COUNTERS}
 
 
+def _normalise_ml_operation_counts(counters: Mapping[str, Any] | None = None) -> dict[str, int]:
+    source = dict(counters or {})
+    return {key: int(source.get(key, 0) or 0) for key in CR152_ML_FORBIDDEN_OPERATION_COUNTERS}
+
+
 def _stable_sha256(payload: Mapping[str, Any]) -> str:
     data = json.dumps(payload, sort_keys=True, separators=(",", ":"), default=str)
     return "sha256:" + hashlib.sha256(data.encode("utf-8")).hexdigest()
@@ -817,6 +1132,14 @@ __all__ = [
     "ASSET_MAP_SCHEMA",
     "FeatureAvailabilityContract",
     "LeakagePolicy",
+    "MLCVFoldSpec",
+    "MLLabelPolicySpec",
+    "MLPITFeatureMatrixContract",
+    "MLPurgedEmbargoCVPolicy",
+    "CR152_ML_FORBIDDEN_OPERATION_COUNTERS",
+    "ML_LABEL_METHOD_FIXED_WINDOW",
+    "ML_LABEL_METHOD_META_LABEL",
+    "ML_LABEL_METHOD_TRIPLE_BARRIER",
     "RESEARCH_DATASET_SPEC_SCHEMA",
     "RESEARCH_PRODUCTION_AUDIT_SCHEMA",
     "ResearchProductionAsset",
@@ -834,6 +1157,9 @@ __all__ = [
     "research_dataset_spec_from_mapping",
     "validate_research_production_asset_map",
     "validate_feature_availability_contract",
+    "validate_ml_label_policy_spec",
+    "validate_ml_pit_feature_matrix_contract",
+    "validate_ml_purged_embargo_cv_policy",
     "validate_research_dataset_snapshot_spec",
     "validate_research_dataset_spec",
 ]

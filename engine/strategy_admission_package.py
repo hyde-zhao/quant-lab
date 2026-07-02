@@ -37,6 +37,7 @@ MF_ADMISSION_REAL_OPERATION_NOT_AUTHORIZED = "MF_ADMISSION_REAL_OPERATION_NOT_AU
 MF_ADMISSION_CREDENTIAL_READ_FORBIDDEN = "MF_ADMISSION_CREDENTIAL_READ_FORBIDDEN"
 MF_ADMISSION_RUNTIME_NOT_AUTHORIZED = "MF_ADMISSION_RUNTIME_NOT_AUTHORIZED"
 MF_ADMISSION_STATISTICAL_GATE_BLOCKED = "MF_ADMISSION_STATISTICAL_GATE_BLOCKED"
+MF_ADMISSION_ML_GATE_BLOCKED = "MF_ADMISSION_ML_GATE_BLOCKED"
 
 NOT_AUTHORIZED_COUNTER_FIELDS = (
     "qmt_api_call",
@@ -464,6 +465,19 @@ def map_statistical_gate_status_to_admission_status(status: Any) -> AdmissionSta
     return AdmissionStatus.BLOCKED
 
 
+def map_ml_gate_status_to_admission_status(status: Any) -> AdmissionStatus:
+    normalized = _enum_value(status).strip().upper()
+    if normalized == "PASS":
+        return AdmissionStatus.PASS
+    if normalized == "FAIL":
+        return AdmissionStatus.FAIL
+    if normalized == "NEEDS_REVIEW":
+        return AdmissionStatus.WARN
+    if normalized == "BLOCKED":
+        return AdmissionStatus.BLOCKED
+    return AdmissionStatus.BLOCKED
+
+
 def attach_statistical_gate_to_admission_package(
     package: StrategyAdmissionPackage | Mapping[str, Any],
     statistical_gate_summary: Mapping[str, Any] | Any,
@@ -498,6 +512,51 @@ def attach_statistical_gate_to_admission_package(
         payload["blocked_reasons"] = tuple(_dedupe_reason_payloads(blocked_reasons))
         unlock_conditions = list(_as_sequence(payload.get("unlock_conditions")))
         unlock_conditions.append("provide_passing_CR151_statistical_gate_or_route_review")
+        payload["unlock_conditions"] = tuple(dict.fromkeys(str(item) for item in unlock_conditions if str(item)))
+    return _json_safe(payload)
+
+
+def attach_ml_gate_to_admission_package(
+    package: StrategyAdmissionPackage | Mapping[str, Any],
+    ml_gate_summary: Mapping[str, Any] | Any,
+) -> dict[str, Any]:
+    """Attach CR152 ML gate evidence without changing runtime authorization flags."""
+
+    payload = to_jsonable_admission_package(package)
+    summary = _as_mapping(ml_gate_summary)
+    status_value = summary.get("gate_status") or summary.get("status")
+    mapped_status = map_ml_gate_status_to_admission_status(status_value)
+    current_status = _admission_status_from_value(payload.get("admission_status"))
+    payload["admission_status"] = _worse_admission_status(current_status, mapped_status).value
+    payload["ml_gate_summary"] = _json_safe(summary)
+    payload["gate_present"] = bool(summary.get("gate_present", True))
+    payload["gate_required"] = bool(summary.get("gate_required", True))
+    payload["gate_status"] = _enum_value(status_value or "BLOCKED")
+    payload["gate_ref"] = _first_non_empty(summary.get("gate_ref"), payload.get("gate_ref"))
+
+    evidence_refs = list(_as_sequence(payload.get("evidence_refs")))
+    for ref in _ml_gate_refs(summary):
+        if ref not in evidence_refs:
+            evidence_refs.append(ref)
+    payload["evidence_refs"] = tuple(str(item) for item in evidence_refs if str(item))
+
+    blocked_reasons_payload = tuple(_as_sequence(summary.get("blocked_reasons")))
+    if mapped_status is not AdmissionStatus.PASS:
+        blocked_reasons = list(_as_sequence(payload.get("blocked_reasons")))
+        blocked_reasons.append(
+            AdmissionBlockedReason(
+                code=MF_ADMISSION_ML_GATE_BLOCKED,
+                message="CR152 ML admission gate is not PASS.",
+                source="ml_gate_summary",
+                field="gate_status",
+                unlock_condition="provide_passing_CR152_ml_gate_or_route_review",
+                evidence_ref=";".join(_ml_gate_refs(summary)),
+            ).to_dict()
+        )
+        blocked_reasons.extend(blocked_reasons_payload)
+        payload["blocked_reasons"] = tuple(_dedupe_reason_payloads(blocked_reasons))
+        unlock_conditions = list(_as_sequence(payload.get("unlock_conditions")))
+        unlock_conditions.append("provide_passing_CR152_ml_gate_or_route_review")
         payload["unlock_conditions"] = tuple(dict.fromkeys(str(item) for item in unlock_conditions if str(item)))
     return _json_safe(payload)
 
@@ -760,6 +819,16 @@ def _statistical_gate_refs(summary: Mapping[str, Any]) -> tuple[str, ...]:
         if value:
             refs.append(value)
     refs.extend(str(item) for item in _as_sequence(summary.get("report_refs")) if str(item))
+    return tuple(dict.fromkeys(refs))
+
+
+def _ml_gate_refs(summary: Mapping[str, Any]) -> tuple[str, ...]:
+    refs: list[str] = []
+    for field_name in ("ml_gate_ref", "gate_ref", "ref", "evidence_ref"):
+        value = str(summary.get(field_name) or "")
+        if value:
+            refs.append(value)
+    refs.extend(str(item) for item in _as_sequence(summary.get("evidence_refs")) if str(item))
     return tuple(dict.fromkeys(refs))
 
 
