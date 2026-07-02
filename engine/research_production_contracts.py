@@ -7,7 +7,7 @@ feature artifacts, fetch providers, touch NAS, run QMT, or start trading.
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass, field
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 import hashlib
 import json
 from typing import Any, Mapping, Sequence
@@ -26,6 +26,12 @@ ASSET_MAP_SCHEMA = "research_production_asset_map_v1"
 ML_PIT_FEATURE_MATRIX_SCHEMA = "ml_pit_feature_matrix_contract_v1"
 ML_LABEL_POLICY_SCHEMA = "ml_label_policy_v1"
 ML_PURGED_EMBARGO_CV_SCHEMA = "ml_purged_embargo_cv_policy_v1"
+EVENT_TIME_SEMANTICS_SCHEMA = "event_time_semantics_v1"
+EVENT_RESEARCH_SPEC_SCHEMA = "event_research_spec_v1"
+EVENT_REVISION_PIT_GATE_SCHEMA = "event_revision_pit_gate_v1"
+EVENT_GATE_STATUS_PASS = "PASS"
+EVENT_GATE_STATUS_NEEDS_REVIEW = "NEEDS_REVIEW"
+EVENT_GATE_STATUS_BLOCKED = "BLOCKED"
 ML_LABEL_METHOD_FIXED_WINDOW = "fixed_window"
 ML_LABEL_METHOD_TRIPLE_BARRIER = "triple_barrier"
 ML_LABEL_METHOD_META_LABEL = "meta_label"
@@ -46,6 +52,25 @@ CR152_ML_FORBIDDEN_OPERATION_COUNTERS = tuple(
         )
     )
 )
+CR153_EVENT_FORBIDDEN_OPERATION_COUNTERS = tuple(
+    dict.fromkeys(
+        (
+            *FORBIDDEN_OPERATION_COUNTERS,
+            "real_event_feed_read",
+            "live_listener_started",
+            "real_lake_access",
+            "nas_access",
+            "provider_fetch",
+            "credential_read",
+            "event_store_write",
+            "catalog_pointer_mutation",
+            "registry_write",
+            "runtime_started",
+            "broker_or_order_flow",
+        )
+    )
+)
+_MUTABLE_EVENT_REF_TOKENS = ("latest", "current", "mutable", "set_current", "catalog://current")
 
 
 @dataclass(frozen=True, slots=True)
@@ -237,6 +262,90 @@ class MLPurgedEmbargoCVPolicy:
             "embargo_days": self.embargo_days,
             "label_horizon_days": self.label_horizon_days,
             "decision_time_field": self.decision_time_field,
+            "operation_counts": dict(self.operation_counts),
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class EventTimeSemantics:
+    event_occurred_at: str
+    event_announced_at: str
+    event_available_at: str
+    decision_time: str
+    timezone: str = "UTC"
+    calendar_ref: str = ""
+    schema_version: str = EVENT_TIME_SEMANTICS_SCHEMA
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "schema_version": self.schema_version,
+            "event_occurred_at": self.event_occurred_at,
+            "event_announced_at": self.event_announced_at,
+            "event_available_at": self.event_available_at,
+            "decision_time": self.decision_time,
+            "timezone": self.timezone,
+            "calendar_ref": self.calendar_ref,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class EventResearchSpec:
+    spec_id: str
+    research_dataset_spec_id: str
+    event_id: str
+    event_type: str
+    entity_id: str
+    source_snapshot_refs: tuple[str, ...]
+    revision_policy_ref: str
+    time_semantics: EventTimeSemantics
+    entity_id_field: str = "symbol"
+    revision_source_refs: tuple[str, ...] = ()
+    revision_policy_na_reason: str = ""
+    operation_counts: Mapping[str, int] = field(default_factory=dict)
+    schema_version: str = EVENT_RESEARCH_SPEC_SCHEMA
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "schema_version": self.schema_version,
+            "spec_id": self.spec_id,
+            "research_dataset_spec_id": self.research_dataset_spec_id,
+            "event_id": self.event_id,
+            "event_type": self.event_type,
+            "entity_id": self.entity_id,
+            "entity_id_field": self.entity_id_field,
+            "source_snapshot_refs": list(self.source_snapshot_refs),
+            "revision_policy_ref": self.revision_policy_ref,
+            "revision_source_refs": list(self.revision_source_refs),
+            "revision_policy_na_reason": self.revision_policy_na_reason,
+            "time_semantics": self.time_semantics.to_dict(),
+            "operation_counts": _normalise_event_operation_counts(self.operation_counts),
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class EventRevisionPITGate:
+    event_research_spec_id: str
+    status: str
+    issues: tuple[Mapping[str, Any], ...]
+    revision_policy_ref: str
+    revision_source_refs: tuple[str, ...]
+    source_snapshot_refs: tuple[str, ...]
+    operation_counts: Mapping[str, int]
+    schema_version: str = EVENT_REVISION_PIT_GATE_SCHEMA
+
+    @property
+    def passed(self) -> bool:
+        return self.status == EVENT_GATE_STATUS_PASS
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "schema_version": self.schema_version,
+            "event_research_spec_id": self.event_research_spec_id,
+            "status": self.status,
+            "issues": [dict(issue) for issue in self.issues],
+            "revision_policy_ref": self.revision_policy_ref,
+            "revision_source_refs": list(self.revision_source_refs),
+            "source_snapshot_refs": list(self.source_snapshot_refs),
             "operation_counts": dict(self.operation_counts),
         }
 
@@ -694,6 +803,264 @@ def validate_ml_purged_embargo_cv_policy(policy: MLPurgedEmbargoCVPolicy | Mappi
     return tuple(issues)
 
 
+def validate_event_time_semantics(time_semantics: EventTimeSemantics | Mapping[str, Any]) -> tuple[dict[str, Any], ...]:
+    value = time_semantics if isinstance(time_semantics, EventTimeSemantics) else _event_time_semantics_from_mapping(time_semantics)
+    issues: list[dict[str, Any]] = []
+    required_fields = (
+        "event_occurred_at",
+        "event_announced_at",
+        "event_available_at",
+        "decision_time",
+    )
+    for field_name in required_fields:
+        if not str(getattr(value, field_name) or "").strip():
+            issues.append(
+                _event_issue(
+                    "event_time_required_field_missing",
+                    EVENT_GATE_STATUS_BLOCKED,
+                    field=field_name,
+                    message=f"{field_name} is required for event research PIT semantics.",
+                    remediation="Provide an explicit independent event time value.",
+                )
+            )
+    if not str(value.event_available_at or "").strip():
+        issues.append(
+            _event_issue(
+                "event_available_at_missing",
+                EVENT_GATE_STATUS_BLOCKED,
+                field="event_available_at",
+                message="event_available_at is required and must not be inferred.",
+                remediation="Provide the earliest event data availability time visible to the research decision.",
+            )
+        )
+        issues.append(
+            _event_issue(
+                "event_available_at_inference_forbidden",
+                EVENT_GATE_STATUS_BLOCKED,
+                field="event_available_at",
+                message="event_occurred_at and event_announced_at cannot substitute for event_available_at.",
+                remediation="Keep event_available_at as an explicit independent field.",
+            )
+        )
+    if not str(value.timezone or "").strip():
+        issues.append(
+            _event_issue(
+                "event_timezone_missing",
+                EVENT_GATE_STATUS_BLOCKED,
+                field="timezone",
+                message="timezone metadata must not be empty.",
+                remediation="Set a deterministic timezone value such as UTC.",
+            )
+        )
+    if value.calendar_ref and _is_mutable_event_ref(value.calendar_ref):
+        issues.append(
+            _event_issue(
+                "event_mutable_source_ref_forbidden",
+                EVENT_GATE_STATUS_BLOCKED,
+                field="calendar_ref",
+                evidence_ref=value.calendar_ref,
+                message="calendar_ref must not point at latest/current/mutable catalog truth.",
+                remediation="Use a static calendar evidence reference or omit the optional field.",
+            )
+        )
+
+    parsed: dict[str, datetime | None] = {}
+    for field_name in required_fields:
+        raw_value = str(getattr(value, field_name) or "").strip()
+        if not raw_value:
+            parsed[field_name] = None
+            continue
+        parsed[field_name] = _parse_datetime(raw_value)
+        if parsed[field_name] is None:
+            issues.append(
+                _event_issue(
+                    "event_time_unparseable",
+                    EVENT_GATE_STATUS_BLOCKED,
+                    field=field_name,
+                    message=f"{field_name} must be ISO-8601-like or YYYYMMDD.",
+                    evidence_ref=raw_value,
+                    remediation="Use a deterministic timestamp string, for example 2026-07-02T09:30:00+08:00.",
+                )
+            )
+    available_at = parsed.get("event_available_at")
+    decision_time = parsed.get("decision_time")
+    if available_at is not None and decision_time is not None and available_at > decision_time:
+        issues.append(
+            _event_issue(
+                "event_available_after_decision_time",
+                EVENT_GATE_STATUS_BLOCKED,
+                field="event_available_at",
+                message="event_available_at must be at or before decision_time.",
+                evidence_ref=f"{value.event_available_at}>{value.decision_time}",
+                remediation="Move the research decision later or use an event snapshot available before the decision.",
+            )
+        )
+    return tuple(issues)
+
+
+def validate_event_research_spec(
+    spec: EventResearchSpec | Mapping[str, Any],
+    *,
+    research_dataset_spec: ResearchDatasetSpec | Mapping[str, Any] | None = None,
+) -> tuple[dict[str, Any], ...]:
+    value = spec if isinstance(spec, EventResearchSpec) else event_research_spec_from_mapping(spec)
+    issues: list[dict[str, Any]] = list(validate_event_time_semantics(value.time_semantics))
+    for field_name in (
+        "spec_id",
+        "research_dataset_spec_id",
+        "event_id",
+        "event_type",
+        "entity_id",
+        "entity_id_field",
+    ):
+        if not str(getattr(value, field_name) or "").strip():
+            issues.append(
+                _event_issue(
+                    "event_research_required_field_missing",
+                    EVENT_GATE_STATUS_BLOCKED,
+                    field=field_name,
+                    message=f"{field_name} is required for EventResearchSpec.",
+                    remediation="Populate the static event research metadata field.",
+                )
+            )
+    if _is_mutable_event_ref(value.event_id):
+        issues.append(
+            _event_issue(
+                "event_mutable_source_ref_forbidden",
+                EVENT_GATE_STATUS_BLOCKED,
+                field="event_id",
+                evidence_ref=value.event_id,
+                message="event_id must be a stable identifier, not latest/current/mutable.",
+                remediation="Use a frozen fixture or snapshot event id.",
+            )
+        )
+    if not value.source_snapshot_refs:
+        issues.append(
+            _event_issue(
+                "event_source_snapshot_refs_missing",
+                EVENT_GATE_STATUS_BLOCKED,
+                field="source_snapshot_refs",
+                message="EventResearchSpec requires at least one static source snapshot reference.",
+                remediation="Attach a local/static fixture snapshot ref without reading the snapshot.",
+            )
+        )
+    for field_name, refs in (
+        ("source_snapshot_refs", value.source_snapshot_refs),
+        ("revision_source_refs", value.revision_source_refs),
+    ):
+        for ref in refs:
+            if not str(ref).strip():
+                issues.append(
+                    _event_issue(
+                        "event_source_ref_empty",
+                        EVENT_GATE_STATUS_BLOCKED,
+                        field=field_name,
+                        message="Event source and revision refs must not contain empty values.",
+                        remediation="Remove the empty ref or replace it with a static ref.",
+                    )
+                )
+            elif _is_mutable_event_ref(ref):
+                issues.append(
+                    _event_issue(
+                        "event_mutable_source_ref_forbidden",
+                        EVENT_GATE_STATUS_BLOCKED,
+                        field=field_name,
+                        evidence_ref=ref,
+                        message="Event source and revision refs must not point at latest/current/mutable truth.",
+                        remediation="Use immutable snapshot/version refs.",
+                    )
+                )
+    if not str(value.revision_policy_ref or "").strip():
+        if str(value.revision_policy_na_reason or "").strip():
+            issues.append(
+                _event_issue(
+                    "event_revision_policy_needs_review",
+                    EVENT_GATE_STATUS_NEEDS_REVIEW,
+                    field="revision_policy_ref",
+                    message="revision_policy_ref is absent with an explicit N/A reason; this is reviewable but never PASS.",
+                    evidence_ref=value.revision_policy_na_reason,
+                    remediation="Keep downstream admission at NEEDS_REVIEW or provide a revision policy ref.",
+                )
+            )
+        else:
+            issues.append(
+                _event_issue(
+                    "event_revision_policy_missing",
+                    EVENT_GATE_STATUS_BLOCKED,
+                    field="revision_policy_ref",
+                    message="revision_policy_ref is required unless explicit N/A-with-reason is provided.",
+                    remediation="Provide a static revision policy reference or an explicit N/A reason.",
+                )
+            )
+    elif _is_mutable_event_ref(value.revision_policy_ref):
+        issues.append(
+            _event_issue(
+                "event_mutable_source_ref_forbidden",
+                EVENT_GATE_STATUS_BLOCKED,
+                field="revision_policy_ref",
+                evidence_ref=value.revision_policy_ref,
+                message="revision_policy_ref must not point at latest/current/mutable truth.",
+                remediation="Use an immutable policy reference.",
+            )
+        )
+    for key, count in _normalise_event_operation_counts(value.operation_counts).items():
+        if count != 0:
+            issues.append(
+                _event_issue(
+                    "event_forbidden_operation_counter_nonzero",
+                    EVENT_GATE_STATUS_BLOCKED,
+                    field=key,
+                    message="CR153 S01 is local/static/fixture-only; forbidden operation counters must remain zero.",
+                    value=count,
+                    remediation="Remove the unauthorized operation and re-run static fixture validation.",
+                )
+            )
+    if research_dataset_spec is not None:
+        dataset = (
+            research_dataset_spec
+            if isinstance(research_dataset_spec, ResearchDatasetSpec)
+            else research_dataset_spec_from_mapping(research_dataset_spec)
+        )
+        if value.research_dataset_spec_id != dataset.spec_id:
+            issues.append(
+                _event_issue(
+                    "event_research_dataset_spec_id_mismatch",
+                    EVENT_GATE_STATUS_BLOCKED,
+                    field="research_dataset_spec_id",
+                    message="EventResearchSpec must reference the supplied ResearchDatasetSpec anchor.",
+                    expected=dataset.spec_id,
+                    actual=value.research_dataset_spec_id,
+                    remediation="Align research_dataset_spec_id with the dataset anchor.",
+                )
+            )
+    return tuple(issues)
+
+
+def build_event_revision_pit_gate(
+    spec: EventResearchSpec | Mapping[str, Any],
+    *,
+    research_dataset_spec: ResearchDatasetSpec | Mapping[str, Any] | None = None,
+) -> EventRevisionPITGate:
+    value = spec if isinstance(spec, EventResearchSpec) else event_research_spec_from_mapping(spec)
+    issues = validate_event_research_spec(value, research_dataset_spec=research_dataset_spec)
+    statuses = {str(issue.get("status") or "") for issue in issues}
+    if EVENT_GATE_STATUS_BLOCKED in statuses:
+        status = EVENT_GATE_STATUS_BLOCKED
+    elif EVENT_GATE_STATUS_NEEDS_REVIEW in statuses:
+        status = EVENT_GATE_STATUS_NEEDS_REVIEW
+    else:
+        status = EVENT_GATE_STATUS_PASS
+    return EventRevisionPITGate(
+        event_research_spec_id=value.spec_id,
+        status=status,
+        issues=issues,
+        revision_policy_ref=value.revision_policy_ref,
+        revision_source_refs=value.revision_source_refs,
+        source_snapshot_refs=value.source_snapshot_refs,
+        operation_counts=_normalise_event_operation_counts(value.operation_counts),
+    )
+
+
 def audit_research_production_contract(
     spec: ResearchDatasetSpec | Mapping[str, Any],
     *,
@@ -1041,6 +1408,42 @@ def _ml_cv_fold_from_mapping(data: Mapping[str, Any]) -> MLCVFoldSpec:
     )
 
 
+def event_research_spec_from_mapping(data: Mapping[str, Any]) -> EventResearchSpec:
+    time_semantics = data.get("time_semantics") or {}
+    time_value = (
+        time_semantics
+        if isinstance(time_semantics, EventTimeSemantics)
+        else _event_time_semantics_from_mapping(time_semantics)
+    )
+    return EventResearchSpec(
+        spec_id=str(data.get("spec_id") or ""),
+        research_dataset_spec_id=str(data.get("research_dataset_spec_id") or ""),
+        event_id=str(data.get("event_id") or ""),
+        event_type=str(data.get("event_type") or ""),
+        entity_id=str(data.get("entity_id") or ""),
+        entity_id_field=str(data.get("entity_id_field") or "symbol"),
+        source_snapshot_refs=tuple(str(item) for item in data.get("source_snapshot_refs") or ()),
+        revision_policy_ref=str(data.get("revision_policy_ref") or ""),
+        revision_source_refs=tuple(str(item) for item in data.get("revision_source_refs") or ()),
+        revision_policy_na_reason=str(data.get("revision_policy_na_reason") or ""),
+        time_semantics=time_value,
+        operation_counts=_normalise_event_operation_counts(data.get("operation_counts")),
+        schema_version=str(data.get("schema_version") or EVENT_RESEARCH_SPEC_SCHEMA),
+    )
+
+
+def _event_time_semantics_from_mapping(data: Mapping[str, Any]) -> EventTimeSemantics:
+    return EventTimeSemantics(
+        event_occurred_at=str(data.get("event_occurred_at") or ""),
+        event_announced_at=str(data.get("event_announced_at") or ""),
+        event_available_at=str(data.get("event_available_at") or ""),
+        decision_time=str(data.get("decision_time") or ""),
+        timezone=str(data.get("timezone") or "UTC"),
+        calendar_ref=str(data.get("calendar_ref") or ""),
+        schema_version=str(data.get("schema_version") or EVENT_TIME_SEMANTICS_SCHEMA),
+    )
+
+
 def _ml_cv_fold_issues(fold: MLCVFoldSpec, *, index: int, embargo_days: int) -> list[dict[str, Any]]:
     issues: list[dict[str, Any]] = []
     for field_name in ("fold_id", "train_start", "train_end", "validation_start", "validation_end"):
@@ -1109,6 +1512,22 @@ def _parse_date(value: str) -> date | None:
             return None
 
 
+def _parse_datetime(value: str) -> datetime | None:
+    raw_value = str(value).strip()
+    if not raw_value:
+        return None
+    try:
+        parsed = datetime.fromisoformat(raw_value.replace("Z", "+00:00"))
+    except ValueError:
+        try:
+            parsed = datetime.strptime(raw_value, "%Y%m%d")
+        except ValueError:
+            return None
+    if parsed.tzinfo is not None:
+        return parsed.astimezone(timezone.utc).replace(tzinfo=None)
+    return parsed
+
+
 def _zero_operation_counts() -> dict[str, int]:
     return {key: 0 for key in FORBIDDEN_OPERATION_COUNTERS}
 
@@ -1123,6 +1542,38 @@ def _normalise_ml_operation_counts(counters: Mapping[str, Any] | None = None) ->
     return {key: int(source.get(key, 0) or 0) for key in CR152_ML_FORBIDDEN_OPERATION_COUNTERS}
 
 
+def _normalise_event_operation_counts(counters: Mapping[str, Any] | None = None) -> dict[str, int]:
+    source = dict(counters or {})
+    return {key: int(source.get(key, 0) or 0) for key in CR153_EVENT_FORBIDDEN_OPERATION_COUNTERS}
+
+
+def _is_mutable_event_ref(value: str) -> bool:
+    lowered = str(value or "").strip().lower()
+    return any(token in lowered for token in _MUTABLE_EVENT_REF_TOKENS)
+
+
+def _event_issue(
+    code: str,
+    status: str,
+    *,
+    field: str,
+    message: str,
+    remediation: str,
+    evidence_ref: str = "",
+    **extra: Any,
+) -> dict[str, Any]:
+    payload: dict[str, Any] = {
+        "code": code,
+        "status": status,
+        "field": field,
+        "message": message,
+        "evidence_ref": evidence_ref,
+        "remediation": remediation,
+    }
+    payload.update(extra)
+    return payload
+
+
 def _stable_sha256(payload: Mapping[str, Any]) -> str:
     data = json.dumps(payload, sort_keys=True, separators=(",", ":"), default=str)
     return "sha256:" + hashlib.sha256(data.encode("utf-8")).hexdigest()
@@ -1130,6 +1581,16 @@ def _stable_sha256(payload: Mapping[str, Any]) -> str:
 
 __all__ = [
     "ASSET_MAP_SCHEMA",
+    "CR153_EVENT_FORBIDDEN_OPERATION_COUNTERS",
+    "EVENT_GATE_STATUS_BLOCKED",
+    "EVENT_GATE_STATUS_NEEDS_REVIEW",
+    "EVENT_GATE_STATUS_PASS",
+    "EVENT_RESEARCH_SPEC_SCHEMA",
+    "EVENT_REVISION_PIT_GATE_SCHEMA",
+    "EVENT_TIME_SEMANTICS_SCHEMA",
+    "EventResearchSpec",
+    "EventRevisionPITGate",
+    "EventTimeSemantics",
     "FeatureAvailabilityContract",
     "LeakagePolicy",
     "MLCVFoldSpec",
@@ -1150,13 +1611,17 @@ __all__ = [
     "ResearchProductionAudit",
     "audit_research_production_contract",
     "build_feature_availability_contract",
+    "build_event_revision_pit_gate",
     "build_research_production_asset_map",
     "build_research_dataset_snapshot_spec",
+    "event_research_spec_from_mapping",
     "research_dataset_request_from_spec",
     "research_dataset_spec_fingerprint",
     "research_dataset_spec_from_mapping",
     "validate_research_production_asset_map",
     "validate_feature_availability_contract",
+    "validate_event_research_spec",
+    "validate_event_time_semantics",
     "validate_ml_label_policy_spec",
     "validate_ml_pit_feature_matrix_contract",
     "validate_ml_purged_embargo_cv_policy",

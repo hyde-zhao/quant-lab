@@ -38,6 +38,7 @@ MF_ADMISSION_CREDENTIAL_READ_FORBIDDEN = "MF_ADMISSION_CREDENTIAL_READ_FORBIDDEN
 MF_ADMISSION_RUNTIME_NOT_AUTHORIZED = "MF_ADMISSION_RUNTIME_NOT_AUTHORIZED"
 MF_ADMISSION_STATISTICAL_GATE_BLOCKED = "MF_ADMISSION_STATISTICAL_GATE_BLOCKED"
 MF_ADMISSION_ML_GATE_BLOCKED = "MF_ADMISSION_ML_GATE_BLOCKED"
+MF_ADMISSION_EVENT_GATE_BLOCKED = "MF_ADMISSION_EVENT_GATE_BLOCKED"
 
 NOT_AUTHORIZED_COUNTER_FIELDS = (
     "qmt_api_call",
@@ -478,6 +479,19 @@ def map_ml_gate_status_to_admission_status(status: Any) -> AdmissionStatus:
     return AdmissionStatus.BLOCKED
 
 
+def map_event_gate_status_to_admission_status(status: Any) -> AdmissionStatus:
+    normalized = _enum_value(status).strip().upper()
+    if normalized == "PASS":
+        return AdmissionStatus.PASS
+    if normalized == "FAIL":
+        return AdmissionStatus.FAIL
+    if normalized == "NEEDS_REVIEW":
+        return AdmissionStatus.WARN
+    if normalized == "BLOCKED":
+        return AdmissionStatus.BLOCKED
+    return AdmissionStatus.BLOCKED
+
+
 def attach_statistical_gate_to_admission_package(
     package: StrategyAdmissionPackage | Mapping[str, Any],
     statistical_gate_summary: Mapping[str, Any] | Any,
@@ -513,6 +527,88 @@ def attach_statistical_gate_to_admission_package(
         unlock_conditions = list(_as_sequence(payload.get("unlock_conditions")))
         unlock_conditions.append("provide_passing_CR151_statistical_gate_or_route_review")
         payload["unlock_conditions"] = tuple(dict.fromkeys(str(item) for item in unlock_conditions if str(item)))
+    return _json_safe(payload)
+
+
+def attach_event_gate_to_admission_package(
+    package: StrategyAdmissionPackage | Mapping[str, Any],
+    event_gate_summary: Mapping[str, Any] | Any,
+) -> dict[str, Any]:
+    """Attach CR153 event gate evidence without changing runtime auth flags."""
+
+    payload = to_jsonable_admission_package(package)
+    summary = _as_mapping(event_gate_summary)
+    status_value = summary.get("gate_status") or summary.get("status") or "BLOCKED"
+    mapped_status = map_event_gate_status_to_admission_status(status_value)
+    current_status = _admission_status_from_value(payload.get("admission_status"))
+    payload["admission_status"] = _worse_admission_status(current_status, mapped_status).value
+    payload["event_gate_summary"] = _json_safe(summary)
+    payload["event_gate_present"] = bool(summary.get("gate_present", bool(summary)))
+    payload["event_gate_required"] = bool(summary.get("gate_required", True))
+    payload["event_gate_status"] = _enum_value(status_value).strip().upper() if summary else "BLOCKED"
+    payload["event_gate_ref"] = _first_non_empty(summary.get("gate_ref"), payload.get("event_gate_ref"))
+    payload["event_gate_blocked_reasons"] = tuple(_as_sequence(summary.get("blocked_reasons")))
+
+    evidence_refs = list(_as_sequence(payload.get("evidence_refs")))
+    for ref in _event_gate_refs(summary):
+        if ref not in evidence_refs:
+            evidence_refs.append(ref)
+    payload["evidence_refs"] = tuple(str(item) for item in evidence_refs if str(item))
+
+    limitations = list(_as_sequence(payload.get("limitations")))
+    limitations.extend(_as_sequence(summary.get("limitations")))
+    limitations.extend(
+        (
+            "event_gate_pass_not_runtime_ready",
+            "no_real_event_feed",
+            "no_live_event_listener",
+            "no_qmt_runtime",
+            "no_simulation_or_live_authorization",
+            "no_broker_order",
+            "no_trading_authorization",
+            "no_event_store_or_registry_publication",
+        )
+    )
+    payload["limitations"] = tuple(dict.fromkeys(str(item) for item in limitations if str(item)))
+
+    blocked_claims = list(_as_sequence(payload.get("blocked_claims")))
+    blocked_claims.append(
+        AdmissionClaim(
+            claim="event_gate_pass_not_runtime_ready",
+            status="blocked",
+            code=MF_ADMISSION_EVENT_GATE_BLOCKED,
+            reason="CR153 event gate PASS only covers static evidence semantics.",
+            limitation="Not feed, runtime, simulation, paper, live, broker or trading readiness.",
+            evidence_ref=";".join(_event_gate_refs(summary)),
+        ).to_dict()
+    )
+    payload["blocked_claims"] = tuple(_dedupe_claim_payloads(blocked_claims))
+
+    if mapped_status is not AdmissionStatus.PASS:
+        blocked_reasons = list(_as_sequence(payload.get("blocked_reasons")))
+        blocked_reasons.append(
+            AdmissionBlockedReason(
+                code=MF_ADMISSION_EVENT_GATE_BLOCKED,
+                message="CR153 event admission gate is not PASS.",
+                source="event_gate_summary",
+                field="gate_status",
+                unlock_condition="provide_passing_CR153_event_gate_or_route_review",
+                evidence_ref=";".join(_event_gate_refs(summary)),
+            ).to_dict()
+        )
+        blocked_reasons.extend(_as_sequence(summary.get("blocked_reasons")))
+        payload["blocked_reasons"] = tuple(_dedupe_reason_payloads(blocked_reasons))
+        unlock_conditions = list(_as_sequence(payload.get("unlock_conditions")))
+        unlock_conditions.append("provide_passing_CR153_event_gate_or_route_review")
+        payload["unlock_conditions"] = tuple(dict.fromkeys(str(item) for item in unlock_conditions if str(item)))
+
+    for field_name in (
+        "not_qmt_authorization",
+        "not_simulation_authorization",
+        "not_live_authorization",
+        "not_broker_order",
+    ):
+        payload[field_name] = bool(payload.get(field_name, True))
     return _json_safe(payload)
 
 
@@ -812,6 +908,19 @@ def _dedupe_reason_payloads(reasons: Sequence[Any]) -> tuple[dict[str, Any], ...
     return tuple(result)
 
 
+def _dedupe_claim_payloads(claims: Sequence[Any]) -> tuple[dict[str, Any], ...]:
+    seen: set[tuple[str, str]] = set()
+    result: list[dict[str, Any]] = []
+    for claim in claims:
+        data = _as_mapping(claim)
+        key = (str(data.get("claim") or ""), str(data.get("code") or ""))
+        if key in seen:
+            continue
+        seen.add(key)
+        result.append(data)
+    return tuple(result)
+
+
 def _statistical_gate_refs(summary: Mapping[str, Any]) -> tuple[str, ...]:
     refs: list[str] = []
     for field_name in ("statistical_gate_ref", "gate_ref", "ref", "evidence_ref"):
@@ -825,6 +934,16 @@ def _statistical_gate_refs(summary: Mapping[str, Any]) -> tuple[str, ...]:
 def _ml_gate_refs(summary: Mapping[str, Any]) -> tuple[str, ...]:
     refs: list[str] = []
     for field_name in ("ml_gate_ref", "gate_ref", "ref", "evidence_ref"):
+        value = str(summary.get(field_name) or "")
+        if value:
+            refs.append(value)
+    refs.extend(str(item) for item in _as_sequence(summary.get("evidence_refs")) if str(item))
+    return tuple(dict.fromkeys(refs))
+
+
+def _event_gate_refs(summary: Mapping[str, Any]) -> tuple[str, ...]:
+    refs: list[str] = []
+    for field_name in ("event_gate_ref", "gate_ref", "ref", "evidence_ref"):
         value = str(summary.get(field_name) or "")
         if value:
             refs.append(value)
