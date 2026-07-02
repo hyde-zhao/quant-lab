@@ -15,6 +15,7 @@ from engine.mature_multifactor_framework import (
 )
 from engine.mature_multifactor_research import (
     CR150_FORBIDDEN_OPERATION_COUNTS,
+    CR151_LINKAGE_NODE_ORDER,
     CR150_LINKAGE_NODE_ORDER,
     build_cr150_multifactor_framework_completion_map,
     validate_cr150_multifactor_framework_completion_map,
@@ -241,3 +242,54 @@ def test_cr150_completion_map_blocks_missing_report_pack_linkage() -> None:
     assert any(gap["node_id"] == "backtest_report_pack" for gap in completion["linkage_gaps"])
     issues = validate_cr150_multifactor_framework_completion_map(completion)
     assert any(issue["code"] == "cr150_completion_required_node_not_passed" for issue in issues)
+
+
+def test_cr151_completion_map_can_require_statistical_gate_without_rewriting_cr150_base_order() -> None:
+    items = _completion_inputs()
+
+    missing_gate = build_cr150_multifactor_framework_completion_map(
+        run_id=str(items["run_id"]),
+        factor_specs=items["factor_specs"],  # type: ignore[arg-type]
+        factor_run_refs=items["factor_run_refs"],  # type: ignore[arg-type]
+        factor_panel_ref=str(items["factor_panel_ref"]),
+        label_window_ref=str(items["label_window_ref"]),
+        signal_set=items["signal_set"],  # type: ignore[arg-type]
+        evidence_index=items["evidence_index"],  # type: ignore[arg-type]
+        risk_policy=items["risk_policy"],
+        backtest_run_spec=items["run_spec"],
+        backtest_report_pack=items["report_pack"],
+        cost_risk_attribution_pack=items["attribution_pack"],
+        admission_package=items["admission_package"],  # type: ignore[arg-type]
+        operation_counts=CR150_FORBIDDEN_OPERATION_COUNTS,
+        require_statistical_gate=True,
+    )
+
+    assert missing_gate["status"] == "BLOCKED"
+    assert tuple(missing_gate["node_order"]) == CR151_LINKAGE_NODE_ORDER
+    assert any(gap["gap_id"] == "statistical_admission_gate_missing" for gap in missing_gate["linkage_gaps"])
+
+    passing_gate = build_cr150_multifactor_framework_completion_map(
+        run_id=str(items["run_id"]),
+        factor_specs=items["factor_specs"],  # type: ignore[arg-type]
+        factor_run_refs=items["factor_run_refs"],  # type: ignore[arg-type]
+        factor_panel_ref=str(items["factor_panel_ref"]),
+        label_window_ref=str(items["label_window_ref"]),
+        signal_set=items["signal_set"],  # type: ignore[arg-type]
+        evidence_index=items["evidence_index"],  # type: ignore[arg-type]
+        risk_policy=items["risk_policy"],
+        backtest_run_spec=items["run_spec"],
+        backtest_report_pack=items["report_pack"],
+        cost_risk_attribution_pack=items["attribution_pack"],
+        admission_package=items["admission_package"],  # type: ignore[arg-type]
+        operation_counts=CR150_FORBIDDEN_OPERATION_COUNTS,
+        require_statistical_gate=True,
+        statistical_gate_summary={
+            "status": "PASS",
+            "statistical_gate_ref": "artifact://cr151/statistical-gate.json",
+            "report_refs": ("artifact://cr151/multiple-testing.json",),
+        },
+    )
+
+    assert passing_gate["status"] == "PASS"
+    assert tuple(passing_gate["node_order"]) == CR151_LINKAGE_NODE_ORDER
+    assert validate_cr150_multifactor_framework_completion_map(passing_gate) == ()

@@ -36,6 +36,7 @@ MF_ADMISSION_ORDER_DRAFT_ONLY = "MF_ADMISSION_ORDER_DRAFT_ONLY"
 MF_ADMISSION_REAL_OPERATION_NOT_AUTHORIZED = "MF_ADMISSION_REAL_OPERATION_NOT_AUTHORIZED"
 MF_ADMISSION_CREDENTIAL_READ_FORBIDDEN = "MF_ADMISSION_CREDENTIAL_READ_FORBIDDEN"
 MF_ADMISSION_RUNTIME_NOT_AUTHORIZED = "MF_ADMISSION_RUNTIME_NOT_AUTHORIZED"
+MF_ADMISSION_STATISTICAL_GATE_BLOCKED = "MF_ADMISSION_STATISTICAL_GATE_BLOCKED"
 
 NOT_AUTHORIZED_COUNTER_FIELDS = (
     "qmt_api_call",
@@ -450,6 +451,57 @@ def to_jsonable_admission_package(package: StrategyAdmissionPackage | Mapping[st
     return _json_safe(dict(package))
 
 
+def map_statistical_gate_status_to_admission_status(status: Any) -> AdmissionStatus:
+    normalized = _enum_value(status).strip().upper()
+    if normalized == "PASS":
+        return AdmissionStatus.PASS
+    if normalized == "FAIL":
+        return AdmissionStatus.FAIL
+    if normalized == "NEEDS_REVIEW":
+        return AdmissionStatus.WARN
+    if normalized == "BLOCKED":
+        return AdmissionStatus.BLOCKED
+    return AdmissionStatus.BLOCKED
+
+
+def attach_statistical_gate_to_admission_package(
+    package: StrategyAdmissionPackage | Mapping[str, Any],
+    statistical_gate_summary: Mapping[str, Any] | Any,
+) -> dict[str, Any]:
+    """Attach CR151 statistical gate evidence without changing runtime auth flags."""
+
+    payload = to_jsonable_admission_package(package)
+    summary = _as_mapping(statistical_gate_summary)
+    mapped_status = map_statistical_gate_status_to_admission_status(summary.get("status"))
+    current_status = _admission_status_from_value(payload.get("admission_status"))
+    payload["admission_status"] = _worse_admission_status(current_status, mapped_status).value
+    payload["statistical_gate_summary"] = _json_safe(summary)
+
+    evidence_refs = list(_as_sequence(payload.get("evidence_refs")))
+    for ref in _statistical_gate_refs(summary):
+        if ref not in evidence_refs:
+            evidence_refs.append(ref)
+    payload["evidence_refs"] = tuple(str(item) for item in evidence_refs if str(item))
+
+    if mapped_status is not AdmissionStatus.PASS:
+        blocked_reasons = list(_as_sequence(payload.get("blocked_reasons")))
+        blocked_reasons.append(
+            AdmissionBlockedReason(
+                code=MF_ADMISSION_STATISTICAL_GATE_BLOCKED,
+                message="CR151 statistical admission gate is not PASS.",
+                source="statistical_gate_summary",
+                field="status",
+                unlock_condition="provide_passing_CR151_statistical_gate_or_route_review",
+                evidence_ref=";".join(_statistical_gate_refs(summary)),
+            ).to_dict()
+        )
+        payload["blocked_reasons"] = tuple(_dedupe_reason_payloads(blocked_reasons))
+        unlock_conditions = list(_as_sequence(payload.get("unlock_conditions")))
+        unlock_conditions.append("provide_passing_CR151_statistical_gate_or_route_review")
+        payload["unlock_conditions"] = tuple(dict.fromkeys(str(item) for item in unlock_conditions if str(item)))
+    return _json_safe(payload)
+
+
 def _normalize_counters(counters: NotAuthorizedCounters | Mapping[str, int] | None) -> NotAuthorizedCounters:
     if counters is None:
         return zero_not_authorized_counters()
@@ -686,6 +738,47 @@ def _dedupe_claims(claims: Sequence[AdmissionClaim]) -> tuple[AdmissionClaim, ..
         seen.add(key)
         result.append(claim)
     return tuple(result)
+
+
+def _dedupe_reason_payloads(reasons: Sequence[Any]) -> tuple[dict[str, Any], ...]:
+    seen: set[tuple[str, str, str]] = set()
+    result: list[dict[str, Any]] = []
+    for reason in reasons:
+        data = _as_mapping(reason)
+        key = (str(data.get("code") or ""), str(data.get("source") or ""), str(data.get("field") or ""))
+        if key in seen:
+            continue
+        seen.add(key)
+        result.append(data)
+    return tuple(result)
+
+
+def _statistical_gate_refs(summary: Mapping[str, Any]) -> tuple[str, ...]:
+    refs: list[str] = []
+    for field_name in ("statistical_gate_ref", "gate_ref", "ref", "evidence_ref"):
+        value = str(summary.get(field_name) or "")
+        if value:
+            refs.append(value)
+    refs.extend(str(item) for item in _as_sequence(summary.get("report_refs")) if str(item))
+    return tuple(dict.fromkeys(refs))
+
+
+def _admission_status_from_value(value: Any) -> AdmissionStatus:
+    normalized = _enum_value(value).strip().lower()
+    for status in AdmissionStatus:
+        if normalized == status.value:
+            return status
+    return AdmissionStatus.BLOCKED
+
+
+def _worse_admission_status(left: AdmissionStatus, right: AdmissionStatus) -> AdmissionStatus:
+    priority = {
+        AdmissionStatus.PASS: 0,
+        AdmissionStatus.WARN: 1,
+        AdmissionStatus.FAIL: 2,
+        AdmissionStatus.BLOCKED: 3,
+    }
+    return left if priority[left] >= priority[right] else right
 
 
 def _as_mapping(value: Any) -> dict[str, Any]:

@@ -82,6 +82,8 @@ CR150_LINKAGE_NODE_ORDER = (
     "cost_risk_attribution",
     "strategy_admission_package",
 )
+CR151_STATISTICAL_GATE_NODE_ID = "statistical_admission_gate"
+CR151_LINKAGE_NODE_ORDER = CR150_LINKAGE_NODE_ORDER + (CR151_STATISTICAL_GATE_NODE_ID,)
 CR150_DEFAULT_DEFERRED_ROUTES = (
     "machine_learning",
     "event_driven",
@@ -1123,6 +1125,8 @@ def build_cr150_multifactor_framework_completion_map(
     backtest_run_spec: Mapping[str, Any] | Any | None = None,
     backtest_report_pack: Mapping[str, Any] | Any | None = None,
     cost_risk_attribution_pack: Mapping[str, Any] | Any | None = None,
+    statistical_gate_summary: Mapping[str, Any] | Any | None = None,
+    require_statistical_gate: bool = False,
     operation_counts: Mapping[str, Any] | None = None,
     external_basis_refs: Mapping[str, str] | None = None,
     deferred_routes: Sequence[str] | None = None,
@@ -1135,13 +1139,14 @@ def build_cr150_multifactor_framework_completion_map(
     run_spec_payload = _cr150_payload(backtest_run_spec)
     report_pack_payload = _cr150_payload(backtest_report_pack)
     attribution_payload = _cr150_payload(cost_risk_attribution_pack)
+    statistical_gate_payload = _cr150_payload(statistical_gate_summary)
     factor_payloads = tuple(_cr150_payload(item) for item in factor_specs)
 
     metric_refs = evidence_payload.get("metric_refs") if isinstance(evidence_payload.get("metric_refs"), Mapping) else {}
     resolved_factor_panel_ref = str(factor_panel_ref or metric_refs.get("factor_panel_ref") or signal_payload.get("lineage_ref") or "")
     resolved_label_window_ref = str(label_window_ref or metric_refs.get("label_window_ref") or "")
 
-    nodes = (
+    nodes = [
         _cr150_node(
             "factor_spec",
             "engine.multifactor_contracts.FactorSpec",
@@ -1197,7 +1202,10 @@ def build_cr150_multifactor_framework_completion_map(
             (_cr150_admission_ref(admission_payload),),
             admission_payload,
         ),
-    )
+    ]
+    if require_statistical_gate or statistical_gate_payload:
+        nodes.append(_cr151_statistical_gate_node(statistical_gate_payload, required=bool(require_statistical_gate)))
+    node_order = tuple(str(node["node_id"]) for node in nodes)
     gaps = _cr150_linkage_gaps(nodes, operations)
     deferred = tuple(str(item) for item in (deferred_routes or CR150_DEFAULT_DEFERRED_ROUTES))
     node_hashes = {str(node["node_id"]): str(node["content_hash"]) for node in nodes}
@@ -1205,7 +1213,7 @@ def build_cr150_multifactor_framework_completion_map(
         {
             "schema_version": CR150_COMPLETION_MAP_SCHEMA,
             "run_id": run_id,
-            "node_order": CR150_LINKAGE_NODE_ORDER,
+            "node_order": node_order,
             "node_hashes": node_hashes,
             "operation_counts": operations,
             "deferred_routes": deferred,
@@ -1234,7 +1242,7 @@ def build_cr150_multifactor_framework_completion_map(
         ),
         "external_basis_refs": dict(external_basis_refs or {}),
         "deferred_routes": list(deferred),
-        "node_order": list(CR150_LINKAGE_NODE_ORDER),
+        "node_order": list(node_order),
         "nodes": [dict(node) for node in nodes],
         "linkage_gaps": list(gaps),
         "hash_chain": {
@@ -1254,11 +1262,12 @@ def validate_cr150_multifactor_framework_completion_map(completion_map: Mapping[
     nodes = tuple(dict(item) for item in completion_map.get("nodes") or ())
     node_order = tuple(str(item) for item in completion_map.get("node_order") or ())
     actual_order = tuple(str(node.get("node_id") or "") for node in nodes)
-    if node_order != CR150_LINKAGE_NODE_ORDER or actual_order != CR150_LINKAGE_NODE_ORDER:
+    allowed_orders = {CR150_LINKAGE_NODE_ORDER, CR151_LINKAGE_NODE_ORDER}
+    if node_order != actual_order or actual_order not in allowed_orders:
         issues.append(
             {
                 "code": "cr150_completion_node_order_invalid",
-                "expected": list(CR150_LINKAGE_NODE_ORDER),
+                "expected": [list(CR150_LINKAGE_NODE_ORDER), list(CR151_LINKAGE_NODE_ORDER)],
                 "actual": list(actual_order),
             }
         )
@@ -1285,7 +1294,7 @@ def validate_cr150_multifactor_framework_completion_map(completion_map: Mapping[
         {
             "schema_version": CR150_COMPLETION_MAP_SCHEMA,
             "run_id": completion_map.get("run_id"),
-            "node_order": CR150_LINKAGE_NODE_ORDER,
+            "node_order": node_order,
             "node_hashes": dict((completion_map.get("hash_chain") or {}).get("node_hashes") or {}),
             "operation_counts": operations,
             "deferred_routes": tuple(str(item) for item in completion_map.get("deferred_routes") or ()),
@@ -1371,6 +1380,34 @@ def _cr150_admission_ref(payload: Mapping[str, Any]) -> str:
     return f"strategy-admission-package://{run_id}" if run_id else ""
 
 
+def _cr151_statistical_gate_refs(payload: Mapping[str, Any]) -> tuple[str, ...]:
+    refs: list[str] = []
+    for field_name in ("statistical_gate_ref", "gate_ref", "ref", "evidence_ref"):
+        value = str(payload.get(field_name) or "")
+        if value:
+            refs.append(value)
+    report_refs = payload.get("report_refs")
+    if isinstance(report_refs, Sequence) and not isinstance(report_refs, (str, bytes, bytearray)):
+        refs.extend(str(item) for item in report_refs if str(item))
+    elif report_refs:
+        refs.append(str(report_refs))
+    return tuple(dict.fromkeys(refs))
+
+
+def _cr151_statistical_gate_node(payload: Mapping[str, Any], *, required: bool) -> dict[str, Any]:
+    node = _cr150_node(
+        CR151_STATISTICAL_GATE_NODE_ID,
+        "engine.strategy_admission_statistical_gate.StrategyAdmissionStatisticalGate",
+        _cr151_statistical_gate_refs(payload),
+        payload,
+        required=required,
+    )
+    normalized_status = str(payload.get("status") or "").strip().upper()
+    if required and normalized_status != "PASS":
+        node["status"] = normalized_status or "MISSING"
+    return node
+
+
 def _cr150_node(
     node_id: str,
     object_type: str,
@@ -1408,6 +1445,16 @@ def _cr150_linkage_gaps(
     for node in nodes:
         if bool(node.get("required", True)) and node.get("status") != "PASS":
             node_id = str(node.get("node_id") or "unknown")
+            if node_id == CR151_STATISTICAL_GATE_NODE_ID:
+                gaps.append(
+                    {
+                        "gap_id": "statistical_admission_gate_missing",
+                        "node_id": node_id,
+                        "severity": "blocker",
+                        "reason": "Required CR151 statistical admission gate evidence is missing or not PASS.",
+                    }
+                )
+                continue
             gaps.append(
                 {
                     "gap_id": f"CR150-LINKAGE-{node_id.upper()}-MISSING",
