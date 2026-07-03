@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 
 from engine.strategy_admission_package import (
+    MF_ADMISSION_CROSS_STRATEGY_RELIABILITY_BLOCKED,
     MF_ADMISSION_CREDENTIAL_READ_FORBIDDEN,
     MF_ADMISSION_MANIFEST_NOT_READY,
     MF_ADMISSION_ORDER_DRAFT_ONLY,
@@ -15,8 +16,10 @@ from engine.strategy_admission_package import (
     AdmissionStatus,
     NotAuthorizedCounters,
     assert_no_real_operation,
+    attach_cross_strategy_reliability_to_admission_package,
     build_strategy_admission_package,
     determine_admission_status,
+    map_cross_strategy_reliability_status_to_admission_status,
     make_order_intent_draft_ref,
     to_jsonable_admission_package,
     validate_admission_inputs,
@@ -349,3 +352,114 @@ def test_ts_s07_07_forbidden_imports_and_misleading_enablement_strings_are_absen
     assert "qmt-ready" not in lowered
     assert "simulation-ready" not in lowered
     assert "live-ready" not in lowered
+
+
+def _pass_package_payload(**overrides: object) -> dict[str, object]:
+    payload: dict[str, object] = {
+        "schema_version": "strategy_admission_package_v1",
+        "package_id": "strategy-admission:cr154-fixture",
+        "strategy_id": "strategy-cr154-fixture",
+        "run_id": "run-cr154-fixture",
+        "admission_status": "pass",
+        "evidence_refs": ("fixture://existing",),
+        "blocked_reasons": (),
+        "unlock_conditions": (),
+        "blocked_claims": (),
+        "limitations": ("existing_limitation",),
+        "not_qmt_authorization": True,
+        "not_simulation_authorization": True,
+        "not_live_authorization": True,
+        "not_broker_order": True,
+    }
+    payload.update(overrides)
+    return payload
+
+
+def test_cr154_cross_strategy_reliability_status_mapping_and_pass_attachment_preserves_runtime_boundaries() -> None:
+    assert map_cross_strategy_reliability_status_to_admission_status("PASS") is AdmissionStatus.PASS
+    assert map_cross_strategy_reliability_status_to_admission_status("FAIL") is AdmissionStatus.FAIL
+    assert map_cross_strategy_reliability_status_to_admission_status("NEEDS_REVIEW") is AdmissionStatus.WARN
+    assert map_cross_strategy_reliability_status_to_admission_status("BLOCKED") is AdmissionStatus.BLOCKED
+    assert map_cross_strategy_reliability_status_to_admission_status("unknown") is AdmissionStatus.BLOCKED
+
+    payload = attach_cross_strategy_reliability_to_admission_package(
+        _pass_package_payload(
+            blocked_claims=(
+                {
+                    "claim": "existing_runtime_claim",
+                    "status": "blocked",
+                    "code": "EXISTING",
+                    "reason": "existing",
+                },
+            )
+        ),
+        {
+            "status": "PASS",
+            "gate_status": "PASS",
+            "gate_ref": "fixture://cr154/cross-strategy",
+            "evidence_refs": ("fixture://cr154/gate1", "fixture://cr154/gate6"),
+            "limitations": ("local_static_fixture_only",),
+        },
+    )
+
+    assert payload["admission_status"] == AdmissionStatus.PASS.value
+    assert payload["cross_strategy_reliability_status"] == "PASS"
+    assert payload["cross_strategy_reliability_ref"] == "fixture://cr154/cross-strategy"
+    assert {"fixture://existing", "fixture://cr154/cross-strategy", "fixture://cr154/gate1", "fixture://cr154/gate6"} <= set(
+        payload["evidence_refs"]
+    )
+    assert payload["not_qmt_authorization"] is True
+    assert payload["not_simulation_authorization"] is True
+    assert payload["not_live_authorization"] is True
+    assert payload["not_broker_order"] is True
+    assert "cross_strategy_reliability_pass_not_runtime_ready" in payload["limitations"]
+    assert "no_trading_authorization" in payload["limitations"]
+    assert {"existing_runtime_claim", "cross_strategy_reliability_pass_not_runtime_ready"} <= {
+        claim["claim"] for claim in payload["blocked_claims"]
+    }
+
+
+def test_cr154_cross_strategy_reliability_blocked_attachment_degrades_and_preserves_adjacent_gate_fields() -> None:
+    package = _pass_package_payload(
+        statistical_gate_summary={"status": "PASS"},
+        ml_gate_summary={"gate_status": "PASS"},
+        event_gate_summary={"gate_status": "PASS"},
+        gate_status="PASS",
+        gate_ref="fixture://legacy/generic",
+    )
+
+    payload = attach_cross_strategy_reliability_to_admission_package(
+        package,
+        {
+            "gate_status": "BLOCKED",
+            "gate_ref": "fixture://cr154/blocked",
+            "blocked_reasons": (
+                {
+                    "code": "CR154_BLOCKED",
+                    "source": "cross_strategy_reliability_gate",
+                    "field": "gate_1_statistical",
+                    "message": "blocked fixture",
+                },
+            ),
+            "blocked_claims": (
+                {
+                    "claim": "production_reliability",
+                    "status": "blocked",
+                    "code": "CR154_BLOCKED",
+                    "reason": "blocked fixture",
+                },
+            ),
+        },
+    )
+
+    assert payload["admission_status"] == AdmissionStatus.BLOCKED.value
+    assert payload["statistical_gate_summary"] == {"status": "PASS"}
+    assert payload["ml_gate_summary"] == {"gate_status": "PASS"}
+    assert payload["event_gate_summary"] == {"gate_status": "PASS"}
+    assert payload["gate_status"] == "PASS"
+    assert payload["gate_ref"] == "fixture://legacy/generic"
+    assert payload["cross_strategy_reliability_status"] == "BLOCKED"
+    assert MF_ADMISSION_CROSS_STRATEGY_RELIABILITY_BLOCKED in {
+        reason["code"] for reason in payload["blocked_reasons"]
+    }
+    assert "provide_passing_cross_strategy_reliability_gate_or_route_review" in payload["unlock_conditions"]

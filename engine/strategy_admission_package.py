@@ -39,6 +39,7 @@ MF_ADMISSION_RUNTIME_NOT_AUTHORIZED = "MF_ADMISSION_RUNTIME_NOT_AUTHORIZED"
 MF_ADMISSION_STATISTICAL_GATE_BLOCKED = "MF_ADMISSION_STATISTICAL_GATE_BLOCKED"
 MF_ADMISSION_ML_GATE_BLOCKED = "MF_ADMISSION_ML_GATE_BLOCKED"
 MF_ADMISSION_EVENT_GATE_BLOCKED = "MF_ADMISSION_EVENT_GATE_BLOCKED"
+MF_ADMISSION_CROSS_STRATEGY_RELIABILITY_BLOCKED = "MF_ADMISSION_CROSS_STRATEGY_RELIABILITY_BLOCKED"
 
 NOT_AUTHORIZED_COUNTER_FIELDS = (
     "qmt_api_call",
@@ -492,6 +493,19 @@ def map_event_gate_status_to_admission_status(status: Any) -> AdmissionStatus:
     return AdmissionStatus.BLOCKED
 
 
+def map_cross_strategy_reliability_status_to_admission_status(status: Any) -> AdmissionStatus:
+    normalized = _enum_value(status).strip().upper()
+    if normalized == "PASS":
+        return AdmissionStatus.PASS
+    if normalized == "FAIL":
+        return AdmissionStatus.FAIL
+    if normalized == "NEEDS_REVIEW":
+        return AdmissionStatus.WARN
+    if normalized == "BLOCKED":
+        return AdmissionStatus.BLOCKED
+    return AdmissionStatus.BLOCKED
+
+
 def attach_statistical_gate_to_admission_package(
     package: StrategyAdmissionPackage | Mapping[str, Any],
     statistical_gate_summary: Mapping[str, Any] | Any,
@@ -600,6 +614,94 @@ def attach_event_gate_to_admission_package(
         payload["blocked_reasons"] = tuple(_dedupe_reason_payloads(blocked_reasons))
         unlock_conditions = list(_as_sequence(payload.get("unlock_conditions")))
         unlock_conditions.append("provide_passing_CR153_event_gate_or_route_review")
+        payload["unlock_conditions"] = tuple(dict.fromkeys(str(item) for item in unlock_conditions if str(item)))
+
+    for field_name in (
+        "not_qmt_authorization",
+        "not_simulation_authorization",
+        "not_live_authorization",
+        "not_broker_order",
+    ):
+        payload[field_name] = bool(payload.get(field_name, True))
+    return _json_safe(payload)
+
+
+def attach_cross_strategy_reliability_to_admission_package(
+    package: StrategyAdmissionPackage | Mapping[str, Any],
+    cross_strategy_reliability_summary: Mapping[str, Any] | Any,
+) -> dict[str, Any]:
+    """Attach CR154 reliability gate evidence without changing runtime auth flags."""
+
+    payload = to_jsonable_admission_package(package)
+    summary = _as_mapping(cross_strategy_reliability_summary)
+    status_value = summary.get("gate_status") or summary.get("status") or "BLOCKED"
+    mapped_status = map_cross_strategy_reliability_status_to_admission_status(status_value)
+    current_status = _admission_status_from_value(payload.get("admission_status"))
+    payload["admission_status"] = _worse_admission_status(current_status, mapped_status).value
+    payload["cross_strategy_reliability_summary"] = _json_safe(summary)
+    payload["cross_strategy_reliability_present"] = bool(summary.get("gate_present", bool(summary)))
+    payload["cross_strategy_reliability_required"] = bool(summary.get("gate_required", True))
+    payload["cross_strategy_reliability_status"] = _enum_value(status_value).strip().upper() if summary else "BLOCKED"
+    payload["cross_strategy_reliability_ref"] = _first_non_empty(
+        summary.get("cross_strategy_reliability_ref"),
+        summary.get("gate_ref"),
+        payload.get("cross_strategy_reliability_ref"),
+    )
+    payload["cross_strategy_reliability_blocked_reasons"] = tuple(_as_sequence(summary.get("blocked_reasons")))
+
+    refs = _cross_strategy_reliability_refs(summary)
+    evidence_refs = list(_as_sequence(payload.get("evidence_refs")))
+    for ref in refs:
+        if ref not in evidence_refs:
+            evidence_refs.append(ref)
+    payload["evidence_refs"] = tuple(str(item) for item in evidence_refs if str(item))
+
+    limitations = list(_as_sequence(payload.get("limitations")))
+    limitations.extend(_as_sequence(summary.get("limitations")))
+    limitations.extend(
+        (
+            "cross_strategy_reliability_pass_not_runtime_ready",
+            "no_real_lake_or_provider_validation",
+            "no_paper_trading_authorization",
+            "no_simulation_or_live_authorization",
+            "no_qmt_runtime",
+            "no_broker_order",
+            "no_trading_authorization",
+            "no_runtime_or_registry_publication",
+        )
+    )
+    payload["limitations"] = tuple(dict.fromkeys(str(item) for item in limitations if str(item)))
+
+    blocked_claims = list(_as_sequence(payload.get("blocked_claims")))
+    blocked_claims.append(
+        AdmissionClaim(
+            claim="cross_strategy_reliability_pass_not_runtime_ready",
+            status="blocked",
+            code=MF_ADMISSION_CROSS_STRATEGY_RELIABILITY_BLOCKED,
+            reason="CR154 cross-strategy reliability gate PASS only covers local/static/fixture reliability evidence.",
+            limitation="Not paper, simulation, live, broker, trading, runtime, registry, production, true TCA or real data readiness.",
+            evidence_ref=";".join(refs),
+        ).to_dict()
+    )
+    blocked_claims.extend(_as_sequence(summary.get("blocked_claims")))
+    payload["blocked_claims"] = tuple(_dedupe_claim_payloads(blocked_claims))
+
+    if mapped_status is not AdmissionStatus.PASS:
+        blocked_reasons = list(_as_sequence(payload.get("blocked_reasons")))
+        blocked_reasons.append(
+            AdmissionBlockedReason(
+                code=MF_ADMISSION_CROSS_STRATEGY_RELIABILITY_BLOCKED,
+                message="CR154 cross-strategy reliability gate is not PASS.",
+                source="cross_strategy_reliability_summary",
+                field="gate_status",
+                unlock_condition="provide_passing_cross_strategy_reliability_gate_or_route_review",
+                evidence_ref=";".join(refs),
+            ).to_dict()
+        )
+        blocked_reasons.extend(_as_sequence(summary.get("blocked_reasons")))
+        payload["blocked_reasons"] = tuple(_dedupe_reason_payloads(blocked_reasons))
+        unlock_conditions = list(_as_sequence(payload.get("unlock_conditions")))
+        unlock_conditions.append("provide_passing_cross_strategy_reliability_gate_or_route_review")
         payload["unlock_conditions"] = tuple(dict.fromkeys(str(item) for item in unlock_conditions if str(item)))
 
     for field_name in (
@@ -948,6 +1050,23 @@ def _event_gate_refs(summary: Mapping[str, Any]) -> tuple[str, ...]:
         if value:
             refs.append(value)
     refs.extend(str(item) for item in _as_sequence(summary.get("evidence_refs")) if str(item))
+    return tuple(dict.fromkeys(refs))
+
+
+def _cross_strategy_reliability_refs(summary: Mapping[str, Any]) -> tuple[str, ...]:
+    refs: list[str] = []
+    for field_name in (
+        "cross_strategy_reliability_ref",
+        "cross_strategy_reliability_gate_ref",
+        "gate_ref",
+        "ref",
+        "evidence_ref",
+    ):
+        value = str(summary.get(field_name) or "")
+        if value:
+            refs.append(value)
+    refs.extend(str(item) for item in _as_sequence(summary.get("evidence_refs")) if str(item))
+    refs.extend(str(item) for item in _as_sequence(summary.get("report_refs")) if str(item))
     return tuple(dict.fromkeys(refs))
 
 
