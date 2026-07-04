@@ -147,6 +147,14 @@ items:
     provenance:
       -
         cr: CR-010
+  tests/data_lake/test_current_truth_profile.py:
+    domains:
+      - data_lake
+    old_paths: []
+    introduced_by: CR-149
+    provenance:
+      -
+        cr: CR-149
   tests/data_lake/test_cr_data_audit_chain.py:
     domains:
       - data_lake
@@ -221,6 +229,14 @@ items:
     provenance:
       -
         cr: CR-139
+  tests/data_lake/test_governed_lake_readiness_matrix.py:
+    domains:
+      - data_lake
+    old_paths: []
+    introduced_by: CR-149
+    provenance:
+      -
+        cr: CR-149
   tests/data_lake/test_feature_label_artifact_layer.py:
     domains:
       - data_lake
@@ -352,6 +368,22 @@ items:
     provenance:
       -
         cr: CR-139
+  tests/data_lake/test_physical_partition_migration_execute.py:
+    domains:
+      - data_lake
+    old_paths: []
+    introduced_by: CR-146
+    provenance:
+      -
+        cr: CR-146
+  tests/data_lake/test_physical_partition_migration_plan.py:
+    domains:
+      - data_lake
+    old_paths: []
+    introduced_by: CR-146
+    provenance:
+      -
+        cr: CR-146
   tests/data_lake/test_production_current_truth_rerun.py:
     domains:
       - data_lake
@@ -893,6 +925,14 @@ items:
     provenance:
       -
         cr: CR-011
+  tests/research/test_backtest_production_contracts.py:
+    domains:
+      - research
+    old_paths: []
+    introduced_by: CR-148
+    provenance:
+      -
+        cr: CR-148
   tests/research/test_capacity_cost_sensitivity.py:
     domains:
       - research
@@ -901,6 +941,14 @@ items:
     provenance:
       -
         cr: CR-011
+  tests/research/test_cross_strategy_reliability_gates.py:
+    domains:
+      - research
+    old_paths: []
+    introduced_by: CR-154
+    provenance:
+      -
+        cr: CR-154
   tests/research/test_chapter3_backfill.py:
     domains:
       - research
@@ -917,6 +965,14 @@ items:
     provenance:
       -
         source: chapter-3
+  tests/research/test_event_driven_strategy_e2e_contracts.py:
+    domains:
+      - research
+    old_paths: []
+    introduced_by: CR-153
+    provenance:
+      -
+        cr: CR-153
   tests/research/test_execution_price_policy.py:
     domains:
       - research
@@ -1061,6 +1117,14 @@ items:
     provenance:
       -
         source: legacy-topic-test
+  tests/research/test_ml_strategy_e2e_contracts.py:
+    domains:
+      - research
+    old_paths: []
+    introduced_by: CR-152
+    provenance:
+      -
+        cr: CR-152
   tests/research/test_mature_multifactor_framework_stage2.py:
     domains:
       - research
@@ -1093,6 +1157,14 @@ items:
     provenance:
       -
         source: legacy-topic-test
+  tests/research/test_multifactor_framework_completion.py:
+    domains:
+      - research
+    old_paths:
+      - tests/test_cr150_multifactor_framework_completion.py
+    provenance:
+      -
+        cr: CR-150
   tests/research/test_no_real_operation_safety.py:
     domains:
       - research
@@ -1173,6 +1245,14 @@ items:
     provenance:
       -
         source: chapter-3
+  tests/research/test_research_production_contracts.py:
+    domains:
+      - research
+    old_paths: []
+    introduced_by: CR-147
+    provenance:
+      -
+        cr: CR-147
   tests/research/test_research_consumer_boundary.py:
     domains:
       - research
@@ -1221,6 +1301,14 @@ items:
     provenance:
       -
         cr: CR-030
+  tests/research/test_strategy_admission_statistical_gate.py:
+    domains:
+      - research
+    old_paths:
+      - tests/test_cr151_strategy_admission_statistical_gate.py
+    provenance:
+      -
+        cr: CR-151
   tests/research/test_tradability_gates.py:
     domains:
       - research
