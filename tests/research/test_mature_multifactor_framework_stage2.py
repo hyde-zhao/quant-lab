@@ -3,12 +3,18 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from engine.mature_multifactor_framework import (
+    MF_STAGE2_EVIDENCE_INDEX_INCOMPLETE,
+    MF_STAGE2_MATURE_PACKAGE_REF_SET_INVALID,
     MF_STAGE2_NO_LAKE_VIOLATION,
     MF_STAGE2_REQUIRED_FIELD_MISSING,
     MATURE_ADMISSION_SUPPORT_SCHEMA,
     SIGNAL_SET_SCHEMA,
     STAGE2_DATA_REQUIREMENTS,
+    STAGE2_MATURE_PACKAGE_REQUIRED_REFS,
+    STAGE2_MATURE_PACKAGE_REF_SET_SCHEMA,
     STAGE2_MATURE_FRAMEWORK_BUNDLE_SCHEMA,
     STAGE3_REQUIRED_EVIDENCE,
     STAGE3_MATURE_RESEARCH_PACKAGE_SCHEMA,
@@ -16,25 +22,31 @@ from engine.mature_multifactor_framework import (
     STAGE3_RESEARCH_RUN_MANIFEST_SCHEMA,
     STRATEGY_CANDIDATE_SCHEMA,
     StrategyFamily,
+    build_research_evidence_item,
     build_mature_admission_support_from_cr030_cr039_outputs,
     build_multifactor_strategy_type_adapter,
     build_project_strategy_candidate_from_cr039,
     build_stage3_mature_research_package,
     build_stage3_research_run_manifest,
     build_stage3_research_machine_handoff,
+    build_stage2_mature_package_ref_set,
     build_stage2_mature_admission_support,
     build_stage2_portfolio_risk_policy,
     build_stage2_research_evidence_index,
     build_stage2_signal_set,
     validate_project_strategy_candidate,
+    validate_research_evidence_index_refs_only,
+    validate_research_evidence_item,
     validate_stage3_mature_research_package,
     validate_stage3_research_machine_handoff,
     validate_stage3_research_run_manifest,
     validate_stage2_no_lake,
+    validate_stage2_mature_package_ref_set,
     validate_strategy_type_adapter,
 )
 from engine.multifactor_contracts import (
     BLOCKED_CLAIMS_DEFAULT,
+    FORBIDDEN_OPERATION_COUNTERS,
     FactorDirection,
     FactorSpec,
     PermissionCounters,
@@ -495,3 +507,116 @@ def test_stage3_11_run_manifest_requires_frozen_release_factor_versions_and_date
         "factor_versions",
         "date_range.end",
     } <= {reason.field for reason in result.blocked_reasons}
+
+
+def test_stage2_12_mature_package_ref_set_covers_required_stage2_exit_refs() -> None:
+    ref_set = build_stage2_mature_package_ref_set(
+        package_id="stage2-mature-package-cr157",
+        factor_spec_refs=({"factor_id": "momentum_20d", "evidence_ref": "fixture://stage2/factor-spec"},),
+        factor_run_spec_refs=({"run_id": "factor-run-20260626", "evidence_ref": "fixture://stage2/factor-run"},),
+        factor_panel_ref={"panel_id": "factor-panel-20260626", "evidence_ref": "fixture://stage2/factor-panel"},
+        label_window_ref={"label_window_id": "label-window-5d", "evidence_ref": "fixture://stage2/label-window"},
+        evaluation_report_refs=({"report_id": "eval-cr151", "evidence_ref": "fixture://stage2/eval"},),
+        portfolio_risk_policy_ref={"policy_id": "stage2-risk-policy-fixture"},
+        mature_admission_support_ref={"package_id": "stage2-support"},
+        research_evidence_index_ref={"index_id": "stage2-evidence-index-fixture"},
+    )
+
+    assert ref_set.schema_version == STAGE2_MATURE_PACKAGE_REF_SET_SCHEMA
+    assert ref_set.status == "PASS"
+    assert set(STAGE2_MATURE_PACKAGE_REQUIRED_REFS) <= set(ref_set.to_dict())
+    assert validate_stage2_mature_package_ref_set(ref_set).passed
+
+    incomplete = ref_set.to_dict()
+    incomplete["factor_run_spec_refs"] = ()
+    result = validate_stage2_mature_package_ref_set(incomplete)
+
+    assert result.status == "blocked"
+    assert MF_STAGE2_MATURE_PACKAGE_REF_SET_INVALID in {reason.code for reason in result.blocked_reasons}
+    assert "factor_run_spec_refs" in {reason.field for reason in result.blocked_reasons}
+
+
+def test_stage2_13_research_evidence_items_are_refs_only_and_unique() -> None:
+    item = build_research_evidence_item(
+        {
+            "evidence_id": "EVID-CR157-metric-ic",
+            "source_ref": {"path": "process/evidence/CR157-ic.index.json"},
+            "artifact_type": "metric",
+            "source_cr": "CR-157",
+            "owner": "meta-dev",
+            "status": "PASS",
+            "hash": "sha256:abc123",
+            "freshness_status": "current",
+        }
+    )
+    assert validate_research_evidence_item(item).passed
+
+    copied_body = item.to_dict()
+    copied_body["full_report"] = "copied report body"
+    body_result = validate_research_evidence_item(copied_body)
+    assert body_result.status == "blocked"
+    assert MF_STAGE2_EVIDENCE_INDEX_INCOMPLETE in {reason.code for reason in body_result.blocked_reasons}
+    assert "evidence_items.body" in {reason.field for reason in body_result.blocked_reasons}
+
+    index = build_stage2_research_evidence_index(
+        index_id="stage2-evidence-index-cr157",
+        run_manifest_ref="fixture://stage2/run-manifest",
+        metric_refs={"ic_rankic_ref": "fixture://stage2/ic"},
+        lineage_refs={"pit_universe": "fixture://stage2/pit"},
+        evidence_items=(item, item),
+    )
+    duplicate_result = validate_research_evidence_index_refs_only(index)
+
+    assert duplicate_result.status == "blocked"
+    assert "evidence_items.EVID-CR157-metric-ic" in {reason.field for reason in duplicate_result.blocked_reasons}
+
+
+def test_stage2_14_stage3_handoff_readiness_fails_closed_on_missing_package_or_unknown_status() -> None:
+    objects = _stage2_objects()
+    fixture = objects["fixture"]  # type: ignore[assignment]
+    support = build_stage2_mature_admission_support(
+        strategy_id=str(fixture["strategy_id"]),  # type: ignore[index]
+        adapter=objects["adapter"],  # type: ignore[arg-type]
+        factor_specs=(_factor_spec(),),
+        signal_set=objects["signal_set"],  # type: ignore[arg-type]
+        evidence_index=objects["evidence_index"],  # type: ignore[arg-type]
+        risk_policy=objects["risk_policy"],  # type: ignore[arg-type]
+    )
+    candidate = build_project_strategy_candidate_from_cr039(
+        cr039_candidate=fixture["cr039_candidate"],  # type: ignore[index]
+        signal_set=objects["signal_set"],  # type: ignore[arg-type]
+        evidence_index=objects["evidence_index"],  # type: ignore[arg-type]
+        risk_policy=objects["risk_policy"],  # type: ignore[arg-type]
+    )
+    handoff = build_stage3_research_machine_handoff(
+        strategy_id=str(fixture["strategy_id"]),  # type: ignore[index]
+        mature_admission_support=support,
+        strategy_candidate=candidate,
+        evidence_index=objects["evidence_index"],  # type: ignore[arg-type]
+        risk_policy=objects["risk_policy"],  # type: ignore[arg-type]
+    )
+
+    assert handoff.readiness_status == "PASS"
+    assert handoff.package_ref["package_id"] == support.package_id
+    assert handoff.research_evidence_index_ref["index_id"] == objects["evidence_index"].index_id  # type: ignore[attr-defined]
+    assert validate_stage3_research_machine_handoff(handoff).passed
+
+    missing_package = handoff.to_dict()
+    missing_package["package_ref"] = {}
+    missing_result = validate_stage3_research_machine_handoff(missing_package)
+    assert missing_result.status == "blocked"
+    assert "package_ref" in {reason.field for reason in missing_result.blocked_reasons}
+
+    unknown_status = handoff.to_dict()
+    unknown_status["readiness_status"] = "UNKNOWN"
+    unknown_result = validate_stage3_research_machine_handoff(unknown_status)
+    assert unknown_result.status == "blocked"
+    assert "readiness_status" in {reason.field for reason in unknown_result.blocked_reasons}
+
+
+@pytest.mark.parametrize("counter_name", FORBIDDEN_OPERATION_COUNTERS)
+def test_stage2_15_every_forbidden_operation_counter_blocks_no_lake_boundary(counter_name: str) -> None:
+    result = validate_stage2_no_lake({counter_name: 1})
+
+    assert result.status == "blocked"
+    assert f"permission_counters.{counter_name}" in {reason.field for reason in result.blocked_reasons}

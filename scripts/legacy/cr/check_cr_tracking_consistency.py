@@ -7,6 +7,7 @@ publish、QMT 或交易操作。它使用标准库实现，避免给工作流引
 from __future__ import annotations
 
 import argparse
+import json
 import re
 import sys
 from pathlib import Path
@@ -427,7 +428,7 @@ def require(condition: bool, message: str, failures: list[str]) -> None:
 def check_project(project_root: Path) -> list[str]:
     failures: list[str] = []
     state_path = project_root / "process/STATE.md"
-    index_path = project_root / "process/changes/CR-INDEX.yaml"
+    index_path = project_root / "process/changes/CR-INDEX.json"
     tracking_path = project_root / "process/changes/CR-019-FOLLOW-UP-TRACKING-2026-05-31.md"
     cr019_path = project_root / "process/changes/CR-019-STAGE6-MULTIFACTOR-SIMULATION-ARCHITECTURE-2026-05-30.md"
     cr025_path = project_root / "process/changes/CR-025-BACKTRADER-OPTIONAL-EXECUTION-BACKEND-HARDENING-2026-05-31.md"
@@ -447,6 +448,12 @@ def check_project(project_root: Path) -> list[str]:
 
     state_text = read_text(state_path)
     index_text = read_text(index_path)
+    index_data = None
+    if index_text:
+        try:
+            index_data = json.loads(index_text)
+        except json.JSONDecodeError:
+            pass
     tracking_text = read_text(tracking_path)
     cr019_text = read_text(cr019_path)
     cr025_text = read_text(cr025_path)
@@ -628,22 +635,23 @@ def check_project(project_root: Path) -> list[str]:
             failures,
         )
         require(
-            has_current_tracking_entry(index_text, active_change, "active"),
-            f"CR-INDEX.yaml active_crs 缺少当前 active formal CR: {active_change}",
+            (index_data is not None and active_change in index_data.get("active_crs", []))
+            or (index_data is None and has_current_tracking_entry(index_text, active_change, "active")),
+            f"CR-INDEX.json active_crs 缺少当前 active formal CR: {active_change}",
             failures,
         )
 
     for item_id in ("CR-025", "CR-029", "CR-030", "CR-040", "CR-041", "CR-043", "CR-044", "CR-045", "CR-046", "CR-020", *REQUIRED_CANDIDATES, *REQUIRED_CANCELLED_QMT_CRS, *REQUIRED_SPIKES):
-        require(item_id in index_text, f"CR-INDEX.yaml 缺少 {item_id}", failures)
+        require(item_id in index_text, f"CR-INDEX.json 缺少 {item_id}", failures)
         require(item_id in state_text, f"STATE.md cr_tracking 缺少 {item_id}", failures)
 
-    require('id: "CR-025"' in index_text, "CR-INDEX.yaml 缺少 CR-025 标准项", failures)
+    require(index_data is not None and any(it["id"] == "CR-025" for it in index_data.get("items", [])), "CR-INDEX.json 缺少 CR-025 标准项", failures)
     require("CR-025" in tracking_text, "CR-019 follow-up 台账缺少 CR-025", failures)
     if cr025_is_active:
         require('active_change: "CR-025"' in state_text, "STATE.md 顶层 active_change 未切换到 CR-025", failures)
     if cr025_is_closed:
         require("closed_crs:" in state_text, "STATE.md cr_tracking 缺少 closed_crs", failures)
-        require("closed_crs:" in index_text, "CR-INDEX.yaml 缺少 closed_crs", failures)
+        require(index_data is not None and any(it.get("status") == "closed" for it in index_data.get("items", [])), "CR-INDEX.json 缺少 closed 状态项", failures)
         if cr096_is_active:
             require('active_change: "CR-096"' in state_text or "active_change: 'CR-096'" in state_text or "active_change: CR-096" in state_text, "STATE.md 顶层 active_change 未切换到 CR-096", failures)
         elif cr095_is_active:
@@ -679,112 +687,112 @@ def check_project(project_root: Path) -> list[str]:
         require_tracking_status(tracking_text, "CR-025", {"closed"}, "CR-019 follow-up 台账未将 CR-025 标记为 closed 等价状态", failures)
     if cr030_is_active:
         require('active_change: "CR-030"' in state_text, "STATE.md 顶层 active_change 未切换到 CR-030", failures)
-        require('status: "active-formal-cr"' in index_text, "CR-INDEX.yaml 顶层未标记 active-formal-cr", failures)
+        require(index_data is not None and len(index_data.get("active_crs", [])) > 0, "CR-INDEX.json 顶层 active_crs 为空", failures)
         require('status: "active-formal-cr"' in state_text, "STATE.md cr_tracking 未标记 active-formal-cr", failures)
         require("active_crs:" in state_text, "STATE.md cr_tracking 缺少 active_crs", failures)
-        require("active_crs:" in index_text, "CR-INDEX.yaml 缺少 active_crs", failures)
+        require(index_data is not None and len(index_data.get("active_crs", [])) > 0, "CR-INDEX.json 缺少 active_crs", failures)
         require(cr030_status in tracking_text, f"CR-019 follow-up 台账未记录 CR-030 当前 active 状态: {cr030_status}", failures)
         require("| CR-030 | active |" in tracking_text, "CR-019 follow-up 台账未将 CR-030 标记为 active formal CR", failures)
     if cr030_is_closed:
         require_tracking_status(tracking_text, "CR-030", {"closed"}, "CR-019 follow-up 台账未将 CR-030 标记为 closed 等价状态", failures)
     if cr040_is_active:
         require('active_change: "CR-040"' in state_text, "STATE.md 顶层 active_change 未切换到 CR-040", failures)
-        require('status: "active-formal-cr"' in index_text, "CR-INDEX.yaml 顶层未标记 active-formal-cr", failures)
+        require(index_data is not None and len(index_data.get("active_crs", [])) > 0, "CR-INDEX.json 顶层 active_crs 为空", failures)
         require('status: "active-formal-cr"' in state_text, "STATE.md cr_tracking 未标记 active-formal-cr", failures)
         require("active_crs:" in state_text, "STATE.md cr_tracking 缺少 active_crs", failures)
-        require("active_crs:" in index_text, "CR-INDEX.yaml 缺少 active_crs", failures)
+        require(index_data is not None and len(index_data.get("active_crs", [])) > 0, "CR-INDEX.json 缺少 active_crs", failures)
         require(cr040_status in tracking_text, f"CR-019 follow-up 台账未记录 CR-040 当前 active 状态: {cr040_status}", failures)
         require("| CR-040 | active |" in tracking_text, "CR-019 follow-up 台账未将 CR-040 标记为 active formal CR", failures)
     if cr040_is_closed:
         require_tracking_status(tracking_text, "CR-040", {"closed"}, "CR-019 follow-up 台账未将 CR-040 标记为 closed 等价状态", failures)
     if cr041_is_active:
         require('active_change: "CR-041"' in state_text, "STATE.md 顶层 active_change 未切换到 CR-041", failures)
-        require('status: "active-formal-cr"' in index_text, "CR-INDEX.yaml 顶层未标记 active-formal-cr", failures)
+        require(index_data is not None and len(index_data.get("active_crs", [])) > 0, "CR-INDEX.json 顶层 active_crs 为空", failures)
         require('status: "active-formal-cr"' in state_text, "STATE.md cr_tracking 未标记 active-formal-cr", failures)
         require("active_crs:" in state_text, "STATE.md cr_tracking 缺少 active_crs", failures)
-        require("active_crs:" in index_text, "CR-INDEX.yaml 缺少 active_crs", failures)
+        require(index_data is not None and len(index_data.get("active_crs", [])) > 0, "CR-INDEX.json 缺少 active_crs", failures)
         require(cr041_status in tracking_text, f"CR-019 follow-up 台账未记录 CR-041 当前 active 状态: {cr041_status}", failures)
         require("| CR-041 | active |" in tracking_text, "CR-019 follow-up 台账未将 CR-041 标记为 active formal CR", failures)
     if cr041_is_closed:
         require_tracking_status(tracking_text, "CR-041", {"closed"}, "CR-019 follow-up 台账未将 CR-041 标记为 closed 等价状态", failures)
     if cr043_is_active:
         require('active_change: "CR-043"' in state_text, "STATE.md 顶层 active_change 未切换到 CR-043", failures)
-        require('status: active-formal-cr' in index_text or 'status: "active-formal-cr"' in index_text, "CR-INDEX.yaml 顶层未标记 active-formal-cr", failures)
+        require(index_data is not None and len(index_data.get("active_crs", [])) > 0, "CR-INDEX.json 顶层 active_crs 为空", failures)
         require('status: active-formal-cr' in state_text or 'status: "active-formal-cr"' in state_text, "STATE.md cr_tracking 未标记 active-formal-cr", failures)
         require("active_crs:" in state_text, "STATE.md cr_tracking 缺少 active_crs", failures)
-        require("active_crs:" in index_text, "CR-INDEX.yaml 缺少 active_crs", failures)
+        require(index_data is not None and len(index_data.get("active_crs", [])) > 0, "CR-INDEX.json 缺少 active_crs", failures)
         require(cr043_status in tracking_text, f"CR-019 follow-up 台账未记录 CR-043 当前 active 状态: {cr043_status}", failures)
         require("| CR-043 |" in tracking_text and "| active |" in tracking_text, "CR-019 follow-up 台账未将 CR-043 标记为 active formal Spike", failures)
     if cr043_is_closed:
         require_tracking_status(tracking_text, "CR-043", {"closed"}, "CR-019 follow-up 台账未将 CR-043 标记为 closed 等价状态", failures)
     if cr044_is_active:
         require('active_change: "CR-044"' in state_text, "STATE.md 顶层 active_change 未切换到 CR-044", failures)
-        require('status: "active-formal-cr"' in index_text, "CR-INDEX.yaml 顶层未标记 active-formal-cr", failures)
+        require(index_data is not None and len(index_data.get("active_crs", [])) > 0, "CR-INDEX.json 顶层 active_crs 为空", failures)
         require('status: "active-formal-cr"' in state_text, "STATE.md cr_tracking 未标记 active-formal-cr", failures)
         require("active_crs:" in state_text, "STATE.md cr_tracking 缺少 active_crs", failures)
-        require("active_crs:" in index_text, "CR-INDEX.yaml 缺少 active_crs", failures)
+        require(index_data is not None and len(index_data.get("active_crs", [])) > 0, "CR-INDEX.json 缺少 active_crs", failures)
         require(cr044_status in tracking_text, f"CR-019 follow-up 台账未记录 CR-044 当前 active 状态: {cr044_status}", failures)
         require("| CR-044 | active |" in tracking_text, "CR-019 follow-up 台账未将 CR-044 标记为 active formal CR", failures)
     if cr044_is_closed:
         require_tracking_status(tracking_text, "CR-044", {"closed"}, "CR-019 follow-up 台账未将 CR-044 标记为 closed 等价状态", failures)
     if cr045_is_active:
         require('active_change: "CR-045"' in state_text, "STATE.md 顶层 active_change 未切换到 CR-045", failures)
-        require('status: "active-formal-cr"' in index_text, "CR-INDEX.yaml 顶层未标记 active-formal-cr", failures)
+        require(index_data is not None and len(index_data.get("active_crs", [])) > 0, "CR-INDEX.json 顶层 active_crs 为空", failures)
         require('status: "active-formal-cr"' in state_text, "STATE.md cr_tracking 未标记 active-formal-cr", failures)
         require("active_crs:" in state_text, "STATE.md cr_tracking 缺少 active_crs", failures)
-        require("active_crs:" in index_text, "CR-INDEX.yaml 缺少 active_crs", failures)
+        require(index_data is not None and len(index_data.get("active_crs", [])) > 0, "CR-INDEX.json 缺少 active_crs", failures)
         require(cr045_status in tracking_text, f"CR-019 follow-up 台账未记录 CR-045 当前 active 状态: {cr045_status}", failures)
         require("| CR-045 | active |" in tracking_text, "CR-019 follow-up 台账未将 CR-045 标记为 active formal CR", failures)
     if cr045_is_closed:
         require_tracking_status(tracking_text, "CR-045", {"closed"}, "CR-019 follow-up 台账未将 CR-045 标记为 closed 等价状态", failures)
     if cr046_is_active:
         require('active_change: "CR-046"' in state_text, "STATE.md 顶层 active_change 未切换到 CR-046", failures)
-        require('status: "active-formal-cr"' in index_text, "CR-INDEX.yaml 顶层未标记 active-formal-cr", failures)
+        require(index_data is not None and len(index_data.get("active_crs", [])) > 0, "CR-INDEX.json 顶层 active_crs 为空", failures)
         require('status: "active-formal-cr"' in state_text, "STATE.md cr_tracking 未标记 active-formal-cr", failures)
         require("active_crs:" in state_text, "STATE.md cr_tracking 缺少 active_crs", failures)
-        require("active_crs:" in index_text, "CR-INDEX.yaml 缺少 active_crs", failures)
-        require(cr046_status in index_text, f"CR-INDEX.yaml 未记录 CR-046 当前 active 状态: {cr046_status}", failures)
+        require(index_data is not None and len(index_data.get("active_crs", [])) > 0, "CR-INDEX.json 缺少 active_crs", failures)
+        require(cr046_status in index_text, f"CR-INDEX.json 未记录 CR-046 当前 active 状态: {cr046_status}", failures)
         require("CR-046-FOLLOW-UP-TRACKING-2026-06-13.md" in state_text, "STATE.md 缺少 CR-046 follow-up tracking 路径", failures)
-        require("CR-046-FOLLOW-UP-TRACKING-2026-06-13.md" in index_text, "CR-INDEX.yaml 缺少 CR-046 follow-up tracking 路径", failures)
+        require("CR-046-FOLLOW-UP-TRACKING-2026-06-13.md" in index_text, "CR-INDEX.json 缺少 CR-046 follow-up tracking 路径", failures)
     if cr046_is_closed:
         require("closed_crs:" in state_text, "STATE.md cr_tracking 缺少 closed_crs", failures)
-        require("closed_crs:" in index_text, "CR-INDEX.yaml 缺少 closed_crs", failures)
+        require(index_data is not None and any(it.get("status") == "closed" for it in index_data.get("items", [])), "CR-INDEX.json 缺少 closed 状态项", failures)
     if cr020_is_active:
         require('active_change: "CR-020"' in state_text, "STATE.md 顶层 active_change 未切换到 CR-020", failures)
-        require('status: "active-formal-cr"' in index_text, "CR-INDEX.yaml 顶层未标记 active-formal-cr", failures)
+        require(index_data is not None and len(index_data.get("active_crs", [])) > 0, "CR-INDEX.json 顶层 active_crs 为空", failures)
         require('status: "active-formal-cr"' in state_text, "STATE.md cr_tracking 未标记 active-formal-cr", failures)
         require("active_crs:" in state_text, "STATE.md cr_tracking 缺少 active_crs", failures)
-        require("active_crs:" in index_text, "CR-INDEX.yaml 缺少 active_crs", failures)
+        require(index_data is not None and len(index_data.get("active_crs", [])) > 0, "CR-INDEX.json 缺少 active_crs", failures)
         require(cr020_status in tracking_text, f"CR-019 follow-up 台账未记录 CR-020 当前 active 状态: {cr020_status}", failures)
         require("| CR-020 | active |" in tracking_text, "CR-019 follow-up 台账未将 CR-020 标记为 active formal CR", failures)
     if cr020_is_closed:
         require_tracking_status(tracking_text, "CR-020", {"closed"}, "CR-019 follow-up 台账未将 CR-020 标记为 closed 等价状态", failures)
     if cr020_is_cancelled:
         require("cancelled_crs:" in state_text, "STATE.md cr_tracking 缺少 cancelled_crs", failures)
-        require("cancelled_crs:" in index_text, "CR-INDEX.yaml 缺少 cancelled_crs", failures)
+        require(index_data is not None and any(it.get("status") in ("cancelled","cancelled-user-deleted") for it in index_data.get("items", [])), "CR-INDEX.json 缺少 cancelled 状态项", failures)
         require_tracking_status(tracking_text, "CR-020", {"cancelled"}, "CR-019 follow-up 台账未将 CR-020 标记为 cancelled 等价状态", failures)
 
     for item_id in REQUIRED_CANDIDATES:
-        require(f'id: "{item_id}"' in index_text, f"CR-INDEX.yaml 缺少 candidate 标准项 {item_id}", failures)
+        require(index_data is not None and any(it["id"] == item_id for it in index_data.get("items", [])), f"CR-INDEX.json 缺少 candidate 标准项 {item_id}", failures)
         require(item_id in tracking_text, f"CR-019 follow-up 台账缺少 candidate {item_id}", failures)
 
     for item_id in REQUIRED_CANCELLED_QMT_CRS:
-        require(f'id: "{item_id}"' in index_text, f"CR-INDEX.yaml 缺少 cancelled QMT 标准项 {item_id}", failures)
+        require(index_data is not None and any(it["id"] == item_id for it in index_data.get("items", [])), f"CR-INDEX.json 缺少 cancelled QMT 标准项 {item_id}", failures)
         require(item_id in tracking_text, f"CR-019 follow-up 台账缺少 cancelled QMT {item_id}", failures)
         require(f"| {item_id} |" in tracking_text and "cancelled-user-deleted" in tracking_text, f"CR-019 follow-up 台账未将 {item_id} 标记为 cancelled-user-deleted", failures)
 
     for item_id in REQUIRED_SPIKES:
-        require(f'id: "{item_id}"' in index_text, f"CR-INDEX.yaml 缺少 spike 标准项 {item_id}", failures)
+        require(index_data is not None and any(it["id"] == item_id for it in index_data.get("items", [])), f"CR-INDEX.json 缺少 spike 标准项 {item_id}", failures)
         require(item_id in tracking_text, f"CR-019 follow-up 台账缺少 spike {item_id}", failures)
 
     require("Related Formal CR" in tracking_text, "CR-019 follow-up 台账缺少 Related Formal CR 小节", failures)
     require("CR-029" in tracking_text, "CR-019 follow-up 台账未关联 CR-029", failures)
     require("STALE-CR019-ACTIVE-CHANGE" in state_text, "STATE.md 缺少 STALE-CR019-ACTIVE-CHANGE 审计记录", failures)
-    require("STALE-CR019-ACTIVE-CHANGE" in index_text, "CR-INDEX.yaml 缺少 STALE-CR019-ACTIVE-CHANGE 审计记录", failures)
+    require("STALE-CR019-ACTIVE-CHANGE" in index_text, "CR-INDEX.json 缺少 STALE-CR019-ACTIVE-CHANGE 审计记录", failures)
     require('status: "resolved"' in state_text, "STATE.md 未将 STALE-CR019-ACTIVE-CHANGE 标记 resolved", failures)
-    require('status: "resolved"' in index_text, "CR-INDEX.yaml 未将 STALE-CR019-ACTIVE-CHANGE 标记 resolved", failures)
+    require('status: "resolved"' in index_text, "CR-INDEX.json 未将 STALE-CR019-ACTIVE-CHANGE 标记 resolved", failures)
     require("SYNC-CR029-RELATED-ACTIVE" in state_text, "STATE.md 缺少 SYNC-CR029-RELATED-ACTIVE 记录", failures)
-    require("SYNC-CR029-RELATED-ACTIVE" in index_text, "CR-INDEX.yaml 缺少 SYNC-CR029-RELATED-ACTIVE 记录", failures)
+    require("SYNC-CR029-RELATED-ACTIVE" in index_text, "CR-INDEX.json 缺少 SYNC-CR029-RELATED-ACTIVE 记录", failures)
 
     return failures
 

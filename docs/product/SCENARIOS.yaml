@@ -1,0 +1,186 @@
+schema_version: 1
+version: "0.3"
+status: draft
+cr_id: CR-158
+updated_at: "2026-07-05T16:25:00+08:00"
+source_requirements:
+  - docs/product/REQUIREMENTS.md
+source_use_cases:
+  - docs/product/USE-CASES.md
+revision_record:
+  - version: v0.1
+    date: "2026-07-05"
+    author: host-orchestrator
+    summary: "Create CR157 Stage 2 multifactor framework scenario baseline draft."
+  - version: v0.2
+    date: "2026-07-05"
+    author: host-orchestrator
+    summary: "Add source refs and coverage summary required by scenario template."
+  - version: v0.3
+    date: "2026-07-05"
+    author: host-orchestrator
+    summary: "Add CR158 event + ML strategy adapter scenarios while preserving CR157 baseline scenarios."
+scenarios:
+  - id: SC-CR157-P01
+    title: "Build mature admission package from complete research refs"
+    type: positive
+    priority: P0
+    requirement_refs: [REQ-CR157-001, REQ-CR157-003]
+    preconditions:
+      - "CP2 scope approved before implementation."
+      - "Fixture/static mature research refs are available."
+    steps:
+      - "Provide mature research package ref, validation report ref, runner offline preflight ref, observation plan ref and risk policy ref."
+      - "Build mature admission package draft."
+      - "Validate package fields and evidence index refs."
+    expected:
+      - "Package is structurally complete."
+      - "Authorization flags remain not_runtime, not_simulation, not_live and not_gateway_or_qmt."
+      - "No provider, NAS, credential, QMT, gateway, simulation or trading access occurs."
+  - id: SC-CR157-P02
+    title: "Stage 2 to Stage 3 handoff is explicit and auditable"
+    type: positive
+    priority: P0
+    requirement_refs: [REQ-CR157-002, REQ-CR157-003]
+    preconditions:
+      - "Stage 2 framework support and handoff contract are in scope."
+    steps:
+      - "Inspect handoff fields for inputs, outputs, evidence refs, validation plan and forbidden runtime operations."
+      - "Trace handoff to evidence index and component documentation."
+    expected:
+      - "Handoff distinguishes Stage 2 support, Stage 3 research evidence production and Stage 4 observation review."
+      - "No handoff field implies runtime authorization."
+  - id: SC-CR157-N01
+    title: "Missing P0 evidence fails closed"
+    type: negative
+    priority: P0
+    requirement_refs: [REQ-CR157-001, REQ-CR157-003]
+    steps:
+      - "Provide a package input without validation report ref or runner offline preflight ref."
+      - "Run package validation."
+    expected:
+      - "Validation blocks package."
+      - "Blocked reason is machine-readable."
+  - id: SC-CR157-N02
+    title: "Runtime or external operation flag fails closed"
+    type: negative
+    priority: P0
+    requirement_refs: [REQ-CR157-004]
+    steps:
+      - "Set provider_fetch_count, credential_read_count, qmt_call_count, gateway_call_count, simulation_count or trading_count to non-zero."
+      - "Run no-runtime guard validation."
+    expected:
+      - "Validation blocks package or handoff."
+      - "No external operation is executed."
+  - id: SC-CR157-B01
+    title: "Event and ML adapter scope remains backlog"
+    type: boundary
+    priority: P1
+    requirement_refs: [REQ-CR157-006]
+    steps:
+      - "Review CR157 first-slice Story Map and MVP scope."
+      - "Check whether event/ML adapter implementation is included."
+    expected:
+      - "CR157 first slice excludes event/ML adapter implementation."
+      - "Backlog records follow-up adapter candidates."
+  - id: SC-CR157-A01
+    title: "CP2 approval is required before HLD or Story split"
+    type: precheck
+    priority: P0
+    requirement_refs: [REQ-CR157-007]
+    steps:
+      - "Attempt to route CR157 to HLD, Story split, LLD or implementation before CP2 approval."
+    expected:
+      - "Workflow blocks routing and points to CP2 checkpoint."
+  - id: SC-CR158-P01
+    title: "Unified adapter core accepts event and ML typed extensions"
+    type: positive
+    priority: P0
+    requirement_refs: [REQ-CR158-001, REQ-CR158-002, REQ-CR158-003]
+    use_case_refs: [UC-58-CR158]
+    preconditions:
+      - "CR158 CP2 scope is approved before HLD or Story split."
+      - "Fixture/static event refs and fixture/static ML refs are available."
+    steps:
+      - "Create an event adapter fixture with event source ref, event time ref, alignment policy ref and signal output ref."
+      - "Create an ML adapter fixture with training snapshot ref, validation report ref, model artifact ref and prediction signal ref."
+      - "Validate both fixtures against shared adapter core plus type-specific extensions."
+    expected:
+      - "Both adapter fixtures validate through the shared core."
+      - "Event-only fields are not required for ML fixtures."
+      - "ML-only fields are not required for event fixtures."
+      - "No external feed, training, provider, lake, credential, runtime or publish operation occurs."
+  - id: SC-CR158-P02
+    title: "Adapter evidence index stores refs-only typed extensions"
+    type: positive
+    priority: P0
+    requirement_refs: [REQ-CR158-004]
+    use_case_refs: [UC-58-CR158]
+    steps:
+      - "Build an evidence index entry for event adapter fixture refs."
+      - "Build an evidence index entry for ML adapter fixture refs."
+      - "Inspect stored fields for report body, event payload body, model binary, transcript or diff body."
+    expected:
+      - "Evidence index contains typed refs and short metadata only."
+      - "Large body copy count is 0."
+      - "All event and ML evidence refs are traceable."
+  - id: SC-CR158-N01
+    title: "Missing adapter P0 refs fail closed"
+    type: negative
+    priority: P0
+    requirement_refs: [REQ-CR158-002, REQ-CR158-003]
+    use_case_refs: [UC-58-CR158]
+    steps:
+      - "Validate an event adapter fixture missing alignment policy ref."
+      - "Validate an ML adapter fixture missing validation report ref."
+    expected:
+      - "Both validations block."
+      - "Blocked reasons are machine-readable."
+  - id: SC-CR158-N02
+    title: "Runtime or external operation counters fail closed"
+    type: negative
+    priority: P0
+    requirement_refs: [REQ-CR158-005]
+    use_case_refs: [UC-58-CR158]
+    steps:
+      - "Set one or more forbidden counters non-zero: event feed, model training, provider fetch, credential read, lake write, registry write, gateway call, trading call, publish or external framework run."
+      - "Run CR158 no-runtime guard validation."
+    expected:
+      - "Validation blocks CR158 adapter readiness."
+      - "Forbidden operation count is reported."
+      - "No actual external operation is executed."
+  - id: SC-CR158-B01
+    title: "CP2 approval does not authorize direct implementation"
+    type: boundary
+    priority: P0
+    requirement_refs: [REQ-CR158-006]
+    use_case_refs: [UC-58-CR158]
+    steps:
+      - "After CP2 scope approval, attempt to route CR158 directly to CP6 implementation."
+    expected:
+      - "Workflow blocks direct implementation and routes to CP3 HLD, CP4 planning and CP5 design batch."
+  - id: SC-CR158-A01
+    title: "Release wording avoids runtime readiness claims"
+    type: precheck
+    priority: P1
+    requirement_refs: [REQ-CR158-007]
+    use_case_refs: [UC-58-CR158]
+    steps:
+      - "Review CR158 release wording draft for production/runtime/trading/registry claims."
+    expected:
+      - "Release wording says local/static/fixture adapter readiness only."
+      - "Not authorized list includes feed, training, registry, runtime, trading and publish."
+coverage_summary:
+  total: 12
+  p0_total: 10
+  p0_with_planned_coverage: 10
+  high_priority_positive_and_negative_covered: true
+  source_requirements_total: 14
+  source_use_cases_total: 3
+  gaps:
+    - id: GAP-CR157-001
+      status: resolved_by_CR157_CP2_and_promoted_CR158
+      description: "SGQ-CR157-001 deferred adapter implementation out of CR157 and promoted DF-CR157-001/002 into CR158."
+    - id: GAP-CR158-001
+      status: pending_user_decision
+      description: "CR158 CP2 must confirm unified event + ML adapter scope and no-runtime authorization boundary before HLD or implementation."

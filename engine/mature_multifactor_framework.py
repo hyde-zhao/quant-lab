@@ -28,8 +28,10 @@ STAGE2_FRAMEWORK_SCHEMA = "mature_multifactor_framework_stage2_v1"
 STRATEGY_TYPE_ADAPTER_SCHEMA = "strategy_type_adapter_contract_v1"
 SIGNAL_SET_SCHEMA = "signal_set_v1"
 RESEARCH_EVIDENCE_INDEX_SCHEMA = "research_evidence_index_v1"
+RESEARCH_EVIDENCE_ITEM_SCHEMA = "research_evidence_item_v1"
 PORTFOLIO_RISK_POLICY_SCHEMA = "portfolio_risk_policy_v1"
 MATURE_ADMISSION_SUPPORT_SCHEMA = "mature_strategy_admission_support_stage2_v1"
+STAGE2_MATURE_PACKAGE_REF_SET_SCHEMA = "stage2_mature_package_ref_set_v1"
 TYPED_UNAVAILABLE_SCHEMA = "typed_unavailable_v1"
 STRATEGY_CANDIDATE_SCHEMA = "strategy_candidate_v1"
 STAGE2_MATURE_FRAMEWORK_BUNDLE_SCHEMA = "stage2_mature_framework_bundle_v1"
@@ -49,6 +51,7 @@ MF_STAGE2_FACTOR_SPEC_BLOCKED = "MF_STAGE2_FACTOR_SPEC_BLOCKED"
 MF_STAGE2_SIGNAL_SET_INVALID = "MF_STAGE2_SIGNAL_SET_INVALID"
 MF_STAGE2_EVIDENCE_INDEX_INCOMPLETE = "MF_STAGE2_EVIDENCE_INDEX_INCOMPLETE"
 MF_STAGE2_RISK_POLICY_INVALID = "MF_STAGE2_RISK_POLICY_INVALID"
+MF_STAGE2_MATURE_PACKAGE_REF_SET_INVALID = "MF_STAGE2_MATURE_PACKAGE_REF_SET_INVALID"
 MF_STAGE2_STRATEGY_CANDIDATE_INVALID = "MF_STAGE2_STRATEGY_CANDIDATE_INVALID"
 MF_STAGE2_CR039_OUTPUT_INVALID = "MF_STAGE2_CR039_OUTPUT_INVALID"
 MF_STAGE3_HANDOFF_INVALID = "MF_STAGE3_HANDOFF_INVALID"
@@ -71,6 +74,40 @@ STAGE2_DATA_REQUIREMENTS = (
 )
 
 STAGE2_FORBIDDEN_COUNTERS = FORBIDDEN_OPERATION_COUNTERS
+
+STAGE2_MATURE_PACKAGE_REQUIRED_REFS = (
+    "factor_spec_refs",
+    "factor_run_spec_refs",
+    "factor_panel_ref",
+    "label_window_ref",
+    "evaluation_report_refs",
+    "portfolio_risk_policy_ref",
+    "mature_admission_support_ref",
+    "research_evidence_index_ref",
+)
+
+EVIDENCE_BODY_FORBIDDEN_KEYS = (
+    "body",
+    "content",
+    "full_report",
+    "full_test_matrix",
+    "review_text",
+    "diff",
+    "transcript",
+)
+
+RESEARCH_EVIDENCE_ITEM_STATUSES = (
+    "PASS",
+    "NEEDS_REVIEW",
+    "BLOCKED",
+    "N/A_WITH_REASON",
+)
+
+STAGE2_HANDOFF_READINESS_STATUSES = (
+    "PASS",
+    "NEEDS_REVIEW",
+    "BLOCKED",
+)
 
 STAGE3_REQUIRED_EVIDENCE = (
     "data_release_ref",
@@ -206,6 +243,26 @@ class SignalSet:
 
 
 @dataclass(frozen=True, slots=True)
+class ResearchEvidenceItem:
+    evidence_id: str
+    source_ref: Mapping[str, Any]
+    artifact_type: str
+    source_cr: str
+    owner: str
+    status: str
+    hash: str = ""
+    freshness_status: str = "unknown"
+    blocked_claim_refs: tuple[str, ...] = ()
+    typed_unavailable: tuple[TypedUnavailable, ...] = ()
+    schema_version: str = RESEARCH_EVIDENCE_ITEM_SCHEMA
+
+    def to_dict(self) -> dict[str, Any]:
+        data = asdict(self)
+        data["typed_unavailable"] = [item.to_dict() for item in self.typed_unavailable]
+        return _json_safe(data)
+
+
+@dataclass(frozen=True, slots=True)
 class ResearchEvidenceIndex:
     index_id: str
     data_release_ref: str
@@ -217,10 +274,12 @@ class ResearchEvidenceIndex:
     schema_version: str = RESEARCH_EVIDENCE_INDEX_SCHEMA
     not_catalog_publish: bool = True
     not_data_lake_write: bool = True
+    evidence_items: tuple[ResearchEvidenceItem | Mapping[str, Any], ...] = ()
 
     def to_dict(self) -> dict[str, Any]:
         data = asdict(self)
         data["typed_unavailable"] = [item.to_dict() for item in self.typed_unavailable]
+        data["evidence_items"] = [_object_to_dict(item) for item in self.evidence_items]
         return _json_safe(data)
 
 
@@ -267,6 +326,31 @@ class MatureAdmissionSupport:
     not_runtime_authorization: bool = True
     not_simulation_authorization: bool = True
     not_live_authorization: bool = True
+
+    def to_dict(self) -> dict[str, Any]:
+        data = asdict(self)
+        data["typed_unavailable"] = [item.to_dict() for item in self.typed_unavailable]
+        data["blocked_reasons"] = [reason.to_dict() for reason in self.blocked_reasons]
+        return _json_safe(data)
+
+
+@dataclass(frozen=True, slots=True)
+class Stage2MaturePackageRefSet:
+    package_id: str
+    status: str
+    factor_spec_refs: tuple[Mapping[str, Any], ...]
+    factor_run_spec_refs: tuple[Mapping[str, Any], ...]
+    factor_panel_ref: Mapping[str, Any]
+    label_window_ref: Mapping[str, Any]
+    evaluation_report_refs: tuple[Mapping[str, Any], ...]
+    portfolio_risk_policy_ref: Mapping[str, Any]
+    mature_admission_support_ref: Mapping[str, Any]
+    research_evidence_index_ref: Mapping[str, Any]
+    typed_unavailable: tuple[TypedUnavailable, ...] = ()
+    blocked_reasons: tuple[Stage2BlockedReason, ...] = ()
+    permission_counters: Mapping[str, int] = field(default_factory=dict)
+    schema_version: str = STAGE2_MATURE_PACKAGE_REF_SET_SCHEMA
+    not_runtime_authorization: bool = True
 
     def to_dict(self) -> dict[str, Any]:
         data = asdict(self)
@@ -323,6 +407,11 @@ class Stage3ResearchMachineHandoff:
     not_runtime_authorization: bool = True
     not_simulation_authorization: bool = True
     not_live_authorization: bool = True
+    package_ref: Mapping[str, Any] = field(default_factory=dict)
+    research_evidence_index_ref: Mapping[str, Any] = field(default_factory=dict)
+    readiness_status: str = ""
+    blocked_claim_refs: tuple[str, ...] = ()
+    permission_counters: Mapping[str, int] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         data = asdict(self)
@@ -403,6 +492,7 @@ class Stage2MatureFrameworkBundle:
     not_runtime_authorization: bool = True
     not_simulation_authorization: bool = True
     not_live_authorization: bool = True
+    stage2_exit_refs: Mapping[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         data = asdict(self)
@@ -499,6 +589,7 @@ def build_stage2_research_evidence_index(
     metric_refs: Mapping[str, str] | None = None,
     lineage_refs: Mapping[str, str] | None = None,
     data_release_ref: str = "",
+    evidence_items: Sequence[ResearchEvidenceItem | Mapping[str, Any]] | None = None,
 ) -> ResearchEvidenceIndex:
     metric_data = dict(metric_refs or {})
     lineage_data = dict(lineage_refs or {})
@@ -525,6 +616,80 @@ def build_stage2_research_evidence_index(
             "not_runtime_authorization",
         ),
         typed_unavailable=tuple(unavailable),
+        evidence_items=tuple(
+            item if isinstance(item, ResearchEvidenceItem) else build_research_evidence_item(item)
+            for item in (evidence_items or ())
+        ),
+    )
+
+
+def build_research_evidence_item(item: Mapping[str, Any]) -> ResearchEvidenceItem:
+    data = _as_mapping(item)
+    return ResearchEvidenceItem(
+        evidence_id=str(data.get("evidence_id") or data.get("id") or ""),
+        source_ref=_as_mapping(data.get("source_ref")),
+        artifact_type=str(data.get("artifact_type") or ""),
+        source_cr=str(data.get("source_cr") or ""),
+        owner=str(data.get("owner") or ""),
+        status=str(data.get("status") or "NEEDS_REVIEW").upper(),
+        hash=str(data.get("hash") or ""),
+        freshness_status=str(data.get("freshness_status") or "unknown"),
+        blocked_claim_refs=tuple(str(item) for item in _sequence(data.get("blocked_claim_refs")) if str(item)),
+        typed_unavailable=tuple(_typed_from_payload(data.get("typed_unavailable"))),
+    )
+
+
+def build_stage2_mature_package_ref_set(
+    *,
+    package_id: str,
+    factor_spec_refs: Sequence[Mapping[str, Any]],
+    factor_run_spec_refs: Sequence[Mapping[str, Any]],
+    factor_panel_ref: Mapping[str, Any],
+    label_window_ref: Mapping[str, Any],
+    evaluation_report_refs: Sequence[Mapping[str, Any]],
+    portfolio_risk_policy_ref: Mapping[str, Any],
+    mature_admission_support_ref: Mapping[str, Any],
+    research_evidence_index_ref: Mapping[str, Any],
+    permission_counters: PermissionCounters | Mapping[str, int] | None = None,
+    typed_unavailable: Sequence[TypedUnavailable | Mapping[str, Any]] = (),
+    blocked_reasons: Sequence[Stage2BlockedReason | Mapping[str, Any]] = (),
+    status: str = "",
+) -> Stage2MaturePackageRefSet:
+    counters = _normalize_permission_counters(permission_counters)
+    typed = tuple(_typed_from_payload(typed_unavailable))
+    blocked = tuple(_dedupe_reasons((*_reasons_from_payload(blocked_reasons), *validate_stage2_no_lake(counters).blocked_reasons)))
+    provisional = Stage2MaturePackageRefSet(
+        package_id=package_id,
+        status=str(status or ("BLOCKED" if blocked else "PASS")).upper(),
+        factor_spec_refs=tuple(dict(ref) for ref in factor_spec_refs),
+        factor_run_spec_refs=tuple(dict(ref) for ref in factor_run_spec_refs),
+        factor_panel_ref=dict(factor_panel_ref),
+        label_window_ref=dict(label_window_ref),
+        evaluation_report_refs=tuple(dict(ref) for ref in evaluation_report_refs),
+        portfolio_risk_policy_ref=dict(portfolio_risk_policy_ref),
+        mature_admission_support_ref=dict(mature_admission_support_ref),
+        research_evidence_index_ref=dict(research_evidence_index_ref),
+        typed_unavailable=typed,
+        blocked_reasons=blocked,
+        permission_counters=counters,
+    )
+    validation = validate_stage2_mature_package_ref_set(provisional)
+    final_reasons = tuple(_dedupe_reasons((*blocked, *validation.blocked_reasons)))
+    final_status = "BLOCKED" if final_reasons else provisional.status
+    return Stage2MaturePackageRefSet(
+        package_id=provisional.package_id,
+        status=final_status,
+        factor_spec_refs=provisional.factor_spec_refs,
+        factor_run_spec_refs=provisional.factor_run_spec_refs,
+        factor_panel_ref=provisional.factor_panel_ref,
+        label_window_ref=provisional.label_window_ref,
+        evaluation_report_refs=provisional.evaluation_report_refs,
+        portfolio_risk_policy_ref=provisional.portfolio_risk_policy_ref,
+        mature_admission_support_ref=provisional.mature_admission_support_ref,
+        research_evidence_index_ref=provisional.research_evidence_index_ref,
+        typed_unavailable=provisional.typed_unavailable,
+        blocked_reasons=final_reasons,
+        permission_counters=provisional.permission_counters,
     )
 
 
@@ -738,6 +903,11 @@ def build_stage3_research_machine_handoff(
     strategy_candidate: StrategyCandidate | Mapping[str, Any],
     evidence_index: ResearchEvidenceIndex | Mapping[str, Any],
     risk_policy: PortfolioRiskPolicy | Mapping[str, Any],
+    package_ref: Mapping[str, Any] | None = None,
+    research_evidence_index_ref: Mapping[str, Any] | None = None,
+    readiness_status: str = "",
+    blocked_claim_refs: Sequence[str] | None = None,
+    permission_counters: PermissionCounters | Mapping[str, int] | None = None,
 ) -> Stage3ResearchMachineHandoff:
     support_data = _as_mapping(mature_admission_support)
     candidate_data = _as_mapping(strategy_candidate)
@@ -746,6 +916,8 @@ def build_stage3_research_machine_handoff(
     blocked = []
     blocked.extend(_reasons_from_payload(support_data.get("blocked_reasons")))
     blocked.extend(_reasons_from_payload(candidate_data.get("blocked_reasons")))
+    counters = _normalize_permission_counters(permission_counters or support_data.get("permission_counters"))
+    blocked.extend(validate_stage2_no_lake(counters).blocked_reasons)
     missing = [
         item
         for item in ("package_id",)
@@ -767,6 +939,21 @@ def build_stage3_research_machine_handoff(
                 field="strategy_candidate.candidate_id",
             )
         )
+
+    readiness = str(readiness_status or ("BLOCKED" if blocked else "PASS")).upper()
+    package_data_ref = dict(package_ref or _ref(support_data, "package_id", MATURE_ADMISSION_SUPPORT_SCHEMA))
+    evidence_data_ref = dict(research_evidence_index_ref or _ref(evidence_data, "index_id", RESEARCH_EVIDENCE_INDEX_SCHEMA))
+    claim_refs = tuple(
+        str(item)
+        for item in (
+            blocked_claim_refs
+            or (
+                *STAGE3_FORBIDDEN_CLAIMS,
+                *[reason.field for reason in blocked if reason.field],
+            )
+        )
+        if str(item)
+    )
 
     return Stage3ResearchMachineHandoff(
         handoff_id=_stable_id(
@@ -813,6 +1000,11 @@ def build_stage3_research_machine_handoff(
             "build_mature_strategy_admission_package_before_any_runtime",
         ),
         blocked_reasons=tuple(_dedupe_reasons(blocked)),
+        package_ref=package_data_ref,
+        research_evidence_index_ref=evidence_data_ref,
+        readiness_status=readiness,
+        blocked_claim_refs=claim_refs,
+        permission_counters=counters,
     )
 
 
@@ -1061,6 +1253,19 @@ def build_mature_admission_support_from_cr030_cr039_outputs(
             "role": "strategy_candidate_research_result",
         },
         blocked_reasons=blocked,
+        stage2_exit_refs={
+            "schema_version": STAGE2_MATURE_PACKAGE_REF_SET_SCHEMA,
+            "status": "NEEDS_REVIEW",
+            "reason": "legacy_builder_compatibility_partial_ref_set",
+            "factor_spec_refs": tuple(_factor_spec_ref(spec) for spec in factor_specs),
+            "factor_run_spec_refs": (),
+            "factor_panel_ref": {"typed_unavailable": "stage3_factor_panel_ref"},
+            "label_window_ref": {"typed_unavailable": "stage3_label_window_ref"},
+            "evaluation_report_refs": (),
+            "portfolio_risk_policy_ref": _ref(_as_mapping(risk_policy), "policy_id", PORTFOLIO_RISK_POLICY_SCHEMA),
+            "mature_admission_support_ref": _ref(_as_mapping(support), "package_id", MATURE_ADMISSION_SUPPORT_SCHEMA),
+            "research_evidence_index_ref": _ref(_as_mapping(evidence_index), "index_id", RESEARCH_EVIDENCE_INDEX_SCHEMA),
+        },
     )
 
 
@@ -1094,6 +1299,126 @@ def validate_project_strategy_candidate(candidate: StrategyCandidate | Mapping[s
     return _validation("StrategyCandidate", str(data.get("candidate_id") or ""), reasons, typed_unavailable=typed)
 
 
+def validate_stage2_mature_package_ref_set(
+    ref_set: Stage2MaturePackageRefSet | Mapping[str, Any],
+) -> Stage2ValidationResult:
+    data = _as_mapping(ref_set)
+    reasons = _required_reasons(
+        data,
+        ("package_id", "status", *STAGE2_MATURE_PACKAGE_REQUIRED_REFS),
+        code=MF_STAGE2_MATURE_PACKAGE_REF_SET_INVALID,
+    )
+    typed = tuple(_typed_from_payload(data.get("typed_unavailable")))
+    allowed_statuses = {"PASS", "FAIL", "NEEDS_REVIEW", "BLOCKED"}
+    status = str(data.get("status") or "").upper()
+    if status not in allowed_statuses:
+        reasons.append(
+            Stage2BlockedReason(
+                code=MF_STAGE2_MATURE_PACKAGE_REF_SET_INVALID,
+                message="Stage 2 mature package ref set status 不在允许集合内。",
+                field="status",
+                remediation="使用 PASS / FAIL / NEEDS_REVIEW / BLOCKED。",
+            )
+        )
+    for field_name in STAGE2_MATURE_PACKAGE_REQUIRED_REFS:
+        value = data.get(field_name)
+        if _is_blank(value) and not _typed_covers(typed, field_name):
+            reasons.append(
+                Stage2BlockedReason(
+                    code=MF_STAGE2_MATURE_PACKAGE_REF_SET_INVALID,
+                    message=f"Stage 2 mature package ref set 缺少 mandatory ref: {field_name}",
+                    field=field_name,
+                    remediation="补齐 ref，或以 typed unavailable 明确来源、原因和后续 Stage。",
+                )
+            )
+    counters = _normalize_permission_counters(data.get("permission_counters"))
+    reasons.extend(validate_stage2_no_lake(counters).blocked_reasons)
+    reasons.extend(_reasons_from_payload(data.get("blocked_reasons")))
+    return _validation(
+        "Stage2MaturePackageRefSet",
+        str(data.get("package_id") or ""),
+        reasons,
+        typed_unavailable=typed,
+    )
+
+
+def validate_research_evidence_item(item: ResearchEvidenceItem | Mapping[str, Any]) -> Stage2ValidationResult:
+    data = _as_mapping(item)
+    reasons = _required_reasons(
+        data,
+        ("evidence_id", "source_ref", "artifact_type", "source_cr", "owner", "status"),
+        code=MF_STAGE2_EVIDENCE_INDEX_INCOMPLETE,
+    )
+    status = str(data.get("status") or "").upper()
+    if status not in RESEARCH_EVIDENCE_ITEM_STATUSES:
+        reasons.append(
+            Stage2BlockedReason(
+                code=MF_STAGE2_EVIDENCE_INDEX_INCOMPLETE,
+                message="ResearchEvidenceItem.status 不在允许集合内。",
+                field="status",
+                remediation="使用 PASS / NEEDS_REVIEW / BLOCKED / N/A_WITH_REASON。",
+            )
+        )
+    if _contains_forbidden_evidence_body(data):
+        reasons.append(
+            Stage2BlockedReason(
+                code=MF_STAGE2_EVIDENCE_INDEX_INCOMPLETE,
+                message="ResearchEvidenceItem 只能包含 refs-only metadata，不得内联 full body / diff / transcript。",
+                field="evidence_items.body",
+                remediation="改为 source_ref / hash / short summary，不复制完整报告正文。",
+            )
+        )
+    if status == "PASS" and _is_blank(data.get("hash")):
+        reasons.append(
+            Stage2BlockedReason(
+                code=MF_STAGE2_EVIDENCE_INDEX_INCOMPLETE,
+                message="PASS evidence item 必须包含 hash ref。",
+                field="hash",
+            )
+        )
+    typed = tuple(_typed_from_payload(data.get("typed_unavailable")))
+    return _validation("ResearchEvidenceItem", str(data.get("evidence_id") or ""), reasons, typed_unavailable=typed)
+
+
+def validate_research_evidence_index_refs_only(
+    index: ResearchEvidenceIndex | Mapping[str, Any],
+) -> Stage2ValidationResult:
+    data = _as_mapping(index)
+    reasons: list[Stage2BlockedReason] = []
+    typed = tuple(_typed_from_payload(data.get("typed_unavailable")))
+    seen: set[str] = set()
+    for item in _sequence(data.get("evidence_items")):
+        item_data = _as_mapping(item)
+        evidence_id = str(item_data.get("evidence_id") or "")
+        if evidence_id and evidence_id in seen:
+            reasons.append(
+                Stage2BlockedReason(
+                    code=MF_STAGE2_EVIDENCE_INDEX_INCOMPLETE,
+                    message=f"ResearchEvidenceIndex evidence_id 重复: {evidence_id}",
+                    field=f"evidence_items.{evidence_id}",
+                )
+            )
+        if evidence_id:
+            seen.add(evidence_id)
+        item_result = validate_research_evidence_item(item_data)
+        reasons.extend(item_result.blocked_reasons)
+        typed = tuple(_dedupe_typed((*typed, *item_result.typed_unavailable)))
+    if _contains_forbidden_evidence_body(data):
+        reasons.append(
+            Stage2BlockedReason(
+                code=MF_STAGE2_EVIDENCE_INDEX_INCOMPLETE,
+                message="ResearchEvidenceIndex 不得复制完整 evidence body。",
+                field="research_evidence_index.body",
+            )
+        )
+    return _validation(
+        "ResearchEvidenceIndexRefsOnly",
+        str(data.get("index_id") or ""),
+        reasons,
+        typed_unavailable=typed,
+    )
+
+
 def validate_stage3_research_machine_handoff(handoff: Stage3ResearchMachineHandoff | Mapping[str, Any]) -> Stage2ValidationResult:
     data = _as_mapping(handoff)
     reasons = _required_reasons(
@@ -1109,6 +1434,9 @@ def validate_stage3_research_machine_handoff(handoff: Stage3ResearchMachineHando
             "execution_boundary",
             "blocked_until",
             "validation_plan",
+            "package_ref",
+            "research_evidence_index_ref",
+            "readiness_status",
         ),
         code=MF_STAGE3_HANDOFF_INVALID,
     )
@@ -1130,6 +1458,35 @@ def validate_stage3_research_machine_handoff(handoff: Stage3ResearchMachineHando
                 field=f"required_evidence.{item}",
             )
         )
+    readiness_status = str(data.get("readiness_status") or "").upper()
+    if readiness_status not in STAGE2_HANDOFF_READINESS_STATUSES:
+        reasons.append(
+            Stage2BlockedReason(
+                code=MF_STAGE3_HANDOFF_INVALID,
+                message="Stage 2 / Stage 3 handoff readiness_status 不在允许集合内。",
+                field="readiness_status",
+                remediation="使用 PASS / NEEDS_REVIEW / BLOCKED；未知状态必须阻断。",
+            )
+        )
+    if not _has_structured_ref(data.get("package_ref")):
+        reasons.append(
+            Stage2BlockedReason(
+                code=MF_STAGE3_HANDOFF_INVALID,
+                message="Stage 3 handoff 缺少 package_ref。",
+                field="package_ref",
+            )
+        )
+    if not _has_structured_ref(data.get("research_evidence_index_ref")):
+        reasons.append(
+            Stage2BlockedReason(
+                code=MF_STAGE3_HANDOFF_INVALID,
+                message="Stage 3 handoff 缺少 research_evidence_index_ref。",
+                field="research_evidence_index_ref",
+            )
+        )
+    counters = _normalize_permission_counters(data.get("permission_counters"))
+    reasons.extend(validate_stage2_no_lake(counters).blocked_reasons)
+    reasons.extend(_reasons_from_payload(data.get("blocked_reasons")))
     return _validation("Stage3ResearchMachineHandoff", str(data.get("handoff_id") or ""), reasons)
 
 
@@ -1331,6 +1688,9 @@ def validate_research_evidence_index(index: ResearchEvidenceIndex | Mapping[str,
                 )
             )
     typed = tuple(_typed_from_payload(data.get("typed_unavailable")))
+    refs_only = validate_research_evidence_index_refs_only(data)
+    reasons.extend(refs_only.blocked_reasons)
+    typed = tuple(_dedupe_typed((*typed, *refs_only.typed_unavailable)))
     return _validation("ResearchEvidenceIndex", str(data.get("index_id") or ""), reasons, typed_unavailable=typed)
 
 
@@ -1503,6 +1863,36 @@ def _typed_from_payload(value: Any) -> list[TypedUnavailable]:
             )
         )
     return result
+
+
+def _typed_covers(items: Sequence[TypedUnavailable], field_name: str) -> bool:
+    return any(field_name in item.missing_inputs for item in items)
+
+
+def _contains_forbidden_evidence_body(value: Any) -> bool:
+    if isinstance(value, Mapping):
+        for key, nested in value.items():
+            if str(key).lower() in EVIDENCE_BODY_FORBIDDEN_KEYS:
+                return True
+            if _contains_forbidden_evidence_body(nested):
+                return True
+        return False
+    if isinstance(value, Sequence) and not isinstance(value, (str, bytes, bytearray)):
+        return any(_contains_forbidden_evidence_body(item) for item in value)
+    return False
+
+
+def _has_structured_ref(value: Any) -> bool:
+    data = _as_mapping(value)
+    if not data:
+        return False
+    if not _is_blank(data.get("evidence_ref")):
+        return True
+    return any(
+        key.endswith("_id") and not _is_blank(val)
+        for key, val in data.items()
+        if isinstance(key, str)
+    )
 
 
 def _dedupe_reasons(reasons: Sequence[Stage2BlockedReason]) -> tuple[Stage2BlockedReason, ...]:
