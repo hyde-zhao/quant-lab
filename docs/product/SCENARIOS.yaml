@@ -1,8 +1,8 @@
 schema_version: 1
-version: "0.3"
+version: "0.4"
 status: draft
-cr_id: CR-158
-updated_at: "2026-07-05T16:25:00+08:00"
+cr_id: CR-160
+updated_at: "2026-07-09T20:30:00+08:00"
 source_requirements:
   - docs/product/REQUIREMENTS.md
 source_use_cases:
@@ -20,6 +20,10 @@ revision_record:
     date: "2026-07-05"
     author: host-orchestrator
     summary: "Add CR158 event + ML strategy adapter scenarios while preserving CR157 baseline scenarios."
+  - version: v0.4
+    date: "2026-07-09"
+    author: host-orchestrator
+    summary: "Add CR160 Stage 4 observation review workflow scenarios and product baseline promotion coverage."
 scenarios:
   - id: SC-CR157-P01
     title: "Build mature admission package from complete research refs"
@@ -170,13 +174,105 @@ scenarios:
     expected:
       - "Release wording says local/static/fixture adapter readiness only."
       - "Not authorized list includes feed, training, registry, runtime, trading and publish."
+  - id: SC-CR160-P01
+    title: "Contract-level Stage 4 review completes without readiness overclaim"
+    type: positive
+    priority: P0
+    requirement_refs: [REQ-CR160-001, REQ-CR160-002, REQ-CR160-004]
+    use_case_refs: [UC-58-CR160]
+    preconditions:
+      - "CR160 CP2 selected design-only dual-lane fail-closed route."
+      - "A Stage 3 package provides refs only and no runtime authorization."
+    steps:
+      - "Review ObservationReviewInput fields for admission package ref, research evidence refs and observation plan instance ref."
+      - "Classify evidence profile as contract_only."
+      - "Apply decision table and authorization boundary."
+    expected:
+      - "Review can output contract_review_complete or needs_real_data_evidence."
+      - "paper_candidate remains false or unavailable."
+      - "simulation_ready remains false or unavailable."
+      - "No runtime, data access, paper, simulation or live authorization is produced."
+  - id: SC-CR160-P02
+    title: "Layered checklist traces Stage 1, Stage 2, Stage 3 and cross-cutting evidence"
+    type: positive
+    priority: P0
+    requirement_refs: [REQ-CR160-003, REQ-CR160-007]
+    use_case_refs: [UC-58-CR160]
+    steps:
+      - "Inspect observation review checklist layers."
+      - "Map Stage 1 items to PIT, universe, lineage, dataset refs and leakage policy."
+      - "Map Stage 2 items to factor methodology, evidence index, typed unavailable and blocked reasons."
+      - "Map Stage 3 items to statistical gate, OOS, economic significance, capacity and rerun consistency."
+      - "Map cross-cutting items to authorization boundary, operation counters, no-overclaim wording and follow-up routing."
+    expected:
+      - "All 4 layers are present."
+      - "Each layer has at least 5 review items."
+      - "Each item uses PASS, NEEDS_REVIEW, FAIL or N/A."
+  - id: SC-CR160-N01
+    title: "CR155 blocked admission remains fail-closed"
+    type: negative
+    priority: P0
+    requirement_refs: [REQ-CR160-004, REQ-CR160-005, REQ-CR160-006]
+    use_case_refs: [UC-58-CR160]
+    preconditions:
+      - "Existing CR155 evidence is available as an already-produced reference."
+      - "CR160 does not execute new lake reads."
+    steps:
+      - "Classify CR155 admission evidence with package_status FAIL or BLOCKED and paper_candidate false."
+      - "Apply CR160 decision table."
+      - "Review no-overclaim and authorization wording."
+    expected:
+      - "Classification is blocked_admission_failed."
+      - "rerun_consistency PASS does not promote the artifact."
+      - "paper_candidate remains false."
+      - "No new real lake read/write or runtime authorization occurs."
+  - id: SC-CR160-N02
+    title: "Missing observation plan instance fails closed"
+    type: negative
+    priority: P0
+    requirement_refs: [REQ-CR160-001, REQ-CR160-002]
+    use_case_refs: [UC-58-CR160]
+    steps:
+      - "Provide only an observation plan template ref or omit observation_plan_ref."
+      - "Attempt Stage 4 observation review classification."
+    expected:
+      - "Review result is blocked or needs_review."
+      - "The missing instance reason is machine-readable."
+      - "No Stage 5 handoff authorization is produced."
+  - id: SC-CR160-A01
+    title: "CP8 approval keeps runtime and data authorization denied"
+    type: precheck
+    priority: P0
+    requirement_refs: [REQ-CR160-006]
+    use_case_refs: [UC-58-CR160]
+    steps:
+      - "Review CP8 Decision Brief, release notes and deploy checklist after CR160 verification."
+      - "Search for claims that CP8 approves code implementation, new lake access, paper simulation, live runtime, trading, broker, publish or deployment."
+    expected:
+      - "All forbidden operations remain explicitly not authorized."
+      - "READY_WITH_RISK is described as design/gate contract closure only."
+      - "Any Stage 5 or runtime action is routed to a follow-up CR."
+  - id: SC-CR160-B01
+    title: "Product baseline records DF and BL promotion to CR160"
+    type: boundary
+    priority: P0
+    requirement_refs: [REQ-CR160-007]
+    use_case_refs: [UC-58-CR160]
+    steps:
+      - "Inspect USE-CASES, REQUIREMENTS, SCENARIOS, TEST-MATRIX, MVP-SCOPE and BACKLOG."
+      - "Check whether DF-CR157-003 and BL-CR157-003 are preserved and marked promoted to CR160."
+      - "Check whether revision records preserve older CR157 and CR158 baselines."
+    expected:
+      - "6 of 6 product docs contain CR160 baseline entries."
+      - "DF-CR157-003 or BL-CR157-003 promotion is traceable."
+      - "Older CR157 and CR158 entries remain present."
 coverage_summary:
-  total: 12
-  p0_total: 10
-  p0_with_planned_coverage: 10
+  total: 18
+  p0_total: 16
+  p0_with_planned_coverage: 16
   high_priority_positive_and_negative_covered: true
-  source_requirements_total: 14
-  source_use_cases_total: 3
+  source_requirements_total: 21
+  source_use_cases_total: 4
   gaps:
     - id: GAP-CR157-001
       status: resolved_by_CR157_CP2_and_promoted_CR158
@@ -184,3 +280,6 @@ coverage_summary:
     - id: GAP-CR158-001
       status: pending_user_decision
       description: "CR158 CP2 must confirm unified event + ML adapter scope and no-runtime authorization boundary before HLD or implementation."
+    - id: GAP-CR160-001
+      status: resolved_by_CR160_CP8_product_baseline_refresh
+      description: "CR160 CP0/CP2 product baseline refresh promise is satisfied by v0.4 updates across 6 product docs before CP8 closure."

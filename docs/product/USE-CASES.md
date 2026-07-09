@@ -1,11 +1,11 @@
 ---
 status: draft
-version: "0.3"
+version: "0.4"
 confirmed_by: ""
 confirmed_at: ""
 engagement_mode: production
 scenario_subject_type: target-artifact
-scenario_subject_id: "CR-158"
+scenario_subject_id: "CR-160"
 target_artifact_type: workflow
 governance_mode: review-gated
 review_policy: strict
@@ -13,7 +13,7 @@ delivery_routing:
   mode: project-readme-contract
   output_root: "docs/product"
   source: docs
-total_use_cases: 3
+total_use_cases: 4
 ---
 
 # Product Use Cases
@@ -25,12 +25,13 @@ total_use_cases: 3
 | v0.1 | 2026-07-05 | host-orchestrator | 新建 CR157 Stage 2 多因子研究框架升级用例基线草案，承接 `docs/components/MULTIFACTOR-RESEARCH.md` 和 no-lake initial slice 证据。 |
 | v0.2 | 2026-07-05 | host-orchestrator | 补充模板 frontmatter、Scenario Gray Areas 详情、用户可见确认记录和 Deferred Ideas。 |
 | v0.3 | 2026-07-05 | host-orchestrator | 追加 CR158 event + ML strategy adapter unified implementation 基线；保留 CR157 deferred 历史并记录 promotion 映射。 |
+| v0.4 | 2026-07-09 | host-orchestrator | 追加 CR160 Stage 4 observation review workflow 用例，并将 `DF-CR157-003` 标记为 promoted to CR160。 |
 
 ## 状态
 
 - 文档状态：draft
-- 关联 CR：`CR-157` / `CR-158`
-- 当前门禁：CR158 CP2 pending user review
+- 关联 CR：`CR-157` / `CR-158` / `CR-160`
+- 当前门禁：CR160 CP8 release readiness
 - 旧基线保留：当前仓库未发现既有 `docs/product/USE-CASES.md`，本文件作为产品层用例入口；既有组件说明和场景文档不被重写。
 
 ## UC-58 多因子策略研究到准入
@@ -79,7 +80,7 @@ total_use_cases: 3
 |---|---|---|---|---|
 | DF-CR157-001 | Event strategy adapter implementation | SGQ-CR157-001 | 避免 CR157 first slice 扩大为跨策略类型重构。 | CR157 CP8 后，或 CP3 前用户明确修改 first slice 范围。 |
 | DF-CR157-002 | ML strategy adapter implementation | SGQ-CR157-001 | 避免 FEAT-13 evidence index 合同过早绑定 ML 专属语义。 | Event/ML strategy E2E 需要统一 adapter contract 时另起 CR。 |
-| DF-CR157-003 | Stage 4 observation review workflow | MVP-SCOPE | 当前 CR 不授权 simulation / paper / live 或 runtime。 | Mature admission package PASS 后，另起 observation / runtime authorization gate。 |
+| DF-CR157-003 | Stage 4 observation review workflow | MVP-SCOPE | 当前 CR 不授权 simulation / paper / live 或 runtime。 | 已 promoted to `CR-160`，由 CR160 定义 Stage 4 observation review workflow 和 authorization gate contract；Stage 5 / runtime 仍需后续 CR。 |
 
 ## CR158 Deferred Promotion Mapping
 
@@ -87,6 +88,35 @@ total_use_cases: 3
 |---|---|---|---|---|
 | DF-CR157-001 | FU-CR157-001 | promoted-active | `CR-158` | 保留 CR157 deferred 历史，CR158 承接 event adapter 产品基线、架构和实现路径。 |
 | DF-CR157-002 | FU-CR157-002 | promoted-active | `CR-158` | 保留 CR157 deferred 历史，CR158 承接 ML adapter 产品基线、架构和实现路径。 |
+
+## CR160 Deferred Promotion Mapping
+
+| Legacy Deferred ID | CR160 tracking ID | 状态 | 正式 CR | 保留策略 |
+|---|---|---|---|---|
+| DF-CR157-003 | FU-CR160-STAGE4-OBSERVATION-REVIEW | promoted-active | `CR-160` | 保留 CR157 deferred 历史，CR160 承接 Stage 4 observation review workflow、observation plan template、分层 checklist、fail-closed decision table 和 authorization gate contract；不承接 Stage 5 paper/simulation/live/runtime authorization。 |
+
+## UC-58-CR160 Stage 4 Observation Review Workflow
+
+| 字段 | 内容 |
+|---|---|
+| 用例 ID | UC-58-CR160 |
+| 名称 | Stage 4 observation review workflow |
+| 主要用户 | 量化研究负责人、策略研究员、验证负责人、框架维护者 |
+| 触发条件 | Stage 3 mature research package 或 admission package 需要进入 observation review，但 simulation / paper / live / runtime 尚未授权。 |
+| 目标 | 在不授权新数据访问、runtime、simulation、paper 或 live 的前提下，定义 `observation_plan_ref` 指向的 plan 内容规范、分层审查 checklist、fail-closed decision table 和 Stage 4 到 Stage 5 的 authorization gate contract。 |
+| 当前 CR 范围 | 纯设计交付：HLD、observation plan template、Stage 1/2/3 分层 checklist、EvidenceProfile / AdmissionReadiness / ObservationDecision / EscalationRoute 决策表、CR155 blocked admission fail-closed 样例、产品基线追溯。 |
+| 明确不在范围 | 代码实现、schema/checker、执行 observation、执行 simulation/paper/live、strategy remediation、CR155 晋级、新 real lake read/write、NAS/provider/credential access、catalog/store/registry/model/prediction write、broker/order/trading、Git remote write、publish。 |
+| 退出条件 | CP8 必须确认 design-only `READY_WITH_RISK`、产品基线已刷新、CR155 仍分类为 `blocked_admission_failed`，并确认 contract-only lane 不能输出 `paper_candidate=true` 或 `simulation_ready`。 |
+
+### CR160 用户旅程
+
+| 步骤 | 用户意图 | 系统行为 | 成功标准 |
+|---|---|---|---|
+| 1 | 审查 Stage 3 handoff 是否具备 Stage 4 输入 | 读取 `observation_plan_ref`、admission package ref、research evidence index、input refs 和 blocked claims。 | 缺少 observation plan instance、P0 evidence 或 admission 非阻断证据时 fail-closed。 |
+| 2 | 区分 contract-level 与 real-data evidence | 将输入归类为 `contract_only`、`real_data_validated`、`runtime_authorized` 或 `unknown`。 | `contract_only` lane 只能输出 contract review 结论，不能输出 paper/simulation readiness。 |
+| 3 | 按 Stage 1/2/3 分层 checklist 审查 | 分别审查 PIT/universe/lineage、factor methodology/typed unavailable、statistical gate/OOS/economic significance/capacity/rerun。 | checklist 至少覆盖 4 层且每项有 PASS/NEEDS_REVIEW/FAIL/N/A。 |
+| 4 | 用 CR155 反例验证 fail-closed | 将 CR155 `BLOCKED/FAIL/paper_candidate=false` 分类为 `blocked_admission_failed`。 | rerun consistency PASS 不提升 evidence 等级；admission FAIL 和 paper_candidate=false 必须保持阻断。 |
+| 5 | 输出后续路由而非运行授权 | 根据 decision table 输出 blocked、needs_real_data_evidence、contract_review_complete 或 follow-up escalation。 | 不产生 runtime authorization；Stage 5 paper/simulation gate 必须由后续 CR 独立授权。 |
 
 ## UC-58-CR158 Event + ML Strategy Adapter Unified Implementation
 

@@ -949,6 +949,14 @@ items:
     provenance:
       -
         cr: CR-154
+  tests/research/test_daily_multifactor_baseline_artifact.py:
+    domains:
+      - research
+    old_paths: []
+    introduced_by: CR-155
+    provenance:
+      -
+        cr: CR-155
   tests/research/test_chapter3_backfill.py:
     domains:
       - research
@@ -973,6 +981,15 @@ items:
     provenance:
       -
         cr: CR-153
+  tests/research/test_event_strategy_adapter.py:
+    domains:
+      - research
+    old_paths:
+      - tests/test_cr158_event_strategy_adapter.py
+    provenance:
+      -
+        cr: CR-158
+        story: CR158-S02
   tests/research/test_execution_price_policy.py:
     domains:
       - research
@@ -1125,6 +1142,15 @@ items:
     provenance:
       -
         cr: CR-152
+  tests/research/test_ml_strategy_adapter.py:
+    domains:
+      - research
+    old_paths:
+      - tests/test_cr158_ml_strategy_adapter.py
+    provenance:
+      -
+        cr: CR-158
+        story: CR158-S03
   tests/research/test_mature_multifactor_framework_stage2.py:
     domains:
       - research
@@ -1293,6 +1319,24 @@ items:
     provenance:
       -
         cr: CR-092
+  tests/research/test_strategy_adapter_evidence_refs.py:
+    domains:
+      - research
+    old_paths:
+      - tests/test_cr158_adapter_evidence_refs.py
+    provenance:
+      -
+        cr: CR-158
+        story: CR158-S04
+  tests/research/test_strategy_adapter_no_runtime_guard.py:
+    domains:
+      - research
+    old_paths:
+      - tests/test_cr158_adapter_no_runtime_guard.py
+    provenance:
+      -
+        cr: CR-158
+        story: CR158-S05
   tests/research/test_strategy_admission_package.py:
     domains:
       - research
@@ -1309,6 +1353,15 @@ items:
     provenance:
       -
         cr: CR-151
+  tests/research/test_strategy_type_adapter_core.py:
+    domains:
+      - research
+    old_paths:
+      - tests/test_cr158_strategy_type_adapter_contract.py
+    provenance:
+      -
+        cr: CR-158
+        story: CR158-S01
   tests/research/test_tradability_gates.py:
     domains:
       - research

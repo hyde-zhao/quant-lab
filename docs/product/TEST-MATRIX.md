@@ -1,9 +1,9 @@
 ---
 status: draft
-version: "0.3"
+version: "0.4"
 source_scenarios: "docs/product/SCENARIOS.yaml"
 source_requirements: "docs/product/REQUIREMENTS.md"
-cr_id: "CR-158"
+cr_id: "CR-160"
 template_deviation_reason: "CR157 uses Scenario/Requirement/Test Layer/Validation Mode columns to preserve gate and no-runtime evidence mapping; coverage statistics remain present below."
 ---
 
@@ -16,12 +16,13 @@ template_deviation_reason: "CR157 uses Scenario/Requirement/Test Layer/Validatio
 | v0.1 | 2026-07-05 | host-orchestrator | 新建 CR157 Stage 2 多因子研究框架升级测试覆盖矩阵草案。 |
 | v0.2 | 2026-07-05 | host-orchestrator | 补充 frontmatter 和模板偏差原因。 |
 | v0.3 | 2026-07-05 | host-orchestrator | 追加 CR158 event + ML strategy adapter 覆盖矩阵；保留 CR157 baseline rows。 |
+| v0.4 | 2026-07-09 | host-orchestrator | 追加 CR160 Stage 4 observation review workflow 覆盖矩阵和产品基线刷新检查。 |
 
 ## 状态
 
 - 文档状态：draft
-- 关联 CR：`CR-157` / `CR-158`
-- 当前门禁：CR158 CP2 pending user review
+- 关联 CR：`CR-157` / `CR-158` / `CR-160`
+- 当前门禁：CR160 CP8 release readiness
 
 ## Coverage Matrix
 
@@ -39,22 +40,30 @@ template_deviation_reason: "CR157 uses Scenario/Requirement/Test Layer/Validatio
 | SC-CR158-N02 | REQ-CR158-005 | unit / security | fixture/static | forbidden operation counter fail-closed tests | P0 | planned |
 | SC-CR158-B01 | REQ-CR158-006 | workflow / gate | static | CP2-to-CP3/CP5 route guard check | P0 | planned |
 | SC-CR158-A01 | REQ-CR158-007 | doc-review / release | static | release wording no-runtime overclaim review | P1 | planned |
+| SC-CR160-P01 | REQ-CR160-001, REQ-CR160-002, REQ-CR160-004 | design-review / contract | static | HLD Stage 4 object and decision table review | P0 | verified-cp7 |
+| SC-CR160-P02 | REQ-CR160-003, REQ-CR160-007 | checklist / traceability | static | layered observation review checklist and product baseline review | P0 | verified-cp8 |
+| SC-CR160-N01 | REQ-CR160-004, REQ-CR160-005, REQ-CR160-006 | seed-classification / negative | existing-evidence | CR155 blocked_admission_failed classification review | P0 | verified-cp7 |
+| SC-CR160-N02 | REQ-CR160-001, REQ-CR160-002 | design-review / negative | static | missing observation plan instance fail-closed review | P0 | verified-cp7 |
+| SC-CR160-A01 | REQ-CR160-006 | security / release | static | CP8 non-authorization wording and release boundary review | P0 | verified-cp8 |
+| SC-CR160-B01 | REQ-CR160-007 | product-baseline / traceability | static | 6 product docs CR160 promotion and revision-record check | P0 | verified-cp8 |
 
 ## Coverage Summary
 
 | Metric | Value |
 |---|---:|
-| P0 requirements | 11 |
-| P0 scenarios | 10 |
-| P0 scenarios with planned coverage | 10 |
+| P0 requirements | 18 |
+| P0 scenarios | 16 |
+| P0 scenarios with planned coverage | 16 |
 | External runtime tests authorized | 0 |
 | Provider / NAS / credential tests authorized | 0 |
 | Trading / simulation / live tests authorized | 0 |
 | Real event feed tests authorized | 0 |
 | Real model training / registry tests authorized | 0 |
+| CR160 product baseline docs refreshed | 6 |
 
 ## Notes
 
 - CR157 verification must use fixture/static/no-lake evidence unless a later authorization gate explicitly changes scope.
 - A CP2 approval authorizes only product/design progression, not implementation and not runtime execution.
 - CR158 verification must use fixture/static/no-runtime evidence. CP2 approval does not authorize real event feed, real model training, model registry write, provider/lake/NAS/credential access, runtime, trading, publish or Git remote write.
+- CR160 verification is design-only and existing-evidence-only. CP8 approval does not authorize code implementation, checker/schema, new lake access, observation execution, simulation, paper, live, trading, publish or deployment.

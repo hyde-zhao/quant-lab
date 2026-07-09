@@ -1,6 +1,6 @@
 ---
 status: draft
-version: "0.3"
+version: "0.4"
 confirmed: false
 confirmed_by: ""
 confirmed_at: ""
@@ -15,12 +15,13 @@ confirmed_at: ""
 | v0.1 | 2026-07-05 | host-orchestrator | 新建 CR157 Stage 2 多因子研究框架升级需求基线草案。 |
 | v0.2 | 2026-07-05 | host-orchestrator | 补充 frontmatter，并把成功标准改为可量化字段集和计数。 |
 | v0.3 | 2026-07-05 | host-orchestrator | 追加 CR158 event + ML strategy adapter unified implementation 需求；保留 CR157 adapter backlog boundary 为历史基线。 |
+| v0.4 | 2026-07-09 | host-orchestrator | 追加 CR160 Stage 4 observation review workflow 需求，并补齐 `DF-CR157-003` / `BL-CR157-003` promotion 追溯。 |
 
 ## 状态
 
 - 文档状态：draft
-- 关联 CR：`CR-157` / `CR-158`
-- 当前门禁：CR158 CP2 pending user review
+- 关联 CR：`CR-157` / `CR-158` / `CR-160`
+- 当前门禁：CR160 CP8 release readiness
 - 旧基线保留：当前仓库未发现既有 `docs/product/REQUIREMENTS.md`；既有组件文档和检查证据作为输入，不被替换。
 
 ## Requirement Summary
@@ -41,6 +42,13 @@ confirmed_at: ""
 | REQ-CR158-005 | No-runtime authorization guard | P0 | draft | CR158 不授权真实 feed、training、provider/lake/NAS/credential、runtime、trading、publish 或 registry/store/catalog write；禁用计数非 0 必须 blocked。 |
 | REQ-CR158-006 | CP2/CP5 gate enforcement | P0 | draft | CP2 前不得 HLD/Story/LLD/实现；CP5 前不得实现；CP7 必须验证 no-runtime。 |
 | REQ-CR158-007 | Release wording boundary | P1 | draft | CP8 release wording 必须区分 fixture/static adapter readiness 与 production/runtime/trading readiness。 |
+| REQ-CR160-001 | Stage 4 observation review workflow contract | P0 | draft | 定义 6 个 Stage 4 design objects 的输入、输出、失败路径和后续路由。 |
+| REQ-CR160-002 | Observation plan template and instance boundary | P0 | draft | `observation_plan_ref` 必须指向可审查实例；CR160 必须定义 template，Stage 3 产物必须声明 instance 合规性。 |
+| REQ-CR160-003 | Layered observation review checklist | P0 | draft | Checklist 必须覆盖 Stage 1、Stage 2、Stage 3 和横切授权/no-overclaim 4 层，每层至少 5 项。 |
+| REQ-CR160-004 | Fail-closed evidence lane decision table | P0 | draft | Decision table 必须覆盖 4 条 evidence lane；`contract_only` lane 不得输出 `paper_candidate=true` 或 `simulation_ready`。 |
+| REQ-CR160-005 | CR155 blocked seed classification | P0 | draft | 既有 CR155 evidence 必须分类为 `blocked_admission_failed`，且 `paper_candidate=false` 不得被提升。 |
+| REQ-CR160-006 | Design-only authorization boundary | P0 | draft | CR160 CP8 approval 不授权代码实现、新数据访问、runtime、simulation、paper、live、trading、publish 或 CR155 晋级。 |
+| REQ-CR160-007 | Product baseline traceability refresh | P0 | draft | CP8 关闭前必须更新 6 个产品基线文档，记录 `DF-CR157-003` / `BL-CR157-003` promoted to CR160。 |
 
 ## Functional Requirements
 
@@ -150,6 +158,80 @@ CR158 的 release notes、verification report 和 component docs 必须明确区
 - CP8 release wording 必须包含 “not authorized” 清单，覆盖真实 feed、训练、registry、runtime、trading、publish。
 - 不得出现 simulation-ready、paper-ready、live-ready、trading-ready、production-ready 或 registry-published 声明，除非后续独立授权 CR 明确批准。
 
+### REQ-CR160-001 Stage 4 Observation Review Workflow Contract
+
+CR160 必须补齐 CR157 预留但未定义的 Stage 4 observation review 语义，使 Stage 3 mature research package 到 Stage 5 paper/simulation admission 之间有可审查、可失败、可路由的 contract。
+
+成功标准：
+
+- HLD 必须定义 6 个 Stage 4 design objects：ObservationReviewInput、EvidenceProfile、AdmissionReadiness、ObservationDecision、EscalationRoute、AuthorizationBoundary。
+- 每个 design object 必须列出输入、输出、失败路径和下一阶段消费方式。
+- 缺少 observation plan instance、admission package ref、research evidence refs 或 authorization boundary 时必须 fail-closed。
+
+### REQ-CR160-002 Observation Plan Template and Instance Boundary
+
+CR160 必须区分 observation plan template 与 observation plan instance，避免把模板文档误当成已审查实例。
+
+成功标准：
+
+- Observation plan template 至少定义 5 类内容：观察周期、检查点频率、跟踪指标、退出条件、Stage 1/2/3 evidence refs 要求。
+- Stage 3 产物必须提供 observation plan instance ref；仅有 template ref 时 Stage 4 review 不得通过。
+- Review workflow 必须审查 instance 对 template 的合规性，并在不合规时输出 blocked 或 needs_review。
+
+### REQ-CR160-003 Layered Observation Review Checklist
+
+Observation review checklist 必须覆盖数据基础、研究生产、研究机 admission 和横切授权边界，不能只审 Stage 3 统计结果。
+
+成功标准：
+
+- Stage 1 层至少 5 项，覆盖 PIT、universe、lineage、dataset refs、leakage policy。
+- Stage 2 层至少 5 项，覆盖 factor methodology、evaluation refs、typed_unavailable、blocked reasons、evidence index。
+- Stage 3 层至少 5 项，覆盖 statistical gate、out-of-sample、economic significance、capacity/impact、rerun consistency。
+- 横切层至少 5 项，覆盖 operation counters、authorization boundary、no-overclaim wording、follow-up route、human review outcome。
+- 每个 checklist item 的结果枚举必须是 PASS、NEEDS_REVIEW、FAIL 或 N/A。
+
+### REQ-CR160-004 Fail-Closed Evidence Lane Decision Table
+
+CR160 必须用 evidence lane + admission readiness 的矩阵表达 Stage 4 结果，默认 fail-closed。
+
+成功标准：
+
+- Evidence lane 必须覆盖 4 类：`contract_only`、`real_data_validated`、`runtime_authorized`、`unknown`。
+- `contract_only` lane 的 readiness=true 路径数量必须为 0。
+- `unknown` lane 必须 blocked 或 needs_review，不能输出 paper/simulation readiness。
+- `real_data_validated` lane 仍需 admission 非阻断；real-data evidence 不等于 runtime authorization。
+
+### REQ-CR160-005 CR155 Blocked Seed Classification
+
+CR155 daily baseline artifact 必须作为 fail-closed 反例样本被 CR160 workflow 正确分类。
+
+成功标准：
+
+- CR155 既有 evidence 必须显示 admission package `FAIL` 或 `BLOCKED`、`paper_candidate=false`、blocked gates 可追溯。
+- CR160 classification 必须输出 `blocked_admission_failed`。
+- Rerun consistency PASS 不得提升 CR155 evidence 等级，也不得绕过 admission FAIL。
+- CR160 不得执行新的 real lake read/write；只消费既有 CR155 evidence ref。
+
+### REQ-CR160-006 Design-Only Authorization Boundary
+
+CR160 是 product-scope / requirement-change 的纯设计 CR，不是 runtime 或代码实现 CR。
+
+成功标准：
+
+- CP8 approve 不授权代码实现、schema/checker、strategy remediation、CR155 晋级、新 real lake read/write、NAS/provider/credential access、broker/order/trading、QMT/MiniQMT/xtquant/gateway、paper/simulation/live/runtime、catalog/store/registry/model/prediction write、Git remote write、deployment、release execution 或 publish。
+- Release wording 必须明确 `READY_WITH_RISK` 只表示 Stage 4 design/gate contract 可用作后续基线。
+- 所有 Stage 5 paper/simulation/live/runtime 动作必须另起 CR 和授权 gate。
+
+### REQ-CR160-007 Product Baseline Traceability Refresh
+
+CR160 CP0/CP2 已承诺刷新产品基线；CP8 关闭前必须补齐该追溯链。
+
+成功标准：
+
+- 6 个产品文档必须增量更新：`USE-CASES.md`、`REQUIREMENTS.md`、`SCENARIOS.yaml`、`TEST-MATRIX.md`、`MVP-SCOPE.md`、`BACKLOG.md`。
+- `DF-CR157-003` 与 `BL-CR157-003` 必须标记为 promoted to CR160，且旧 CR157/CR158 基线不得被删除。
+- 产品文档必须保留修订记录，并把 product baseline refresh 作为 CP8 关闭前置条件记录到 CP8 checkpoint。
+
 ## Non-Functional Requirements
 
 | NFR ID | 维度 | 要求 | 度量 |
@@ -162,6 +244,9 @@ CR158 的 release notes、verification report 和 component docs 必须明确区
 | NFR-CR158-002 | 安全性 | Event/ML adapter 实现必须保持 no-runtime/no-publish。 | 禁用操作计数全部为 0。 |
 | NFR-CR158-003 | 可演进性 | Shared core 与 type-specific extension 分离。 | event-only 与 ML-only 字段互不成为对方必填项。 |
 | NFR-CR158-004 | 可测试性 | 所有 P0 CR158 场景可用 fixture/static 方式验证。 | P0 scenario 覆盖率 100%。 |
+| NFR-CR160-001 | 可追溯性 | Stage 4 review 必须可回链 Stage 1/2/3 refs、CR155 seed evidence 和产品基线 promotion。 | CR160 P0 requirement / scenario / matrix 覆盖率 100%；6/6 产品文档刷新。 |
+| NFR-CR160-002 | 安全性 | Stage 4 design closure 不得被误读为 runtime、paper、simulation 或 live 授权。 | 禁用操作授权数量为 0；not-authorized 清单覆盖 12 类以上。 |
+| NFR-CR160-003 | 可测试性 | Checklist、decision table 和 CR155 seed classification 必须可人工复核。 | Checklist item 数 >= 20；CR155 classification evidence ref 1 个以上。 |
 
 ## Open Decisions
 
@@ -171,3 +256,6 @@ CR158 的 release notes、verification report 和 component docs 必须明确区
 | DQ-CP2-CR158-UNIFIED-SCOPE | scope | CR158 是否把 event 与 ML adapter 合并为一个统一 adapter CR？ | 合并为一个 CR，shared core + type-specific extension。 | pending user review |
 | DQ-CP2-CR158-NO-RUNTIME | security | CR158 CP2 approve 是否授权真实 feed、训练、registry、runtime、trading或 publish？ | 不授权；只允许 local/static/fixture 设计和后续验证。 | pending user review |
 | DQ-CP2-CR158-GATE-SEQUENCE | implementation | CP2 approve 后是否允许直接实现？ | 不允许；CP2 后进入 CP3 HLD，CP5 批准后才实现。 | pending user review |
+| DQ-CP2-CR160-EVIDENCE-PROFILE | scope | CR160 observation review 输入是 contract-level evidence 还是 real-data evidence？ | 双轨 fail-closed；contract lane 不能输出 paper/simulation readiness。 | approved |
+| DQ-CP2-CR160-DELIVERABLE-SHAPE | implementation | CR160 是设计交付还是代码实现？ | 纯设计交付；CP4/CP5/CP6 N/A，CP7/CP8 做设计验证和发布就绪。 | approved |
+| DQ-CP8-CR160-004 | scope / traceability | CP8 关闭前是否必须补齐产品基线刷新？ | 必须补齐 6 个产品文档，作为 CR160 关闭前置条件。 | resolved 2026-07-09 |
