@@ -1,6 +1,6 @@
 ---
 status: draft
-version: "0.4"
+version: "0.5"
 confirmed_by: ""
 confirmed_at: ""
 engagement_mode: production
@@ -13,7 +13,7 @@ delivery_routing:
   mode: project-readme-contract
   output_root: "docs/product"
   source: docs
-total_use_cases: 4
+total_use_cases: 5
 ---
 
 # Product Use Cases
@@ -26,12 +26,13 @@ total_use_cases: 4
 | v0.2 | 2026-07-05 | host-orchestrator | 补充模板 frontmatter、Scenario Gray Areas 详情、用户可见确认记录和 Deferred Ideas。 |
 | v0.3 | 2026-07-05 | host-orchestrator | 追加 CR158 event + ML strategy adapter unified implementation 基线；保留 CR157 deferred 历史并记录 promotion 映射。 |
 | v0.4 | 2026-07-09 | host-orchestrator | 追加 CR160 Stage 4 observation review workflow 用例，并将 `DF-CR157-003` 标记为 promoted to CR160。 |
+| v0.5 | 2026-07-10 | host-orchestrator | CR162 补齐 CR161 strategy-admission evidence availability 用例；保留 CR161 closed 历史，仅刷新当前产品基线。 |
 
 ## 状态
 
 - 文档状态：draft
-- 关联 CR：`CR-157` / `CR-158` / `CR-160`
-- 当前门禁：CR160 CP8 release readiness
+- 关联 CR：`CR-157` / `CR-158` / `CR-160` / `CR-161` / `CR-162`
+- 当前门禁：CR162 CP7 static verification
 - 旧基线保留：当前仓库未发现既有 `docs/product/USE-CASES.md`，本文件作为产品层用例入口；既有组件说明和场景文档不被重写。
 
 ## UC-58 多因子策略研究到准入
@@ -166,3 +167,26 @@ total_use_cases: 4
 | 前置条件 | CP0 已通过；产品基线 draft 已生成；CP2 待人工确认。 |
 | 主要产出 | mature admission package builder scope、Stage 2/Stage 3 handoff scope、requirements、scenarios、test matrix、MVP scope、release slices。 |
 | 退出条件 | CP2 approved 后进入 solution-design；CP2 未批准时不得 HLD、Story split、LLD 或实现。 |
+
+## UC-58-CR161 Strategy Admission Evidence Availability
+
+| 字段 | 内容 |
+|---|---|
+| 用例 ID | UC-58-CR161 |
+| 名称 | Strategy admission evidence availability and fail-closed review |
+| 主要用户 | 量化研究负责人、策略研究员、验证负责人、框架维护者 |
+| 触发条件 | 策略准入需要说明多重检验、数据偷窥、过拟合、walk-forward/OOS、经济成本和容量/流动性证据是否可计算。 |
+| 目标 | 用七对象 evidence contract 明确策略准入需要的证据，并在 mandatory evidence 不存在或不能计算时输出 `typed_unavailable` 和阻断结论。 |
+| 当前基线范围 | `ExperimentFamilyManifest`、`MultipleTestingEvidence`、`DataSnoopingEvidence`、`OverfitRiskEvidence`、`WalkForwardEvidence`、`EconomicCostEvidence`、`CapacityLiquidityEvidence`；与 CR151 statistical gate 和 CR154 follow-up 集成，不新建并行 gate。 |
+| 明确不在范围 | 不计算 FDR/PBO/DSR、fold-level OOS、真实 TCA/market impact 或容量 sizing；不改造研究引擎 trial lineage；不访问真实数据或运行时。 |
+| 负向回归 | CR155 保持 blocked；缺少 lineage、p-values 或 fold metrics 时只能给出 `typed_unavailable`，不得补造 PASS 或提升准入。 |
+| 退出条件 | CR162 静态验证确认当前基线可追溯七对象、fail-closed ceiling、CR155 negative regression 与 FU-CR161-001..006；计算实现仍需独立 CR。 |
+
+### CR161 用户旅程
+
+| 步骤 | 用户意图 | 系统行为 | 成功标准 |
+|---|---|---|---|
+| 1 | 识别一个策略准入缺少哪些证据 | 将 C1-C4 映射至七个 evidence objects 和 availability 状态。 | 每个 mandatory object 都有可发现的名称、用途和后续 producer。 |
+| 2 | 防止缺失证据被静默通过 | 对缺少 trial lineage、统计输入、fold metrics 或成本/容量输入的对象给出 `typed_unavailable`。 | 缺失不能转为 PASS、NEEDS_REVIEW 或 runtime readiness。 |
+| 3 | 消费已有失败样例 | 以 CR155 的既有 blocked evidence 运行负向追溯。 | CR155 仍 blocked；不重建历史数值，不把 rerun consistency 误读为新证据。 |
+| 4 | 计划后续计算能力 | 追溯 FU-CR161-001..006 到 trial lineage、统计/OOS producer、成本容量 producer 和独立验证控制。 | follow-up 是 candidate，不授权实现、数据或运行时。 |

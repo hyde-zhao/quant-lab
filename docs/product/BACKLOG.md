@@ -8,6 +8,7 @@
 | v0.2 | 2026-07-05 | host-orchestrator | CP6 回写 CR157 deferred adapter refs 和 runtime boundary wording。 |
 | v0.3 | 2026-07-05 | host-orchestrator | 将 `DF-CR157-001` / `DF-CR157-002` 标记为 promoted to CR158，并保留历史 backlog 追溯。 |
 | v0.4 | 2026-07-09 | host-orchestrator | 将 `BL-CR157-003` / `DF-CR157-003` 标记为 promoted to CR160，并补齐 Stage 4 observation review 产品基线追溯。 |
+| v0.5 | 2026-07-10 | host-orchestrator | CR162 登记 CR161 evidence-producer 与 verifier-lane follow-ups，以及通用 CP8 baseline-refresh checker candidate。 |
 
 ## Candidates
 
@@ -17,6 +18,13 @@
 | DF-CR157-002 | ML strategy adapter implementation | follow-up CR | P1 | CR157 first slice 交付后，需要把 ML strategy 归一到项目级策略候选合同；当前 CR 只保留 backlog ref，不实现 training snapshot / model registry / ML evidence adapter。 |
 | BL-CR157-003 | Stage 4 observation review workflow | promoted to CR160 | P1 | 已由 `CR-160` 承接 Stage 4 observation review workflow 设计、observation plan template、分层 checklist、fail-closed decision table 和 authorization gate contract；不授权 simulation / paper / live / runtime。 |
 | BL-CR157-004 | Process compact route for existing-evidence hygiene | process follow-up | P2 | 来自 CR156 retrospective，用于减少后续 hygiene CR 过度处理。 |
+| FU-CR161-001 | Experiment-family trial lineage instrumentation | follow-up CR | P0 | 研究引擎能记录 experiment family identity、trial count 和 parameter-search lineage 时；当前缺失必须保持 typed_unavailable。 |
+| FU-CR161-002 | C1 multiple-testing, data-snooping and overfit evidence producer | follow-up CR | P0 | FU-CR161-001 已提供完整 lineage，且统计输入可审计时。 |
+| FU-CR161-003 | C2 walk-forward / OOS evidence producer | follow-up CR | P0 | purged-embargo fold manifest、fold metrics 和 OOS inputs 可用时。 |
+| FU-CR161-004 | C3/C4 economic cost and capacity evidence producer | follow-up CR | P0 | 真实可审计成本、impact、capacity 和 liquidity inputs 获独立授权时。 |
+| FU-CR161-005 | Existing-gate integration and CR155 regression implementation | follow-up CR | P1 | 各 producer 可输出 typed evidence 后；必须复用 CR151/CR154，且 CR155 仍 blocked。 |
+| FU-CR161-006 | Independent CP7 verifier-lane resilience | process / QA follow-up | P1 | 高风险后续实现需要独立 QA 结论，或 CR161 waiver 到期前。 |
+| FU-CR162-001 | Generic CP8 product-baseline-refresh checker | process follow-up | P1 | 任一 CR 设置 `product_baseline_refresh_required=true` 时；需独立 process CR/授权。 |
 
 ## Promoted Items
 
@@ -28,4 +36,4 @@
 
 ## Runtime Boundary
 
-CR157 backlog refs, CR158 adapter scope and CR160 Stage 4 observation review scope do not authorize real lake/NAS/provider/credential/QMT/gateway/runtime/simulation/paper/live/trading/broker/feed/order/reconciliation/store/catalog/registry/model registry/prediction store/publish/external framework/Git remote operations. CR160 consumes existing CR155 evidence only as a fail-closed classification sample and may not create new data access or runtime authorization.
+CR157 backlog refs, CR158 adapter scope, CR160 Stage 4 observation review scope and CR161/CR162 evidence availability baseline do not authorize real lake/NAS/provider/credential/QMT/gateway/runtime/simulation/paper/live/trading/broker/feed/order/reconciliation/store/catalog/registry/model registry/prediction store/publish/external framework/Git remote operations. CR160 and CR161 consume existing CR155 evidence only as a fail-closed classification sample; neither may create new data access, runtime authorization or computed evidence claims.

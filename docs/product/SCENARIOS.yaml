@@ -1,8 +1,8 @@
 schema_version: 1
-version: "0.4"
+version: "0.5"
 status: draft
-cr_id: CR-160
-updated_at: "2026-07-09T20:30:00+08:00"
+cr_id: CR-162
+updated_at: "2026-07-10T20:43:29+08:00"
 source_requirements:
   - docs/product/REQUIREMENTS.md
 source_use_cases:
@@ -24,6 +24,10 @@ revision_record:
     date: "2026-07-09"
     author: host-orchestrator
     summary: "Add CR160 Stage 4 observation review workflow scenarios and product baseline promotion coverage."
+  - version: v0.5
+    date: "2026-07-10"
+    author: host-orchestrator
+    summary: "CR162 adds CR161 evidence-availability, typed-unavailable fail-closed, CR155 negative-regression and nine-document baseline-refresh scenarios."
 scenarios:
   - id: SC-CR157-P01
     title: "Build mature admission package from complete research refs"
@@ -266,13 +270,74 @@ scenarios:
       - "6 of 6 product docs contain CR160 baseline entries."
       - "DF-CR157-003 or BL-CR157-003 promotion is traceable."
       - "Older CR157 and CR158 entries remain present."
+  - id: SC-CR161-P01
+    title: "Seven-object evidence availability is discoverable without computed-proof claim"
+    type: positive
+    priority: P0
+    requirement_refs: [REQ-CR161-001]
+    use_case_refs: [UC-58-CR161]
+    steps:
+      - "Inspect current product and feature baselines for all seven CR161 evidence objects."
+      - "Map their C1-C4 coverage, availability semantics, CR151/CR154 integration and follow-up producers."
+    expected:
+      - "All seven objects are named and traceable."
+      - "No object is represented as a completed FDR/PBO/DSR/OOS/TCA/capacity calculation."
+  - id: SC-CR161-N01
+    title: "Missing mandatory evidence remains typed-unavailable and blocked"
+    type: negative
+    priority: P0
+    requirement_refs: [REQ-CR161-002]
+    use_case_refs: [UC-58-CR161]
+    steps:
+      - "Review wording for missing trial lineage, p-values, fold metrics, cost inputs and capacity inputs."
+      - "Attempt to classify the missing mandatory evidence as a pass or soft warning."
+    expected:
+      - "Missing mandatory evidence is typed_unavailable."
+      - "Admission remains blocked and no silent PASS or runtime readiness claim is present."
+  - id: SC-CR161-N02
+    title: "CR155 remains blocked without reconstructed historical evidence"
+    type: negative
+    priority: P0
+    requirement_refs: [REQ-CR161-003]
+    use_case_refs: [UC-58-CR161]
+    steps:
+      - "Consume CR155 only through already-packaged evidence references."
+      - "Review the effect of absent new lineage or fold-level metrics."
+    expected:
+      - "CR155 remains blocked."
+      - "No historical p-values, trials, folds, costs or capacity data is reconstructed."
+  - id: SC-CR161-B01
+    title: "Contract baseline does not overclaim computation or runtime"
+    type: boundary
+    priority: P0
+    requirement_refs: [REQ-CR161-004]
+    use_case_refs: [UC-58-CR161]
+    steps:
+      - "Search current CR161 baseline wording for computed statistics, economic proof and runtime claims."
+    expected:
+      - "Current slice is stated as availability contract plus typed-unavailable fail-closed semantics."
+      - "Computed evidence and runtime actions remain explicitly out of scope."
+  - id: SC-CR162-P01
+    title: "Nine promised baseline documents record CR161 correction"
+    type: positive
+    priority: P0
+    requirement_refs: [REQ-CR161-001, REQ-CR161-005]
+    use_case_refs: [UC-58-CR161]
+    steps:
+      - "Inspect six product and three factor-research-loop feature documents."
+      - "Verify each includes a CR162 revision record and CR161 traceability content."
+      - "Verify CR161 is reframed rather than reopened."
+    expected:
+      - "9 of 9 target documents are updated incrementally."
+      - "FU-CR161-001..006 and FU-CR162-001 remain candidates."
+      - "No source, schema, checker or runtime implementation is implied."
 coverage_summary:
-  total: 18
-  p0_total: 16
-  p0_with_planned_coverage: 16
+  total: 23
+  p0_total: 21
+  p0_with_planned_coverage: 21
   high_priority_positive_and_negative_covered: true
-  source_requirements_total: 21
-  source_use_cases_total: 4
+  source_requirements_total: 26
+  source_use_cases_total: 5
   gaps:
     - id: GAP-CR157-001
       status: resolved_by_CR157_CP2_and_promoted_CR158
@@ -283,3 +348,6 @@ coverage_summary:
     - id: GAP-CR160-001
       status: resolved_by_CR160_CP8_product_baseline_refresh
       description: "CR160 CP0/CP2 product baseline refresh promise is satisfied by v0.4 updates across 6 product docs before CP8 closure."
+    - id: GAP-CR161-001
+      status: correction_in_progress_CR162_CP7
+      description: "CR161 closed without its promised product/feature baseline refresh; CR162 incrementally refreshes all nine documents and verifies the correction before CP8."

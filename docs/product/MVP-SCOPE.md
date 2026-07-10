@@ -7,12 +7,13 @@
 | v0.1 | 2026-07-05 | host-orchestrator | 新建 CR157 MVP 范围草案。 |
 | v0.2 | 2026-07-05 | host-orchestrator | 追加 CR158 event + ML strategy adapter 统一 scope、out-of-scope 和 promoted deferred 映射。 |
 | v0.3 | 2026-07-09 | host-orchestrator | 追加 CR160 Stage 4 observation review design-only scope，并将 `DF-CR157-003` promoted to CR160。 |
+| v0.4 | 2026-07-10 | host-orchestrator | CR162 补齐 CR161 evidence availability 产品范围、fail-closed ceiling、CR155 regression 和 deferred producers。 |
 
 ## 状态
 
 - 文档状态：draft
-- 关联 CR：`CR-157` / `CR-158` / `CR-160`
-- 当前门禁：CR160 CP8 release readiness
+- 关联 CR：`CR-157` / `CR-158` / `CR-160` / `CR-161` / `CR-162`
+- 当前门禁：CR162 CP7 static verification
 
 ## In Scope
 
@@ -34,6 +35,10 @@
 | MVP-CR160-004 | Fail-closed decision table | `contract_only`、`real_data_validated`、`runtime_authorized`、`unknown` 四条 evidence lane 均有可审查决策；`contract_only` lane 0 条路径可输出 `paper_candidate=true` 或 `simulation_ready`。 |
 | MVP-CR160-005 | CR155 blocked seed classification | 既有 CR155 real lake validation evidence 只作为 fail-closed 样例消费，分类为 `blocked_admission_failed`，不执行新 lake 读取。 |
 | MVP-CR160-006 | Product baseline traceability refresh | `USE-CASES`、`REQUIREMENTS`、`SCENARIOS`、`TEST-MATRIX`、`MVP-SCOPE`、`BACKLOG` 均记录 `DF-CR157-003` / `BL-CR157-003` promoted to CR160。 |
+| MVP-CR161-001 | Seven-object evidence availability baseline | 当前基线可发现 C1-C4 对应七对象；每个对象有 availability、claim ceiling、gate integration 和 producer follow-up 说明。 |
+| MVP-CR161-002 | Mandatory typed-unavailable fail-closed | 缺 trial lineage、p-values、fold metrics、成本或容量输入时，相关 evidence 为 `typed_unavailable` 并阻断。 |
+| MVP-CR161-003 | CR155 negative regression | CR155 继续 `blocked`，不因 contract refresh、rerun consistency 或不可用新 evidence 而晋级。 |
+| MVP-CR161-004 | Current-baseline reframe | CR162 刷新六个产品和三个 feature 文档；CR161 closed history 保留，仅标记为 reframed。 |
 
 ## Out of Scope
 
@@ -51,6 +56,7 @@
 | CR160 code implementation / schema checker | CR160 走纯设计路径；checker/schema 可作为后续 CR 候选，不在本轮实现。 |
 | CR160 new real lake read/write or CR155 promotion | CR160 只消费既有 CR155 evidence 作为反例样本，不授权新 lake 访问，也不把 CR155 升级为 paper/simulation candidate。 |
 | CR160 Stage 5 paper/simulation authorization | Stage 4 design/gate contract 关闭后，Stage 5 gate 仍需后续 CR 独立授权。 |
+| CR161 computed evidence producers | FDR/PBO/DSR、walk-forward/OOS folds、TCA/market impact、capacity/liquidity sizing 和 trial-lineage instrumentation 都需要独立实现型 CR。 |
 
 ## Deferred
 
@@ -59,6 +65,8 @@
 | DF-CR157-001 | Event strategy adapter | 后续独立 CR，复用 `StrategyTypeAdapter` 合同。 |
 | DF-CR157-002 | ML strategy adapter | 后续独立 CR，复用 `SignalSet` / `ResearchEvidenceIndex` 合同。 |
 | DF-CR157-003 | Stage 4 observation review workflow | 已 promoted to `CR-160`；CR160 覆盖 Stage 4 review workflow design，不覆盖 Stage 5 simulation/paper/runtime authorization。 |
+| FU-CR161-001..006 | Evidence producers and independent verifier lane | 保持 candidate；先满足输入 lineage/metrics/cost/capacity 和独立验证条件，再通过单独 CR 授权。 |
+| FU-CR162-001 | Generic CP8 baseline-refresh checker | 保持 candidate；不得扩大当前 CR162 的文档纠错范围。 |
 
 ## Promoted to CR158
 
