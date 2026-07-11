@@ -2,6 +2,12 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from engine.experiment_family_lineage import (
+    ExperimentFamilyManifest,
+    FamilyLineageValidationResult,
+    LineageAvailability,
+    ValidationStatus,
+)
 from engine.cross_strategy_reliability_gates import (
     IMPACT_MODEL_FAMILIES,
     STATISTICAL_ARTIFACT_SLOTS,
@@ -17,6 +23,7 @@ from engine.cross_strategy_reliability_gates import (
     validate_gate4_capacity_impact,
     validate_gate5_slots,
 )
+from engine.strategy_admission_statistical_gate import ValidationBoundFamilyEvidence
 
 
 def _gate1_artifacts(**overrides: object) -> dict[str, object]:
@@ -42,6 +49,33 @@ def _gate1_artifacts(**overrides: object) -> dict[str, object]:
     return base
 
 
+def _trusted_family_lineage() -> ValidationBoundFamilyEvidence:
+    manifest = ExperimentFamilyManifest(
+        schema_version=1,
+        family_id="cr154-reliability-family",
+        manifest_version=1,
+        spec_ref="fixture://cr154/lineage/spec",
+        events_ref="fixture://cr154/lineage/events",
+        sealed_event_count=25,
+        sealed_last_sequence=25,
+        raw_trial_count=25,
+        trial_ids=tuple(f"trial-{index:02d}" for index in range(25)),
+        seal_hash="sha256:cr154-trusted-lineage",
+        sealed_at="2026-07-11T00:00:00Z",
+    )
+    validation = FamilyLineageValidationResult(
+        schema_version=1,
+        validation_id="validation-cr154-trusted-lineage",
+        target_ref="fixture://cr154/lineage/manifest-v1",
+        target_hash=manifest.seal_hash,
+        availability=LineageAvailability.PRESENT,
+        validation_status=ValidationStatus.PASS,
+        recomputed_raw_trial_count=manifest.raw_trial_count,
+        declared_raw_trial_count=manifest.raw_trial_count,
+    )
+    return ValidationBoundFamilyEvidence(manifest, validation)
+
+
 def test_cr154_s01_shared_contract_fixture_cases_are_stable_and_forbidden_counters_block() -> None:
     cases = fixture_cases_shared_contract()
     by_id = {case["case_id"]: case for case in cases}
@@ -63,8 +97,22 @@ def test_cr154_s02_gate1_requires_explicit_statistical_artifacts_and_propagates_
         _gate1_artifacts(),
         release_profile="candidate-release",
         claim_types=("statistical_significance", "sharpe"),
+        family_lineage_projection=_trusted_family_lineage(),
     )
-    assert gate.status is ReliabilityGateStatus.PASS
+    assert gate.status is ReliabilityGateStatus.BLOCKED
+    assert gate.family_lineage_projection["availability"] == "present"
+    assert {claim.claim_id for claim in gate.blocked_claims} == {
+        "trial_count_policy",
+        "effective_trial_count_unavailable",
+    }
+
+    missing_lineage = evaluate_gate1_statistical_reliability(
+        _gate1_artifacts(),
+        release_profile="candidate-release",
+        claim_types=("statistical_significance", "sharpe"),
+    )
+    assert missing_lineage.status is ReliabilityGateStatus.BLOCKED
+    assert missing_lineage.family_lineage_projection["availability"] == "typed_unavailable"
 
     blocked = evaluate_gate1_statistical_reliability(
         _gate1_artifacts(white_reality_check_or_hansen_spa_refs=[], trial_count_and_effective_trials={"raw_trial_count": 0}),
@@ -73,7 +121,7 @@ def test_cr154_s02_gate1_requires_explicit_statistical_artifacts_and_propagates_
     )
     payload = blocked.to_dict()
     assert payload["status"] == "BLOCKED"
-    assert payload["release_blocking_reason"]["reason_id"] == "statistical_reliability_artifact_missing"
+    assert payload["release_blocking_reason"]["reason_id"] == "effective_trial_count_unavailable"
     assert {"statistical_significance", "trial_count_policy"} <= {claim["claim_id"] for claim in payload["blocked_claims"]}
 
     missing_multiple_and_fdr = evaluate_gate1_statistical_reliability(
@@ -108,7 +156,7 @@ def test_cr154_s02_gate1_requires_explicit_statistical_artifacts_and_propagates_
         claim_types=("statistical_significance",),
     )
     approximated_payload = approximated_trials.to_dict()
-    assert approximated_payload["status"] == "NEEDS_REVIEW"
+    assert approximated_payload["status"] == "BLOCKED"
     assert "trial_count_approximation_review" in {
         claim["claim_id"] for claim in approximated_payload["blocked_claims"]
     }

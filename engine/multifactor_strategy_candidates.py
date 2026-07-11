@@ -13,6 +13,12 @@ from typing import Any, Mapping, Sequence
 import numpy as np
 import pandas as pd
 
+from engine.experiment_family_lineage import SelectionDecision
+from engine.mature_multifactor_research import (
+    ProducerLineageConfig,
+    ProducerLineageError,
+    _ProducerLineageTrial,
+)
 from engine.multifactor_contracts import FORBIDDEN_OPERATION_COUNTERS
 
 
@@ -22,6 +28,7 @@ BACKTEST_RESULT_SCHEMA = "multifactor_strategy_backtest_results_v1"
 FACTOR_CONTRIBUTION_SCHEMA = "multifactor_strategy_factor_contribution_v1"
 RISK_COST_SCHEMA = "multifactor_strategy_risk_cost_summary_v1"
 STRATEGY_ADMISSION_PACKAGE_SCHEMA = "multifactor_strategy_admission_package_v1"
+LEGACY_CR039_CHAIN_ID = "legacy_cr039"
 
 FORBIDDEN_OPERATION_COUNTS = {key: 0 for key in FORBIDDEN_OPERATION_COUNTERS}
 RUNTIME_CLAIMS = (
@@ -93,12 +100,57 @@ def run_strategy_research(
     risk_exposure: pd.DataFrame,
     performance_attribution: pd.DataFrame,
     input_refs: Mapping[str, str] | None = None,
+    lineage_config: ProducerLineageConfig | None = None,
 ) -> StrategyResearchResult:
     """基于 CR-038 本地产物生成 CR-039 策略候选准入结果。"""
 
+    if lineage_config is not None and type(lineage_config) is not ProducerLineageConfig:
+        raise ProducerLineageError("producer_lineage_config_invalid")
+
     validate_upstream_research_summaries(upstream_research_summaries)
     validate_portfolio_admission_payload(portfolio_admission_payload)
-    candidates = build_strategy_candidates(portfolio_admission_payload)
+    lineage_trial = None
+    if lineage_config is not None:
+        membership = sorted(
+            {
+                str(row.get("portfolio_id"))
+                for sample in portfolio_admission_payload.get("samples", [])
+                if isinstance(sample, Mapping)
+                for row in sample.get("portfolio_admission_summary", [])
+                if isinstance(row, Mapping) and row.get("portfolio_id")
+            }
+        )
+        lineage_trial = _ProducerLineageTrial(
+            lineage_config,
+            expected_chain_id=LEGACY_CR039_CHAIN_ID,
+            normalized_parameters=[{"source_portfolio_id": portfolio_id} for portfolio_id in membership],
+            seed=0,
+            run_id=run_id,
+        )
+    try:
+        candidates = build_strategy_candidates(portfolio_admission_payload)
+    except Exception as error:
+        if lineage_trial is not None:
+            lineage_trial.fail(f"producer_hook_failed:{type(error).__name__}")
+        raise
+    else:
+        if lineage_trial is not None:
+            selected_portfolios = {item.source_portfolio_id for item in candidates}
+            decisions = {
+                trial_id: (
+                    SelectionDecision.SELECTED
+                    if portfolio_id in selected_portfolios
+                    else SelectionDecision.REJECTED
+                )
+                for trial_id, portfolio_id in zip(lineage_trial.trial_ids, membership)
+            }
+            lineage_trial.finish(
+                decision=decisions,
+                reason="cr039_candidates_built" if candidates else "cr039_no_candidate_built",
+            )
+    finally:
+        if lineage_trial is not None:
+            lineage_trial.seal_and_close()
     candidates, excluded = filter_capacity_passing_candidates(candidates, capacity_liquidity_analysis)
     if not candidates:
         return blocked_missing_evidence_result(

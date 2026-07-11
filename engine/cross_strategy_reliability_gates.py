@@ -11,7 +11,9 @@ from dataclasses import asdict, dataclass, field
 from enum import Enum
 from typing import Any, Mapping, Sequence
 
+from engine.experiment_family_lineage import FamilyEvidenceProjection, LineageAvailability
 from engine.serialization import json_safe
+from engine.strategy_admission_statistical_gate import ValidationBoundFamilyEvidence, consume_family_lineage_projection
 
 
 CR154_RELIABILITY_SCHEMA_VERSION = "cross_strategy_reliability_gates_v1"
@@ -154,6 +156,7 @@ class ReliabilityGateSummary:
     evidence_completeness: str = "complete"
     operation_counts: Mapping[str, int] = field(default_factory=dict)
     limitations: tuple[str, ...] = ()
+    family_lineage_projection: Mapping[str, Any] = field(default_factory=dict)
     schema_version: str = CR154_RELIABILITY_SCHEMA_VERSION
 
     def to_dict(self) -> dict[str, Any]:
@@ -301,18 +304,31 @@ def evaluate_gate1_statistical_reliability(
     gate3_summary: ReliabilityGateSummary | Mapping[str, Any] | None = None,
     gate4_summary: ReliabilityGateSummary | Mapping[str, Any] | None = None,
     operation_counts: Mapping[str, Any] | None = None,
+    family_lineage_projection: ValidationBoundFamilyEvidence | FamilyEvidenceProjection | Mapping[str, Any] | None = None,
 ) -> ReliabilityGateSummary:
+    lineage = consume_family_lineage_projection(family_lineage_projection)
+    projected_artifacts = dict(artifacts)
+    if lineage["availability"] == LineageAvailability.PRESENT.value:
+        projected_artifacts["trial_count_and_effective_trials"] = {
+            "raw_trial_count": lineage["raw_trial_count"],
+            "effective_trial_count": None,
+            "provenance_ref": lineage["target_ref"],
+            "lineage_hash": lineage["target_hash"],
+            "effective_trial_count_availability": LineageAvailability.TYPED_UNAVAILABLE.value,
+            "effective_trial_count_ref": "",
+            "effective_trial_count_method": "",
+        }
     counts = normalize_forbidden_operation_counts(operation_counts)
     status, reason, blocked = evaluate_shared_contract(
-        artifact_refs=_gate1_artifact_refs(artifacts),
+        artifact_refs=_gate1_artifact_refs(projected_artifacts),
         operation_counts=counts,
         gate_id=GATE_1_STATISTICAL,
     )
     if status is ReliabilityGateStatus.BLOCKED:
-        return ReliabilityGateSummary(GATE_1_STATISTICAL, status, blocked_claims=blocked, release_blocking_reason=reason, operation_counts=counts)
+        return ReliabilityGateSummary(GATE_1_STATISTICAL, status, blocked_claims=blocked, release_blocking_reason=reason, operation_counts=counts, family_lineage_projection=lineage)
 
     claims = list(blocked)
-    refs = list(_gate1_artifact_refs(artifacts))
+    refs = list(_gate1_artifact_refs(projected_artifacts))
     source_gate_claims, source_reason = _propagate_gate3_gate4(gate3_summary, gate4_summary, refs, release_profile)
     claims.extend(source_gate_claims)
     if source_reason is not None:
@@ -320,10 +336,30 @@ def evaluate_gate1_statistical_reliability(
         reason = source_reason
 
     if status is ReliabilityGateStatus.PASS:
-        severity_status, severity_reason, severity_claims = _gate1_statistical_artifact_policy(artifacts, release_profile, claim_types)
+        severity_status, severity_reason, severity_claims = _gate1_statistical_artifact_policy(projected_artifacts, release_profile, claim_types)
         status = severity_status
         reason = severity_reason
         claims.extend(severity_claims)
+
+    # CR163 supplies only validated raw lineage.  Effective trials remain
+    # typed-unavailable, so C1/deflated-performance wording is non-computable.
+    claims.append(
+        BlockedClaim(
+            "effective_trial_count_unavailable",
+            "effective trial count is typed_unavailable; C1 is non-computable.",
+            GATE_1_STATISTICAL,
+            "Block deflated performance and admission-readiness wording.",
+            "approve_and_implement_an_effective_trial_count_method_under_a_later_CR",
+            evidence_ref=str(lineage.get("target_ref") or ""),
+        )
+    )
+    status = ReliabilityGateStatus.BLOCKED
+    reason = ReleaseBlockingReason(
+        "effective_trial_count_unavailable",
+        "Gate 1 remains blocked because effective trials are unavailable.",
+        GATE_1_STATISTICAL,
+        "provide_a_separately_approved_effective_trial_count_method",
+    )
 
     return ReliabilityGateSummary(
         gate_id=GATE_1_STATISTICAL,
@@ -333,6 +369,7 @@ def evaluate_gate1_statistical_reliability(
         release_blocking_reason=reason,
         operation_counts=counts,
         limitations=("local_static_fixture_only", f"strategy_class={strategy_class}"),
+        family_lineage_projection=lineage,
     )
 
 

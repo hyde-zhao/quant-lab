@@ -8,12 +8,14 @@
 | v0.2 | 2026-07-05 | host-orchestrator | 追加 CR158 event + ML strategy adapter 统一 scope、out-of-scope 和 promoted deferred 映射。 |
 | v0.3 | 2026-07-09 | host-orchestrator | 追加 CR160 Stage 4 observation review design-only scope，并将 `DF-CR157-003` promoted to CR160。 |
 | v0.4 | 2026-07-10 | host-orchestrator | CR162 补齐 CR161 evidence availability 产品范围、fail-closed ceiling、CR155 regression 和 deferred producers。 |
+| v0.5 | 2026-07-11 | meta-pm | CR163 增量追加 trial lineage MVP、冻结入口清单、量化验收、排除项与 deferred 统计/回填/real-runner 项。 |
+| v0.6 | 2026-07-11 | meta-pm | 回填 SGQ-A，归一化为 2 条 producer chains / 4 mappings，并明确 ExperimentFamilyManifest availability 与 C1 raw-input-only ceiling。 |
 
 ## 状态
 
 - 文档状态：draft
-- 关联 CR：`CR-157` / `CR-158` / `CR-160` / `CR-161` / `CR-162`
-- 当前门禁：CR162 CP7 static verification
+- 关联 CR：`CR-157` / `CR-158` / `CR-160` / `CR-161` / `CR-162` / `CR-163`
+- 当前门禁：CR163 CP2 baseline pending
 
 ## In Scope
 
@@ -39,6 +41,12 @@
 | MVP-CR161-002 | Mandatory typed-unavailable fail-closed | 缺 trial lineage、p-values、fold metrics、成本或容量输入时，相关 evidence 为 `typed_unavailable` 并阻断。 |
 | MVP-CR161-003 | CR155 negative regression | CR155 继续 `blocked`，不因 contract refresh、rerun consistency 或不可用新 evidence 而晋级。 |
 | MVP-CR161-004 | Current-baseline reframe | CR162 刷新六个产品和三个 feature 文档；CR161 closed history 保留，仅标记为 reframed。 |
+| MVP-CR163-001 | Pre-search family declaration and lifecycle | 2/2 P0 producer chains 在首个 trial 前声明 family；post-hoc declaration 全部 blocked。 |
+| MVP-CR163-002 | Append-only trial/attempt/selection lineage | failed/cancelled/excluded/selected/rejected 全部保留；孤儿 trial 与孤儿 selection 为 0。 |
+| MVP-CR163-003 | Raw count semantics | distinct trial identity 精确重算；retry 不增 raw count，不同 seed 增加；count mismatch blocked。 |
+| MVP-CR163-004 | Deterministic seal and supersession | 同 fixture 10 次 seal 仅 1 个 hash；sealed 原地修改 0 次；纠错保留 version chain。 |
+| MVP-CR163-005 | Frozen P0 producer inventory | 2 条去重 producer chains、CPI-CR163-001..004 4/4 instrumentation mappings；excluded/N/A paths 100% 有理由。 |
+| MVP-CR163-006 | Existing-gate integration and negative regression | seal/completeness/ref/count/tamper 全通过才可 present；uninstrumented 为 typed_unavailable；invalid/tampered 为 blocked；仅 C1 raw-input-ready、C1 不可计算；CR155 仍 blocked。 |
 
 ## Out of Scope
 
@@ -57,6 +65,10 @@
 | CR160 new real lake read/write or CR155 promotion | CR160 只消费既有 CR155 evidence 作为反例样本，不授权新 lake 访问，也不把 CR155 升级为 paper/simulation candidate。 |
 | CR160 Stage 5 paper/simulation authorization | Stage 4 design/gate contract 关闭后，Stage 5 gate 仍需后续 CR 独立授权。 |
 | CR161 computed evidence producers | FDR/PBO/DSR、walk-forward/OOS folds、TCA/market impact、capacity/liquidity sizing 和 trial-lineage instrumentation 都需要独立实现型 CR。 |
+| CR163 statistical correction / effective-trial computation | CR163 只提供 raw lineage facts，method/ref 保持空。 |
+| CR163 historical lineage backfill | 不授权从历史产物推断并伪装成原生 instrumentation。 |
+| CR163 real ML/event runner instrumentation | 当前只有 fixture/static adapter compatibility；没有获授权 real runner。 |
+| CR163 real data/runtime/external writes | 不访问 lake/NAS/provider/credentials，不运行 simulation/paper/live/trading/broker，不写 remote/publish/catalog pointer。 |
 
 ## Deferred
 
@@ -67,6 +79,9 @@
 | DF-CR157-003 | Stage 4 observation review workflow | 已 promoted to `CR-160`；CR160 覆盖 Stage 4 review workflow design，不覆盖 Stage 5 simulation/paper/runtime authorization。 |
 | FU-CR161-001..006 | Evidence producers and independent verifier lane | 保持 candidate；先满足输入 lineage/metrics/cost/capacity 和独立验证条件，再通过单独 CR 授权。 |
 | FU-CR162-001 | Generic CP8 baseline-refresh checker | 保持 candidate；不得扩大当前 CR162 的文档纠错范围。 |
+| DF-CR163-001 | Effective-trial/statistical correction producer | raw lineage 稳定后另起 CR，冻结方法与独立验证。 |
+| DF-CR163-002 | Historical lineage backfill | 仅在独立数据/审计授权和 provenance 语义确认后重启。 |
+| DF-CR163-003 | Real ML/event runner instrumentation | real runner 与 runtime/data authorization 同时具备后重启。 |
 
 ## Promoted to CR158
 

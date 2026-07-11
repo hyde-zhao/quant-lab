@@ -12,6 +12,13 @@ from dataclasses import asdict, dataclass, field
 from enum import Enum
 from typing import Any, Mapping, Sequence
 
+from engine.experiment_family_lineage import (
+    ExperimentFamilyManifest,
+    FamilyEvidenceProjection,
+    FamilyLineageValidationResult,
+    LineageAvailability,
+    project_family_evidence,
+)
 from engine.serialization import as_mapping, json_safe, safe_float
 
 
@@ -138,6 +145,8 @@ class StrategyAdmissionStatisticalGate:
     operation_counts: Mapping[str, int] = field(default_factory=dict)
     statistical_gate_ref: str = ""
     thresholds: StatisticalGateThresholds | Mapping[str, Any] = field(default_factory=StatisticalGateThresholds)
+    family_lineage_projection: Mapping[str, Any] = field(default_factory=dict)
+    family_lineage_reconciliation: Mapping[str, Any] = field(default_factory=dict)
     schema_version: str = STATISTICAL_GATE_SCHEMA_VERSION
 
     def to_dict(self) -> dict[str, Any]:
@@ -282,12 +291,37 @@ def evaluate_strategy_admission_statistical_gate(
     operation_counts: Mapping[str, Any] | None = None,
     report_refs: Sequence[str] | None = None,
     statistical_gate_ref: str = "",
+    family_lineage_projection: ValidationBoundFamilyEvidence | FamilyEvidenceProjection | Mapping[str, Any] | None = None,
 ) -> StrategyAdmissionStatisticalGate:
     """Evaluate CR151 Wave A reports with fail-closed status precedence."""
 
     threshold = _thresholds(thresholds)
     normalized_counts = _normalise_operation_counts(operation_counts)
     blocked: list[StatisticalValidationIssue] = list(forbidden_operation_counts_zero(normalized_counts))
+    overfit_data = _as_mapping(overfit_risk_report)
+    lineage = consume_family_lineage_projection(family_lineage_projection)
+    manual_trial_count = _as_int(overfit_data.get("trial_count")) if overfit_data else None
+    reconciliation = reconcile_manual_trial_count(lineage, manual_trial_count)
+    if reconciliation["status"] == "mismatch":
+        blocked.append(
+            StatisticalValidationIssue(
+                code="statistical_gate_manual_trial_count_mismatch",
+                severity="blocker",
+                message="Manual trial_count does not match the validated raw lineage count.",
+                field="overfit_risk_report.trial_count",
+                evidence_ref=str(lineage.get("target_ref") or ""),
+            )
+        )
+    if lineage["availability"] != LineageAvailability.PRESENT.value:
+        blocked.append(
+            StatisticalValidationIssue(
+                code="statistical_gate_family_lineage_blocked",
+                severity="blocker",
+                message="A sealed and validation-bound family lineage projection is required.",
+                field="family_lineage_projection",
+                evidence_ref=str(lineage.get("target_ref") or ""),
+            )
+        )
 
     mandatory_reports = (
         ("multiple_testing_report", multiple_testing_report, validate_multiple_testing_report),
@@ -328,7 +362,122 @@ def evaluate_strategy_admission_statistical_gate(
         operation_counts=normalized_counts,
         statistical_gate_ref=str(statistical_gate_ref or ""),
         thresholds=threshold,
+        family_lineage_projection=lineage,
+        family_lineage_reconciliation=reconciliation,
     )
+
+
+@dataclass(frozen=True, slots=True)
+class ValidationBoundFamilyEvidence:
+    """Trusted in-memory input that carries both sides of S01 validation binding."""
+
+    manifest: ExperimentFamilyManifest | None
+    validation: FamilyLineageValidationResult
+
+
+def consume_family_lineage_projection(
+    projection: ValidationBoundFamilyEvidence | FamilyEvidenceProjection | Mapping[str, Any] | None,
+) -> dict[str, Any]:
+    """Return the single validation-bound admission projection.
+
+    This is deliberately a structural consumer adapter: it never reads lineage
+    storage, replays events, recomputes a hash, or treats a manual count as
+    provenance.  All three existing admission consumers use this function.
+    """
+
+    trusted_positive = isinstance(projection, ValidationBoundFamilyEvidence)
+    if projection is None:
+        data: dict[str, Any] = {
+            "availability": LineageAvailability.TYPED_UNAVAILABLE.value,
+            "unavailable_reason": "native_family_lineage_projection_unavailable",
+        }
+    elif trusted_positive:
+        data = project_family_evidence(projection.manifest, projection.validation).to_dict()
+    elif isinstance(projection, FamilyEvidenceProjection):
+        data = projection.to_dict()
+    elif isinstance(projection, Mapping):
+        # Serialized input carries no locally verifiable manifest/result binding.
+        # It may be retained only as a blocked diagnostic, never as positive truth.
+        data = {
+            "availability": LineageAvailability.BLOCKED.value,
+            "target_ref": str(projection.get("target_ref") or ""),
+            "target_hash": str(projection.get("target_hash") or ""),
+            "blocked_reasons": ("serialized_projection_untrusted",),
+        }
+    else:
+        data = {"availability": "blocked", "blocked_reasons": ("projection_type_invalid",)}
+
+    availability = str(data.get("availability") or "").strip().lower()
+    target_ref = str(data.get("target_ref") or "")
+    target_hash = str(data.get("target_hash") or "")
+    raw_value = data.get("raw_trial_count")
+    raw_count = raw_value if isinstance(raw_value, int) and not isinstance(raw_value, bool) else None
+    blocked_reasons = tuple(sorted({str(item) for item in data.get("blocked_reasons", ()) if str(item)}))
+    unavailable_reason = str(data.get("unavailable_reason") or "")
+    effective_availability = str(
+        data.get("effective_trial_count_availability") or LineageAvailability.TYPED_UNAVAILABLE.value
+    ).strip().lower()
+    effective_count = data.get("effective_trial_count")
+    effective_ref = str(data.get("effective_ref") or "")
+    effective_method = str(data.get("effective_method") or "")
+    c1_status = str(data.get("c1_input_status") or "input_blocked").strip().lower()
+
+    malformed = (
+        effective_availability != LineageAvailability.TYPED_UNAVAILABLE.value
+        or effective_count is not None
+        or bool(effective_ref)
+        or bool(effective_method)
+    )
+    if availability == LineageAvailability.PRESENT.value:
+        malformed = malformed or not trusted_positive
+        malformed = malformed or not target_ref or not target_hash or raw_count is None or raw_count < 1
+        malformed = malformed or bool(blocked_reasons) or bool(unavailable_reason) or c1_status != "raw_input_ready"
+    elif availability == LineageAvailability.TYPED_UNAVAILABLE.value:
+        malformed = malformed or bool(target_ref) or bool(target_hash) or raw_count is not None or not unavailable_reason
+    elif availability == LineageAvailability.NOT_APPLICABLE_WITH_REASON.value:
+        malformed = malformed or bool(target_ref) or bool(target_hash) or raw_count is not None or not unavailable_reason
+    elif availability == LineageAvailability.BLOCKED.value:
+        malformed = malformed or raw_count is not None or not blocked_reasons
+    else:
+        malformed = True
+
+    if malformed:
+        availability = LineageAvailability.BLOCKED.value
+        blocked_reasons = tuple(sorted(set(blocked_reasons) | {"family_lineage_projection_malformed"}))
+        raw_count = None
+        c1_status = "input_blocked"
+
+    return dict(
+        json_safe(
+            {
+                "availability": availability,
+                "target_ref": target_ref,
+                "target_hash": target_hash,
+                "raw_trial_count": raw_count,
+                "blocked_reasons": blocked_reasons,
+                "unavailable_reason": unavailable_reason,
+                "effective_trial_count_availability": LineageAvailability.TYPED_UNAVAILABLE.value,
+                "effective_trial_count": None,
+                "effective_ref": "",
+                "effective_method": "",
+                "c1_input_status": c1_status,
+            }
+        )
+    )
+
+
+def reconcile_manual_trial_count(lineage: Mapping[str, Any], manual_trial_count: int | None) -> dict[str, Any]:
+    """Return consumer-local diagnostics without mutating canonical lineage."""
+
+    validated = lineage.get("raw_trial_count") if lineage.get("availability") == "present" else None
+    status = "absent"
+    if manual_trial_count is not None and isinstance(validated, int):
+        status = "match" if manual_trial_count == validated else "mismatch"
+    return {
+        "status": status,
+        "manual_trial_count": manual_trial_count,
+        "validated_raw_trial_count": validated,
+    }
 
 
 def _hard_threshold_issues(

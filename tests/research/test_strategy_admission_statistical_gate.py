@@ -3,6 +3,12 @@ from __future__ import annotations
 import json
 
 from engine.admission_contracts import AdmissionStatus
+from engine.experiment_family_lineage import (
+    ExperimentFamilyManifest,
+    FamilyLineageValidationResult,
+    LineageAvailability,
+    ValidationStatus,
+)
 from engine.strategy_admission_package import (
     attach_statistical_gate_to_admission_package,
     map_statistical_gate_status_to_admission_status,
@@ -12,6 +18,7 @@ from engine.strategy_admission_statistical_gate import (
     MultipleTestingReport,
     RobustFactorStatisticsReport,
     StatisticalGateStatus,
+    ValidationBoundFamilyEvidence,
     WalkForwardValidationPlan,
     default_statistical_gate_thresholds,
     evaluate_strategy_admission_statistical_gate,
@@ -69,6 +76,33 @@ def _overfit_report() -> BacktestOverfitRiskReport:
         sample_length=756,
         report_ref="artifact://cr151/overfit-risk.json",
     )
+
+
+def _trusted_family_lineage() -> ValidationBoundFamilyEvidence:
+    manifest = ExperimentFamilyManifest(
+        schema_version=1,
+        family_id="cr151-factor-family",
+        manifest_version=1,
+        spec_ref="fixture://cr151/lineage/spec",
+        events_ref="fixture://cr151/lineage/events",
+        sealed_event_count=12,
+        sealed_last_sequence=12,
+        raw_trial_count=12,
+        trial_ids=tuple(f"trial-{index:02d}" for index in range(12)),
+        seal_hash="sha256:cr151-trusted-lineage",
+        sealed_at="2026-07-11T00:00:00Z",
+    )
+    validation = FamilyLineageValidationResult(
+        schema_version=1,
+        validation_id="validation-cr151-trusted-lineage",
+        target_ref="fixture://cr151/lineage/manifest-v1",
+        target_hash=manifest.seal_hash,
+        availability=LineageAvailability.PRESENT,
+        validation_status=ValidationStatus.PASS,
+        recomputed_raw_trial_count=manifest.raw_trial_count,
+        declared_raw_trial_count=manifest.raw_trial_count,
+    )
+    return ValidationBoundFamilyEvidence(manifest, validation)
 
 
 def test_cr151_contracts_are_json_serializable_and_deterministic() -> None:
@@ -147,6 +181,7 @@ def test_cr151_evaluator_returns_pass_for_complete_fixture() -> None:
         walk_forward_plan=_walk_forward_plan(),
         overfit_risk_report=_overfit_report(),
         statistical_gate_ref="artifact://cr151/statistical-gate.json",
+        family_lineage_projection=_trusted_family_lineage(),
     )
 
     assert gate.status is StatisticalGateStatus.PASS
@@ -182,6 +217,7 @@ def test_cr151_evaluator_fails_hard_thresholds() -> None:
         robust_statistics_report=_robust_report(),
         walk_forward_plan=_walk_forward_plan((True, False, False)),
         overfit_risk_report=_overfit_report(),
+        family_lineage_projection=_trusted_family_lineage(),
     )
 
     assert gate.status is StatisticalGateStatus.FAIL
@@ -197,11 +233,27 @@ def test_cr151_evaluator_needs_review_for_small_but_present_sample() -> None:
         robust_statistics_report=_robust_report(sample_count=20),
         walk_forward_plan=_walk_forward_plan(),
         overfit_risk_report=_overfit_report(),
+        family_lineage_projection=_trusted_family_lineage(),
     )
 
     assert gate.status is StatisticalGateStatus.NEEDS_REVIEW
     assert gate.needs_review_reasons[0].code == "statistical_gate_sample_count_below_review_threshold"
     assert default_statistical_gate_thresholds().min_oos_pass_rate == 0.67
+
+
+def test_cr151_complete_threshold_fixture_without_lineage_is_blocked() -> None:
+    gate = evaluate_strategy_admission_statistical_gate(
+        multiple_testing_report=_multiple_testing_report(),
+        robust_statistics_report=_robust_report(),
+        walk_forward_plan=_walk_forward_plan(),
+        overfit_risk_report=_overfit_report(),
+    )
+
+    assert gate.status is StatisticalGateStatus.BLOCKED
+    assert gate.family_lineage_projection["availability"] == "typed_unavailable"
+    assert "statistical_gate_family_lineage_blocked" in {
+        reason.code for reason in gate.blocked_reasons
+    }
 
 
 def test_cr151_statistical_status_maps_to_existing_admission_status() -> None:

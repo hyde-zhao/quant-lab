@@ -1,9 +1,9 @@
 ---
 status: draft
-version: "0.5"
+version: "0.7"
 source_scenarios: "docs/product/SCENARIOS.yaml"
 source_requirements: "docs/product/REQUIREMENTS.md"
-cr_id: "CR-160"
+cr_id: "CR-163"
 template_deviation_reason: "CR157 uses Scenario/Requirement/Test Layer/Validation Mode columns to preserve gate and no-runtime evidence mapping; coverage statistics remain present below."
 ---
 
@@ -18,12 +18,14 @@ template_deviation_reason: "CR157 uses Scenario/Requirement/Test Layer/Validatio
 | v0.3 | 2026-07-05 | host-orchestrator | 追加 CR158 event + ML strategy adapter 覆盖矩阵；保留 CR157 baseline rows。 |
 | v0.4 | 2026-07-09 | host-orchestrator | 追加 CR160 Stage 4 observation review workflow 覆盖矩阵和产品基线刷新检查。 |
 | v0.5 | 2026-07-10 | host-orchestrator | CR162 补齐 CR161 evidence-availability、fail-closed、CR155 negative regression、no-overclaim 和九文档刷新静态覆盖。 |
+| v0.6 | 2026-07-11 | meta-pm | CR163 追加 12 个 P0 lineage lifecycle、count、integrity、permission 和 CR155 regression 场景映射。 |
+| v0.7 | 2026-07-11 | meta-pm | 回填 SGQ-A 语义，明确 2 条 producer chains / 4 个 mappings，以及 present / typed_unavailable / blocked 与 C1 raw-input-only 验证。 |
 
 ## 状态
 
 - 文档状态：draft
 - 关联 CR：`CR-157` / `CR-158` / `CR-160` / `CR-161` / `CR-162`
-- 当前门禁：CR162 CP7 static verification
+- 当前门禁：CR163 CP2 baseline pending
 
 ## Coverage Matrix
 
@@ -52,6 +54,18 @@ template_deviation_reason: "CR157 uses Scenario/Requirement/Test Layer/Validatio
 | SC-CR161-N02 | REQ-CR161-003 | existing-evidence / negative | static | CR155 remains blocked without reconstructed lineage, p-values or folds | P0 | planned-cp7 |
 | SC-CR161-B01 | REQ-CR161-004 | boundary / release | static | product and feature wording contains no computed-proof or runtime readiness claim | P0 | planned-cp7 |
 | SC-CR162-P01 | REQ-CR161-001, REQ-CR161-005 | product-baseline / traceability | static | all 9 promised documents contain CR161 references and CR162 revision records | P0 | planned-cp7 |
+| SC-CR163-P01 | REQ-CR163-001, REQ-CR163-005 | contract / inventory | fixture/static | 4/4 instrumentation mappings across 2 deduplicated producer chains and pre-search ordering | P0 | planned |
+| SC-CR163-P02 | REQ-CR163-002, REQ-CR163-003 | unit / lineage | fixture/static | append-only event graph and distinct-trial recount | P0 | planned |
+| SC-CR163-P03 | REQ-CR163-004, REQ-CR163-006, REQ-CR163-007 | contract / integration | fixture/static | deterministic seal; completeness/ref validation; present only when all pass; C1 still non-computable | P0 | planned |
+| SC-CR163-N01 | REQ-CR163-001, REQ-CR163-007 | negative / precheck | fixture/static | uninstrumented typed_unavailable; post-hoc/incomplete/invalid lineage blocked | P0 | planned |
+| SC-CR163-N02 | REQ-CR163-002, REQ-CR163-007 | negative / integrity | fixture/static | duplicate identity conflict fail-closed | P0 | planned |
+| SC-CR163-B01 | REQ-CR163-003 | boundary / count | fixture/static | retry/seed/trial/attempt count assertions | P0 | planned |
+| SC-CR163-B02 | REQ-CR163-006, REQ-CR163-008 | boundary / claim-ceiling | static | effective count typed-unavailable, empty ref/method | P0 | planned |
+| SC-CR163-F01 | REQ-CR163-002, REQ-CR163-003 | failure-recovery / lineage | fixture/static | failed/cancelled/excluded retention and count | P0 | planned |
+| SC-CR163-R01 | REQ-CR163-004, REQ-CR163-007 | recovery / version-chain | fixture/static | immutable v1 plus valid superseding v2 | P0 | planned |
+| SC-CR163-T01 | REQ-CR163-004, REQ-CR163-007 | security / tamper | fixture/static | post-seal mutation hash mismatch fail-closed | P0 | planned |
+| SC-CR163-A01 | REQ-CR163-008 | permission / security | fixture/static | forbidden operation counters all zero; non-zero fixture blocked | P0 | planned |
+| SC-CR163-G01 | REQ-CR163-006, REQ-CR163-008 | negative-regression / existing-evidence | static | CR155 remains blocked without backfill | P0 | planned |
 
 ## Coverage Summary
 
@@ -67,6 +81,11 @@ template_deviation_reason: "CR157 uses Scenario/Requirement/Test Layer/Validatio
 | Real model training / registry tests authorized | 0 |
 | CR160 product baseline docs refreshed | 6 |
 | CR161 / CR162 baseline documents refreshed | 9 |
+| CR163 deduplicated producer chains | 2 |
+| CR163 frozen P0 instrumentation mappings | 4 |
+| CR163 P0 scenarios | 12 |
+| CR163 P0 scenarios with planned coverage | 12 |
+| CR163 effective-trial computations authorized | 0 |
 
 ## Notes
 
@@ -75,3 +94,4 @@ template_deviation_reason: "CR157 uses Scenario/Requirement/Test Layer/Validatio
 - CR158 verification must use fixture/static/no-runtime evidence. CP2 approval does not authorize real event feed, real model training, model registry write, provider/lake/NAS/credential access, runtime, trading, publish or Git remote write.
 - CR160 verification is design-only and existing-evidence-only. CP8 approval does not authorize code implementation, checker/schema, new lake access, observation execution, simulation, paper, live, trading, publish or deployment.
 - CR161 / CR162 verification is static documentation and existing-evidence traceability only. The matrix does not represent FDR/PBO/DSR, fold-level OOS, TCA, market-impact or capacity computation.
+- CR163 verification remains fixture/static unless a later gate grants separate runtime/data authorization. Future native instrumented runs may set `ExperimentFamilyManifest=present` only after seal/completeness/reference/count/tamper validation; uninstrumented paths remain `typed_unavailable`; invalid/tampered lineages are `blocked`. This prepares only the C1 raw-lineage input and does not make C1 computable.

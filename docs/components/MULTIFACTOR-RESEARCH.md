@@ -1,5 +1,11 @@
 # 组件说明：多因子研究
 
+## 修订记录
+
+| 版本 | 日期 | 修订人 | 变更要点 |
+|---|---|---|---|
+| v1.0 | 2026-07-11 | meta-doc | 增量补充 CR-163 trial lineage、准入可用性与恢复边界；不回填历史运行。 |
+
 多因子研究组件覆盖 FactorSpec、FactorRunSpec、factor panel、label window、单因子评价、多因子组合和 StrategyAdmissionPackage。它输出“策略准入输入”，不输出真实交易许可。
 
 ## 1. 核心对象
@@ -131,3 +137,19 @@ Mature multifactor research runner 的稳定入口为 `scripts/research/run_mult
 | process summary | `process/evidence/stage3-mature-multifactor/stage3-mature-mf-20260627-csi-all-value-bottom-top200-step20-pass-candidate-v3/stage3-research-summary.json` |
 
 已知限制：当前策略已通过研究准入，但该结论只允许进入观察审查候选；`prices_limit` catalog lineage 仍记录历史 run ref，但 runner 实际读取完整 canonical root；流动性容量阈值使用数据湖原生字段单位；风格暴露使用市值、PB、波动和动量代理；mature research 仍不授权 simulation runtime、gateway、`small_live` 或 `live`。
+
+## 8. Trial Lineage 与准入可用性
+
+CR-163 为未来 instrumented mature multifactor research run 增加 experiment-family trial lineage。它不会重建或回填既有运行，也不表示本轮执行过真实研究运行、真实数据访问、simulation、paper 或 live 操作。
+
+| 状态或字段 | 用户可见含义 |
+|---|---|
+| 未提供 lineage 参数 | `--lineage-spec` 与 `--lineage-root` 两者都未提供时，研究流程保持兼容，但 admission lineage 投影为 `typed_unavailable`。 |
+| 参数不成对或 spec 无效 | 只提供其中一个参数，或 lineage spec 无效时，必须 fail-closed 为 `blocked`；不得降级为 `typed_unavailable` 或伪造 lineage。 |
+| `present` | 只允许未来 instrumented run 在 family 已 seal 且完整 validation 通过后投影；仅有目录、记录片段或未验证 seal 均不足以成为 `present`。 |
+| `raw_trial_count` | 由已验证的 family lineage 记录得出，是系统事实，不由调用方或报告人工覆盖。 |
+| `effective_trial_count` | CR-163 仍固定为 `typed_unavailable`，因此 C1 不可计算；不得用 `raw_trial_count` 代替统计校正后的有效试验数。 |
+
+family recorder 使用追加式记录和 seal。若写入期间 crash，或尾部记录 malformed，该 family 不允许原地 resume、截断修复后续写或补 seal；操作者必须保留失败证据并创建新的 family identity。精确 10,000 trial 的结果只用于 characterization，不是容量阈值、性能承诺或 SLA。
+
+历史 CR155 不做 lineage reconstruction 或 backfill；其 admission 继续保持 `blocked`，`paper_candidate=false`。任何解除都需要独立、可验证的新 family 证据，不能由 CR-163 文档或历史产物推断。

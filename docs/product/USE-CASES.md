@@ -1,11 +1,11 @@
 ---
 status: draft
-version: "0.5"
+version: "0.7"
 confirmed_by: ""
 confirmed_at: ""
 engagement_mode: production
 scenario_subject_type: target-artifact
-scenario_subject_id: "CR-160"
+scenario_subject_id: "CR-163"
 target_artifact_type: workflow
 governance_mode: review-gated
 review_policy: strict
@@ -13,7 +13,7 @@ delivery_routing:
   mode: project-readme-contract
   output_root: "docs/product"
   source: docs
-total_use_cases: 5
+total_use_cases: 6
 ---
 
 # Product Use Cases
@@ -27,12 +27,14 @@ total_use_cases: 5
 | v0.3 | 2026-07-05 | host-orchestrator | 追加 CR158 event + ML strategy adapter unified implementation 基线；保留 CR157 deferred 历史并记录 promotion 映射。 |
 | v0.4 | 2026-07-09 | host-orchestrator | 追加 CR160 Stage 4 observation review workflow 用例，并将 `DF-CR157-003` 标记为 promoted to CR160。 |
 | v0.5 | 2026-07-10 | host-orchestrator | CR162 补齐 CR161 strategy-admission evidence availability 用例；保留 CR161 closed 历史，仅刷新当前产品基线。 |
+| v0.6 | 2026-07-11 | meta-pm | CR163 增量追加 experiment-family trial lineage instrumentation 用例、候选生产入口清单、count / availability 语义和 SGQ 待确认项；保留既有 CR157-CR162 基线。 |
+| v0.7 | 2026-07-11 | meta-pm | 回填 SGQ-CR163-001..004 全部选择 A；将 inventory 统一表述为“2 条去重 producer chains / 4 个 instrumentation mappings”，并收紧 C1 raw-lineage claim ceiling。 |
 
 ## 状态
 
 - 文档状态：draft
-- 关联 CR：`CR-157` / `CR-158` / `CR-160` / `CR-161` / `CR-162`
-- 当前门禁：CR162 CP7 static verification
+- 关联 CR：`CR-157` / `CR-158` / `CR-160` / `CR-161` / `CR-162` / `CR-163`
+- 当前门禁：CR163 CP2 requirement / scenario / scope baseline pending
 - 旧基线保留：当前仓库未发现既有 `docs/product/USE-CASES.md`，本文件作为产品层用例入口；既有组件说明和场景文档不被重写。
 
 ## UC-58 多因子策略研究到准入
@@ -190,3 +192,54 @@ total_use_cases: 5
 | 2 | 防止缺失证据被静默通过 | 对缺少 trial lineage、统计输入、fold metrics 或成本/容量输入的对象给出 `typed_unavailable`。 | 缺失不能转为 PASS、NEEDS_REVIEW 或 runtime readiness。 |
 | 3 | 消费已有失败样例 | 以 CR155 的既有 blocked evidence 运行负向追溯。 | CR155 仍 blocked；不重建历史数值，不把 rerun consistency 误读为新证据。 |
 | 4 | 计划后续计算能力 | 追溯 FU-CR161-001..006 到 trial lineage、统计/OOS producer、成本容量 producer 和独立验证控制。 | follow-up 是 candidate，不授权实现、数据或运行时。 |
+
+## UC-58-CR163 Experiment-Family Trial Lineage Instrumentation
+
+| 字段 | 内容 |
+|---|---|
+| 用例 ID | UC-58-CR163 |
+| 名称 | Experiment-family trial lineage instrumentation |
+| 主要用户 | 量化研究负责人、策略研究员、准入审查者、框架维护者、独立验证者 |
+| 触发条件 | 候选生产研究准备开始参数、种子或配置搜索，而现有 `ExperimentManifest` 只能描述单次 run，准入侧的 trial lineage 仍为 `typed_unavailable`。 |
+| 输入 | 预先声明的 experiment family、冻结的候选生产入口、每个 trial / attempt / selection 事件、单次 run 的 `run_id` / `experiment_id` / artifact refs。 |
+| 处理逻辑 | 首个 trial 前声明 family；运行期间 append-only 记录 trial、attempt、失败/取消/排除与 selection；结束后校验完整性并 seal；后续修正只能 supersede。 |
+| 输出 / 结果 | 可验证的 family lineage availability 与 ref、raw trial count、seal / supersession / tamper 结论，以及供既有 CR151/CR154/admission consumer 使用的 fail-closed 输入。 |
+| 前置条件 | CR163 CP2/CP3/CP5 分别批准产品、架构和设计证据；真实运行与数据访问仍需独立授权。 |
+| 排除情况 | 不计算 effective trial count、FDR/BH、WRC/SPA、PBO/CSCV、DSR、walk-forward、TCA、capacity 或 alpha decay；不回填历史 lineage；不提升 CR155。 |
+| 成功标准 | 冻结入口清单 P0 覆盖率 100%；每个声明 trial 恰有一个稳定 trial identity；重试不增加 raw count，不同 seed 增加；seal 后原版本 0 次原地修改；tamper / 缺记录 / count 不一致 100% fail-closed；forbidden operation counts 全为 0。 |
+| C1 claim ceiling | CR163 只使未来合法 instrumented run 的 C1 raw-lineage input 可就绪；它不提供 p-values、effective-trial method 或 multiple-testing/data-snooping/overfit 计算，因此不使 C1 computable。 |
+
+### CR163 候选生产入口清单（CP2 冻结候选）
+
+| Inventory ID | 分类 | 路径 / symbol | CP2 处理 | 仓库事实 |
+|---|---|---|---|---|
+| CPI-CR163-001 | P0 public entrypoint | `scripts/research/run_multifactor_strategy_research.py::main` → legacy wrapper → `engine.mature_multifactor_research.run_stage3_mature_multifactor_research` | included；public wrapper 与 engine orchestration 均需接入共享 producer contract | runner 调用 Stage 3 orchestration，后者调用 `build_strategy_candidate` 产出 `StrategyCandidate`。 |
+| CPI-CR163-002 | P0 legacy entrypoint | `scripts/legacy/research/run_multifactor_strategy_candidates.py` → `engine.multifactor_strategy_candidates.run_strategy_research` | included；保留兼容入口，避免 legacy 候选链绕过 lineage | `run_strategy_research` 调用 `build_strategy_candidates`、refine 与 admission package builder。 |
+| CPI-CR163-003 | P0 construction hook | `engine.mature_multifactor_research.build_strategy_candidate` | included as hook；不得被视为第三条独立 trial | Stage 3 orchestration 的直接候选构造点。 |
+| CPI-CR163-004 | P0 construction hook | `engine.multifactor_strategy_candidates.build_strategy_candidates` | included as hook；不得被视为额外 trial | CR039 研究 runner 的候选构造点。 |
+| CPI-CR163-X01 | excluded factor discovery | `engine.anomaly_discovery.run_anomaly_discovery` | excluded；产出 factor/anomaly discovery candidate，不是本 CR 的 strategy-admission candidate family | 输出 anomaly candidates / decisions；后续进入 factor catalog。 |
+| CPI-CR163-X02 | excluded compatibility adapter | `engine.mature_multifactor_framework.build_project_strategy_candidate_from_cr039` | excluded from producer count；只归一化既有 CR039 candidate | 输入已有 candidate，不发起搜索或新 trial。 |
+| CPI-CR163-X03 | excluded consumer | `engine.strategy_admission_statistical_gate`、`engine.cross_strategy_reliability_gates`、`engine.strategy_admission_package` | consumer integration only | 消费 trial/count/availability，不生产候选 family。 |
+| CPI-CR163-X04 | excluded contract | `engine.backtest_production_contracts.build_backtest_run_spec`、`engine.research_manifest.ExperimentManifest` | shared identity contract only | 创建单次 run metadata，不执行候选搜索。 |
+| CPI-CR163-X05 | compatibility-only | UC-59 ML / UC-60 event fixture-static adapters | shared producer contract compatibility；real runner instrumentation N/A | 当前没有已授权的 real ML/event candidate runner；不得伪称 runtime-ready。 |
+
+P0 coverage 定义：共有 **2 条去重 producer chains、4 个 instrumentation mappings**；`CPI-CR163-001..004` 每项都必须有“声明 family / 记录 trial+attempt+selection / seal+completeness+ref validate / consumer availability”映射，4/4 才是 100%。包装入口与其 construction hook 属于同一生产链，raw trial count 只能由 stable trial identity 去重，不能按函数调用次数累加。
+
+Availability ceiling：未来原生 instrumented run 只有在 seal、completeness、reference integrity 与 count/tamper validation 全部通过后，`ExperimentFamilyManifest` 才可为 `present`；未 instrumented producer/path 保持 `typed_unavailable`；invalid、incomplete 或 tampered lineage 必须为 `blocked`。这只准备 C1 raw-lineage input，不使 C1 computable。
+
+### CR163 Scenario Gray Areas 与待转问 SGQ
+
+| 灰区 ID | 问题 | 为什么重要 | 影响面 | 推荐 | 状态 |
+|---|---|---|---|---|---|
+| SGQ-CR163-001 | P0 清单是否冻结为 2 条去重 producer chains / 4 个 instrumentation mappings，并把 anomaly/adapter/consumer/contract 路径排除？ | 决定 instrumentation 完整性和“100% coverage”的分母。 | scope / architecture / validation / maintenance | A：冻结 CPI-CR163-001..004，以 stable identity 防止 wrapper+hook 双计数。 | confirmed-A |
+| SGQ-CR163-002 | raw trial count 是否采用“不同参数或 seed = 不同 trial；同一 trial 的 retry = 新 attempt、不增加 trial；失败/取消/排除仍保留并计数”？ | 决定准入 count 可审计性，避免事后缩小 family。 | semantics / validation / risk | A：append-only 保留所有已声明 trial。 | confirmed-A |
+| SGQ-CR163-003 | 是否维持 `effective_trial_count=typed_unavailable` 且 ref / method 为空，直到独立统计 CR？ | 防止 lineage instrumentation 被误读为 statistical correction。 | scope / claim ceiling / gate | A：CR163 只提供 raw lineage facts。 | confirmed-A |
+| SGQ-CR163-004 | seal 后纠错是否只允许创建 superseding version，并保持旧 hash/ref 可验证？ | 决定审计、tamper detection 和恢复成本。 | integrity / recovery / release | A：禁止原地改写 sealed version。 | confirmed-A |
+
+## CR163 Deferred Ideas
+
+| ID | 内容 | 状态 | 重启条件 |
+|---|---|---|---|
+| DF-CR163-001 | effective trial count 与独立 statistical correction producer | deferred | family lineage 已稳定，另起 CR 明确方法、输入与独立验证。 |
+| DF-CR163-002 | 历史 research run lineage backfill | deferred / not authorized | 独立审计与数据授权明确，且不会把推断记录伪装为原生 instrumentation。 |
+| DF-CR163-003 | real ML / event candidate runner instrumentation | deferred | real runner 存在并通过独立 runtime/data authorization；当前只保留 contract compatibility。 |

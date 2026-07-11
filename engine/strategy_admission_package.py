@@ -40,6 +40,7 @@ MF_ADMISSION_STATISTICAL_GATE_BLOCKED = "MF_ADMISSION_STATISTICAL_GATE_BLOCKED"
 MF_ADMISSION_ML_GATE_BLOCKED = "MF_ADMISSION_ML_GATE_BLOCKED"
 MF_ADMISSION_EVENT_GATE_BLOCKED = "MF_ADMISSION_EVENT_GATE_BLOCKED"
 MF_ADMISSION_CROSS_STRATEGY_RELIABILITY_BLOCKED = "MF_ADMISSION_CROSS_STRATEGY_RELIABILITY_BLOCKED"
+MF_ADMISSION_FAMILY_LINEAGE_BLOCKED = "MF_ADMISSION_FAMILY_LINEAGE_BLOCKED"
 
 NOT_AUTHORIZED_COUNTER_FIELDS = (
     "qmt_api_call",
@@ -541,6 +542,61 @@ def attach_statistical_gate_to_admission_package(
         unlock_conditions = list(_as_sequence(payload.get("unlock_conditions")))
         unlock_conditions.append("provide_passing_CR151_statistical_gate_or_route_review")
         payload["unlock_conditions"] = tuple(dict.fromkeys(str(item) for item in unlock_conditions if str(item)))
+    return _json_safe(payload)
+
+
+def attach_family_lineage_to_admission_package(
+    package: StrategyAdmissionPackage | Mapping[str, Any],
+    family_lineage_projection: Mapping[str, Any] | Any | None,
+) -> dict[str, Any]:
+    """Attach CR163 lineage to the existing package; this is not a new gate."""
+
+    from engine.strategy_admission_statistical_gate import consume_family_lineage_projection
+
+    if isinstance(package, StrategyAdmissionPackage) or isinstance(package, Mapping):
+        payload = to_jsonable_admission_package(package)
+    else:
+        to_dict = getattr(package, "to_dict", None)
+        payload = _json_safe(to_dict()) if callable(to_dict) else {}
+    lineage = consume_family_lineage_projection(family_lineage_projection)
+    payload["family_lineage_projection"] = lineage
+    is_cr155_package = "package_status" in payload and "paper_candidate" in payload
+    status_field = "package_status" if is_cr155_package else "admission_status"
+    current_status = _admission_status_from_value(payload.get(status_field))
+    lineage_status = AdmissionStatus.PASS if lineage["availability"] == "present" else AdmissionStatus.BLOCKED
+    combined_status = _worse_admission_status(current_status, lineage_status)
+    payload[status_field] = combined_status.value.upper() if is_cr155_package else combined_status.value
+    if is_cr155_package and combined_status is not AdmissionStatus.PASS:
+        payload["paper_candidate"] = False
+
+    evidence_refs = list(_as_sequence(payload.get("evidence_refs")))
+    if lineage["availability"] == "present" and lineage["target_ref"] not in evidence_refs:
+        evidence_refs.append(lineage["target_ref"])
+    payload["evidence_refs"] = tuple(str(item) for item in evidence_refs if str(item))
+
+    limitations = list(_as_sequence(payload.get("limitations")))
+    limitations.extend(("raw_lineage_input_only", "effective_trial_count_unavailable", "c1_non_computable"))
+    payload["limitations"] = tuple(dict.fromkeys(str(item) for item in limitations if str(item)))
+    if lineage_status is AdmissionStatus.BLOCKED:
+        blocked_reasons = list(_as_sequence(payload.get("blocked_reasons")))
+        blocked_reasons.append(
+            AdmissionBlockedReason(
+                code=MF_ADMISSION_FAMILY_LINEAGE_BLOCKED,
+                message="Native sealed and validated family lineage is unavailable or blocked.",
+                source="family_lineage_projection",
+                field="availability",
+                unlock_condition="provide_matching_sealed_family_lineage_validation",
+                evidence_ref=str(lineage.get("target_ref") or ""),
+            ).to_dict()
+        )
+        payload["blocked_reasons"] = tuple(_dedupe_reason_payloads(blocked_reasons))
+    for field_name in (
+        "not_qmt_authorization",
+        "not_simulation_authorization",
+        "not_live_authorization",
+        "not_broker_order",
+    ):
+        payload[field_name] = bool(payload.get(field_name, True))
     return _json_safe(payload)
 
 

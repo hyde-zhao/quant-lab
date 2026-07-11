@@ -32,8 +32,10 @@ from engine.multifactor_strategy_candidates import (
     StrategyResearchResult,
     run_strategy_research,
 )
+from engine.mature_multifactor_research import ProducerLineageConfig
 from engine.research_cli import enforce_memory_budget, json_safe as _json_safe, memory_budget_summary
 from engine.research_paths import research_report_path, research_run_path
+from scripts.research.run_multifactor_strategy_research import parse_producer_lineage_cli_pair
 
 
 CR039_RUN_SCHEMA = "multifactor_strategy_candidates_run_v1"
@@ -93,11 +95,18 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--chapter7-report-root", default=str(research_report_path("chapter7_factor_practice")))
     parser.add_argument("--chapter7-process-root", default=str(research_run_path("chapter7_factor_practice")))
     parser.add_argument("--max-memory-gb", type=float, default=16.0)
+    parser.add_argument("--lineage-spec", default=None)
+    parser.add_argument("--lineage-root", default=None)
     return parser.parse_args()
 
 
 def main() -> int:
     args = parse_args()
+    lineage_config = parse_producer_lineage_cli_pair(
+        lineage_spec=args.lineage_spec,
+        lineage_root=args.lineage_root,
+        producer_chain_id="legacy_cr039",
+    )
     run_id = args.run_id or f"run-multifactor-strategy-candidates-{datetime.now().strftime('%Y%m%d-%H%M%S')}"
     result = run_strategy_candidates_from_paths(
         run_id=run_id,
@@ -111,6 +120,7 @@ def main() -> int:
         chapter7_report_root=Path(args.chapter7_report_root),
         chapter7_process_root=Path(args.chapter7_process_root),
         max_memory_gb=args.max_memory_gb,
+        lineage_config=lineage_config,
     )
     print(
         json.dumps(
@@ -135,6 +145,7 @@ def run_strategy_candidates_from_paths(
     chapter7_report_root: Path = research_report_path("chapter7_factor_practice"),
     chapter7_process_root: Path = research_run_path("chapter7_factor_practice"),
     max_memory_gb: float = 16.0,
+    lineage_config: ProducerLineageConfig | None = None,
 ) -> StrategyCandidateRunResult:
     artifacts = strategy_candidate_artifacts(run_id, output_root=output_root, report_root=report_root)
     artifacts.report_dir.mkdir(parents=True, exist_ok=True)
@@ -172,6 +183,7 @@ def run_strategy_candidates_from_paths(
         risk_exposure=pd.read_csv(cr038_report_dir / "risk_exposure.csv"),
         performance_attribution=pd.read_csv(cr038_report_dir / "performance_attribution.csv"),
         input_refs=input_refs,
+        lineage_config=lineage_config,
     )
     write_outputs(result, artifacts, max_memory_gb=max_memory_gb)
     enforce_memory_budget(max_memory_gb, "cr039_strategy_candidates")

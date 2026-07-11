@@ -7,12 +7,14 @@
 | v0.1 | 2026-07-05 | host-orchestrator | 新建 CR157 Stage 2 多因子研究框架升级 Story Map 草案。 |
 | v0.2 | 2026-07-05 | host-orchestrator | 追加 CR158 event + ML strategy adapter unified implementation Story Map 候选。 |
 | v0.3 | 2026-07-05 | host-orchestrator | CP3 approved 后将 CR158-S01..S06 对齐为 CP4 开发 Story；CP2 baseline 改为 gate evidence，不占开发 Story ID。 |
+| v0.4 | 2026-07-11 | meta-pm | 增量追加 CR163 五个 outcome-oriented candidate Stories；仅作为 CP2/CP3 输入，不写入 DEVELOPMENT-PLAN。 |
+| v0.5 | 2026-07-11 | meta-pm | 根据 SGQ-A 将 CR163-S03 明确覆盖 2 条去重 producer chains / 全部 CPI-CR163-001..004 mappings；五 Story 数量不变。 |
 
 ## 状态
 
 - 文档状态：draft
-- 关联 CR：`CR-157` / `CR-158`
-- 当前门禁：CR158 CP2 pending user review
+- 关联 CR：`CR-157` / `CR-158` / `CR-163`
+- 当前门禁：CR163 CP2 baseline pending
 - 注意：CP2 未批准前，以下 Story 只是产品规划候选，不是 `DEVELOPMENT-PLAN` 或 dev-ready Story。
 
 ## Activities
@@ -32,6 +34,11 @@
 | Evidence and handoff | 扩展 evidence index typed refs 和 Stage 2/3 handoff | CR158-S04 Evidence and handoff typed refs | P0 | CP4/CP5/CP7 |
 | No-runtime guard | 证明 forbidden operation counters fail-closed | CR158-S05 No-runtime guard counters | P0 | CP5/CP6/CP7 |
 | Adapter release boundary | 文档、release wording 与 no-runtime 验证 | CR158-S06 Verification and release boundary | P1 | CP7/CP8 |
+| Declare and validate lineage contract | 在首次搜索前建立 family 并验证完整性 | CR163-S01 Family contract + validator candidate | P0 | CP3/CP5 |
+| Preserve research history | 记录 trial / attempt / selection 并确定性 seal | CR163-S02 Recorder + seal + hash candidate | P0 | CP3/CP5 |
+| Cover all frozen producers | 让两条去重候选生产链及其 direct hooks 均不能绕过 lineage | CR163-S03 Both producer chains / CPI-CR163-001..004 instrumentation candidate | P0 | CP3/CP5 |
+| Reuse existing admission controls | 把 availability/ref/raw count 接入既有 gate，维持 effective unavailable | CR163-S04 Existing admission integration candidate | P0 | CP3/CP5 |
+| Prove integrity and regression | 验证 recovery/tamper/count/permission/CR155 fail-closed | CR163-S05 Integrity + recovery + CR155 regression candidate | P0 | CP5/CP7 |
 
 ## Release Slice Candidate
 
@@ -39,3 +46,8 @@
 |---|---|---|
 | CR157 first slice | CR157-S01, CR157-S02, CR157-S03, CR157-S04, CR157-S05, CR157-S06 backlog alignment only | event adapter implementation, ML adapter implementation, provider/lake/runtime/trading/publish |
 | CR158 unified adapter slice | CR158-S01, CR158-S02, CR158-S03, CR158-S04, CR158-S05, CR158-S06 | real event feed, real ML model training, external model service, provider/lake/NAS/credential access, runtime/trading/publish |
+| CR163 trial lineage slice | CR163-S01..S05 candidate set | statistical correction、historical backfill、real ML/event runner、real data/runtime/trading/publish |
+
+> CR163-S01..S05 是目标为五个 Stories 的产品规划候选，不是正式 Story decomposition；CP2 批准后仍须 CP3 HLD，之后由 meta-se 在 CP4 生成机器真相源。
+
+CR163-S03 scope note：不增加第六个 Story；S03 单一 candidate Story 必须覆盖 public Stage 3 chain、legacy CR039 chain 及 `build_strategy_candidate` / `build_strategy_candidates` 两个 hook，即 CPI-CR163-001..004 4/4 instrumentation mappings。

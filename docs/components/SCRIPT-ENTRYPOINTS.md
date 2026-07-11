@@ -1,5 +1,11 @@
 # 组件说明：脚本入口与命名治理
 
+## 修订记录
+
+| 版本 | 日期 | 修订人 | 变更要点 |
+|---|---|---|---|
+| v1.0 | 2026-07-11 | meta-doc | 增量补充 CR-163 mature multifactor research lineage CLI 参数和 fail-closed 行为。 |
+
 脚本入口按长期能力域组织，根目录中的 `cr*`、`chapter*`、`stage*` 命名只作为历史兼容入口保留。新文档和新自动化应优先使用稳定路径。
 
 ## 1. 设计刷新判断
@@ -62,3 +68,20 @@
 ## 5. 公共函数抽象
 
 研究 CLI 共享的内存预算、JSON 安全转换和浮点列表解析收敛到 `engine/research_cli.py`。脚本不应继续复制 `_json_safe`、`max_rss_bytes`、`memory_budget_summary`、`enforce_memory_budget` 等工具函数。
+
+## 6. Mature Multifactor Research Lineage 参数
+
+稳定入口 `scripts/research/run_multifactor_strategy_research.py` 接受以下成对参数：
+
+| 参数 | 含义 | 约束 |
+|---|---|---|
+| `--lineage-spec <path>` | experiment-family lineage spec 路径。 | 必须与 `--lineage-root <path>` 同时提供；无效 spec 必须 `blocked`。 |
+| `--lineage-root <path>` | family recorder / seal 的根路径。 | 必须与 `--lineage-spec <path>` 同时提供。 |
+
+参数行为是严格的三态边界：
+
+- 两个参数都不提供：允许兼容运行，但 admission lineage 为 `typed_unavailable`。
+- 只提供任意一个参数，或提供的 lineage spec 无效：fail-closed 为 `blocked`，不启动或恢复一个不完整 family。
+- 两个参数均有效：仍不能仅凭参数存在就声明 lineage `present`；未来 instrumented run 必须完成 family seal 和完整 validation，准入投影才可为 `present`。
+
+发生 crash 或发现 malformed tail 时，CLI 不对原 family 做 resume、尾部截断修复或继续追加；应保留失败 family，并以新的 family identity 重启。10,000 trial 路径仅用于 characterization，不构成吞吐量、容量或恢复 SLA。该入口不计算 `effective_trial_count` 或 C1，也不回填 CR155。

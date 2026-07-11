@@ -17,6 +17,24 @@ from typing import Any, Mapping, Sequence
 import numpy as np
 import pandas as pd
 
+from engine.experiment_family_lineage import (
+    AttemptState,
+    DeclareTrial,
+    ExperimentFamilySpec,
+    ExperimentTrial,
+    FamilyLineageSession,
+    FinalizeTrial,
+    FinishAttempt,
+    RecordSelection,
+    SelectionDecision,
+    StartAttempt,
+    TrialAttempt,
+    TrialSelection,
+    TrialState,
+    derive_stable_trial_id,
+)
+from engine.experiment_family_lineage_store import LocalFamilyLineageRecorder
+
 from engine.factor_model_validation import FactorModelValidationReport, build_factor_model_validation_report
 from engine.factor_registry import (
     STAGE3_MATURE_MULTIFACTOR_FACTOR_IDS,
@@ -36,6 +54,194 @@ from engine.mature_multifactor_framework import (
     build_stage3_research_run_manifest,
     validate_stage3_mature_research_package,
 )
+
+
+PUBLIC_STAGE3_CHAIN_ID = "public_stage3"
+PRODUCER_LINEAGE_MAPPING_INVENTORY = {
+    "CPI-CR163-001": ("public_stage3", "wrapper_orchestration"),
+    "CPI-CR163-002": ("legacy_cr039", "wrapper_orchestration"),
+    "CPI-CR163-003": ("public_stage3", "candidate_hook_boundary"),
+    "CPI-CR163-004": ("legacy_cr039", "candidate_hook_boundary"),
+}
+
+
+class ProducerLineageError(RuntimeError):
+    """Fail-closed producer adapter error with a stable machine code."""
+
+    def __init__(self, code: str, detail: str = "") -> None:
+        self.code = code
+        self.detail = detail
+        super().__init__(code if not detail else f"{code}:{detail}")
+
+
+@dataclass(frozen=True, slots=True)
+class ProducerLineageConfig:
+    """The only programmatic configuration accepted by producer adapters."""
+
+    family_spec: ExperimentFamilySpec
+    lineage_root: Path
+    producer_chain_id: str
+
+    def __post_init__(self) -> None:
+        if self.producer_chain_id not in {"public_stage3", "legacy_cr039"}:
+            raise ProducerLineageError("invalid_identifier", "producer_chain_id")
+        if self.family_spec.producer_chain_id != self.producer_chain_id:
+            raise ProducerLineageError("family_identity_mismatch", "producer_chain_id")
+        if not isinstance(self.lineage_root, Path) or not self.lineage_root.is_absolute():
+            raise ProducerLineageError("lineage_root_invalid")
+
+
+class _ProducerLineageTrial:
+    """One orchestration-owned session and one predeclared raw trial."""
+
+    def __init__(
+        self,
+        config: ProducerLineageConfig,
+        *,
+        expected_chain_id: str,
+        normalized_parameters: Mapping[str, Any] | Sequence[Mapping[str, Any]],
+        seed: Any,
+        run_id: str,
+    ) -> None:
+        if type(config) is not ProducerLineageConfig:
+            raise ProducerLineageError("producer_lineage_config_invalid")
+        if config.producer_chain_id != expected_chain_id:
+            raise ProducerLineageError("family_identity_mismatch", "producer_chain_id")
+        self.config = config
+        parameter_sets = (normalized_parameters,) if isinstance(normalized_parameters, Mapping) else tuple(normalized_parameters)
+        if not parameter_sets:
+            raise ProducerLineageError("required_field_missing", "normalized_parameters")
+        self.trial_ids = tuple(
+            derive_stable_trial_id(config.family_spec.family_id, parameters, seed)
+            for parameters in parameter_sets
+        )
+        self.attempt_ids = tuple(f"attempt:{trial_id}:1" for trial_id in self.trial_ids)
+        self.trial_id = self.trial_ids[0]
+        self.attempt_id = self.attempt_ids[0]
+        recorder, receipt = LocalFamilyLineageRecorder.open(config.lineage_root, config.family_spec)
+        self.recorder = recorder
+        self.session = FamilyLineageSession.open(config.family_spec, recorder, str(config.lineage_root))
+        if not receipt.accepted or not self.session.declare_receipt.accepted:
+            recorder.close()
+            reasons = receipt.blocked_reasons or self.session.declare_receipt.blocked_reasons
+            raise ProducerLineageError(reasons[0] if reasons else "lineage_declare_blocked")
+        sequence = config.family_spec.declared_sequence + 1
+        self._next_sequence = sequence
+        for index, (trial_id, parameters) in enumerate(zip(self.trial_ids, parameter_sets)):
+            trial_sequence = sequence if index == 0 else self._take_sequence()
+            self._submit(
+                DeclareTrial(
+                    event_id=f"declare-trial:{trial_id}",
+                    family_id=config.family_spec.family_id,
+                    sequence=trial_sequence,
+                    trial=ExperimentTrial(
+                        family_id=config.family_spec.family_id,
+                        trial_id=trial_id,
+                        normalized_parameters=parameters,
+                        seed=seed,
+                        declared_sequence=trial_sequence,
+                        run_refs=(run_id,),
+                    ),
+                )
+            )
+        for trial_id, attempt_id in zip(self.trial_ids, self.attempt_ids):
+            self._submit(
+                StartAttempt(
+                    event_id=f"start-attempt:{attempt_id}",
+                    family_id=config.family_spec.family_id,
+                    sequence=self._take_sequence(),
+                    attempt=TrialAttempt(
+                        family_id=config.family_spec.family_id,
+                        trial_id=trial_id,
+                        attempt_id=attempt_id,
+                        ordinal=1,
+                        state=AttemptState.RUNNING,
+                        run_ref=run_id,
+                    ),
+                )
+            )
+
+    def _take_sequence(self) -> int:
+        self._next_sequence += 1
+        return self._next_sequence
+
+    def _submit(self, command: Any) -> None:
+        receipt = self.session.submit(command)
+        if not receipt.accepted:
+            raise ProducerLineageError(receipt.blocked_reasons[0] if receipt.blocked_reasons else "lineage_submit_blocked")
+
+    def finish(
+        self,
+        *,
+        decision: SelectionDecision | Mapping[str, SelectionDecision],
+        reason: str,
+        artifact_refs: Sequence[str] = (),
+    ) -> None:
+        for trial_id, attempt_id in zip(self.trial_ids, self.attempt_ids):
+            trial_decision = decision.get(trial_id, SelectionDecision.REJECTED) if isinstance(decision, Mapping) else decision
+            self._submit(
+                FinishAttempt(
+                    event_id=f"finish-attempt:{attempt_id}",
+                    family_id=self.config.family_spec.family_id,
+                    sequence=self._take_sequence(),
+                    attempt_id=attempt_id,
+                    state=AttemptState.SUCCEEDED,
+                    terminal_reason="producer_hook_completed",
+                )
+            )
+            self._submit(
+                FinalizeTrial(
+                    event_id=f"finalize-trial:{trial_id}",
+                    family_id=self.config.family_spec.family_id,
+                    sequence=self._take_sequence(),
+                    trial_id=trial_id,
+                    state=TrialState.SUCCEEDED,
+                    terminal_reason="producer_hook_completed",
+                )
+            )
+            self._submit(
+                RecordSelection(
+                    event_id=f"record-selection:{trial_id}",
+                    family_id=self.config.family_spec.family_id,
+                    sequence=self._take_sequence(),
+                    selection=TrialSelection(
+                        family_id=self.config.family_spec.family_id,
+                        trial_id=trial_id,
+                        selection_id=f"selection:{trial_id}",
+                        sequence=self._next_sequence,
+                        decision=trial_decision,
+                        reason=reason,
+                        artifact_refs=tuple(artifact_refs),
+                    ),
+                )
+            )
+
+    def fail(self, reason: str) -> None:
+        for trial_id, attempt_id in zip(self.trial_ids, self.attempt_ids):
+            self._submit(
+                FinishAttempt(
+                    event_id=f"finish-attempt:{attempt_id}", family_id=self.config.family_spec.family_id,
+                    sequence=self._take_sequence(), attempt_id=attempt_id,
+                    state=AttemptState.FAILED, terminal_reason=reason,
+                )
+            )
+            self._submit(
+                FinalizeTrial(
+                    event_id=f"finalize-trial:{trial_id}", family_id=self.config.family_spec.family_id,
+                    sequence=self._take_sequence(), trial_id=trial_id,
+                    state=TrialState.FAILED, terminal_reason=reason,
+                )
+            )
+
+    def seal_and_close(self) -> None:
+        try:
+            seal_request = self.session.seal(1)
+            if not seal_request.request_receipt.accepted:
+                reasons = seal_request.request_receipt.blocked_reasons
+                raise ProducerLineageError(reasons[0] if reasons else "lineage_seal_blocked")
+            self.recorder.seal(1)
+        finally:
+            self.recorder.close()
 from engine.multifactor_contracts import (
     BLOCKED_CLAIMS_DEFAULT,
     FORBIDDEN_OPERATION_COUNTERS,
@@ -184,7 +390,10 @@ def run_stage3_mature_multifactor_research(
     rebalance_step: int = DEFAULT_REBALANCE_STEP,
     factor_weights: Mapping[str, float] | None = None,
     score_multiplier: float = 1.0,
+    lineage_config: ProducerLineageConfig | None = None,
 ) -> Stage3ResearchRunResult:
+    if lineage_config is not None and type(lineage_config) is not ProducerLineageConfig:
+        raise ProducerLineageError("producer_lineage_config_invalid")
     lake = Path(lake_root)
     artifacts = stage3_artifacts(run_id, Path(research_root), Path(process_evidence_root))
     artifacts.research_dir.mkdir(parents=True, exist_ok=True)
@@ -243,7 +452,42 @@ def run_stage3_mature_multifactor_research(
         min_adv_amount=min_adv_amount,
         fee_slippage_ref=artifact_ref(run_id, artifacts.runner_offline_preflight_path),
     )
-    strategy_candidate = build_strategy_candidate(run_id, signal_set, risk_policy, portfolio, turnover, artifacts)
+    lineage_trial = None
+    if lineage_config is not None:
+        lineage_trial = _ProducerLineageTrial(
+            lineage_config,
+            expected_chain_id=PUBLIC_STAGE3_CHAIN_ID,
+            normalized_parameters={
+                "cost_bps": cost_bps,
+                "end": end,
+                "factor_weights": dict(factor_weights or {}),
+                "label_horizon": label_horizon,
+                "max_weight": max_weight,
+                "min_adv_amount": min_adv_amount,
+                "rebalance_step": rebalance_step,
+                "score_multiplier": score_multiplier,
+                "start": start,
+                "top_n": top_n,
+            },
+            seed=0,
+            run_id=run_id,
+        )
+    try:
+        strategy_candidate = build_strategy_candidate(run_id, signal_set, risk_policy, portfolio, turnover, artifacts)
+    except Exception as error:
+        if lineage_trial is not None:
+            lineage_trial.fail(f"producer_hook_failed:{type(error).__name__}")
+        raise
+    else:
+        if lineage_trial is not None:
+            lineage_trial.finish(
+                decision=SelectionDecision.SELECTED,
+                reason="stage3_strategy_candidate_built",
+                artifact_refs=(artifact_ref(run_id, artifacts.turnover_path),),
+            )
+    finally:
+        if lineage_trial is not None:
+            lineage_trial.seal_and_close()
     evidence_index = build_research_evidence_index(run_id, artifacts, catalog, limitations)
     factor_specs = build_factor_specs(run_id, catalog)
     admission_package = build_mature_admission_package(

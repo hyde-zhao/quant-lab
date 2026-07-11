@@ -1,8 +1,8 @@
 schema_version: 1
-version: "0.5"
+version: "0.7"
 status: draft
-cr_id: CR-162
-updated_at: "2026-07-10T20:43:29+08:00"
+cr_id: CR-163
+updated_at: "2026-07-11T11:30:00+08:00"
 source_requirements:
   - docs/product/REQUIREMENTS.md
 source_use_cases:
@@ -28,6 +28,14 @@ revision_record:
     date: "2026-07-10"
     author: host-orchestrator
     summary: "CR162 adds CR161 evidence-availability, typed-unavailable fail-closed, CR155 negative-regression and nine-document baseline-refresh scenarios."
+  - version: v0.6
+    date: "2026-07-11"
+    author: meta-pm
+    summary: "CR163 adds pre-search declaration, append-only trial/attempt/selection, retry/seed/count, seal/supersession/tamper, missing-instrumentation, authorization and CR155 regression scenarios."
+  - version: v0.7
+    date: "2026-07-11"
+    author: meta-pm
+    summary: "Record SGQ option-A confirmation, normalize inventory to four mappings across two deduplicated producer chains, and tighten ExperimentFamilyManifest/C1 availability ceilings."
 scenarios:
   - id: SC-CR157-P01
     title: "Build mature admission package from complete research refs"
@@ -331,13 +339,109 @@ scenarios:
       - "9 of 9 target documents are updated incrementally."
       - "FU-CR161-001..006 and FU-CR162-001 remain candidates."
       - "No source, schema, checker or runtime implementation is implied."
+  - id: SC-CR163-P01
+    title: "Declare experiment family before first candidate trial"
+    type: positive
+    priority: P0
+    requirement_refs: [REQ-CR163-001, REQ-CR163-005]
+    use_case_refs: [UC-58-CR163]
+    steps: ["Select each frozen P0 producer chain.", "Declare its family before emitting a trial-start event.", "Validate event ordering and producer coverage."]
+    expected: ["Both deduplicated producer chains have pre-search declarations.", "Instrumentation mapping is 4/4 across CPI-CR163-001..004.", "No wrapper/hook double count occurs."]
+  - id: SC-CR163-P02
+    title: "Record trial attempt and selection lineage append-only"
+    type: positive
+    priority: P0
+    requirement_refs: [REQ-CR163-002, REQ-CR163-003]
+    use_case_refs: [UC-58-CR163]
+    steps: ["Record multiple trials and attempts.", "Record selected and rejected outcomes.", "Recompute lineage and raw count from stable identities."]
+    expected: ["Every trial and selection is referentially complete.", "Raw count equals distinct trial identities.", "No terminal event is deleted."]
+  - id: SC-CR163-P03
+    title: "Seal deterministically and expose lineage as present"
+    type: positive
+    priority: P0
+    requirement_refs: [REQ-CR163-004, REQ-CR163-006, REQ-CR163-007]
+    use_case_refs: [UC-58-CR163]
+    steps: ["Validate a complete family.", "Seal identical normalized content repeatedly.", "Pass availability/ref/raw count to existing admission consumers."]
+    expected: ["Repeated seals produce one deterministic hash.", "ExperimentFamilyManifest is present only after seal, completeness, reference-integrity, count and tamper checks pass.", "C1 raw-lineage input is ready but C1 remains non-computable without statistical inputs/method.", "No parallel admission gate is created."]
+  - id: SC-CR163-N01
+    title: "Missing pre-search instrumentation fails closed"
+    type: negative
+    priority: P0
+    requirement_refs: [REQ-CR163-001, REQ-CR163-007]
+    use_case_refs: [UC-58-CR163]
+    steps: ["Emit a trial before family declaration or omit a frozen entrypoint mapping.", "Attempt seal and admission consumption."]
+    expected: ["An otherwise valid but uninstrumented path remains typed_unavailable.", "Post-hoc, incomplete or invalid lineage is blocked and cannot be present.", "Blocked reason identifies ordering or inventory gap."]
+  - id: SC-CR163-N02
+    title: "Duplicate identity with conflicting content fails closed"
+    type: negative
+    priority: P0
+    requirement_refs: [REQ-CR163-002, REQ-CR163-007]
+    use_case_refs: [UC-58-CR163]
+    steps: ["Append the same event identity twice with different payloads.", "Attempt validation and seal."]
+    expected: ["Conflict is blocked.", "Neither payload silently overwrites the other."]
+  - id: SC-CR163-B01
+    title: "Retry does not increase raw count while a different seed does"
+    type: boundary
+    priority: P0
+    requirement_refs: [REQ-CR163-003]
+    use_case_refs: [UC-58-CR163]
+    steps: ["Create one trial with three attempts.", "Create a second trial differing only by seed.", "Recompute counts."]
+    expected: ["Raw trial count is 2.", "Attempt count is 4.", "Retries and seeds remain distinguishable."]
+  - id: SC-CR163-B02
+    title: "Effective trial count stays typed unavailable"
+    type: boundary
+    priority: P0
+    requirement_refs: [REQ-CR163-006, REQ-CR163-008]
+    use_case_refs: [UC-58-CR163]
+    steps: ["Provide complete raw lineage.", "Inspect effective-trial fields and admission claims."]
+    expected: ["effective_trial_count is typed_unavailable.", "Effective-trial ref and method are empty.", "C1 is raw-lineage input-ready only and remains non-computable.", "No statistical correction is claimed."]
+  - id: SC-CR163-F01
+    title: "Failed cancelled and excluded trials remain in lineage"
+    type: failure-recovery
+    priority: P0
+    requirement_refs: [REQ-CR163-002, REQ-CR163-003]
+    use_case_refs: [UC-58-CR163]
+    steps: ["Create successful, failed, cancelled and excluded trials.", "Select one candidate.", "Seal and recompute raw count."]
+    expected: ["All four trial states remain present and counted.", "Selection does not shrink the family."]
+  - id: SC-CR163-R01
+    title: "Correction supersedes an immutable sealed version"
+    type: failure-recovery
+    priority: P0
+    requirement_refs: [REQ-CR163-004, REQ-CR163-007]
+    use_case_refs: [UC-58-CR163]
+    steps: ["Seal version 1.", "Append a correction with reason.", "Create version 2 that supersedes version 1."]
+    expected: ["Version 1 hash remains verifiable.", "Version 2 links to version 1.", "No in-place mutation occurs."]
+  - id: SC-CR163-T01
+    title: "Post-seal tamper is detected"
+    type: negative
+    priority: P0
+    requirement_refs: [REQ-CR163-004, REQ-CR163-007]
+    use_case_refs: [UC-58-CR163]
+    steps: ["Change sealed trial membership or selection content without supersession.", "Recompute hash and validate chain."]
+    expected: ["Tamper is detected and blocked.", "Availability is blocked, not present."]
+  - id: SC-CR163-A01
+    title: "Unauthorized runtime or external operation remains denied"
+    type: permission
+    priority: P0
+    requirement_refs: [REQ-CR163-008]
+    use_case_refs: [UC-58-CR163]
+    steps: ["Review fixture/static verification counters.", "Set any forbidden operation counter non-zero in a negative fixture."]
+    expected: ["Normal fixture counters are all zero.", "Any non-zero forbidden counter blocks.", "No external operation is executed."]
+  - id: SC-CR163-G01
+    title: "CR155 negative regression remains blocked"
+    type: negative-regression
+    priority: P0
+    requirement_refs: [REQ-CR163-006, REQ-CR163-008]
+    use_case_refs: [UC-58-CR163]
+    steps: ["Consume existing CR155 evidence refs only.", "Expose CR163 lineage availability contract without reconstructing history.", "Evaluate existing admission path."]
+    expected: ["CR155 remains blocked.", "No historical lineage is synthesized.", "No unavailable evidence is promoted to pass."]
 coverage_summary:
-  total: 23
-  p0_total: 21
-  p0_with_planned_coverage: 21
+  total: 35
+  p0_total: 33
+  p0_with_planned_coverage: 33
   high_priority_positive_and_negative_covered: true
-  source_requirements_total: 26
-  source_use_cases_total: 5
+  source_requirements_total: 34
+  source_use_cases_total: 6
   gaps:
     - id: GAP-CR157-001
       status: resolved_by_CR157_CP2_and_promoted_CR158
@@ -351,3 +455,6 @@ coverage_summary:
     - id: GAP-CR161-001
       status: correction_in_progress_CR162_CP7
       description: "CR161 closed without its promised product/feature baseline refresh; CR162 incrementally refreshes all nine documents and verifies the correction before CP8."
+    - id: GAP-CR163-001
+      status: resolved_by_user_confirmation_A_2026-07-11
+      description: "SGQ-CR163-001..004 are confirmed as option A: 2 deduplicated producer chains / 4 mappings, append-only count semantics, effective count unavailable and immutable supersession. Formal CP2 remains host-owned and unopened."
