@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 from scripts.quality.check_change_tracking_consistency import (
@@ -27,57 +28,19 @@ status: "{status}"
 
 
 def _index_text(active_change: str = "CR-093") -> str:
-    return f"""active_crs:
-- id: {active_change}
-  status: active-formal-cr
-  formal_cr_path: process/changes/CR-093-LEDGER-HYGIENE-CR019-CR025-TRACKING-CLEANUP-2026-06-18.md
-closed_crs:
-- id: CR-020
-  status: closed-formal-cr
-- id: CR-025
-  status: closed-formal-cr
-- id: CR-029
-  status: closed-formal-cr
-- id: CR-030
-  status: closed-formal-cr
-- id: CR-040
-  status: closed-formal-cr
-- id: CR-041
-  status: closed-formal-cr
-- id: CR-043
-  status: closed-formal-cr
-- id: CR-044
-  status: closed-formal-cr
-- id: CR-045
-  status: closed-formal-cr
-- id: CR-046
-  status: closed-formal-cr
-- id: "CR-025"
-  status: closed-formal-cr
-cancelled_crs:
-- id: "CR-021"
-  status: cancelled-formal-cr
-- id: "CR-022"
-  status: cancelled-formal-cr
-- id: "CR-023"
-  status: cancelled-formal-cr
-- id: "CR-024"
-  status: cancelled-formal-cr
-follow_up_candidates:
-- id: "CR-026"
-  status: follow-up-candidate
-spike_candidates:
-- id: "CR-027"
-  status: spike-candidate
-- id: "CR-028"
-  status: spike-candidate
-stale_status_conflicts:
-- id: STALE-CR019-ACTIVE-CHANGE
-  status: "resolved"
-  formal_cr_path: process/changes/CR-019-STAGE6-MULTIFACTOR-SIMULATION-ARCHITECTURE-2026-05-30.md
-- id: SYNC-CR029-RELATED-ACTIVE
-  status: "resolved-closed"
-"""
+    closed = ("CR-020", "CR-025", "CR-029", "CR-030", "CR-040", "CR-041", "CR-043", "CR-044", "CR-045", "CR-046")
+    cancelled = ("CR-021", "CR-022", "CR-023", "CR-024")
+    return json.dumps({"active_crs": [active_change], "stale_status_conflicts": [
+        {"id": "STALE-CR019-ACTIVE-CHANGE", "status": "resolved"},
+        {"id": "SYNC-CR029-RELATED-ACTIVE", "status": "resolved-closed"},
+    ], "items": [
+        {"id": active_change, "status": "active", "formal_cr_path": "process/changes/CR-093-LEDGER-HYGIENE-CR019-CR025-TRACKING-CLEANUP-2026-06-18.md"},
+        *({"id": cr_id, "status": "closed"} for cr_id in closed),
+        *({"id": cr_id, "status": "cancelled"} for cr_id in cancelled),
+        {"id": "CR-026", "status": "candidate"},
+        {"id": "CR-027", "status": "spike_candidate"},
+        {"id": "CR-028", "status": "spike_candidate"},
+    ]})
 
 
 def _state_text(active_change: str = "CR-093", history_active: str = "CR-025") -> str:
@@ -185,7 +148,7 @@ tracking_id: "CR-019-FOLLOW-UP-TRACKING"
 def _write_project(tmp_path: Path, *, active_change: str = "CR-093") -> Path:
     root = tmp_path
     _write(root / "process/STATE.md", _state_text(active_change=active_change))
-    _write(root / "process/changes/CR-INDEX.yaml", _index_text(active_change=active_change))
+    _write(root / "process/changes/CR-INDEX.json", _index_text(active_change=active_change))
     _write(root / "process/changes/CR-019-FOLLOW-UP-TRACKING-2026-05-31.md", _tracking_text())
     _write(
         root / "process/changes/CR-019-STAGE6-MULTIFACTOR-SIMULATION-ARCHITECTURE-2026-05-30.md",

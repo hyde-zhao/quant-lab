@@ -38,6 +38,54 @@ CURRENT_WORKFLOW_SHARED_SOURCE_ASSETS = frozenset(
     }
 )
 
+CURRENT_CR164_SOURCE_ASSETS = frozenset(
+    {
+        "docs/product/BACKLOG.md",
+        "docs/product/MVP-SCOPE.md",
+        "docs/product/RELEASE-SLICES.md",
+        "docs/product/REQUIREMENTS.md",
+        "docs/product/SCENARIOS.yaml",
+        "docs/product/STORY-MAP.md",
+        "docs/product/TEST-MATRIX.md",
+        "docs/product/USE-CASES.md",
+        "engine/cross_strategy_reliability_gates.py",
+        "engine/multiple_testing_evidence.py",
+        "engine/overfit_evidence.py",
+        "engine/statistical_evidence.py",
+        "engine/strategy_admission_package.py",
+        "engine/strategy_admission_statistical_gate.py",
+        "tests/PROVENANCE.yaml",
+        "tests/research/test_multiple_testing_evidence.py",
+        "tests/research/test_overfit_evidence.py",
+        "tests/research/test_statistical_evidence_authorization.py",
+        "tests/research/test_statistical_evidence_contracts.py",
+        "tests/research/test_statistical_evidence_cr155_regression.py",
+        "tests/research/test_statistical_evidence_projection.py",
+        "tests/research/test_statistical_evidence_qac.py",
+    }
+)
+
+CURRENT_CR165_SOURCE_ASSETS = frozenset(
+    {
+        "scripts/legacy/cr/check_cr_tracking_consistency.py",
+        "tests/meta_flow/test_cr_tracking_consistency.py",
+        "tests/test_cr163_trial_lineage_admission_projection.py",
+        "tests/test_cr163_trial_lineage_authorization.py",
+        "tests/test_cr163_trial_lineage_cr155_regression.py",
+        "tests/test_cr163_trial_lineage_integrity.py",
+        "tests/test_cr163_trial_lineage_producer_adapters.py",
+        "tests/test_experiment_family_lineage_contracts.py",
+        "tests/test_experiment_family_lineage_store.py",
+        "tests/research/test_experiment_family_lineage_contracts.py",
+        "tests/research/test_experiment_family_lineage_store.py",
+        "tests/research/test_trial_lineage_admission_projection.py",
+        "tests/research/test_trial_lineage_authorization.py",
+        "tests/research/test_trial_lineage_integrity.py",
+        "tests/research/test_trial_lineage_legacy_admission_regression.py",
+        "tests/research/test_trial_lineage_producer_adapters.py",
+    }
+)
+
 CURRENT_WORKFLOW_SHARED_PROCESS_ASSETS = frozenset(
     {
         "STATE.md",
@@ -45,6 +93,7 @@ CURRENT_WORKFLOW_SHARED_PROCESS_ASSETS = frozenset(
         "REQUIREMENTS.md",
         "baseline/CURRENT-REQUIREMENT-BASELINE.yaml",
         "changes/CR-INDEX.json",
+        "changes/CR-INDEX.yaml",
         "changes/CR-091-FOLLOW-UP-TRACKING-2026-06-18.md",
         "changes/CR-098-FOLLOW-UP-TRACKING-2026-06-19.md",
         "docs/design/ARCHITECTURE-DECISION.md",
@@ -56,8 +105,20 @@ CURRENT_WORKFLOW_SHARED_PROCESS_ASSETS = frozenset(
         "state/CHECKPOINT-LEDGER.ndjson",
         "state/CR-LEDGER.ndjson",
         "state/HANDOFF-LEDGER.ndjson",
+        "state/AGENT-DISPATCH-LEDGER.ndjson",
+        "state/GATE-LEDGER.ndjson",
+        "state/QUESTION-LEDGER.ndjson",
         "state/READ-EXPANSION-LEDGER.ndjson",
         "state/STATE.current.json",
+        "state/WORKFLOW-HEALTH.json",
+        "current/CURRENT.json",
+        "current/change",
+        "current/change.ref",
+        "current/context",
+        "current/context.ref",
+        "current/release",
+        "current/release.ref",
+        "docs/design/ARCHIVED-DESIGN-INDEX.md",
     }
 )
 
@@ -392,7 +453,7 @@ CURRENT_CR089_CLOSURE_PROCESS_ASSETS = frozenset(
 )
 
 PROCESS_HISTORY_CR_MIN = 113
-PROCESS_HISTORY_CR_MAX = 126
+PROCESS_HISTORY_CR_MAX = 164
 
 
 @dataclass(frozen=True, slots=True)
@@ -416,6 +477,9 @@ def check_process_artifact_hygiene(
     classified: dict[str, list[dict[str, str]]] = {
         "artifact_history_residual": [],
         "current_cr_asset": [],
+        "closed_cr164_asset": [],
+        "closed_cr165_asset": [],
+        "design_archive_migration_asset": [],
         "current_cr132_asset": [],
         "current_cr133_asset": [],
         "current_cr134_asset": [],
@@ -458,6 +522,9 @@ def check_process_artifact_hygiene(
             "known_non_blocking_buckets": [
                 "artifact_history_residual",
                 "current_cr_asset",
+                "closed_cr164_asset",
+                "closed_cr165_asset",
+                "design_archive_migration_asset",
                 "current_runner_simulation_entry_asset",
                 "current_guardrail_asset",
                 "current_workflow_shared_asset",
@@ -481,6 +548,10 @@ def classify_entry(
             return "current_workflow_shared_asset"
         if entry.path in CURRENT_GUARDRAIL_SOURCE_ASSETS:
             return "current_guardrail_asset"
+        if entry.path in CURRENT_CR164_SOURCE_ASSETS:
+            return "closed_cr164_asset"
+        if entry.path in CURRENT_CR165_SOURCE_ASSETS:
+            return "closed_cr165_asset"
         if entry.path in CURRENT_CR138_SOURCE_ASSETS:
             return "current_cr_asset"
         if entry.path in CURRENT_RUNNER_SIMULATION_ENTRY_SOURCE_ASSETS:
@@ -506,6 +577,12 @@ def classify_entry(
             return "current_workflow_shared_asset"
         if _is_current_cr_process_asset(entry.path, active_cr_numbers, active_cr_process_paths):
             return "current_cr_asset"
+        if _is_cr164_process_asset(entry.path):
+            return "closed_cr164_asset"
+        if _is_cr165_process_asset(entry.path):
+            return "closed_cr165_asset"
+        if _is_design_archive_migration(entry.path):
+            return "design_archive_migration_asset"
         if entry.path in CURRENT_CR138_PROCESS_ASSETS:
             return "current_cr_asset"
         if entry.path in CURRENT_RUNNER_SIMULATION_ENTRY_PROCESS_ASSETS:
@@ -547,6 +624,42 @@ def _is_process_history_residual(path: str) -> bool:
     if path.startswith("stories/"):
         return _has_history_cr(path)
     return False
+
+
+def _is_cr164_process_asset(path: str) -> bool:
+    if re.search(r"\bCR-?164\b", path):
+        return True
+    return path.startswith(
+        (
+            "docs/features/multiple-testing-calculators/",
+            "docs/features/overfit-deflation-calculators/",
+            "docs/features/statistical-evidence-contract/",
+            "docs/features/statistical-evidence-projection/",
+        )
+    )
+
+
+def _is_cr165_process_asset(path: str) -> bool:
+    return bool(re.search(r"\bCR-?165\b", path))
+
+
+def _is_design_archive_migration(path: str) -> bool:
+    if path.startswith("archive/design-cr-docs/"):
+        return True
+    if not path.startswith("docs/design/"):
+        return False
+    name = Path(path).name
+    return name.startswith(
+        (
+            "HLD-",
+            "ARCHITECTURE-DECISION-",
+            "BLUEPRINT-",
+            "DOMAIN-MAP-",
+            "DEPENDENCY-MAP-",
+            "QUANT-RESEARCH-PRODUCTION-ROADMAP",
+            "STRATEGY-",
+        )
+    )
 
 
 def _has_history_cr(path: str) -> bool:

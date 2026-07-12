@@ -47,18 +47,18 @@ from engine.strategy_admission_statistical_gate import consume_family_lineage_pr
 
 REQUIREMENTS = frozenset(f"REQ-CR163-{index:03d}" for index in range(1, 9))
 SCENARIO_TRACE = (
-    {"scenario_id": "P01", "requirements": ("REQ-CR163-001", "REQ-CR163-005"), "feature_scope": ("FEAT-20", "FEAT-21"), "test_function": "tests/test_cr163_trial_lineage_integrity.py::test_p01_trace_and_producer_inventory_are_exact"},
-    {"scenario_id": "P02", "requirements": ("REQ-CR163-002", "REQ-CR163-003"), "feature_scope": ("FEAT-20", "FEAT-21"), "test_function": "tests/test_cr163_trial_lineage_integrity.py::test_p02_two_seeds_retries_and_terminal_membership"},
-    {"scenario_id": "P03", "requirements": ("REQ-CR163-004", "REQ-CR163-006"), "feature_scope": ("FEAT-20", "FEAT-22"), "test_function": "tests/test_cr163_trial_lineage_integrity.py::test_p03_ten_identical_seals_and_valid_claim_ceiling"},
-    {"scenario_id": "N01", "requirements": ("REQ-CR163-001", "REQ-CR163-007"), "feature_scope": ("FEAT-20", "FEAT-21", "FEAT-22"), "test_function": "tests/test_cr163_trial_lineage_integrity.py::test_n01_absent_is_typed_unavailable_and_incomplete_is_blocked"},
-    {"scenario_id": "N02", "requirements": ("REQ-CR163-002", "REQ-CR163-007"), "feature_scope": ("FEAT-20", "FEAT-21"), "test_function": "tests/test_cr163_trial_lineage_integrity.py::test_n02_orphan_attempt_is_blocked"},
-    {"scenario_id": "B01", "requirements": ("REQ-CR163-003", "REQ-CR163-007"), "feature_scope": ("FEAT-20", "FEAT-21"), "test_function": "tests/test_cr163_trial_lineage_integrity.py::test_b01_declared_and_recomputed_count_mismatch_is_blocked"},
-    {"scenario_id": "B02", "requirements": ("REQ-CR163-006",), "feature_scope": ("FEAT-20", "FEAT-22"), "test_function": "tests/test_cr163_trial_lineage_integrity.py::test_b02_absent_invalid_and_manual_mismatch_never_overclaim"},
-    {"scenario_id": "F01", "requirements": ("REQ-CR163-002", "REQ-CR163-003"), "feature_scope": ("FEAT-20", "FEAT-21"), "test_function": "tests/test_cr163_trial_lineage_integrity.py::test_f01_terminal_classes_are_retained"},
-    {"scenario_id": "R01", "requirements": ("REQ-CR163-004", "REQ-CR163-007"), "feature_scope": ("FEAT-20",), "test_function": "tests/test_cr163_trial_lineage_integrity.py::test_r01_supersession_recovery_and_invalid_chains"},
-    {"scenario_id": "T01", "requirements": ("REQ-CR163-004", "REQ-CR163-006", "REQ-CR163-007"), "feature_scope": ("FEAT-20", "FEAT-22"), "test_function": "tests/test_cr163_trial_lineage_integrity.py::test_t01_five_negative_classes_are_target_bound_and_blocked"},
-    {"scenario_id": "A01", "requirements": ("REQ-CR163-008",), "feature_scope": ("FEAT-20", "FEAT-21", "FEAT-22", "FEAT-23"), "test_function": "tests/test_cr163_trial_lineage_authorization.py::test_synthetic_s01_s05_public_path_runs_under_thirteen_zero_sentinels"},
-    {"scenario_id": "G01", "requirements": ("REQ-CR163-006", "REQ-CR163-008"), "feature_scope": ("FEAT-22", "FEAT-23"), "test_function": "tests/test_cr163_trial_lineage_cr155_regression.py::test_actual_and_synthetic_cr155_without_native_ledger_stay_blocked"},
+    {"scenario_id": "P01", "requirements": ("REQ-CR163-001", "REQ-CR163-005"), "feature_scope": ("FEAT-20", "FEAT-21"), "test_function": "tests/research/test_trial_lineage_integrity.py::test_p01_trace_and_producer_inventory_are_exact"},
+    {"scenario_id": "P02", "requirements": ("REQ-CR163-002", "REQ-CR163-003"), "feature_scope": ("FEAT-20", "FEAT-21"), "test_function": "tests/research/test_trial_lineage_integrity.py::test_p02_two_seeds_retries_and_terminal_membership"},
+    {"scenario_id": "P03", "requirements": ("REQ-CR163-004", "REQ-CR163-006"), "feature_scope": ("FEAT-20", "FEAT-22"), "test_function": "tests/research/test_trial_lineage_integrity.py::test_p03_ten_identical_seals_and_valid_claim_ceiling"},
+    {"scenario_id": "N01", "requirements": ("REQ-CR163-001", "REQ-CR163-007"), "feature_scope": ("FEAT-20", "FEAT-21", "FEAT-22"), "test_function": "tests/research/test_trial_lineage_integrity.py::test_n01_absent_is_typed_unavailable_and_incomplete_is_blocked"},
+    {"scenario_id": "N02", "requirements": ("REQ-CR163-002", "REQ-CR163-007"), "feature_scope": ("FEAT-20", "FEAT-21"), "test_function": "tests/research/test_trial_lineage_integrity.py::test_n02_orphan_attempt_is_blocked"},
+    {"scenario_id": "B01", "requirements": ("REQ-CR163-003", "REQ-CR163-007"), "feature_scope": ("FEAT-20", "FEAT-21"), "test_function": "tests/research/test_trial_lineage_integrity.py::test_b01_declared_and_recomputed_count_mismatch_is_blocked"},
+    {"scenario_id": "B02", "requirements": ("REQ-CR163-006",), "feature_scope": ("FEAT-20", "FEAT-22"), "test_function": "tests/research/test_trial_lineage_integrity.py::test_b02_absent_invalid_and_manual_mismatch_never_overclaim"},
+    {"scenario_id": "F01", "requirements": ("REQ-CR163-002", "REQ-CR163-003"), "feature_scope": ("FEAT-20", "FEAT-21"), "test_function": "tests/research/test_trial_lineage_integrity.py::test_f01_terminal_classes_are_retained"},
+    {"scenario_id": "R01", "requirements": ("REQ-CR163-004", "REQ-CR163-007"), "feature_scope": ("FEAT-20",), "test_function": "tests/research/test_trial_lineage_integrity.py::test_r01_supersession_recovery_and_invalid_chains"},
+    {"scenario_id": "T01", "requirements": ("REQ-CR163-004", "REQ-CR163-006", "REQ-CR163-007"), "feature_scope": ("FEAT-20", "FEAT-22"), "test_function": "tests/research/test_trial_lineage_integrity.py::test_t01_five_negative_classes_are_target_bound_and_blocked"},
+    {"scenario_id": "A01", "requirements": ("REQ-CR163-008",), "feature_scope": ("FEAT-20", "FEAT-21", "FEAT-22", "FEAT-23"), "test_function": "tests/research/test_trial_lineage_authorization.py::test_synthetic_s01_s05_public_path_runs_under_thirteen_zero_sentinels"},
+    {"scenario_id": "G01", "requirements": ("REQ-CR163-006", "REQ-CR163-008"), "feature_scope": ("FEAT-22", "FEAT-23"), "test_function": "tests/research/test_trial_lineage_legacy_admission_regression.py::test_actual_and_synthetic_cr155_without_native_ledger_stay_blocked"},
 )
 CPI_IDS = frozenset(f"CPI-CR163-{index:03d}" for index in range(1, 5))
 CHAIN_IDS = frozenset(("public_stage3", "legacy_cr039"))
@@ -166,7 +166,7 @@ def test_p01_trace_and_producer_inventory_are_exact() -> None:
 
 def test_trace_wrong_or_deleted_function_reference_fails_closed() -> None:
     malformed = tuple(
-        {**item, "test_function": "tests/test_cr163_trial_lineage_integrity.py::deleted_test"}
+        {**item, "test_function": "tests/research/test_trial_lineage_integrity.py::deleted_test"}
         if item["scenario_id"] == "P01" else item
         for item in SCENARIO_TRACE
     )

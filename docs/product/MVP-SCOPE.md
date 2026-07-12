@@ -10,12 +10,13 @@
 | v0.4 | 2026-07-10 | host-orchestrator | CR162 补齐 CR161 evidence availability 产品范围、fail-closed ceiling、CR155 regression 和 deferred producers。 |
 | v0.5 | 2026-07-11 | meta-pm | CR163 增量追加 trial lineage MVP、冻结入口清单、量化验收、排除项与 deferred 统计/回填/real-runner 项。 |
 | v0.6 | 2026-07-11 | meta-pm | 回填 SGQ-A，归一化为 2 条 producer chains / 4 mappings，并明确 ExperimentFamilyManifest availability 与 C1 raw-input-only ceiling。 |
+| v0.7 | 2026-07-12 | meta-pm | 增量追加 CR164 四方法 MVP、方法充分性、量化 AC、保守聚合、effective-count ceiling、consumer compatibility 与 deferred 范围。 |
 
 ## 状态
 
 - 文档状态：draft
-- 关联 CR：`CR-157` / `CR-158` / `CR-160` / `CR-161` / `CR-162` / `CR-163`
-- 当前门禁：CR163 CP2 baseline pending
+- 关联 CR：`CR-157` / `CR-158` / `CR-160` / `CR-161` / `CR-162` / `CR-163` / `CR-164`
+- 当前门禁：CR164 CP3 已批准、CP4 PASS；5/5 LLD ready，等待 CP5 全量确认
 
 ## In Scope
 
@@ -47,6 +48,13 @@
 | MVP-CR163-004 | Deterministic seal and supersession | 同 fixture 10 次 seal 仅 1 个 hash；sealed 原地修改 0 次；纠错保留 version chain。 |
 | MVP-CR163-005 | Frozen P0 producer inventory | 2 条去重 producer chains、CPI-CR163-001..004 4/4 instrumentation mappings；excluded/N/A paths 100% 有理由。 |
 | MVP-CR163-006 | Existing-gate integration and negative regression | seal/completeness/ref/count/tamper 全通过才可 present；uninstrumented 为 typed_unavailable；invalid/tampered 为 blocked；仅 C1 raw-input-ready、C1 不可计算；CR155 仍 blocked。 |
+| MVP-CR164-001 | Four-method computable-evidence contract | BH、WRC/SPA、PBO/CSCV、DSR 4/4 均有 method/input/output/provenance/availability 合同。 |
+| MVP-CR164-002 | Validation-bound family/input identity | family/ref/hash/raw count 与 candidate/method inputs binding coverage 100%，count difference 0。 |
+| MVP-CR164-003 | Method-specific sufficiency | BH/WRC-SPA >=2 candidates；PBO >=4 candidates/4 valid splits；DSR >=2 trials/sample_length>=30；所有输入有限且非退化。 |
+| MVP-CR164-004 | Conservative method aggregation | claim-relevant mandatory methods 无 OR-pass；BH PASS + PBO FAIL 不得 clean PASS。 |
+| MVP-CR164-005 | Raw-count DSR / effective-count ceiling | `dsr_input_method=raw_trial_count` 为 CP3 schema 义务；effective count 仍 typed_unavailable 且不得 alias。 |
+| MVP-CR164-006 | Existing-consumer and compatibility projection | 复用 CR151/CR154/admission package；UC-58 implementation，UC-59/60 compatibility-only，consumer coverage 3/3。 |
+| MVP-CR164-007 | Deterministic fail-closed verification contract | 10 reruns -> 1 hash；negative fail-closed 100%；CR155 1/1 blocked；forbidden counters/overclaims 0。 |
 
 ## Out of Scope
 
@@ -69,6 +77,10 @@
 | CR163 historical lineage backfill | 不授权从历史产物推断并伪装成原生 instrumentation。 |
 | CR163 real ML/event runner instrumentation | 当前只有 fixture/static adapter compatibility；没有获授权 real runner。 |
 | CR163 real data/runtime/external writes | 不访问 lake/NAS/provider/credentials，不运行 simulation/paper/live/trading/broker，不写 remote/publish/catalog pointer。 |
+| CR164 effective-trial estimator | SGQ 已确认不在 MVP；不得从 raw count 推导或别名。 |
+| CR164 UC-59 ML / UC-60 event adapter implementation | 当前只保证 contract compatibility；不训练模型、不接 event feed、不新增 real runner。 |
+| CR164 real statistical batch / historical recomputation | CP2 只冻结产品合同；不执行真实研究、历史 p-value/return/split 回填或数据迁移。 |
+| CR164 external bootstrap framework run | WRC/SPA 参数在 CP3 设计；当前不安装或运行外部实现。 |
 
 ## Deferred
 
@@ -82,6 +94,9 @@
 | DF-CR163-001 | Effective-trial/statistical correction producer | raw lineage 稳定后另起 CR，冻结方法与独立验证。 |
 | DF-CR163-002 | Historical lineage backfill | 仅在独立数据/审计授权和 provenance 语义确认后重启。 |
 | DF-CR163-003 | Real ML/event runner instrumentation | real runner 与 runtime/data authorization 同时具备后重启。 |
+| DF-CR164-001 | Effective-trial estimator / multiplicity model | 独立方法 CR 冻结 estimator 假设、偏差、上下界和 verifier 后重启。 |
+| DF-CR164-002 | Real ML/event computable-evidence adapters | real runners、同等 lineage contract 与 runtime/data authorization 全部具备后重启。 |
+| DF-CR164-003 | Real research recomputation / historical evidence migration | 独立 data/runtime/audit gate 批准，且 inferred provenance 不伪装为 native evidence。 |
 
 ## Promoted to CR158
 

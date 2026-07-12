@@ -1,11 +1,11 @@
 ---
 status: draft
-version: "0.7"
+version: "0.8"
 confirmed_by: ""
 confirmed_at: ""
 engagement_mode: production
 scenario_subject_type: target-artifact
-scenario_subject_id: "CR-163"
+scenario_subject_id: "CR-164"
 target_artifact_type: workflow
 governance_mode: review-gated
 review_policy: strict
@@ -13,7 +13,7 @@ delivery_routing:
   mode: project-readme-contract
   output_root: "docs/product"
   source: docs
-total_use_cases: 6
+total_use_cases: 7
 ---
 
 # Product Use Cases
@@ -29,12 +29,13 @@ total_use_cases: 6
 | v0.5 | 2026-07-10 | host-orchestrator | CR162 补齐 CR161 strategy-admission evidence availability 用例；保留 CR161 closed 历史，仅刷新当前产品基线。 |
 | v0.6 | 2026-07-11 | meta-pm | CR163 增量追加 experiment-family trial lineage instrumentation 用例、候选生产入口清单、count / availability 语义和 SGQ 待确认项；保留既有 CR157-CR162 基线。 |
 | v0.7 | 2026-07-11 | meta-pm | 回填 SGQ-CR163-001..004 全部选择 A；将 inventory 统一表述为“2 条去重 producer chains / 4 个 instrumentation mappings”，并收紧 C1 raw-lineage claim ceiling。 |
+| v0.8 | 2026-07-12 | meta-pm | CR164 增量追加 multiple-testing / WRC-SPA / PBO-CSCV / DSR 可计算证据旅程、fail-closed 语义及 UC-59/UC-60 compatibility 边界；回填 SGQ-CR164-001..004 全部确认强化推荐 A。 |
 
 ## 状态
 
 - 文档状态：draft
-- 关联 CR：`CR-157` / `CR-158` / `CR-160` / `CR-161` / `CR-162` / `CR-163`
-- 当前门禁：CR163 CP2 requirement / scenario / scope baseline pending
+- 关联 CR：`CR-157` / `CR-158` / `CR-160` / `CR-161` / `CR-162` / `CR-163` / `CR-164`
+- 当前门禁：CR164 CP3 已批准、CP4 PASS；5/5 LLD ready，等待 CP5 全量确认
 - 旧基线保留：当前仓库未发现既有 `docs/product/USE-CASES.md`，本文件作为产品层用例入口；既有组件说明和场景文档不被重写。
 
 ## UC-58 多因子策略研究到准入
@@ -243,3 +244,79 @@ Availability ceiling：未来原生 instrumented run 只有在 seal、completene
 | DF-CR163-001 | effective trial count 与独立 statistical correction producer | deferred | family lineage 已稳定，另起 CR 明确方法、输入与独立验证。 |
 | DF-CR163-002 | 历史 research run lineage backfill | deferred / not authorized | 独立审计与数据授权明确，且不会把推断记录伪装为原生 instrumentation。 |
 | DF-CR163-003 | real ML / event candidate runner instrumentation | deferred | real runner 存在并通过独立 runtime/data authorization；当前只保留 contract compatibility。 |
+
+## UC-58-CR164 Computable Multiple-Testing and Backtest-Overfitting Evidence
+
+| 字段 | 内容 |
+|---|---|
+| 用例 ID | UC-58-CR164 |
+| 名称 | Computable multiple-testing / data-snooping / PBO / DSR evidence |
+| 主要用户 | 量化研究负责人、策略研究员、准入审查者、独立验证者、框架维护者 |
+| 触发条件 | CR163 已提供 sealed、validation-bound experiment-family lineage 与 `raw_trial_count`，但 CR161/CR154 的 FDR/BH、WRC/SPA、PBO/CSCV、DSR 与 effective-trial slots 仍缺少可计算 provenance。 |
+| 输入 | 可信绑定的 family lineage ref/hash/raw count；完整且有限的候选级指标或 p-values；方法所需的对齐 return path、split/fold、样本长度、Sharpe、偏度、峰度与 provenance refs。 |
+| 处理逻辑 | 先做 lineage、完整性、有限值、样本/候选/split 充分性 precheck；只对输入充分的方法确定性计算；逐方法输出 present / typed_unavailable / blocked；再按 claim 类型和方法冲突规则投影到既有 CR151/CR154/admission consumers。 |
+| 输出 / 结果 | 方法级计算证据、输入/方法/参数/provenance refs、确定性摘要、不可用或阻断原因，以及不会提高原有失败状态的 admission projection。 |
+| 前置条件 | CP2 冻结方法集与定量充分性，CP3 冻结 schema/模块/算法选择，CP5 批准全部设计证据；本阶段只形成产品基线。 |
+| 排除情况 | 不执行真实统计批次、不读取 production/lake/NAS/provider/credential、不调用外部框架、不交易、不发布、不远端写；不重建 CR155 历史输入。 |
+| 成功标准 | 同一规范化 fixture 重复计算 10 次得到 1 个稳定结果摘要；每个选定方法的 required-input 覆盖 100%；NaN/Inf/退化/低样本/缺 lineage/hash mismatch 100% typed_unavailable 或 blocked；CR155 1/1 保持 blocked；禁止操作计数全部为 0。 |
+
+### CR164 用户旅程
+
+| 步骤 | 用户意图 | 系统行为 | 成功标准 |
+|---|---|---|---|
+| 1 | 确认同一实验族与候选集合 | 校验 CR163 lineage availability、ref/hash、raw count 与候选级输入 membership 一致。 | 只有 sealed 且 validation-bound 的完整 family 可进入计算；缺失为 typed_unavailable，冲突或篡改为 blocked。 |
+| 2 | 获得多重检验与 data-snooping 控制 | 对完整有限输入按已批准方法计算 BH 与 WRC/SPA，记录方法、参数、输入摘要和 provenance。 | 方法结果可复跑；缺少 claim-relevant 方法时不得输出 statistical-significance PASS。 |
+| 3 | 量化回测过拟合风险 | 对满足候选、return-path 和 split 充分性的 family 计算 PBO/CSCV。 | split 数、训练/测试观察与 loss ranking 完整；不充分时 fail-closed。 |
+| 4 | 对 Sharpe/IC 声明做 deflation | 在批准的 trial-count 边界和有限矩输入上计算 DSR 或保持 typed_unavailable。 | 不以 raw count 冒充 effective count；当前 consumer 要求 effective count而未提供时，deflated-performance wording 保持 blocked。 |
+| 5 | 解释部分可用与方法冲突 | 逐方法保留结果，并用最保守 claim projection 合并。 | 任一 mandatory 方法 blocked 则相关 claim blocked；FAIL 不因另一方法 PASS 而提升；冲突进入 needs_review 或 blocked，不做 OR-pass。 |
+| 6 | 复用既有 admission consumers | 将证据 refs 投影到 CR151 statistical gate、CR154 Gate 1 与 admission package。 | 不创建竞争 gate；原状态只能保持或恶化，CR155 仍 blocked。 |
+
+### CR164 Scenario Gray Areas 与 Relay SGQ
+
+**讨论日志**：`process/discussions/CP2-CR164-SCENARIO-DISCUSSION-LOG.md`
+**恢复点**：`process/checks/CP2-CR164-DISCUSSION-CHECKPOINT.json`
+
+| 灰区 ID | 问题 | 为什么重要 | 影响面 | 推荐 | 状态 |
+|---|---|---|---|---|---|
+| SGA-CR164-001 | MVP 是 BH-only，还是同时覆盖 WRC/SPA、PBO/CSCV 与 DSR？ | 决定 C1 claim ceiling、输入面、验证矩阵与交付价值。 | scope / complexity / validation / gate | A：四类方法均纳入，逐方法 fail-closed，claim-relevant mandatory methods 无 OR-pass。 | confirmed-A |
+| SGA-CR164-002 | effective trial count 是否在同一切片计算？ | 当前 CR163 明确禁止 effective count，CR154 对部分 deflated claims 又要求它。 | scope / methodology / claim ceiling / maintenance | A：MVP 保持 typed_unavailable；DSR 显式声明 raw-count input 且不别名 effective count。 | confirmed-A |
+| SGA-CR164-003 | 各方法的最小候选、split/fold 与样本阈值是多少？ | 没有可量化下限会把退化或低信息输入误报为可计算。 | validation / risk / user value | A：采用方法特定保守最低线并冻结 consolidated quantitative AC。 | confirmed-A |
+| SGA-CR164-004 | UC-59 ML / UC-60 event 是当前实现对象还是 compatibility consumer？ | 决定 adapter scope 与 cross-strategy schema 负担。 | scope / compatibility / story planning | A：UC-58 实现，UC-59/60 compatibility-only。 | confirmed-A |
+
+### CR164 用户可见场景确认证据
+
+| Question ID | 选项 | 推荐 | 用户回答 | 复述确认 | 状态 |
+|---|---|---|---|---|---|
+| SGQ-CR164-001 | A 四类方法 + conservative aggregation；B BH-only；C defer WRC/SPA | A | `批准，继续推进项目` | 四类方法均纳入；BH PASS + PBO FAIL 不得产生 clean PASS。 | confirmed |
+| SGQ-CR164-002 | A raw-count DSR/effective unavailable；B compute effective；C defer DSR | A | `批准，继续推进项目` | CP3 必须声明 `dsr_input_method=raw_trial_count`，不得别名 effective count。 | confirmed |
+| SGQ-CR164-003 | A 方法特定阈值 + consolidated AC；B stricter floor；C defer to CP3 | A | `批准，继续推进项目` | 采用 A 的 minima 与 10 行量化验收表。 | confirmed |
+| SGQ-CR164-004 | A UC-58 implementation / UC-59/60 compatibility；B adapters in scope；C no compatibility | A | `批准，继续推进项目` | UC-59/60 缺同等输入时 fail-closed。 | confirmed |
+
+Canonical answer：`process/context/CR164-CP2-SGQ-BATCH.yaml`。该回答不是 CP2 formal gate approval。
+
+### CR164 Compatibility Boundary
+
+- `UC-58` 是当前候选实现主体。
+- `UC-59` ML 与 `UC-60` event 只要求消费同一证据 availability/ref/blocked 语义；未提供相同 sealed-family 与方法输入时必须 fail-closed。
+- compatibility 不授权 real model training、event feed、provider、registry、runtime 或外部数据访问，也不要求本轮实现新的 ML/event runner。
+
+### CR164 八维覆盖扫描
+
+| 维度 | 状态 | CR164 覆盖 |
+|---|---|---|
+| 用户 | 已覆盖 | 研究负责人、研究员、准入审查者、独立验证者、维护者。 |
+| 任务 | 已覆盖 | lineage/input precheck、四类方法证据、冲突投影、consumer integration。 |
+| 动机 | 已覆盖 | 防止多重检验、data snooping 与 backtest overfit 被误报为 clean admission。 |
+| 时间 | 已覆盖 | family sealed 后、admission projection 前；CP2/CP3/CP5 gate 顺序明确。 |
+| 环境 | 已覆盖 | 本地 fixture/static；真实 data/runtime 明确不授权。 |
+| 方式 | 已覆盖 | 确定性、provenance-bound、逐方法 availability 与 conservative aggregation。 |
+| 异常 | 已覆盖 | 缺失、低充分性、NaN/Inf/退化、方法冲突、hash mismatch、CR155 regression。 |
+| 集成 | 已覆盖 | CR151、CR154、admission package 以及 UC-59/60 compatibility。 |
+
+## CR164 Deferred Ideas
+
+| ID | 内容 | 状态 | 重启条件 |
+|---|---|---|---|
+| DF-CR164-001 | effective-trial estimator / multiplicity model | deferred-confirmed | 独立方法、偏差假设、估计上下界和 verifier 已在后续 CR 获批。 |
+| DF-CR164-002 | real ML/event statistical-evidence adapters | deferred | real runners 与 runtime/data authorization 存在，且 compatibility contract 已经验证稳定。 |
+| DF-CR164-003 | 真实研究批量重算与历史证据迁移 | not-authorized | 独立 data/runtime/audit gate 批准，且 provenance 不被回填伪装。 |

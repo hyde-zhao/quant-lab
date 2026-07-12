@@ -429,6 +429,8 @@ def check_project(project_root: Path) -> list[str]:
     failures: list[str] = []
     state_path = project_root / "process/STATE.md"
     index_path = project_root / "process/changes/CR-INDEX.json"
+    if not index_path.exists():
+        index_path = project_root / "process/changes/CR-INDEX.yaml"
     tracking_path = project_root / "process/changes/CR-019-FOLLOW-UP-TRACKING-2026-05-31.md"
     cr019_path = project_root / "process/changes/CR-019-STAGE6-MULTIFACTOR-SIMULATION-ARCHITECTURE-2026-05-30.md"
     cr025_path = project_root / "process/changes/CR-025-BACKTRADER-OPTIONAL-EXECUTION-BACKEND-HARDENING-2026-05-31.md"
@@ -790,7 +792,15 @@ def check_project(project_root: Path) -> list[str]:
     require("STALE-CR019-ACTIVE-CHANGE" in state_text, "STATE.md 缺少 STALE-CR019-ACTIVE-CHANGE 审计记录", failures)
     require("STALE-CR019-ACTIVE-CHANGE" in index_text, "CR-INDEX.json 缺少 STALE-CR019-ACTIVE-CHANGE 审计记录", failures)
     require('status: "resolved"' in state_text, "STATE.md 未将 STALE-CR019-ACTIVE-CHANGE 标记 resolved", failures)
-    require('status: "resolved"' in index_text, "CR-INDEX.json 未将 STALE-CR019-ACTIVE-CHANGE 标记 resolved", failures)
+    index_stale_resolved = (
+        any(
+            item.get("id") == "STALE-CR019-ACTIVE-CHANGE" and item.get("status") == "resolved"
+            for item in index_data.get("stale_status_conflicts", [])
+        )
+        if index_data is not None
+        else 'status: "resolved"' in index_text
+    )
+    require(index_stale_resolved, "CR-INDEX.json 未将 STALE-CR019-ACTIVE-CHANGE 标记 resolved", failures)
     require("SYNC-CR029-RELATED-ACTIVE" in state_text, "STATE.md 缺少 SYNC-CR029-RELATED-ACTIVE 记录", failures)
     require("SYNC-CR029-RELATED-ACTIVE" in index_text, "CR-INDEX.json 缺少 SYNC-CR029-RELATED-ACTIVE 记录", failures)
 

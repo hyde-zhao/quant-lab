@@ -41,6 +41,7 @@ MF_ADMISSION_ML_GATE_BLOCKED = "MF_ADMISSION_ML_GATE_BLOCKED"
 MF_ADMISSION_EVENT_GATE_BLOCKED = "MF_ADMISSION_EVENT_GATE_BLOCKED"
 MF_ADMISSION_CROSS_STRATEGY_RELIABILITY_BLOCKED = "MF_ADMISSION_CROSS_STRATEGY_RELIABILITY_BLOCKED"
 MF_ADMISSION_FAMILY_LINEAGE_BLOCKED = "MF_ADMISSION_FAMILY_LINEAGE_BLOCKED"
+MF_ADMISSION_COMPUTABLE_STATISTICAL_EVIDENCE_BLOCKED = "MF_ADMISSION_COMPUTABLE_STATISTICAL_EVIDENCE_BLOCKED"
 
 NOT_AUTHORIZED_COUNTER_FIELDS = (
     "qmt_api_call",
@@ -597,6 +598,67 @@ def attach_family_lineage_to_admission_package(
         "not_broker_order",
     ):
         payload[field_name] = bool(payload.get(field_name, True))
+    return _json_safe(payload)
+
+
+def attach_computable_statistical_evidence(
+    package: StrategyAdmissionPackage | Mapping[str, Any],
+    summary: Any,
+) -> dict[str, Any]:
+    """Attach trusted CR164 summary using worst-state merge; never authorize runtime."""
+
+    from engine.statistical_evidence import EvidenceStatus, StatisticalEvidenceSummary, project_summary
+
+    payload = to_jsonable_admission_package(package)
+    trusted = isinstance(summary, StatisticalEvidenceSummary)
+    if trusted:
+        projection = project_summary(summary, consumer_id="strategy-admission-package")
+        mapped = {
+            EvidenceStatus.PASS: AdmissionStatus.PASS,
+            EvidenceStatus.FAIL: AdmissionStatus.FAIL,
+            EvidenceStatus.TYPED_UNAVAILABLE: AdmissionStatus.BLOCKED,
+            EvidenceStatus.BLOCKED: AdmissionStatus.BLOCKED,
+        }[summary.status]
+    else:
+        projection = {
+            "schema_version": "statistical_evidence_v1",
+            "consumer_id": "strategy-admission-package",
+            "status": EvidenceStatus.BLOCKED.value,
+            "reason_codes": ["statistical_summary_untrusted_or_unavailable"],
+            "effective_trial_count": None,
+            "effective_trial_count_ref": "",
+            "effective_trial_count_method": "",
+            "effective_trial_count_availability": EvidenceStatus.TYPED_UNAVAILABLE.value,
+        }
+        mapped = AdmissionStatus.BLOCKED
+    status_field = "package_status" if "package_status" in payload and "paper_candidate" in payload else "admission_status"
+    current = _admission_status_from_value(payload.get(status_field))
+    combined = _worse_admission_status(current, mapped)
+    payload[status_field] = combined.value.upper() if status_field == "package_status" else combined.value
+    if status_field == "package_status" and combined is not AdmissionStatus.PASS:
+        payload["paper_candidate"] = False
+    payload["computable_statistical_evidence"] = projection
+    evidence_refs = list(_as_sequence(payload.get("evidence_refs")))
+    for ref in _as_sequence(projection.get("method_evidence_refs")):
+        if str(ref) and str(ref) not in evidence_refs:
+            evidence_refs.append(str(ref))
+    payload["evidence_refs"] = tuple(str(item) for item in evidence_refs if str(item))
+    limitations = list(_as_sequence(payload.get("limitations")))
+    limitations.extend(("effective_trial_count_unavailable", "statistical_evidence_not_runtime_authorization"))
+    payload["limitations"] = tuple(dict.fromkeys(str(item) for item in limitations if str(item)))
+    if mapped is not AdmissionStatus.PASS:
+        reasons = list(_as_sequence(payload.get("blocked_reasons")))
+        reasons.append(
+            AdmissionBlockedReason(
+                code=MF_ADMISSION_COMPUTABLE_STATISTICAL_EVIDENCE_BLOCKED,
+                message="CR164 computable statistical evidence is not fully PASS.",
+                source="computable_statistical_evidence",
+                field="status",
+                unlock_condition="provide_all_mandatory_validated_CR164_method_evidence",
+                evidence_ref=str(projection.get("summary_hash") or ""),
+            ).to_dict()
+        )
+        payload["blocked_reasons"] = tuple(_dedupe_reason_payloads(reasons))
     return _json_safe(payload)
 
 

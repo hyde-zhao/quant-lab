@@ -1871,3 +1871,66 @@ items:
     provenance:
       -
         cr: CR-145
+  tests/research/test_statistical_evidence_contracts.py:
+    domains: [research]
+    old_paths: []
+    introduced_by: CR-164
+    provenance: [{cr: CR-164, story: CR164-S01}]
+  tests/research/test_multiple_testing_evidence.py:
+    domains: [research]
+    old_paths: []
+    introduced_by: CR-164
+    provenance: [{cr: CR-164, story: CR164-S02}]
+  tests/research/test_overfit_evidence.py:
+    domains: [research]
+    old_paths: []
+    introduced_by: CR-164
+    provenance: [{cr: CR-164, story: CR164-S03}]
+  tests/research/test_statistical_evidence_projection.py:
+    domains: [research]
+    old_paths: []
+    introduced_by: CR-164
+    provenance: [{cr: CR-164, story: CR164-S04}]
+  tests/research/test_statistical_evidence_qac.py:
+    domains: [research]
+    old_paths: []
+    introduced_by: CR-164
+    provenance: [{cr: CR-164, story: CR164-S05}]
+  tests/research/test_statistical_evidence_authorization.py:
+    domains: [research]
+    old_paths: []
+    introduced_by: CR-164
+    provenance: [{cr: CR-164, story: CR164-S05}]
+  tests/research/test_statistical_evidence_cr155_regression.py:
+    domains: [research]
+    old_paths: []
+    introduced_by: CR-164
+    provenance: [{cr: CR-164, story: CR164-S05}]
+  tests/research/test_trial_lineage_admission_projection.py:
+    domains: [research]
+    old_paths: [tests/test_cr163_trial_lineage_admission_projection.py]
+    provenance: [{cr: CR-163}]
+  tests/research/test_trial_lineage_authorization.py:
+    domains: [research]
+    old_paths: [tests/test_cr163_trial_lineage_authorization.py]
+    provenance: [{cr: CR-163}]
+  tests/research/test_trial_lineage_legacy_admission_regression.py:
+    domains: [research]
+    old_paths: [tests/test_cr163_trial_lineage_cr155_regression.py]
+    provenance: [{cr: CR-163}]
+  tests/research/test_trial_lineage_integrity.py:
+    domains: [research]
+    old_paths: [tests/test_cr163_trial_lineage_integrity.py]
+    provenance: [{cr: CR-163}]
+  tests/research/test_trial_lineage_producer_adapters.py:
+    domains: [research]
+    old_paths: [tests/test_cr163_trial_lineage_producer_adapters.py]
+    provenance: [{cr: CR-163}]
+  tests/research/test_experiment_family_lineage_contracts.py:
+    domains: [research]
+    old_paths: [tests/test_experiment_family_lineage_contracts.py]
+    provenance: [{cr: CR-163}]
+  tests/research/test_experiment_family_lineage_store.py:
+    domains: [research]
+    old_paths: [tests/test_experiment_family_lineage_store.py]
+    provenance: [{cr: CR-163}]

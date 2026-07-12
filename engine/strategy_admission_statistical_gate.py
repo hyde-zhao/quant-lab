@@ -632,3 +632,52 @@ def _issue(code: str, field: str, message: str) -> StatisticalValidationIssue:
 
 def _fail_issue(code: str, field: str, message: str) -> StatisticalValidationIssue:
     return StatisticalValidationIssue(code=code, severity="fail", message=message, field=field)
+
+
+def consume_computable_statistical_evidence(summary: Any) -> dict[str, Any]:
+    """Project a trusted CR164 summary into the existing CR151 status surface.
+
+    Serialized mappings are retained only as blocked diagnostics; positive
+    truth requires the local immutable ``StatisticalEvidenceSummary`` value.
+    """
+
+    from engine.statistical_evidence import EvidenceStatus, StatisticalEvidenceSummary, project_summary
+
+    trusted = isinstance(summary, StatisticalEvidenceSummary)
+    if trusted:
+        projection = project_summary(summary, consumer_id="cr151-statistical-gate")
+    elif isinstance(summary, Mapping):
+        projection = {
+            "schema_version": "statistical_evidence_v1",
+            "consumer_id": "cr151-statistical-gate",
+            "status": EvidenceStatus.BLOCKED.value,
+            "summary_hash": str(summary.get("summary_hash") or ""),
+            "reason_codes": ["serialized_statistical_summary_untrusted"],
+            "limitations": ["positive_evidence_requires_local_validated_summary"],
+            "effective_trial_count": None,
+            "effective_trial_count_ref": "",
+            "effective_trial_count_method": "",
+            "effective_trial_count_availability": EvidenceStatus.TYPED_UNAVAILABLE.value,
+        }
+    else:
+        projection = {
+            "schema_version": "statistical_evidence_v1",
+            "consumer_id": "cr151-statistical-gate",
+            "status": EvidenceStatus.TYPED_UNAVAILABLE.value,
+            "summary_hash": "",
+            "reason_codes": ["computable_statistical_evidence_unavailable"],
+            "limitations": ["no_computable_statistical_summary"],
+            "effective_trial_count": None,
+            "effective_trial_count_ref": "",
+            "effective_trial_count_method": "",
+            "effective_trial_count_availability": EvidenceStatus.TYPED_UNAVAILABLE.value,
+        }
+    mapping = {
+        EvidenceStatus.PASS.value: StatisticalGateStatus.PASS.value,
+        EvidenceStatus.FAIL.value: StatisticalGateStatus.FAIL.value,
+        EvidenceStatus.TYPED_UNAVAILABLE.value: StatisticalGateStatus.BLOCKED.value,
+        EvidenceStatus.BLOCKED.value: StatisticalGateStatus.BLOCKED.value,
+    }
+    projection["statistical_gate_status"] = mapping[str(projection["status"])]
+    projection["trusted_local_summary"] = trusted
+    return dict(json_safe(projection))

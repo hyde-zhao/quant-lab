@@ -1,8 +1,8 @@
 schema_version: 1
-version: "0.7"
+version: "0.8"
 status: draft
-cr_id: CR-163
-updated_at: "2026-07-11T11:30:00+08:00"
+cr_id: CR-164
+updated_at: "2026-07-12T18:20:00+08:00"
 source_requirements:
   - docs/product/REQUIREMENTS.md
 source_use_cases:
@@ -36,6 +36,10 @@ revision_record:
     date: "2026-07-11"
     author: meta-pm
     summary: "Record SGQ option-A confirmation, normalize inventory to four mappings across two deduplicated producer chains, and tighten ExperimentFamilyManifest/C1 availability ceilings."
+  - version: v0.8
+    date: "2026-07-12"
+    author: meta-pm
+    summary: "Add thirteen CR164 positive, negative, boundary, permission, recovery, tamper, compatibility, regression and precheck scenarios after SGQ-CR164-001..004 option-A confirmation."
 scenarios:
   - id: SC-CR157-P01
     title: "Build mature admission package from complete research refs"
@@ -435,13 +439,118 @@ scenarios:
     use_case_refs: [UC-58-CR163]
     steps: ["Consume existing CR155 evidence refs only.", "Expose CR163 lineage availability contract without reconstructing history.", "Evaluate existing admission path."]
     expected: ["CR155 remains blocked.", "No historical lineage is synthesized.", "No unavailable evidence is promoted to pass."]
+  - id: SC-CR164-P01
+    title: "Compute all approved method evidence from one complete sealed family"
+    type: positive
+    priority: P0
+    requirement_refs: [REQ-CR164-001, REQ-CR164-002, REQ-CR164-003, REQ-CR164-004]
+    use_case_refs: [UC-58-CR164]
+    preconditions: ["Trusted CR163 lineage is present and validation-bound.", "All candidate metrics, p-values, aligned returns, splits and DSR moments are finite and sufficient."]
+    steps: ["Bind all inputs to one family ref/hash/raw count.", "Produce BH, WRC/SPA, PBO/CSCV and DSR method evidence.", "Validate required fields and provenance."]
+    expected: ["Selected-method required-input coverage is 100%.", "All four method evidences retain method/version/parameter/provenance refs.", "No method uses an input from a different family."]
+  - id: SC-CR164-P02
+    title: "Deterministic evidence projects to existing consumers"
+    type: positive
+    priority: P0
+    requirement_refs: [REQ-CR164-005, REQ-CR164-007]
+    use_case_refs: [UC-58-CR164]
+    steps: ["Evaluate the same normalized fixture ten times.", "Project method refs to CR151, CR154 Gate 1 and the admission package."]
+    expected: ["Ten runs produce one summary hash.", "Existing-consumer projection paths are complete.", "No competing admission gate is created and authorization flags do not change."]
+  - id: SC-CR164-N01
+    title: "Missing or partial family inputs fail closed per method"
+    type: negative
+    priority: P0
+    requirement_refs: [REQ-CR164-002, REQ-CR164-003, REQ-CR164-004]
+    use_case_refs: [UC-58-CR164]
+    steps: ["Remove lineage, one candidate p-value, one return path or one split side in separate fixtures.", "Attempt method computation and projection."]
+    expected: ["Missing lineage/input is typed_unavailable when not contradictory.", "Partial or inconsistent membership is blocked.", "No present evidence or clean claim is emitted."]
+  - id: SC-CR164-N02
+    title: "Method disagreement uses conservative no-OR-pass semantics"
+    type: negative
+    priority: P0
+    requirement_refs: [REQ-CR164-001, REQ-CR164-006, REQ-CR164-007]
+    use_case_refs: [UC-58-CR164]
+    steps: ["Provide BH PASS with PBO FAIL.", "Provide PBO PASS with DSR typed_unavailable.", "Project final claim status."]
+    expected: ["BH PASS plus PBO FAIL is not clean PASS.", "A mandatory unavailable/blocked method blocks its claim.", "Individual method results and reason refs remain visible."]
+  - id: SC-CR164-B01
+    title: "Method sufficiency thresholds are inclusive and fail closed below the floor"
+    type: boundary
+    priority: P0
+    requirement_refs: [REQ-CR164-004]
+    use_case_refs: [UC-58-CR164]
+    steps: ["Evaluate fixtures exactly at 2 BH/WRC candidates, 4 PBO candidates and 4 valid splits, and DSR 2 trials/sample_length 30.", "Evaluate one-below-threshold variants."]
+    expected: ["At-threshold finite non-degenerate fixtures pass sufficiency precheck.", "Every below-threshold fixture is typed_unavailable or blocked.", "No threshold is silently lowered."]
+  - id: SC-CR164-B02
+    title: "DSR raw-count input never aliases effective trial count"
+    type: boundary
+    priority: P0
+    requirement_refs: [REQ-CR164-008]
+    use_case_refs: [UC-58-CR164]
+    steps: ["Provide sealed raw trial count and sufficient DSR inputs.", "Inspect DSR input metadata and Gate-1 trial-count projection."]
+    expected: ["DSR input declares dsr_input_method=raw_trial_count with lineage provenance.", "effective_trial_count remains typed_unavailable with empty ref/method.", "Claims requiring effective count remain blocked."]
+  - id: SC-CR164-F01
+    title: "Corrected complete inputs recover without overwriting prior failure evidence"
+    type: failure-recovery
+    priority: P0
+    requirement_refs: [REQ-CR164-002, REQ-CR164-003, REQ-CR164-005]
+    use_case_refs: [UC-58-CR164]
+    steps: ["Record a blocked result for incomplete input.", "Provide a corrected validation-bound input set.", "Recompute as a new evidence version."]
+    expected: ["Prior blocked evidence remains auditable.", "New evidence links corrected provenance.", "Recovery does not mutate or erase the prior result."]
+  - id: SC-CR164-T01
+    title: "NaN Inf and degenerate numerical inputs fail closed"
+    type: negative
+    priority: P0
+    requirement_refs: [REQ-CR164-004, REQ-CR164-005]
+    use_case_refs: [UC-58-CR164]
+    steps: ["Inject NaN, Inf, zero variance, probability outside [0,1], negative count and length mismatch fixtures.", "Run static input validation."]
+    expected: ["All six negative classes fail closed.", "No non-finite value appears in present evidence.", "Blocked reasons identify the invalid field."]
+  - id: SC-CR164-H01
+    title: "Family hash count or membership mismatch is blocked"
+    type: negative
+    priority: P0
+    requirement_refs: [REQ-CR164-002, REQ-CR164-005]
+    use_case_refs: [UC-58-CR164]
+    steps: ["Change family hash, raw count or method candidate membership without a valid supersession.", "Attempt evidence production."]
+    expected: ["Each mismatch is blocked.", "candidate/raw-ledger/method-input count difference must be 0.", "No manual count is accepted as provenance."]
+  - id: SC-CR164-A01
+    title: "Unauthorized runtime data or external operations remain denied"
+    type: permission
+    priority: P0
+    requirement_refs: [REQ-CR164-009]
+    use_case_refs: [UC-58-CR164]
+    steps: ["Inspect all forbidden operation counters.", "Set one counter non-zero in a negative fixture."]
+    expected: ["Normal fixture counters are all 0.", "Any non-zero counter blocks.", "No real operation is executed."]
+  - id: SC-CR164-G01
+    title: "CR155 remains blocked without reconstructed statistical inputs"
+    type: negative-regression
+    priority: P0
+    requirement_refs: [REQ-CR164-006, REQ-CR164-009]
+    use_case_refs: [UC-58-CR164]
+    steps: ["Consume existing CR155 evidence refs only.", "Do not synthesize p-values, returns, splits or effective counts.", "Project CR164 availability semantics."]
+    expected: ["CR155 remains blocked 1/1.", "No historical input is reconstructed.", "No new method PASS is fabricated."]
+  - id: SC-CR164-C01
+    title: "ML and event consumers remain compatibility-only and fail closed"
+    type: compatibility
+    priority: P0
+    requirement_refs: [REQ-CR164-007, REQ-CR164-009]
+    use_case_refs: [UC-58-CR164, UC-59, UC-60]
+    steps: ["Project the CR164 evidence contract to multifactor, ML and event consumer shapes.", "Omit sealed-family/statistical inputs from ML and event fixtures."]
+    expected: ["Consumer coverage is 3/3.", "UC-59/60 remain compatibility-only, not implementation scope.", "Missing equivalent inputs fail closed without real training/feed access."]
+  - id: SC-CR164-Q01
+    title: "Checkpoint sequence blocks design and implementation shortcuts"
+    type: precheck
+    priority: P0
+    requirement_refs: [REQ-CR164-001, REQ-CR164-009]
+    use_case_refs: [UC-58-CR164]
+    steps: ["Attempt solution-design before CP2 approval.", "Attempt source/test implementation before CP5 approval.", "Inspect requested runtime/data authorization."]
+    expected: ["Pre-CP2 design routing is blocked.", "Pre-CP5 implementation is blocked.", "Runtime/data/external authorization remains denied at every product/design gate."]
 coverage_summary:
-  total: 35
-  p0_total: 33
-  p0_with_planned_coverage: 33
+  total: 48
+  p0_total: 46
+  p0_with_planned_coverage: 46
   high_priority_positive_and_negative_covered: true
-  source_requirements_total: 34
-  source_use_cases_total: 6
+  source_requirements_total: 43
+  source_use_cases_total: 7
   gaps:
     - id: GAP-CR157-001
       status: resolved_by_CR157_CP2_and_promoted_CR158
@@ -458,3 +567,6 @@ coverage_summary:
     - id: GAP-CR163-001
       status: resolved_by_user_confirmation_A_2026-07-11
       description: "SGQ-CR163-001..004 are confirmed as option A: 2 deduplicated producer chains / 4 mappings, append-only count semantics, effective count unavailable and immutable supersession. Formal CP2 remains host-owned and unopened."
+    - id: GAP-CR164-001
+      status: resolved_by_user_confirmation_A_2026-07-12
+      description: "SGQ-CR164-001..004 confirmed the four-method MVP, raw-count DSR/effective-count ceiling, quantitative sufficiency/QAC and UC-59/60 compatibility-only scope; CP3 method-design obligations remain non-blocking."

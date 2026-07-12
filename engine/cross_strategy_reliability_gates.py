@@ -1060,6 +1060,56 @@ def _status_value(value: Any) -> str:
     return ReliabilityGateStatus.BLOCKED.value
 
 
+def project_computable_statistical_evidence(summary: Any) -> dict[str, Any]:
+    """Map CR164 evidence into existing Gate-1 artifact slots without a new gate."""
+
+    from engine.statistical_evidence import EvidenceStatus, StatisticalEvidenceSummary, project_summary
+
+    if not isinstance(summary, StatisticalEvidenceSummary):
+        return {
+            "status": ReliabilityGateStatus.BLOCKED.value,
+            "artifacts": {},
+            "blocked_claims": ("computable_statistical_summary_untrusted_or_unavailable",),
+            "effective_trial_count_availability": EvidenceStatus.TYPED_UNAVAILABLE.value,
+        }
+    projection = project_summary(summary, consumer_id="cr154-cross-strategy-reliability")
+    refs_by_method = {item.method.value: item.evidence_ref for item in summary.method_evidences}
+    status = {
+        EvidenceStatus.PASS: ReliabilityGateStatus.PASS.value,
+        EvidenceStatus.FAIL: ReliabilityGateStatus.FAIL.value,
+        EvidenceStatus.TYPED_UNAVAILABLE: ReliabilityGateStatus.BLOCKED.value,
+        EvidenceStatus.BLOCKED: ReliabilityGateStatus.BLOCKED.value,
+    }[summary.status]
+    return dict(
+        json_safe(
+            {
+                "status": status,
+                "summary_projection": projection,
+                "artifacts": {
+                    "multiple_testing_correction_refs": tuple(
+                        ref for method, ref in refs_by_method.items() if method in {"bh", "wrc", "spa"} and ref
+                    ),
+                    "fdr_bh_refs": (refs_by_method["bh"],) if refs_by_method.get("bh") else (),
+                    "white_reality_check_or_hansen_spa_refs": tuple(
+                        refs_by_method[method] for method in ("wrc", "spa") if refs_by_method.get(method)
+                    ),
+                    "pbo_or_cscv_refs": (refs_by_method["pbo_cscv"],) if refs_by_method.get("pbo_cscv") else (),
+                    "dsr_or_sharpe_ic_deflation_refs": (refs_by_method["dsr"],) if refs_by_method.get("dsr") else (),
+                    "trial_count_and_effective_trials": {
+                        "raw_trial_count": summary.method_evidences[0].raw_trial_count if summary.method_evidences else None,
+                        "effective_trial_count": None,
+                        "effective_trial_count_ref": "",
+                        "effective_trial_count_method": "",
+                        "effective_trial_count_availability": EvidenceStatus.TYPED_UNAVAILABLE.value,
+                    },
+                },
+                "blocked_claims": () if status == ReliabilityGateStatus.PASS.value else tuple(summary.reason_codes),
+                "effective_trial_count_availability": EvidenceStatus.TYPED_UNAVAILABLE.value,
+            }
+        )
+    )
+
+
 __all__ = [
     "AdmissionGateMode",
     "AdmissionPolicyResult",
@@ -1086,6 +1136,7 @@ __all__ = [
     "evaluate_shared_contract",
     "fixture_cases_shared_contract",
     "normalize_forbidden_operation_counts",
+    "project_computable_statistical_evidence",
     "resolve_admission_policy",
     "validate_gate2_cv_governance",
     "validate_gate3_pit_universe",

@@ -47,6 +47,37 @@ def test_cr132_current_guardrail_assets_are_classified_non_blocking() -> None:
     assert {classify_entry(entry) for entry in entries} == {"current_guardrail_asset"}
 
 
+def test_cr165_closed_cr164_assets_are_explicitly_classified() -> None:
+    entries = [
+        StatusEntry(repo="source", status="M", path="engine/strategy_admission_statistical_gate.py"),
+        StatusEntry(repo="source", status="??", path="engine/multiple_testing_evidence.py"),
+        StatusEntry(repo="process", status="??", path="checks/CP7-CR164-S01.result.json"),
+        StatusEntry(repo="process", status="??", path="docs/features/statistical-evidence-contract/DESIGN.md"),
+    ]
+
+    assert {classify_entry(entry) for entry in entries} == {"closed_cr164_asset"}
+
+
+def test_cr165_design_archive_moves_are_explicitly_classified() -> None:
+    entries = [
+        StatusEntry(repo="process", status="D", path="docs/design/HLD-TRIAL-LINEAGE-INSTRUMENTATION.md"),
+        StatusEntry(repo="process", status="??", path="archive/design-cr-docs/HLD-TRIAL-LINEAGE-INSTRUMENTATION.md"),
+        StatusEntry(repo="process", status="D", path="docs/design/QUANT-RESEARCH-PRODUCTION-ROADMAP.md"),
+    ]
+
+    assert {classify_entry(entry) for entry in entries} == {"design_archive_migration_asset"}
+
+
+def test_cr165_closed_bundle_remains_classified_after_active_state_clears() -> None:
+    entries = [
+        StatusEntry(repo="source", status="M", path="scripts/legacy/cr/check_cr_tracking_consistency.py"),
+        StatusEntry(repo="process", status="??", path="checks/CP8-CR165-DELIVERY-READINESS.result.json"),
+        StatusEntry(repo="process", status="??", path="release/RELEASE-CONTEXT-CR165.yaml"),
+    ]
+
+    assert {classify_entry(entry) for entry in entries} == {"closed_cr165_asset"}
+
+
 def test_cr132_cr138_current_assets_are_rule_classified_non_blocking() -> None:
     entries = [
         StatusEntry(

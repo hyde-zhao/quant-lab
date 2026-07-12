@@ -9,12 +9,13 @@
 | v0.3 | 2026-07-05 | host-orchestrator | CP3 approved 后将 CR158-S01..S06 对齐为 CP4 开发 Story；CP2 baseline 改为 gate evidence，不占开发 Story ID。 |
 | v0.4 | 2026-07-11 | meta-pm | 增量追加 CR163 五个 outcome-oriented candidate Stories；仅作为 CP2/CP3 输入，不写入 DEVELOPMENT-PLAN。 |
 | v0.5 | 2026-07-11 | meta-pm | 根据 SGQ-A 将 CR163-S03 明确覆盖 2 条去重 producer chains / 全部 CPI-CR163-001..004 mappings；五 Story 数量不变。 |
+| v0.6 | 2026-07-12 | meta-pm | 增量追加 CR164 五个 outcome-oriented product-planning candidates，承接四方法、量化 AC、保守聚合与 compatibility-only 范围；不写入 DEVELOPMENT-PLAN。 |
 
 ## 状态
 
 - 文档状态：draft
-- 关联 CR：`CR-157` / `CR-158` / `CR-163`
-- 当前门禁：CR163 CP2 baseline pending
+- 关联 CR：`CR-157` / `CR-158` / `CR-163` / `CR-164`
+- 当前门禁：CR164 CP3 已批准、CP4 PASS；5/5 LLD ready，等待 CP5 全量确认
 - 注意：CP2 未批准前，以下 Story 只是产品规划候选，不是 `DEVELOPMENT-PLAN` 或 dev-ready Story。
 
 ## Activities
@@ -39,6 +40,11 @@
 | Cover all frozen producers | 让两条去重候选生产链及其 direct hooks 均不能绕过 lineage | CR163-S03 Both producer chains / CPI-CR163-001..004 instrumentation candidate | P0 | CP3/CP5 |
 | Reuse existing admission controls | 把 availability/ref/raw count 接入既有 gate，维持 effective unavailable | CR163-S04 Existing admission integration candidate | P0 | CP3/CP5 |
 | Prove integrity and regression | 验证 recovery/tamper/count/permission/CR155 fail-closed | CR163-S05 Integrity + recovery + CR155 regression candidate | P0 | CP5/CP7 |
+| Freeze computable-evidence outcome | 确认四方法、输入充分性和 10 项量化 AC | CR164-S01 Method/input/QAC contract candidate | P0 | CP3/CP5 |
+| Control multiple testing and data snooping | 获得 BH 与 WRC/SPA 的 provenance-bound evidence | CR164-S02 BH + WRC/SPA evidence candidate | P0 | CP3/CP5 |
+| Quantify overfit and deflated performance | 获得 PBO/CSCV 与 raw-count-declared DSR evidence | CR164-S03 PBO/CSCV + DSR evidence candidate | P0 | CP3/CP5 |
+| Preserve conservative admission semantics | 无 OR-pass 地投影到既有 consumers，并保持 UC-59/60 compatibility-only | CR164-S04 Conservative projection + compatibility candidate | P0 | CP3/CP5 |
+| Prove fail-closed and determinism | 覆盖低充分性、NaN/Inf、冲突、tamper、recovery、permission 和 CR155 | CR164-S05 Independent fixture/static verification candidate | P0 | CP5/CP7 |
 
 ## Release Slice Candidate
 
@@ -47,7 +53,10 @@
 | CR157 first slice | CR157-S01, CR157-S02, CR157-S03, CR157-S04, CR157-S05, CR157-S06 backlog alignment only | event adapter implementation, ML adapter implementation, provider/lake/runtime/trading/publish |
 | CR158 unified adapter slice | CR158-S01, CR158-S02, CR158-S03, CR158-S04, CR158-S05, CR158-S06 | real event feed, real ML model training, external model service, provider/lake/NAS/credential access, runtime/trading/publish |
 | CR163 trial lineage slice | CR163-S01..S05 candidate set | statistical correction、historical backfill、real ML/event runner、real data/runtime/trading/publish |
+| CR164 computable statistical evidence slice | CR164-S01..S05 product-planning candidates | effective-trial estimator、real ML/event adapter implementation、real research batch/data/runtime/trading/publish |
 
 > CR163-S01..S05 是目标为五个 Stories 的产品规划候选，不是正式 Story decomposition；CP2 批准后仍须 CP3 HLD，之后由 meta-se 在 CP4 生成机器真相源。
 
 CR163-S03 scope note：不增加第六个 Story；S03 单一 candidate Story 必须覆盖 public Stage 3 chain、legacy CR039 chain 及 `build_strategy_candidate` / `build_strategy_candidates` 两个 hook，即 CPI-CR163-001..004 4/4 instrumentation mappings。
+
+> CR164-S01..S05 只是产品 outcome 候选，不是正式 Story decomposition。CP2 批准后仍须 CP3；正式 Story 数、边界、依赖与文件所有权由 meta-se 在 CP4 决定。

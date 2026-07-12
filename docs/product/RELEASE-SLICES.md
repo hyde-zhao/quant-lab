@@ -8,6 +8,7 @@
 | v0.2 | 2026-07-05 | host-orchestrator | 追加 CR158 event + ML strategy adapter 发布切片候选。 |
 | v0.3 | 2026-07-11 | meta-pm | 增量追加 CR163 产品基线、架构、五 Story 设计/实现验证与 release-readiness 候选切片。 |
 | v0.4 | 2026-07-11 | meta-pm | 根据 SGQ-A 将 CR163 producer slice 明确为 2 条去重 chains / CPI-CR163-001..004 全覆盖，不增加 Story 数。 |
+| v0.5 | 2026-07-12 | meta-pm | 增量追加 CR164 产品基线、方法设计义务、五个 product-planning candidates、fixture/static 验证与 release-readiness 候选切片。 |
 
 ## CR157 Candidate Slices
 
@@ -38,3 +39,13 @@
 | Slice 2 | 形成可实现的五 Story 设计证据 | CR163-S01..S05 正式拆分、LLD/technical notes、file ownership、fixture plan | 未批准实现 | CP4/CP5 |
 | Slice 3 | 让未来研究可原生生成可信 lineage | contract/validator、recorder/seal、2 条去重 P0 producer chains / CPI-CR163-001..004 4/4 mappings、consumer integration、integrity/regression tests | real lake/NAS/provider/broker/trading、C1 statistical computation、backfill | CP6/CP7 |
 | Slice 4 | 交付可审计但无 runtime overclaim 的能力 | release notes、migration/rollback、verification、CR155 regression、not-authorized wording | publish、Git remote write、production enablement | CP8 |
+
+## CR164 Candidate Slices
+
+| Slice | 用户价值 | 包含 | 不包含 | Gate |
+|---|---|---|---|---|
+| Slice 0 | 冻结可计算统计证据的用户语义 | 四方法、minima、10 项 QAC、无 OR-pass、raw-count DSR、UC-59/60 compatibility | HLD、正式 Story、实现、统计运行 | CP2 |
+| Slice 1 | 冻结可审查的方法与 projection design | method schema；DSR raw-count non-alias；WRC/SPA stationary-bootstrap selection；disagreement decision table；existing consumers | code、外部框架、真实数据/runtime | CP3 |
+| Slice 2 | 形成可实现的 Story 设计证据 | 由 meta-se 基于 CR164-S01..S05 候选正式拆分；LLD/technical notes、file ownership、fixture plan | 未批准实现 | CP4/CP5 |
+| Slice 3 | 用本地证据证明可计算且 fail-closed | 四方法 fixture/static producer、consumer projection、negative/recovery/compatibility/CR155 validation | real research batch、lake/NAS/provider、ML training/event feed、trading | CP6/CP7 |
+| Slice 4 | 交付不夸大的可审计能力 | verification、release notes、rollback/migration、not-authorized wording、remaining risks | publish、Git remote write、production enablement | CP8 |
