@@ -1,9 +1,9 @@
 ---
-status: confirmed-cp3
-version: "1.1"
-confirmed: true
-confirmed_by: "user"
-confirmed_at: "2026-07-13T10:46:00+08:00"
+status: awaiting-cp2
+version: "1.2"
+confirmed: false
+confirmed_by: "pending-CR168-CP2"
+confirmed_at: ""
 ---
 
 # Product Requirements
@@ -23,12 +23,13 @@ confirmed_at: "2026-07-13T10:46:00+08:00"
 | v0.9 | 2026-07-13 | host-orchestrator-inline | CR166 增量追加 C2 producer 输入、泄漏边界、确定性 envelope、consumer projection、兼容与授权需求，以及 12 项量化成功标准。 |
 | v1.0 | 2026-07-13 | host-orchestrator | 回填 CR166 CP2 批准，冻结 9 项需求、12 项 QAC、fixture/static 与 Stage 3 claim ceiling；解锁 CP3 设计但不授权实现。 |
 | v1.1 | 2026-07-13 | host-orchestrator | 回填 CR166 CP3 批准；9 项需求与 12 项 QAC 映射到五个正式 Story 和 CP5 全量设计证据，继续不授权实现。 |
+| v1.2 | 2026-07-13 | host-orchestrator-inline | CR168 增量追加 9 项 C3 需求、15 项精确 QAC、Gate 4 C3+C4 联合边界、两类 fixture 与 5 个 CP2 开放决策；保留既有需求基线。 |
 
 ## 状态
 
-- 文档状态：confirmed-cp3
-- 关联 CR：`CR-157` / `CR-158` / `CR-160` / `CR-161` / `CR-162` / `CR-163` / `CR-164` / `CR-166`
-- 当前门禁：CR166 CP3 已批准；CP4/CP5 设计证据准备中，CP5 批准前实现仍 blocked
+- 文档状态：awaiting-cp2
+- 关联 CR：`CR-157` / `CR-158` / `CR-160` / `CR-161` / `CR-162` / `CR-163` / `CR-164` / `CR-166` / `CR-168`
+- 当前门禁：CR168 CP2 待人工批准；CP2 前不得进入 HLD/CP3、Story、LLD、实现或验证
 - 旧基线保留：当前仓库未发现既有 `docs/product/REQUIREMENTS.md`；既有组件文档和检查证据作为输入，不被替换。
 
 ## Requirement Summary
@@ -78,6 +79,15 @@ confirmed_at: "2026-07-13T10:46:00+08:00"
 | REQ-CR164-007 | Existing-consumer integration | P0 | draft | 复用 CR151/CR154/admission package，不建立竞争 gate。 |
 | REQ-CR164-008 | Effective-trial claim ceiling | P0 | confirmed-CP2-input | raw count 不得冒充 effective count；effective 保持 typed_unavailable。 |
 | REQ-CR164-009 | Compatibility, authorization and regression | P0 | confirmed-CP2-input | UC-58 实现、UC-59/60 compatibility-only，禁用操作为 0，CR155 保持 blocked。 |
+| REQ-CR168-001 | Versioned typed C3 component | P0 | awaiting-CP2 | 复用 CR166 envelope，把 `economic_cost@reserved` 演进为 1 个 active typed component / 1 个 schema version，不新建平行 gate/envelope/registry。 |
+| REQ-CR168-002 | Nine-family explicit input contract | P0 | awaiting-CP2 | 9/9 字段族均有 required/optional/N/A/authorization 规则，含 cost-underestimation assumptions/limitations。 |
+| REQ-CR168-003 | Transparent cost and impact approximation | P0 | awaiting-CP2 | 透明输出 fee/tax/spread/slippage/impact approximation、total、gross-to-net、availability、reason、lineage 和 `cost_underestimation_status`。 |
+| REQ-CR168-004 | Ten-class fail-closed validation | P0 | awaiting-CP2 | 10/10 指定缺失、数值、basis、算术、lineage/auth 和 hash tamper 类别均不得产生 present/PASS。 |
+| REQ-CR168-005 | Deterministic canonical identity | P0 | awaiting-CP2 | 同一规范化输入 10 次只产生 1 个 canonical hash，tamper 必须 blocked。 |
+| REQ-CR168-006 | Joint Gate 4 C3 projection | P0 | awaiting-CP2 | 只投影 C3 四字段；C4 三字段保持 typed_unavailable；capacity/aggregate PASS=0。 |
+| REQ-CR168-007 | Multi-strategy-type fixtures | P0 | awaiting-CP2 | daily multifactor synthetic 与 daily/ML compatibility 两族 2/2；event-specific producer=0。 |
+| REQ-CR168-008 | Authorization and claim ceiling | P0 | awaiting-CP2 | 禁止真实数据/TCA/calibration/runtime/trading/remote write；Stage2=true、Stage3=false，其余真实/运行时 claim=false/0。 |
+| REQ-CR168-009 | C4/FU-007/CR155 boundary | P0 | awaiting-CP2 | C4 calculator=0；aggregate integration 留给 FU-007；CR155 admission promotion=0。 |
 
 ## Functional Requirements
 
@@ -490,6 +500,11 @@ QAC-CR164-007 的 3/3 是产品 consumer coverage，不代表 UC-59/60 implement
 | DQ-CP2-CR166-EXTENSION | architecture-boundary | 是否只预留 C3/C4 versioned typed component 扩展点？ | 只冻结兼容约束，不实现或验证 C3/C4 计算。 | resolved-approved 2026-07-13 |
 | DQ-CP2-CR166-COMPATIBILITY | scope | event 是否与 daily/ML 同列 P0？ | daily + ML 为 P0；event 为 P1 applicability，语义未冻结时 N/A。 | resolved-approved 2026-07-13 |
 | DQ-CP2-CR166-AUTHZ | security | CP2 是否授权真实数据/runtime/外部系统或实现？ | 不授权；CP2 后只进入 CP3，CP5 后才可 fixture/static 实现。 | resolved-approved 2026-07-13 |
+| DQ-CP2-CR168-METHOD | scope / methodology | C3 是否包含透明 impact approximation？ | 包含 fee/tax/spread/slippage/impact 分解，但 impact 只使用显式静态参数；备选为延后 impact。 | OPEN，待 CP2 |
+| DQ-CP2-CR168-C3-C4 | architecture-boundary | 是否冻结 C3/C4 最小共享 header？ | 冻结最小共享 header；C4 专属字段 reserved，C4 calculator=0。 | OPEN，待 CP2 |
+| DQ-CP2-CR168-GATE4 | integration-boundary | existing-gate integration 做到何种粒度？ | 只做 1 条 C3-to-Gate-4 compatibility projection；Gate 4 保持 C3+C4 联合，C4 缺失时 fail-closed。 | OPEN，待 CP2 |
+| DQ-CP2-CR168-FIXTURE | compatibility | fixture 适用面是什么？ | 2 族：daily multifactor synthetic + daily/ML multi-strategy-type compatibility；event N/A/deferred。 | OPEN，待 CP2 |
+| DQ-CP2-CR168-CLAIM | claim-ceiling | CP2 是否改变 Stage/真实能力声明？ | 不改变：Stage2=true、Stage3=false；真实 TCA/impact calibration/data/runtime/C4/event/CR155 promotion=false/0。 | OPEN，待 CP2 |
 
 ## CR166 Walk-forward / OOS Producer Requirements
 
@@ -529,3 +544,134 @@ QAC-CR164-007 的 3/3 是产品 consumer coverage，不代表 UC-59/60 implement
 1. 冻结 C2 envelope header、versioned component registry、canonical serialization 与 unknown-component decision table。
 2. 冻结 fold 时间边界、purge/embargo 下限和 daily/ML policy 映射；event-time 语义单独作 applicability decision。
 3. 显式定义 producer→三个 consumers 的调用方向、时机、输入、输出、降级与同步修改面。
+
+## CR168 Economic Cost / Slippage / Impact Producer Requirements
+
+### REQ-CR168-001 Versioned Typed C3 Component
+
+- 必须复用 CR166 neutral strategy evidence envelope 和 canonical serialization/hash；不得创建平行 envelope、evidence registry 或 admission gate。
+- `economic_cost@reserved` 只演进为 `1` 个 active typed C3 component，active schema version 为 `1` 个。
+- 未注册/未知 component 不得满足 mandatory C3 evidence 或产生 Gate 4/aggregate PASS。
+
+成功标准：typed C3 component 类型 `1`；active schema version `1`；平行 gate/envelope/registry `0`。
+
+### REQ-CR168-002 Nine-Family Explicit Input Contract
+
+输入合同必须精确覆盖 `9/9` 字段族：
+
+1. manifest/run/strategy identity；
+2. gross return 或 pre-cost performance basis；
+3. trade、position change、turnover、notional basis；
+4. commission/fee assumptions；
+5. tax/levy assumptions；
+6. spread/slippage assumptions；
+7. impact model family/parameters 或 structured N/A，以及 `cost_underestimation_status`、model assumptions、structured limitations；
+8. unit、currency、calendar、price/notional basis 与显式 conversion declaration；
+9. lineage、provenance、authorization refs。
+
+每个字段族必须有 required/optional/N/A/authorization 规则。C3/C4 可共享 identity、basis 与 lineage 的最小 header；capacity curve、ADV participation、liquidity sizing、alpha decay 字段由 C4 独占。
+
+成功标准：9/9 字段族规则均可机器检查；C4 专属字段由 C3 计算的数量为 `0`。
+
+### REQ-CR168-003 Transparent Static Cost and Impact Approximation
+
+- 只允许使用显式传入的合成或静态参数，确定性计算 commission/fee、tax/levy、spread/slippage、impact approximation、total cost 与 gross-to-net reconciliation。
+- 输出必须携带 availability/outcome、reason codes、lineage/provenance、model/version、`cost_underestimation_status`、`no_real_tca_claim=true`、structured limitations 与 canonical identity。
+- impact approximation 不得被描述为真实 TCA、真实成交还原或经市场校准的 impact。
+
+成功标准：每个 present C3 component 的成本分项、total 与 net 算术可重算；真实 TCA/market calibration claim 数为 `0`。
+
+### REQ-CR168-004 Ten-Class Fail-Closed Validation
+
+以下 `10/10` P0 类别必须分别形成 machine-readable reason，且不得产生 present/PASS：
+
+1. 缺 gross/pre-cost basis；
+2. 缺 trade/turnover/notional basis；
+3. 缺 cost model/version；
+4. 非有限值；
+5. 未经策略允许的负成本或不可能数值；
+6. unit/price/notional basis 不一致；
+7. currency/price-basis/calendar 跨字段不一致且无显式汇率/转换声明；
+8. gross/cost/net 算术不一致；
+9. lineage/provenance/authorization 缺失或不一致；
+10. canonical identity/hash tamper。
+
+成功标准：10/10 类各有正交 negative fixture；false PASS 数为 `0`。
+
+### REQ-CR168-005 Deterministic Canonical Identity
+
+- 规范化、字段排序、数值编码、N/A 表达和 optional component 顺序必须确定。
+- 同一规范化输入、schema/model version 与参数重复运行 `10` 次，必须只产生 `1` 个 canonical hash。
+- 任何字段 tamper 后保留旧 hash 的输入必须 blocked；语义等价规范化输入不得因键顺序变化产生不同 hash。
+
+成功标准：`10 runs -> 1 hash`；tamper false negative 数为 `0`。
+
+### REQ-CR168-006 Joint Gate 4 C3 Compatibility Projection
+
+- Gate 4 canonical 名称为 `GATE_4_CAPACITY_IMPACT`，是 C3+C4 联合门禁，不是 C3-only gate。
+- CR168 的 `1` 条 compatibility projection 只能提供 C3 字段：`impact_model_family`、`impact_model_ref`、`cost_underestimation_status`、`no_real_tca_claim`。
+- C4 字段 `adv_participation_ref`、`capacity_dollars_ref`、`liquidity_sizing_refs` 必须保持 `typed_unavailable`；不得补造 placeholder 使 Gate 4 PASS。
+
+成功标准：C3-to-Gate-4 projection `1`；C4 缺失产生的 capacity/aggregate PASS `0`；C1-C4 aggregate orchestration `0`。
+
+### REQ-CR168-007 Multi-Strategy-Type Fixture Compatibility
+
+- fixture 族精确为 `2/2`：1 个 daily multifactor synthetic economic-cost fixture；1 个同时验证 daily multifactor 与 ML package attach 的 multi-strategy-type compatibility fixture。
+- 两种 strategy type 必须共享相同成本算术、basis、availability、reason 与 hash 语义；strategy-type 差异不得改变 C3 cost 定义。
+- event-specific economic-cost 语义显式 N/A/deferred，event producer 数为 `0`。
+
+成功标准：fixture 族 `2/2`；event-specific producer `0`；真实 model training/event feed 调用 `0`。
+
+### REQ-CR168-008 Authorization and Claim Ceiling
+
+- 本 CR 不授权 lake/NAS/provider/data vendor、credential/secret、真实 order/fill/quote/book/flow/ADV/liquidity、历史灌入/回填/校准、external runtime、broker/trading、catalog/store/registry pointer、publish/deploy/release/tag/push。
+- CP2 approval 只允许进入 CP3 solution design，不授权实现；CP5 前不得实现。
+- claim ceiling 固定：`stage2_complete=true`、`stage3_started=false`、`c3_fixture_static_foundation=false`（直至实际完成）、`real_tca_available=false`、`real_market_impact_calibrated=false`、`real_data_connected=false`、`runtime_ready=false`、`c4_calculators=0`、`event_specific_producer=false`、`cr155_promoted=false`。
+
+成功标准：真实数据读取、真实 TCA、外部 runtime、broker/trading、Git remote write 等禁止操作计数分别为 `0`；overclaim 数为 `0`。
+
+### REQ-CR168-009 C4, FU-007 and CR155 Regression Boundary
+
+- C4 capacity curve、ADV participation、liquidity sizing、alpha decay calculator 保留给 `FU-CR161-005`，CR168 实现数为 `0`。
+- C1-C4 aggregate orchestration、StrategyAdmissionPackage 最终聚合、existing-gate 全链路 integration 与 CR155 综合 regression/promotion decision 保留给 `FU-CR161-007`。
+- CR155 formal CR lifecycle 已关闭，但现有 admission package 必须保持 `BLOCKED` 且 `paper_candidate=false`；C3 结果不得提升、解除或重解释。
+
+成功标准：C4 calculator `0`；aggregate integration `0`；CR155 admission 状态提升 `0`。
+
+## CR168 Quantitative Acceptance Criteria
+
+| QAC | 指标 | 精确目标 | 失败行为 |
+|---|---|---:|---|
+| QAC-CR168-01 | 正式 C3 typed component 类型 | 1 | 非 1 阻断 CP7 |
+| QAC-CR168-02 | active C3 schema version | 1 | 多版本并行 active 或缺版本阻断 |
+| QAC-CR168-03 | 输入字段族规则覆盖 | 9/9 | 任一族无 required/optional/N/A/auth 规则阻断 |
+| QAC-CR168-04 | fixture 族 | 2/2 | 任一族缺失阻断 |
+| QAC-CR168-05 | P0 fail-closed 类别 | 10/10 | 任一类别 false PASS 阻断 |
+| QAC-CR168-06 | deterministic reruns | 10 次 -> 1 canonical hash | hash 漂移或 tamper 漏检阻断 |
+| QAC-CR168-07 | C3-to-Gate-4 compatibility projection | 1 | 缺投影或越界填充 C4 阻断 |
+| QAC-CR168-08 | C4 缺失产生的 capacity/aggregate PASS | 0 | 任一 PASS 阻断 |
+| QAC-CR168-09 | 新建平行 gate/envelope/registry | 0 | 任一新增阻断 |
+| QAC-CR168-10 | C4 calculator | 0 | 任一实现阻断 |
+| QAC-CR168-11 | event-specific producer | 0 | 任一实现阻断 |
+| QAC-CR168-12 | 真实数据/TCA/runtime/broker/trading 操作 | 各 0 | 任一非 0 阻断 |
+| QAC-CR168-13 | CR155 admission 状态提升 | 0 | 任一提升阻断 |
+| QAC-CR168-14 | CR168 新增代码路径引入的测试失败 | 0 | 无法证明为既有问题时不得过 CP7 |
+| QAC-CR168-15 | 带 process 前缀的错误质量引用 | 0 | 任一引用必须修正到 `docs/quality/` |
+
+## CR168 Non-Functional Requirements
+
+| NFR ID | 维度 | 要求 | 精确度量 |
+|---|---|---|---|
+| NFR-CR168-001 | 可审计性 | 所有分项、total、gross-to-net、model assumptions 与 limitations 可由输入重算。 | present component 的算术重算一致率 100%；orphan refs=0。 |
+| NFR-CR168-002 | 确定性 | canonical serialization 对字段顺序与规范化等价输入稳定。 | 10 次执行仅 1 个 hash；tamper 检出率 100%。 |
+| NFR-CR168-003 | 安全与权限 | fixture/static 路径不执行真实数据/runtime/trading/remote write。 | 每个 forbidden-operation counter=0。 |
+| NFR-CR168-004 | 可演进性 | C3 复用 neutral envelope，最小共享 header 不占用 C4 专属语义。 | 平行 envelope/registry/gate=0；C4 calculator=0。 |
+
+## CR168 CP3 Design Obligations
+
+状态：`OPEN_AFTER_CP2`。CP2 未批准前不得开始；以下仅记录待冻结内容，不构成 HLD。
+
+1. 冻结 9 字段族的具体 schema、normalization、N/A、reason-code 与 numeric domain。
+2. 冻结透明 impact approximation 的方法族、参数表达、`cost_underestimation_status` decision table 和 no-real-TCA wording。
+3. 冻结 C3/C4 最小共享 header 与 C4-exclusive field ownership；禁止 C3 预占 capacity/ADV/liquidity/alpha-decay calculator。
+4. 冻结 C3 producer → neutral envelope → Gate 4 compatibility projection 的调用方向、时机、输入、输出、降级和调用方同步修改面。

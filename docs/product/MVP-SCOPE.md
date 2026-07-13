@@ -14,12 +14,13 @@
 | v0.8 | 2026-07-13 | host-orchestrator-inline | 增量追加 CR166 C2 fixture/static foundation、future component compatibility、P0/P1 分层、Stage 3 claim ceiling 与明确排除项。 |
 | v0.9 | 2026-07-13 | host-orchestrator | 回填 CR166 CP2 批准；MVP 范围成为 CP3 正式输入，真实数据、C3/C4 计算、event producer 与 Stage 3 仍明确排除。 |
 | v1.0 | 2026-07-13 | host-orchestrator | 回填 CR166 CP3 批准；范围映射到五个正式 Story，保持 fixture/static、event N/A、C3/C4 calculator=0 与 Stage 3 未启动。 |
+| v1.1 | 2026-07-13 | host-orchestrator-inline | CR168 增量追加 fixture/static C3 typed component、9 字段族、10 类 fail-closed、两类 fixture、联合 Gate 4 投影、claim ceiling 与 C4/FU-007 边界。 |
 
 ## 状态
 
-- 文档状态：confirmed-cp3
-- 关联 CR：`CR-157` / `CR-158` / `CR-160` / `CR-161` / `CR-162` / `CR-163` / `CR-164` / `CR-166`
-- 当前门禁：CR166 CP3 已批准；CP5 全量设计证据待人工确认
+- 文档状态：awaiting-cp2
+- 关联 CR：`CR-157` / `CR-158` / `CR-160` / `CR-161` / `CR-162` / `CR-163` / `CR-164` / `CR-166` / `CR-168`
+- 当前门禁：CR168 CP2 待人工批准；CP2 前只允许产品基线增量和人工门禁准备
 
 ## In Scope
 
@@ -64,6 +65,12 @@
 | MVP-CR166-004 | Versioned component compatibility | C3/C4 注册式扩展不破坏 C2；当前 C3/C4 calculators=0；unknown component 不得满足 mandatory evidence。 |
 | MVP-CR166-005 | Existing consumer projection | CR151 statistical gate、CR154 reliability gate、StrategyAdmissionPackage 3/3 复用同一 evidence refs/availability；CR155 仍 blocked。 |
 | MVP-CR166-006 | Strategy compatibility and claim ceiling | daily + ML 2/2 P0；event P1 applicability；external dereference=0；Stage2 complete，Stage3 not-started，real evidence unavailable。 |
+| MVP-CR168-001 | Versioned typed C3 economic-cost component | 复用 CR166 envelope；component/schema=1/1；平行 gate/envelope/registry=0。 |
+| MVP-CR168-002 | Nine-family static input and transparent arithmetic | 9/9 字段族；fee/tax/spread/slippage/impact/total/gross-to-net 可重算；含 `cost_underestimation_status`。 |
+| MVP-CR168-003 | Ten-class deterministic fail-closed contract | 10/10 指定类别 false PASS=0；规范化输入 10 次→1 hash；tamper 检出率 100%。 |
+| MVP-CR168-004 | Joint Gate 4 C3 compatibility projection | C3 投影=1；C4 fields unavailable；capacity/aggregate PASS=0；C4 calculator=0。 |
+| MVP-CR168-005 | Two fixture families and event boundary | daily multifactor synthetic + daily/ML compatibility=2/2；event-specific producer=0。 |
+| MVP-CR168-006 | Authorization and claim ceiling | Stage2=true、Stage3=false；真实 TCA/calibration/data/runtime=false；CR155 admission promotion=0。 |
 
 ## Out of Scope
 
@@ -94,6 +101,12 @@
 | CR166 C3/C4 computation | 只预留 versioned typed component 扩展点；经济成本、impact、capacity、liquidity、ADV、alpha decay 均不实现。 |
 | CR166 event-specific producer | event-time/calendar-time 与窗口语义未冻结；CP3 可判 N/A，不交付空壳 producer。 |
 | CR166 Stage 3 start or runtime authorization | CR166 关闭后 Stage 2 状态保持 complete；Stage 3 仍需独立 CR 和真实数据连接授权。 |
+| CR168 真实 lake/NAS/provider/credential/data-vendor 或真实订单/成交/盘口/ADV/流动性访问 | 当前只消费显式 synthetic/static 输入；任何真实数据读取或参数估计均需独立授权。 |
+| CR168 真实 TCA、真实成交还原或 market-impact calibration | impact 仅为透明静态 approximation，必须携带 `no_real_tca_claim=true` 与 limitations。 |
+| CR168 C4 capacity/liquidity/ADV/alpha-decay calculator | 归属 `FU-CR161-005`；本 CR 数量固定为 0。 |
+| CR168 C1-C4 aggregate integration / final StrategyAdmissionPackage / CR155 promotion decision | 归属 `FU-CR161-007`；本 CR 只做 1 条 C3-to-Gate-4 compatibility projection。 |
+| CR168 event-specific producer | event-time/calendar/execution 语义未冻结；本 CR显式 N/A/deferred。 |
+| CR168 runtime、broker/trading、catalog/store/registry pointer、publish/deploy/tag/release/Git remote write | 不在授权范围；所有相关操作计数为 0。 |
 
 ## Deferred
 
@@ -110,7 +123,7 @@
 | DF-CR164-001 | Effective-trial estimator / multiplicity model | 独立方法 CR 冻结 estimator 假设、偏差、上下界和 verifier 后重启。 |
 | DF-CR164-002 | Real ML/event computable-evidence adapters | real runners、同等 lineage contract 与 runtime/data authorization 全部具备后重启。 |
 | DF-CR164-003 | Real research recomputation / historical evidence migration | 独立 data/runtime/audit gate 批准，且 inferred provenance 不伪装为 native evidence。 |
-| FU-CR161-004 | C3 economic cost / impact producer | 独立方法、输入与数据授权；复用 CR166 versioned component envelope。 |
+| FU-CR161-004 | C3 economic cost / impact producer | 已 promoted to `CR-168`；只启动 fixture/static foundation，真实 TCA/data/runtime 仍未授权。 |
 | FU-CR161-005 | C4 capacity / liquidity producer | 独立方法、输入与数据授权；可与 C3 共用输入-contract wave，但计算与验证独立。 |
 | FU-CR161-007 | Existing-gate integration and CR155 regression | C1-C4 producer 均稳定后再做端到端整合；CR155 必须保持 blocked。 |
 
@@ -126,3 +139,9 @@
 | Legacy Deferred ID | CR160 scope | 状态 | 说明 |
 |---|---|---|---|
 | DF-CR157-003 / BL-CR157-003 | MVP-CR160-001 / MVP-CR160-002 / MVP-CR160-003 / MVP-CR160-004 / MVP-CR160-005 / MVP-CR160-006 | active in CR160 | Stage 4 observation review workflow 从 CR157 deferred/backlog 进入 CR160 纯设计 scope；product baseline refresh 是 CP8 关闭前置条件，Stage 5 simulation/paper/live/runtime authorization 保持后续 CR。 |
+
+## Promoted to CR168
+
+| Legacy Deferred ID | CR168 scope | 状态 | 说明 |
+|---|---|---|---|
+| FU-CR161-004 | MVP-CR168-001..006 | active / awaiting CP2 | C3 fixture/static economic cost/slippage/impact approximation foundation 已进入 CR168；C4、FU-007 aggregate integration、真实 TCA/data/runtime、event 与 Stage 3 保持范围外。 |

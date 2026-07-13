@@ -1,9 +1,9 @@
 ---
-status: confirmed-cp3
-version: "1.1"
+status: awaiting-cp2
+version: "1.2"
 source_scenarios: "docs/product/SCENARIOS.yaml"
 source_requirements: "docs/product/REQUIREMENTS.md"
-cr_id: "CR-166"
+cr_id: "CR-168"
 template_deviation_reason: "CR157 uses Scenario/Requirement/Test Layer/Validation Mode columns to preserve gate and no-runtime evidence mapping; coverage statistics remain present below."
 ---
 
@@ -24,12 +24,13 @@ template_deviation_reason: "CR157 uses Scenario/Requirement/Test Layer/Validatio
 | v0.9 | 2026-07-13 | host-orchestrator-inline | 追加 CR166 10 个 P0 与 1 个 P1 场景映射，覆盖 daily/ML、8 类 fail-closed、event applicability、Stage claim 与零外部操作。 |
 | v1.0 | 2026-07-13 | host-orchestrator | 回填 CR166 CP2 批准；11/11 场景保持 planned fixture/static，作为 CP3 架构与后续 CP5/CP7 验证输入。 |
 | v1.1 | 2026-07-13 | host-orchestrator | 回填 CR166 CP3 批准；11/11 场景映射到五个正式 Story 和 CP5 LLD/Feature 测试设计，验证仍为 planned、未执行。 |
+| v1.2 | 2026-07-13 | host-orchestrator-inline | CR168 增量追加 16 个场景的 planned fixture/static 覆盖，精确覆盖 10/10 fail-closed、2/2 fixture、Gate 4 联合边界、权限与 CR155 regression。 |
 
 ## 状态
 
-- 文档状态：confirmed-cp3
-- 关联 CR：`CR-157` / `CR-158` / `CR-160` / `CR-161` / `CR-162` / `CR-163` / `CR-164` / `CR-166`
-- 当前门禁：CR166 CP3 已批准；CP5 设计证据待人工确认，当前仍仅为 planned fixture/static coverage
+- 文档状态：awaiting-cp2
+- 关联 CR：`CR-157` / `CR-158` / `CR-160` / `CR-161` / `CR-162` / `CR-163` / `CR-164` / `CR-166` / `CR-168`
+- 当前门禁：CR168 CP2 待人工批准；新增 coverage 只是产品层 planned evidence，不代表实现或验证已执行
 
 ## Coverage Matrix
 
@@ -94,6 +95,22 @@ template_deviation_reason: "CR157 uses Scenario/Requirement/Test Layer/Validatio
 | SC-CR166-A01 | REQ-CR166-009 | permission / security | fixture/static | external ref dereference=0; forbidden counters=0 | P0 | planned |
 | SC-CR166-H01 | REQ-CR166-005, REQ-CR166-006 | determinism / integrity | fixture/static | canonical equivalence and tamper mismatch; unknown component no-PASS | P0 | planned |
 | SC-CR166-E01 | REQ-CR166-008 | compatibility / design-review | static | explicit event N/A decision; no empty producer | P1 | planned-CP7-static |
+| SC-CR168-P01 | REQ-CR168-001, REQ-CR168-002, REQ-CR168-003, REQ-CR168-005 | contract / arithmetic / determinism | fixture/static | daily C3 component；9/9 inputs；10 reruns→1 hash；recomputable gross-to-net | P0 | planned-after-CP5 |
+| SC-CR168-P02 | REQ-CR168-001, REQ-CR168-007 | compatibility / contract | fixture/static | daily + ML package attach uses one C3 semantic | P0 | planned-after-CP5 |
+| SC-CR168-N01 | REQ-CR168-002, REQ-CR168-004 | negative / sufficiency | fixture/static | missing gross/pre-cost basis fail-closed | P0 | planned-after-CP5 |
+| SC-CR168-N02 | REQ-CR168-002, REQ-CR168-004 | negative / sufficiency | fixture/static | missing trade/turnover/notional basis fail-closed | P0 | planned-after-CP5 |
+| SC-CR168-N03 | REQ-CR168-002, REQ-CR168-004 | negative / model-provenance | fixture/static | missing cost model/version fail-closed | P0 | planned-after-CP5 |
+| SC-CR168-N04 | REQ-CR168-003, REQ-CR168-004 | numerical / negative | fixture/static | NaN/Inf variants fail-closed | P0 | planned-after-CP5 |
+| SC-CR168-N05 | REQ-CR168-003, REQ-CR168-004 | numerical / policy | fixture/static | unauthorized negative/impossible cost blocked | P0 | planned-after-CP5 |
+| SC-CR168-N06 | REQ-CR168-002, REQ-CR168-004 | unit / basis | fixture/static | unit/price/notional basis mismatch blocked | P0 | planned-after-CP5 |
+| SC-CR168-N07 | REQ-CR168-002, REQ-CR168-004 | currency / calendar / basis | fixture/static | cross-field mismatch without explicit conversion blocked | P0 | planned-after-CP5 |
+| SC-CR168-N08 | REQ-CR168-003, REQ-CR168-004 | arithmetic / reconciliation | fixture/static | itemized/total/gross/net mismatch blocked | P0 | planned-after-CP5 |
+| SC-CR168-N09 | REQ-CR168-002, REQ-CR168-004, REQ-CR168-008 | lineage / authorization | fixture/static | missing/inconsistent lineage/provenance/auth fail-closed；dereference=0 | P0 | planned-after-CP5 |
+| SC-CR168-N10 | REQ-CR168-004, REQ-CR168-005 | integrity / tamper | fixture/static | canonical equivalence stable；hash tamper blocked | P0 | planned-after-CP5 |
+| SC-CR168-B01 | REQ-CR168-006, REQ-CR168-009 | integration / fail-closed | fixture/static | C3 fields present + C4 typed_unavailable -> Gate 4 no capacity/aggregate PASS | P0 | planned-after-CP5 |
+| SC-CR168-A01 | REQ-CR168-008 | permission / security | fixture/static | real-data/TCA/runtime/trading/remote-write counters all 0 | P0 | planned-after-CP5 |
+| SC-CR168-G01 | REQ-CR168-006, REQ-CR168-009 | negative-regression / existing-evidence | static | CR155 admission remains BLOCKED；paper_candidate=false；promotion=0 | P0 | planned-after-CP5 |
+| SC-CR168-E01 | REQ-CR168-007, REQ-CR168-009 | applicability / boundary | static | event-specific producer explicit N/A/deferred；count=0 | P1 | planned-static-review |
 
 ## Coverage Summary
 
@@ -126,6 +143,17 @@ template_deviation_reason: "CR157 uses Scenario/Requirement/Test Layer/Validatio
 | CR166 P0 fixture families | 2 |
 | CR166 existing-consumer projections | 3 |
 | CR166 external/runtime tests authorized | 0 |
+| CR168 P0 scenarios | 15 |
+| CR168 P0 scenarios with planned coverage | 15 |
+| CR168 P1 applicability scenarios | 1 |
+| CR168 quantitative acceptance criteria | 15 |
+| CR168 typed component / active schema | 1 / 1 |
+| CR168 input field families | 9/9 |
+| CR168 fail-closed classes | 10/10 |
+| CR168 fixture families | 2/2 |
+| CR168 C3-to-Gate-4 projections | 1 |
+| CR168 C4 calculators / event producers | 0 / 0 |
+| CR168 external/runtime tests authorized | 0 |
 
 ## Notes
 
@@ -137,3 +165,4 @@ template_deviation_reason: "CR157 uses Scenario/Requirement/Test Layer/Validatio
 - CR163 verification remains fixture/static unless a later gate grants separate runtime/data authorization. Future native instrumented runs may set `ExperimentFamilyManifest=present` only after seal/completeness/reference/count/tamper validation; uninstrumented paths remain `typed_unavailable`; invalid/tampered lineages are `blocked`. This prepares only the C1 raw-lineage input and does not make C1 computable.
 - CR164 verification is fixture/static only. Four methods are mandatory but no OR-pass is allowed; DSR raw count must be explicitly identified and never alias effective count; WRC/SPA stationary-bootstrap parameter selection is a CP3 obligation. UC-59/60 rows prove compatibility semantics only, not adapter implementation or real feed/training authorization.
 - CR166 验证仅允许 fixture/static：daily multifactor 与 ML compatibility 为 P0；event 为 CP3 applicability/P1。任何真实 fold/OOS 数据、lake/NAS/provider/runtime 或外部 ref 均不得解引用。CP8 也只能声明桥接 foundation，不得声明 Stage 3 已启动或真实 OOS evidence 可用。
+- CR168 coverage 只描述 CP2 待批准的 fixture/static 验证合同。Gate 4 是 C3+C4 联合门禁；C3 present 时 C4 字段仍必须 `typed_unavailable` 并阻止 capacity/aggregate PASS。CP2 不授权 HLD 之外的实现，也不授权真实 TCA、真实 impact calibration、真实数据、runtime、C4、event producer、交易或远端写入。

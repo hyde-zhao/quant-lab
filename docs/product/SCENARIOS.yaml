@@ -1,8 +1,8 @@
 schema_version: 1
-version: "1.1"
-status: confirmed-cp3
-cr_id: CR-166
-updated_at: "2026-07-13T10:20:00+08:00"
+version: "1.2"
+status: awaiting-cp2
+cr_id: CR-168
+updated_at: "2026-07-13T17:15:00+08:00"
 source_requirements:
   - docs/product/REQUIREMENTS.md
 source_use_cases:
@@ -52,6 +52,10 @@ revision_record:
     date: "2026-07-13"
     author: host-orchestrator
     summary: "Record CR166 CP3 approval; map all eleven scenarios to five formal Stories and CP5 design evidence without authorizing implementation or real data."
+  - version: v1.2
+    date: "2026-07-13"
+    author: host-orchestrator-inline
+    summary: "Add sixteen CR168 fixture/static C3 scenarios: two positive/compatibility paths, ten exact fail-closed classes, joint Gate 4 boundary, authorization, CR155 regression, and event N/A."
 scenarios:
   - id: SC-CR157-P01
     title: "Build mature admission package from complete research refs"
@@ -644,13 +648,141 @@ scenarios:
     use_case_refs: [UC-58-CR166, UC-60]
     steps: ["Compare event-time/window semantics with fixed calendar folds during CP3.", "Record applies or N/A with reason."]
     expected: ["Unfrozen event semantics yield explicit N/A, not an empty producer or coverage claim.", "No event feed access occurs."]
+  - id: SC-CR168-P01
+    title: "Produce deterministic economic-cost evidence for a daily multifactor fixture"
+    type: positive
+    priority: P0
+    requirement_refs: [REQ-CR168-001, REQ-CR168-002, REQ-CR168-003, REQ-CR168-005]
+    use_case_refs: [UC-58-CR168]
+    steps: ["Provide all 9 field families with finite static fee/tax/spread/slippage/impact assumptions.", "Produce the C3 component ten times.", "Recompute itemized cost, total cost and gross-to-net reconciliation."]
+    expected: ["The active typed component/schema count is 1/1.", "Ten runs produce one canonical hash.", "All itemized and aggregate arithmetic is reproducible.", "no_real_tca_claim is true."]
+  - id: SC-CR168-P02
+    title: "Daily multifactor and ML packages share one C3 cost semantic"
+    type: compatibility
+    priority: P0
+    requirement_refs: [REQ-CR168-001, REQ-CR168-007]
+    use_case_refs: [UC-58-CR168, UC-59]
+    steps: ["Attach equivalent normalized C3 evidence to a daily multifactor package fixture.", "Attach it to an ML package fixture.", "Compare arithmetic, availability, reasons and canonical identity rules."]
+    expected: ["The multi-strategy-type fixture family passes 1/1.", "Strategy type does not change cost semantics.", "Model training, registry and runtime operation counts remain 0."]
+  - id: SC-CR168-N01
+    title: "Missing gross or pre-cost basis fails closed"
+    type: negative
+    priority: P0
+    requirement_refs: [REQ-CR168-002, REQ-CR168-004]
+    use_case_refs: [UC-58-CR168]
+    steps: ["Remove gross return and all pre-cost performance basis fields.", "Attempt C3 production."]
+    expected: ["Evidence is typed_unavailable or blocked with a gross-basis reason.", "No present/PASS or net result is emitted."]
+  - id: SC-CR168-N02
+    title: "Missing trade turnover or notional basis fails closed"
+    type: negative
+    priority: P0
+    requirement_refs: [REQ-CR168-002, REQ-CR168-004]
+    use_case_refs: [UC-58-CR168]
+    steps: ["Remove trade, position-change, turnover and notional basis.", "Attempt cost calculation."]
+    expected: ["Evidence fails closed with a basis-insufficient reason.", "No zero-cost assumption is silently inserted."]
+  - id: SC-CR168-N03
+    title: "Missing cost model or version fails closed"
+    type: negative
+    priority: P0
+    requirement_refs: [REQ-CR168-002, REQ-CR168-004]
+    use_case_refs: [UC-58-CR168]
+    steps: ["Provide numeric assumptions without an approved cost model family/version.", "Attempt production."]
+    expected: ["Evidence fails closed with model/version reason.", "No default model is inferred."]
+  - id: SC-CR168-N04
+    title: "NaN or Inf cost input fails closed"
+    type: negative
+    priority: P0
+    requirement_refs: [REQ-CR168-003, REQ-CR168-004]
+    use_case_refs: [UC-58-CR168]
+    steps: ["Inject NaN and Inf into separate fee/slippage/impact fixtures.", "Attempt arithmetic and serialization."]
+    expected: ["Every non-finite variant is blocked.", "No non-finite value appears in present evidence or hash input."]
+  - id: SC-CR168-N05
+    title: "Unauthorized negative cost or impossible value fails closed"
+    type: negative
+    priority: P0
+    requirement_refs: [REQ-CR168-003, REQ-CR168-004]
+    use_case_refs: [UC-58-CR168]
+    steps: ["Provide a negative fee without an explicit allowed rebate policy, then an impossible cost/notional relation.", "Attempt production."]
+    expected: ["Both variants are blocked with field-specific reasons.", "No unintended performance uplift is emitted."]
+  - id: SC-CR168-N06
+    title: "Unit price basis or notional basis inconsistency fails closed"
+    type: negative
+    priority: P0
+    requirement_refs: [REQ-CR168-002, REQ-CR168-004]
+    use_case_refs: [UC-58-CR168]
+    steps: ["Mix rate, price and notional units without a consistent declared basis.", "Attempt reconciliation."]
+    expected: ["Evidence is blocked before calculation.", "Reason identifies the inconsistent cross-field basis."]
+  - id: SC-CR168-N07
+    title: "Cross-field currency price-basis or calendar mismatch without conversion fails closed"
+    type: negative
+    priority: P0
+    requirement_refs: [REQ-CR168-002, REQ-CR168-004]
+    use_case_refs: [UC-58-CR168]
+    steps: ["Mix CNY and USD or incompatible calendars/bases without an explicit conversion declaration.", "Compare with a fully consistent CNY fixture."]
+    expected: ["Unconverted cross-field mixing is blocked.", "The internally consistent single-currency fixture is not falsely rejected."]
+  - id: SC-CR168-N08
+    title: "Gross cost and net arithmetic mismatch fails closed"
+    type: negative
+    priority: P0
+    requirement_refs: [REQ-CR168-003, REQ-CR168-004]
+    use_case_refs: [UC-58-CR168]
+    steps: ["Provide itemized costs whose sum differs from total cost or whose gross-minus-cost differs from net.", "Validate reconciliation."]
+    expected: ["Every mismatch is blocked.", "No inconsistent net performance is projected."]
+  - id: SC-CR168-N09
+    title: "Missing or inconsistent lineage provenance or authorization fails closed"
+    type: integrity
+    priority: P0
+    requirement_refs: [REQ-CR168-002, REQ-CR168-004, REQ-CR168-008]
+    use_case_refs: [UC-58-CR168]
+    steps: ["Remove a mandatory lineage/provenance/authorization ref, then mismatch identity/hash in separate fixtures.", "Attempt production."]
+    expected: ["Missing refs are typed_unavailable and contradictions are blocked.", "Orphan refs equal 0.", "No external ref is dereferenced."]
+  - id: SC-CR168-N10
+    title: "Canonical identity or hash tamper fails closed"
+    type: integrity
+    priority: P0
+    requirement_refs: [REQ-CR168-004, REQ-CR168-005]
+    use_case_refs: [UC-58-CR168]
+    steps: ["Reorder semantically equivalent fields and verify stable hash.", "Modify one canonical field while retaining the old hash."]
+    expected: ["Equivalent normalized inputs share one hash.", "Tampered identity is blocked.", "Tamper false negative count is 0."]
+  - id: SC-CR168-B01
+    title: "Gate 4 remains fail-closed when C3 is present and C4 is unavailable"
+    type: boundary
+    priority: P0
+    requirement_refs: [REQ-CR168-006, REQ-CR168-009]
+    use_case_refs: [UC-58-CR168]
+    steps: ["Project impact_model_family, impact_model_ref, cost_underestimation_status and no_real_tca_claim.", "Leave ADV, capacity-dollar and liquidity-sizing refs typed_unavailable.", "Evaluate Gate 4 and aggregate admission."]
+    expected: ["C3 projection count is 1.", "Gate 4 reports C4 missing reasons.", "Capacity/aggregate PASS count is 0.", "No C4 calculator is invoked."]
+  - id: SC-CR168-A01
+    title: "Real-data TCA runtime trading and remote-write operations remain denied"
+    type: permission
+    priority: P0
+    requirement_refs: [REQ-CR168-008]
+    use_case_refs: [UC-58-CR168]
+    steps: ["Inspect all forbidden operation counters.", "Set one counter non-zero in a negative fixture without executing the operation."]
+    expected: ["Normal fixture counters are all 0.", "Any non-zero counter blocks readiness.", "No real data, TCA, broker, runtime or Git remote action occurs."]
+  - id: SC-CR168-G01
+    title: "CR155 admission package remains blocked"
+    type: negative-regression
+    priority: P0
+    requirement_refs: [REQ-CR168-006, REQ-CR168-009]
+    use_case_refs: [UC-58-CR168]
+    steps: ["Consume existing CR155 evidence refs only.", "Attach C3 availability without C4 capacity evidence.", "Inspect admission package status and paper_candidate."]
+    expected: ["admission_package_status remains BLOCKED 1/1.", "paper_candidate remains false.", "CR155 promotion count is 0."]
+  - id: SC-CR168-E01
+    title: "Event-specific economic-cost semantics remain explicit N/A"
+    type: compatibility
+    priority: P1
+    requirement_refs: [REQ-CR168-007, REQ-CR168-009]
+    use_case_refs: [UC-58-CR168, UC-60]
+    steps: ["Request event-specific economic-cost production.", "Inspect applicability and follow-up routing."]
+    expected: ["Result is explicit N/A/deferred with reason.", "Event-specific producer count is 0.", "No event feed access occurs."]
 coverage_summary:
-  total: 59
-  p0_total: 56
-  p0_with_planned_coverage: 56
+  total: 75
+  p0_total: 71
+  p0_with_planned_coverage: 71
   high_priority_positive_and_negative_covered: true
-  source_requirements_total: 52
-  source_use_cases_total: 8
+  source_requirements_total: 61
+  source_use_cases_total: 9
   gaps:
     - id: GAP-CR157-001
       status: resolved_by_CR157_CP2_and_promoted_CR158
@@ -673,3 +805,6 @@ coverage_summary:
     - id: GAP-CR166-001
       status: resolved_by_CR166_CP3_approval
       description: "SGQ-CR166-001..004、DQ-CP2-CR166-* 与 DQ-CP3-CR166-001..004 已于 2026-07-13 获批；envelope、leakage、integration 与 event N/A 架构已冻结，下一门禁为 CP5。"
+    - id: GAP-CR168-001
+      status: pending_CR168_CP2
+      description: "C3 method boundary, C3/C4 shared header, Gate 4 projection depth, two fixture families and claim ceiling await CP2 approval; HLD/Story/LLD/implementation/verification remain blocked."
