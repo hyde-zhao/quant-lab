@@ -91,7 +91,7 @@
 | `llm-wiki` | 外部学习知识库 | 不复制进本项目；学习资料、学习复盘和笔记任务继续在 `llm-wiki` 中处理。 |
 | `work/studies/quant-trading/local_backtest/` | 旧建议路径 / 误创建空骨架 | CR-001 中已确认无文件，并已用 `rmdir` 清理；不再作为项目根或输出路径。 |
 | `delivery/` | meta-flow 通用交付包概念，不是当前 production 项目的正式出口 | CR-001 中已确认无文件，并已用 `rmdir` 清理；当前项目不生成 `delivery/**`、安装脚本或 meta-flow 交付包。 |
-| `README.md` + `docs/` retained manuals | 当前 production 项目正式用户文档出口 | 源码仓库 `docs/` 只保留组件用户手册、安装 / 运行说明、quickstart / reference manual 和 `docs/release/RELEASE-NOTES.md`；过程、设计、质量、CR 合同、检查清单、回滚、迁移、反馈和研究治理规格归档到 `process/docs/source-archive/docs/` 或对应过程目录。 |
+| `README.md` + `docs/` retained manuals | 当前 production 项目正式用户文档出口 | 源码仓库 `docs/` 只保留组件用户手册、安装 / 运行说明、quickstart / reference manual 和 `docs/release/README.md` 发布文档入口；过程、设计、质量、CR 合同、检查清单、回滚、迁移、反馈和研究治理规格归档到 `process/docs/source-archive/docs/` 或对应过程目录。 |
 
 不要把学习资料大规模拷贝进 `quant-lab`。本仓库只保留运行和维护本地回测工具所需的代码、配置、必要示例、报告占位和用户文档；过程证据归档在 `meta-flow-artifacts` 对应项目命名空间。学习复盘、长篇资料沉淀和知识库整理应留在 `llm-wiki`。历史文档中的 `local_backtest` 仍按 legacy alias 理解。
 
