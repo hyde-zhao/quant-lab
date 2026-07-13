@@ -7,12 +7,15 @@ validated CR163 lineage projection and all method inputs explicitly.
 
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass, field, is_dataclass
+from dataclasses import asdict, dataclass, field
 from enum import Enum
-import hashlib
-import json
-import math
 from typing import Any, Mapping, Sequence
+
+from engine.strategy_evidence import (
+    canonical_hash as _neutral_canonical_hash,
+    canonical_json_bytes as _neutral_canonical_json_bytes,
+    canonical_json_value as _neutral_canonical_json_value,
+)
 
 
 STATISTICAL_EVIDENCE_SCHEMA_VERSION = "statistical_evidence_v1"
@@ -116,21 +119,15 @@ class StatisticalEvidenceSummary:
 
 
 def canonical_json_bytes(value: Any) -> bytes:
-    """Return deterministic JSON bytes, rejecting non-finite values."""
+    """C1 compatibility wrapper preserving the original public API and bytes."""
 
-    normalized = _json_value(value)
-    return json.dumps(
-        normalized,
-        allow_nan=False,
-        ensure_ascii=False,
-        separators=(",", ":"),
-        sort_keys=True,
-    ).encode("utf-8")
+    return _neutral_canonical_json_bytes(value)
 
 
 def canonical_hash(value: Any, *, domain: str = SUMMARY_HASH_DOMAIN) -> str:
-    payload = {"domain": domain, "value": value}
-    return f"sha256:{hashlib.sha256(canonical_json_bytes(payload)).hexdigest()}"
+    """C1 compatibility wrapper preserving the legacy default hash domain."""
+
+    return _neutral_canonical_hash(value, domain=domain)
 
 
 def candidate_membership_hash(candidate_ids: Sequence[str]) -> str:
@@ -380,26 +377,7 @@ def project_summary(summary: StatisticalEvidenceSummary, *, consumer_id: str) ->
 
 
 def _json_value(value: Any) -> Any:
-    if isinstance(value, Enum):
-        return value.value
-    if is_dataclass(value):
-        return _json_value(asdict(value))
-    if value is None or isinstance(value, (str, bool, int)):
-        return value
-    if isinstance(value, float):
-        if not math.isfinite(value):
-            raise ValueError("non-finite floats are not supported")
-        return value
-    if isinstance(value, Mapping):
-        result: dict[str, Any] = {}
-        for key, item in value.items():
-            if not isinstance(key, str):
-                raise TypeError("mapping keys must be strings")
-            result[key] = _json_value(item)
-        return dict(sorted(result.items()))
-    if isinstance(value, (tuple, list)):
-        return [_json_value(item) for item in value]
-    raise TypeError(f"unsupported JSON value: {type(value).__name__}")
+    return _neutral_canonical_json_value(value)
 
 
 def _candidate_ids(values: Sequence[str]) -> tuple[str, ...]:

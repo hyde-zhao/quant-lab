@@ -1,9 +1,9 @@
 ---
-status: draft
-version: "0.8"
-confirmed: false
-confirmed_by: ""
-confirmed_at: ""
+status: confirmed-cp3
+version: "1.1"
+confirmed: true
+confirmed_by: "user"
+confirmed_at: "2026-07-13T10:46:00+08:00"
 ---
 
 # Product Requirements
@@ -20,12 +20,15 @@ confirmed_at: ""
 | v0.6 | 2026-07-11 | meta-pm | CR163 增量追加 experiment-family lifecycle、append-only lineage、count、seal、inventory、integration、integrity 和 authorization 需求。 |
 | v0.7 | 2026-07-11 | meta-pm | 根据 SGQ 全部确认 A 归一化 inventory 为 2 条去重 producer chains / 4 个 instrumentation mappings，并明确 present/typed_unavailable/blocked 与 C1 raw-input-only ceiling。 |
 | v0.8 | 2026-07-12 | meta-pm | CR164 增量追加方法集、lineage/input binding、输入充分性、确定性、方法冲突、consumer integration、effective-count ceiling 与授权边界需求；回填 SGQ-CR164-001..004 全部确认 A。 |
+| v0.9 | 2026-07-13 | host-orchestrator-inline | CR166 增量追加 C2 producer 输入、泄漏边界、确定性 envelope、consumer projection、兼容与授权需求，以及 12 项量化成功标准。 |
+| v1.0 | 2026-07-13 | host-orchestrator | 回填 CR166 CP2 批准，冻结 9 项需求、12 项 QAC、fixture/static 与 Stage 3 claim ceiling；解锁 CP3 设计但不授权实现。 |
+| v1.1 | 2026-07-13 | host-orchestrator | 回填 CR166 CP3 批准；9 项需求与 12 项 QAC 映射到五个正式 Story 和 CP5 全量设计证据，继续不授权实现。 |
 
 ## 状态
 
-- 文档状态：draft
-- 关联 CR：`CR-157` / `CR-158` / `CR-160` / `CR-161` / `CR-162` / `CR-163` / `CR-164`
-- 当前门禁：CR164 CP3 已批准、CP4 PASS；5/5 LLD ready，等待 CP5 全量确认
+- 文档状态：confirmed-cp3
+- 关联 CR：`CR-157` / `CR-158` / `CR-160` / `CR-161` / `CR-162` / `CR-163` / `CR-164` / `CR-166`
+- 当前门禁：CR166 CP3 已批准；CP4/CP5 设计证据准备中，CP5 批准前实现仍 blocked
 - 旧基线保留：当前仓库未发现既有 `docs/product/REQUIREMENTS.md`；既有组件文档和检查证据作为输入，不被替换。
 
 ## Requirement Summary
@@ -483,3 +486,46 @@ QAC-CR164-007 的 3/3 是产品 consumer coverage，不代表 UC-59/60 implement
 | DQ-CP2-CR164-EFFECTIVE-TRIAL | scope / risk | 是否在本 CR 计算 effective trial count？ | 不计算；保持 typed_unavailable，防止未经批准的 estimator。 | resolved-A 2026-07-12 |
 | DQ-CP2-CR164-SUFFICIENCY | risk_acceptance | 方法充分性下限采用推荐值还是更严格值？ | 采用方法特定推荐下限，后续 CP3 可在不降低下限的前提下收紧。 | resolved-A 2026-07-12 |
 | DQ-CP2-CR164-COMPATIBILITY | scope | UC-59/60 是实现对象还是 compatibility-only？ | UC-58 实现，UC-59/60 compatibility-only。 | resolved-A 2026-07-12 |
+| DQ-CP2-CR166-SCOPE | scope | 是否批准 fixture/static C2 foundation、8 类 P0 与 Stage 3 claim ceiling？ | 批准；真实 fold/OOS 数据与 Stage 3 启动另起 CR。 | resolved-approved 2026-07-13 |
+| DQ-CP2-CR166-EXTENSION | architecture-boundary | 是否只预留 C3/C4 versioned typed component 扩展点？ | 只冻结兼容约束，不实现或验证 C3/C4 计算。 | resolved-approved 2026-07-13 |
+| DQ-CP2-CR166-COMPATIBILITY | scope | event 是否与 daily/ML 同列 P0？ | daily + ML 为 P0；event 为 P1 applicability，语义未冻结时 N/A。 | resolved-approved 2026-07-13 |
+| DQ-CP2-CR166-AUTHZ | security | CP2 是否授权真实数据/runtime/外部系统或实现？ | 不授权；CP2 后只进入 CP3，CP5 后才可 fixture/static 实现。 | resolved-approved 2026-07-13 |
+
+## CR166 Walk-forward / OOS Producer Requirements
+
+| REQ ID | 标题 | 优先级 | 可验证要求 |
+|---|---|---|---|
+| REQ-CR166-001 | Typed fold input contract | P0 | fold manifest、split policy、train/validation/OOS bounds、purge/embargo、metrics、lineage refs 7/7 字段族有 schema 与 validation result。 |
+| REQ-CR166-002 | Temporal and leakage boundary | P0 | 时间逆序、purge 缺失、embargo 不足 3/3 fail-closed，reason code 不为空。 |
+| REQ-CR166-003 | Fold/metric sufficiency | P0 | 缺 fold、metric 缺失、NaN/Inf 3/3 不产生 present/PASS；valid fold 分母与 pass-rate 可重算。 |
+| REQ-CR166-004 | Lineage integrity | P0 | lineage 缺失、ref/hash/membership 不一致 100% typed_unavailable 或 blocked；orphan refs=0。 |
+| REQ-CR166-005 | Deterministic C2 envelope | P0 | 相同规范化 fixture 10 次只产生 1 个 canonical hash；header + versioned typed component 保持稳定。 |
+| REQ-CR166-006 | Future C3/C4 compatibility | P0 design constraint | 支持注册式 versioned C3/C4 component 扩展；未知/未注册 component 不能满足 mandatory evidence 或产生 PASS；当前 C3/C4 calculators=0。 |
+| REQ-CR166-007 | Existing-consumer projection | P0 | statistical gate、cross-strategy reliability gate、StrategyAdmissionPackage 3/3 使用同一 C2 refs/availability/reasons；不新建 gate。 |
+| REQ-CR166-008 | Strategy compatibility | P0/P1 | daily multifactor 与 ML purged-embargo compatibility 2/2；event 在 CP3 完成 applicability decision，未冻结语义时为 N/A 而非假覆盖。 |
+| REQ-CR166-009 | Deny-default authorization and Stage claim | P0 | external/real-data ref 解引用=0，forbidden counters=0；Stage 2 保持 complete，Stage 3 started/runtime-authorized/real-evidence-available 均为 false。 |
+
+## CR166 Quantitative Acceptance Criteria
+
+| QAC | 指标 | 目标 |
+|---|---|---:|
+| QAC-CR166-01 | P0 fail-closed 类别覆盖 | 8/8 |
+| QAC-CR166-02 | daily + ML P0 fixture 族 | 2/2 |
+| QAC-CR166-03 | event applicability 决策 | 1/1；实现可为 N/A |
+| QAC-CR166-04 | typed input 字段族 | 7/7 |
+| QAC-CR166-05 | temporal/leakage 负向类 | 3/3 blocked |
+| QAC-CR166-06 | lineage negative coverage | 100% fail-closed，orphan=0 |
+| QAC-CR166-07 | deterministic reruns | 10 次→1 hash |
+| QAC-CR166-08 | existing-consumer projection | 3/3 |
+| QAC-CR166-09 | C3/C4 calculators in CR166 | 0 |
+| QAC-CR166-10 | external dereference / forbidden operations | 0 / 0 |
+| QAC-CR166-11 | Stage claim flags | Stage2 complete=true；Stage3 started=false；real evidence available=false |
+| QAC-CR166-12 | repository regression | CR166 新增代码路径引入失败=0；若触及 CR165 已重基线历史路径，CP7 必须逐项列出触发、归因与非回归理由 |
+
+## CR166 CP3 Design Obligations
+
+状态：`RESOLVED`（2026-07-13，CP3 人工批准；决策引用 `DQ-CP3-CR166-001..004`）。以下义务原文保留用于追溯，并作为 CP4/CP5 的强制设计输入。
+
+1. 冻结 C2 envelope header、versioned component registry、canonical serialization 与 unknown-component decision table。
+2. 冻结 fold 时间边界、purge/embargo 下限和 daily/ML policy 映射；event-time 语义单独作 applicability decision。
+3. 显式定义 producer→三个 consumers 的调用方向、时机、输入、输出、降级与同步修改面。

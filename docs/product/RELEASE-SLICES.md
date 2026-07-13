@@ -9,6 +9,8 @@
 | v0.3 | 2026-07-11 | meta-pm | 增量追加 CR163 产品基线、架构、五 Story 设计/实现验证与 release-readiness 候选切片。 |
 | v0.4 | 2026-07-11 | meta-pm | 根据 SGQ-A 将 CR163 producer slice 明确为 2 条去重 chains / CPI-CR163-001..004 全覆盖，不增加 Story 数。 |
 | v0.5 | 2026-07-12 | meta-pm | 增量追加 CR164 产品基线、方法设计义务、五个 product-planning candidates、fixture/static 验证与 release-readiness 候选切片。 |
+| v0.6 | 2026-07-13 | host-orchestrator-inline | 增量追加 CR166 CP2→CP8 候选切片，明确 fixture/static foundation 与 Stage 3 真实数据启动分离。 |
+| v0.7 | 2026-07-13 | host-orchestrator | 回填 Slice 0 / CP2 已批准；当前进入 Slice 1 / CP3 设计，后续 Slice 2-4 仍受 CP3/CP5/CP8 门禁约束。 |
 
 ## CR157 Candidate Slices
 
@@ -49,3 +51,13 @@
 | Slice 2 | 形成可实现的 Story 设计证据 | 由 meta-se 基于 CR164-S01..S05 候选正式拆分；LLD/technical notes、file ownership、fixture plan | 未批准实现 | CP4/CP5 |
 | Slice 3 | 用本地证据证明可计算且 fail-closed | 四方法 fixture/static producer、consumer projection、negative/recovery/compatibility/CR155 validation | real research batch、lake/NAS/provider、ML training/event feed、trading | CP6/CP7 |
 | Slice 4 | 交付不夸大的可审计能力 | verification、release notes、rollback/migration、not-authorized wording、remaining risks | publish、Git remote write、production enablement | CP8 |
+
+## CR166 Candidate Slices
+
+| Slice | 用户价值 | 包含 | 不包含 | Gate |
+|---|---|---|---|---|
+| Slice 0 | 冻结 C2 foundation 产品语义 | 输入合同、8 类 P0、daily/ML、event applicability、12 QAC、Stage claim ceiling | HLD、正式 Story、实现、真实数据 | CP2 |
+| Slice 1 | 冻结不破坏未来扩展的架构 | C2 envelope、versioned component registry、canonical hash、purge/embargo policy、3 consumers、event applies/N/A | code、C3/C4 calculators、runtime | CP3 |
+| Slice 2 | 形成全量实现设计证据 | CP4 正式 Story/DAG 与 CP5 LLD/technical notes/test plan | 未批准代码实现 | CP4/CP5 |
+| Slice 3 | 本地证明 C2 可生产且 fail-closed | daily/ML fixtures、8 类负向、determinism、consumer projection、CR155 regression、zero-operation guards | lake/NAS/provider、真实 folds、event feed、trading | CP6/CP7 |
+| Slice 4 | 交付桥接能力且不夸大 Stage 状态 | verification、release notes、rollback/migration、Stage2 complete/Stage3 not-started 声明 | Stage3 start、publish、deploy、Git remote write | CP8 |

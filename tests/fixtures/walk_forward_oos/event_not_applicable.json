@@ -1,0 +1,8 @@
+{
+  "fixture_id": "cr166-event-not-applicable",
+  "strategy_kind": "event-driven",
+  "availability": "not_applicable_with_reason",
+  "reason_code": "event_fold_semantics_unfrozen",
+  "producer_count": 0,
+  "feed_access_count": 0
+}

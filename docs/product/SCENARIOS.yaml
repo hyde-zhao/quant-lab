@@ -1,8 +1,8 @@
 schema_version: 1
-version: "0.8"
-status: draft
-cr_id: CR-164
-updated_at: "2026-07-12T18:20:00+08:00"
+version: "1.1"
+status: confirmed-cp3
+cr_id: CR-166
+updated_at: "2026-07-13T10:20:00+08:00"
 source_requirements:
   - docs/product/REQUIREMENTS.md
 source_use_cases:
@@ -40,6 +40,18 @@ revision_record:
     date: "2026-07-12"
     author: meta-pm
     summary: "Add thirteen CR164 positive, negative, boundary, permission, recovery, tamper, compatibility, regression and precheck scenarios after SGQ-CR164-001..004 option-A confirmation."
+  - version: v0.9
+    date: "2026-07-13"
+    author: host-orchestrator-inline
+    summary: "Add ten CR166 P0 fixture/static scenarios plus one P1 event applicability scenario; preserve Stage 3 and real-data non-authorization."
+  - version: v1.0
+    date: "2026-07-13"
+    author: host-orchestrator
+    summary: "Record CR166 CP2 approval; freeze all eleven scenarios as CP3 architecture input without authorizing implementation or real data."
+  - version: v1.1
+    date: "2026-07-13"
+    author: host-orchestrator
+    summary: "Record CR166 CP3 approval; map all eleven scenarios to five formal Stories and CP5 design evidence without authorizing implementation or real data."
 scenarios:
   - id: SC-CR157-P01
     title: "Build mature admission package from complete research refs"
@@ -544,13 +556,101 @@ scenarios:
     use_case_refs: [UC-58-CR164]
     steps: ["Attempt solution-design before CP2 approval.", "Attempt source/test implementation before CP5 approval.", "Inspect requested runtime/data authorization."]
     expected: ["Pre-CP2 design routing is blocked.", "Pre-CP5 implementation is blocked.", "Runtime/data/external authorization remains denied at every product/design gate."]
+  - id: SC-CR166-P01
+    title: "Produce deterministic C2 evidence from a complete daily multifactor fold manifest"
+    type: positive
+    priority: P0
+    requirement_refs: [REQ-CR166-001, REQ-CR166-005, REQ-CR166-007]
+    use_case_refs: [UC-58-CR166]
+    steps: ["Provide complete ordered folds, purge/embargo, finite metrics and lineage refs.", "Produce C2 evidence ten times.", "Project to all existing consumers."]
+    expected: ["Ten evaluations produce one canonical hash.", "Fold-level reasons and pass-rate are recomputable.", "Consumer projection coverage is 3/3."]
+  - id: SC-CR166-P02
+    title: "ML purged-embargo policy maps to the common envelope"
+    type: compatibility
+    priority: P0
+    requirement_refs: [REQ-CR166-001, REQ-CR166-008]
+    use_case_refs: [UC-58-CR166, UC-59]
+    steps: ["Provide MLPurgedEmbargoCVPolicy-compatible fixture inputs.", "Map policy and folds to the common C2 envelope."]
+    expected: ["ML compatibility uses the same availability/ref/reason semantics.", "No model training, registry, provider or runtime operation occurs."]
+  - id: SC-CR166-N01
+    title: "Missing fold fails closed"
+    type: negative
+    priority: P0
+    requirement_refs: [REQ-CR166-001, REQ-CR166-003]
+    use_case_refs: [UC-58-CR166]
+    steps: ["Remove one declared fold or provide an empty fold set.", "Attempt production and projection."]
+    expected: ["Evidence is typed_unavailable or blocked.", "No PASS or inflated denominator is emitted."]
+  - id: SC-CR166-N02
+    title: "Reversed or overlapping temporal boundaries fail closed"
+    type: negative
+    priority: P0
+    requirement_refs: [REQ-CR166-002]
+    use_case_refs: [UC-58-CR166]
+    steps: ["Place validation before train end or OOS before validation end.", "Validate temporal ordering."]
+    expected: ["Every reversed/illegal overlap fixture is blocked.", "Reason identifies the offending fold and boundary."]
+  - id: SC-CR166-N03
+    title: "Missing purge where label overlap exists fails closed"
+    type: negative
+    priority: P0
+    requirement_refs: [REQ-CR166-002]
+    use_case_refs: [UC-58-CR166]
+    steps: ["Declare overlapping label windows with purge absent or zero.", "Validate leakage boundary."]
+    expected: ["Evidence is blocked.", "No OOS claim is projected."]
+  - id: SC-CR166-N04
+    title: "Insufficient embargo fails closed"
+    type: boundary
+    priority: P0
+    requirement_refs: [REQ-CR166-002]
+    use_case_refs: [UC-58-CR166]
+    steps: ["Set embargo one unit below the policy requirement.", "Compare with exact-boundary fixture."]
+    expected: ["One-below is blocked and exact-boundary is eligible for further validation.", "Threshold is not silently lowered."]
+  - id: SC-CR166-N05
+    title: "Missing NaN or Inf fold metric fails closed"
+    type: negative
+    priority: P0
+    requirement_refs: [REQ-CR166-003]
+    use_case_refs: [UC-58-CR166]
+    steps: ["Omit a mandatory metric, then inject NaN and Inf in separate fixtures.", "Attempt aggregation."]
+    expected: ["All three variants fail closed.", "No non-finite value appears in present evidence."]
+  - id: SC-CR166-N06
+    title: "Missing or inconsistent lineage fails closed"
+    type: integrity
+    priority: P0
+    requirement_refs: [REQ-CR166-004]
+    use_case_refs: [UC-58-CR166]
+    steps: ["Remove lineage ref, then mismatch ref/hash/membership in separate fixtures.", "Attempt evidence production."]
+    expected: ["Missing lineage is typed_unavailable and contradictions are blocked.", "Orphan refs equal zero."]
+  - id: SC-CR166-A01
+    title: "Unauthorized real-data or external ref is never dereferenced"
+    type: permission
+    priority: P0
+    requirement_refs: [REQ-CR166-009]
+    use_case_refs: [UC-58-CR166]
+    steps: ["Provide a lake/NAS/provider/runtime ref without authorization.", "Run fixture/static validation with operation counters."]
+    expected: ["Dereference count and all forbidden operation counters remain zero.", "Evidence is blocked with an authorization reason."]
+  - id: SC-CR166-H01
+    title: "Canonical hash mismatch or non-canonical serialization fails closed"
+    type: integrity
+    priority: P0
+    requirement_refs: [REQ-CR166-005, REQ-CR166-006]
+    use_case_refs: [UC-58-CR166]
+    steps: ["Reorder semantically identical optional components and verify canonical stability.", "Tamper with one canonical field while retaining the old hash."]
+    expected: ["Equivalent normalized inputs share one hash.", "Tampered hash mismatch is blocked.", "Unknown components cannot satisfy mandatory C2 evidence."]
+  - id: SC-CR166-E01
+    title: "Event compatibility requires an explicit applicability decision"
+    type: compatibility
+    priority: P1
+    requirement_refs: [REQ-CR166-008]
+    use_case_refs: [UC-58-CR166, UC-60]
+    steps: ["Compare event-time/window semantics with fixed calendar folds during CP3.", "Record applies or N/A with reason."]
+    expected: ["Unfrozen event semantics yield explicit N/A, not an empty producer or coverage claim.", "No event feed access occurs."]
 coverage_summary:
-  total: 48
-  p0_total: 46
-  p0_with_planned_coverage: 46
+  total: 59
+  p0_total: 56
+  p0_with_planned_coverage: 56
   high_priority_positive_and_negative_covered: true
-  source_requirements_total: 43
-  source_use_cases_total: 7
+  source_requirements_total: 52
+  source_use_cases_total: 8
   gaps:
     - id: GAP-CR157-001
       status: resolved_by_CR157_CP2_and_promoted_CR158
@@ -570,3 +670,6 @@ coverage_summary:
     - id: GAP-CR164-001
       status: resolved_by_user_confirmation_A_2026-07-12
       description: "SGQ-CR164-001..004 confirmed the four-method MVP, raw-count DSR/effective-count ceiling, quantitative sufficiency/QAC and UC-59/60 compatibility-only scope; CP3 method-design obligations remain non-blocking."
+    - id: GAP-CR166-001
+      status: resolved_by_CR166_CP3_approval
+      description: "SGQ-CR166-001..004、DQ-CP2-CR166-* 与 DQ-CP3-CR166-001..004 已于 2026-07-13 获批；envelope、leakage、integration 与 event N/A 架构已冻结，下一门禁为 CP5。"

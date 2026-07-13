@@ -11,6 +11,7 @@ from engine.statistical_evidence import (
     build_statistical_evidence_input,
     candidate_membership_hash,
     canonical_hash,
+    canonical_json_bytes,
     make_method_evidence,
     project_summary,
     validate_method_evidence,
@@ -49,6 +50,12 @@ def test_input_binding_and_canonical_hash_are_deterministic() -> None:
     assert validate_statistical_evidence_input(value).status is EvidenceStatus.PASS
     assert value.candidate_membership_hash == candidate_membership_hash(value.candidate_ids)
     assert len({canonical_hash(value.to_dict()) for _ in range(10)}) == 1
+
+
+def test_c1_canonical_public_bytes_and_default_domain_golden_are_unchanged() -> None:
+    value = {"z": [1, 2.5], "a": "中", "nested": {"b": True, "a": None}}
+    assert canonical_json_bytes(value) == b'{"a":"\xe4\xb8\xad","nested":{"a":null,"b":true},"z":[1,2.5]}'
+    assert canonical_hash(value) == "sha256:7395e134869632fc2458dc89576f40c5de907db2d2745d613e34498b33d239ee"
 
 
 def test_count_hash_and_non_finite_conflicts_block() -> None:

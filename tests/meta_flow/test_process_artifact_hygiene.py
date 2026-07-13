@@ -78,6 +78,17 @@ def test_cr165_closed_bundle_remains_classified_after_active_state_clears() -> N
     assert {classify_entry(entry) for entry in entries} == {"closed_cr165_asset"}
 
 
+def test_cr166_closed_bundle_remains_classified_after_active_state_clears() -> None:
+    entries = [
+        StatusEntry(repo="source", status="??", path="engine/walk_forward_oos_evidence.py"),
+        StatusEntry(repo="process", status="??", path="checks/CP8-CR166-DELIVERY-READINESS.result.json"),
+        StatusEntry(repo="process", status="??", path="release/RELEASE-CONTEXT-CR166.yaml"),
+        StatusEntry(repo="process", status="??", path="docs/features/walk-forward-oos-producer/DESIGN.md"),
+    ]
+
+    assert {classify_entry(entry) for entry in entries} == {"closed_cr166_asset"}
+
+
 def test_cr132_cr138_current_assets_are_rule_classified_non_blocking() -> None:
     entries = [
         StatusEntry(

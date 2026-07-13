@@ -1,0 +1,8 @@
+{
+  "fixture_id": "cr166-ml-compatibility-pass",
+  "validation_mode": "fixture-static",
+  "strategy_kind": "ml",
+  "test_is_oos": true,
+  "expected_availability": "present",
+  "real_training": false
+}

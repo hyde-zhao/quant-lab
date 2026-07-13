@@ -11,12 +11,15 @@
 | v0.5 | 2026-07-11 | meta-pm | CR163 增量追加 trial lineage MVP、冻结入口清单、量化验收、排除项与 deferred 统计/回填/real-runner 项。 |
 | v0.6 | 2026-07-11 | meta-pm | 回填 SGQ-A，归一化为 2 条 producer chains / 4 mappings，并明确 ExperimentFamilyManifest availability 与 C1 raw-input-only ceiling。 |
 | v0.7 | 2026-07-12 | meta-pm | 增量追加 CR164 四方法 MVP、方法充分性、量化 AC、保守聚合、effective-count ceiling、consumer compatibility 与 deferred 范围。 |
+| v0.8 | 2026-07-13 | host-orchestrator-inline | 增量追加 CR166 C2 fixture/static foundation、future component compatibility、P0/P1 分层、Stage 3 claim ceiling 与明确排除项。 |
+| v0.9 | 2026-07-13 | host-orchestrator | 回填 CR166 CP2 批准；MVP 范围成为 CP3 正式输入，真实数据、C3/C4 计算、event producer 与 Stage 3 仍明确排除。 |
+| v1.0 | 2026-07-13 | host-orchestrator | 回填 CR166 CP3 批准；范围映射到五个正式 Story，保持 fixture/static、event N/A、C3/C4 calculator=0 与 Stage 3 未启动。 |
 
 ## 状态
 
-- 文档状态：draft
-- 关联 CR：`CR-157` / `CR-158` / `CR-160` / `CR-161` / `CR-162` / `CR-163` / `CR-164`
-- 当前门禁：CR164 CP3 已批准、CP4 PASS；5/5 LLD ready，等待 CP5 全量确认
+- 文档状态：confirmed-cp3
+- 关联 CR：`CR-157` / `CR-158` / `CR-160` / `CR-161` / `CR-162` / `CR-163` / `CR-164` / `CR-166`
+- 当前门禁：CR166 CP3 已批准；CP5 全量设计证据待人工确认
 
 ## In Scope
 
@@ -55,6 +58,12 @@
 | MVP-CR164-005 | Raw-count DSR / effective-count ceiling | `dsr_input_method=raw_trial_count` 为 CP3 schema 义务；effective count 仍 typed_unavailable 且不得 alias。 |
 | MVP-CR164-006 | Existing-consumer and compatibility projection | 复用 CR151/CR154/admission package；UC-58 implementation，UC-59/60 compatibility-only，consumer coverage 3/3。 |
 | MVP-CR164-007 | Deterministic fail-closed verification contract | 10 reruns -> 1 hash；negative fail-closed 100%；CR155 1/1 blocked；forbidden counters/overclaims 0。 |
+| MVP-CR166-001 | Common fold/OOS typed input contract | 7/7 输入字段族有 schema、validation 和 reason semantics。 |
+| MVP-CR166-002 | Temporal/leakage fail-closed | 时间逆序、purge 缺失、embargo 不足 3/3 blocked；缺 fold/metric/lineage 同样不产生 PASS。 |
+| MVP-CR166-003 | Deterministic typed C2 evidence | 10 reruns→1 canonical hash；fold-level reasons 与 pass-rate 可重算。 |
+| MVP-CR166-004 | Versioned component compatibility | C3/C4 注册式扩展不破坏 C2；当前 C3/C4 calculators=0；unknown component 不得满足 mandatory evidence。 |
+| MVP-CR166-005 | Existing consumer projection | CR151 statistical gate、CR154 reliability gate、StrategyAdmissionPackage 3/3 复用同一 evidence refs/availability；CR155 仍 blocked。 |
+| MVP-CR166-006 | Strategy compatibility and claim ceiling | daily + ML 2/2 P0；event P1 applicability；external dereference=0；Stage2 complete，Stage3 not-started，real evidence unavailable。 |
 
 ## Out of Scope
 
@@ -81,6 +90,10 @@
 | CR164 UC-59 ML / UC-60 event adapter implementation | 当前只保证 contract compatibility；不训练模型、不接 event feed、不新增 real runner。 |
 | CR164 real statistical batch / historical recomputation | CP2 只冻结产品合同；不执行真实研究、历史 p-value/return/split 回填或数据迁移。 |
 | CR164 external bootstrap framework run | WRC/SPA 参数在 CP3 设计；当前不安装或运行外部实现。 |
+| CR166 real fold/OOS data ingestion or historical recomputation | 当前只接收显式 fixture/static 输入；不连接 lake/NAS/provider，不回填历史证据。 |
+| CR166 C3/C4 computation | 只预留 versioned typed component 扩展点；经济成本、impact、capacity、liquidity、ADV、alpha decay 均不实现。 |
+| CR166 event-specific producer | event-time/calendar-time 与窗口语义未冻结；CP3 可判 N/A，不交付空壳 producer。 |
+| CR166 Stage 3 start or runtime authorization | CR166 关闭后 Stage 2 状态保持 complete；Stage 3 仍需独立 CR 和真实数据连接授权。 |
 
 ## Deferred
 
@@ -97,6 +110,9 @@
 | DF-CR164-001 | Effective-trial estimator / multiplicity model | 独立方法 CR 冻结 estimator 假设、偏差、上下界和 verifier 后重启。 |
 | DF-CR164-002 | Real ML/event computable-evidence adapters | real runners、同等 lineage contract 与 runtime/data authorization 全部具备后重启。 |
 | DF-CR164-003 | Real research recomputation / historical evidence migration | 独立 data/runtime/audit gate 批准，且 inferred provenance 不伪装为 native evidence。 |
+| FU-CR161-004 | C3 economic cost / impact producer | 独立方法、输入与数据授权；复用 CR166 versioned component envelope。 |
+| FU-CR161-005 | C4 capacity / liquidity producer | 独立方法、输入与数据授权；可与 C3 共用输入-contract wave，但计算与验证独立。 |
+| FU-CR161-007 | Existing-gate integration and CR155 regression | C1-C4 producer 均稳定后再做端到端整合；CR155 必须保持 blocked。 |
 
 ## Promoted to CR158
 

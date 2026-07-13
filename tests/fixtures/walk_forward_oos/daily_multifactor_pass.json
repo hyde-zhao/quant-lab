@@ -1,0 +1,8 @@
+{
+  "fixture_id": "cr166-daily-multifactor-pass",
+  "validation_mode": "fixture-static",
+  "strategy_kind": "daily-multifactor",
+  "declared_fold_count": 3,
+  "expected_availability": "present",
+  "real_data": false
+}

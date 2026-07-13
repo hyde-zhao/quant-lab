@@ -1,9 +1,9 @@
 ---
-status: draft
-version: "0.8"
+status: confirmed-cp3
+version: "1.1"
 source_scenarios: "docs/product/SCENARIOS.yaml"
 source_requirements: "docs/product/REQUIREMENTS.md"
-cr_id: "CR-164"
+cr_id: "CR-166"
 template_deviation_reason: "CR157 uses Scenario/Requirement/Test Layer/Validation Mode columns to preserve gate and no-runtime evidence mapping; coverage statistics remain present below."
 ---
 
@@ -21,12 +21,15 @@ template_deviation_reason: "CR157 uses Scenario/Requirement/Test Layer/Validatio
 | v0.6 | 2026-07-11 | meta-pm | CR163 追加 12 个 P0 lineage lifecycle、count、integrity、permission 和 CR155 regression 场景映射。 |
 | v0.7 | 2026-07-11 | meta-pm | 回填 SGQ-A 语义，明确 2 条 producer chains / 4 个 mappings，以及 present / typed_unavailable / blocked 与 C1 raw-input-only 验证。 |
 | v0.8 | 2026-07-12 | meta-pm | 追加 CR164 13 个 P0 method/input/disagreement/boundary/recovery/permission/compatibility/precheck 场景的 fixture/static 覆盖。 |
+| v0.9 | 2026-07-13 | host-orchestrator-inline | 追加 CR166 10 个 P0 与 1 个 P1 场景映射，覆盖 daily/ML、8 类 fail-closed、event applicability、Stage claim 与零外部操作。 |
+| v1.0 | 2026-07-13 | host-orchestrator | 回填 CR166 CP2 批准；11/11 场景保持 planned fixture/static，作为 CP3 架构与后续 CP5/CP7 验证输入。 |
+| v1.1 | 2026-07-13 | host-orchestrator | 回填 CR166 CP3 批准；11/11 场景映射到五个正式 Story 和 CP5 LLD/Feature 测试设计，验证仍为 planned、未执行。 |
 
 ## 状态
 
-- 文档状态：draft
-- 关联 CR：`CR-157` / `CR-158` / `CR-160` / `CR-161` / `CR-162` / `CR-163` / `CR-164`
-- 当前门禁：CR164 CP3 已批准、CP4 PASS；5/5 LLD ready，等待 CP5 全量确认
+- 文档状态：confirmed-cp3
+- 关联 CR：`CR-157` / `CR-158` / `CR-160` / `CR-161` / `CR-162` / `CR-163` / `CR-164` / `CR-166`
+- 当前门禁：CR166 CP3 已批准；CP5 设计证据待人工确认，当前仍仅为 planned fixture/static coverage
 
 ## Coverage Matrix
 
@@ -80,6 +83,17 @@ template_deviation_reason: "CR157 uses Scenario/Requirement/Test Layer/Validatio
 | SC-CR164-G01 | REQ-CR164-006, REQ-CR164-009 | negative-regression / existing-evidence | static | CR155 remains blocked without reconstruction | P0 | planned |
 | SC-CR164-C01 | REQ-CR164-007, REQ-CR164-009 | compatibility / contract | fixture/static | UC-58 + UC-59/60 compatibility projection 3/3 | P0 | planned |
 | SC-CR164-Q01 | REQ-CR164-001, REQ-CR164-009 | workflow / precheck | static | CP2-before-design, CP5-before-implementation and no-runtime route guards | P0 | planned |
+| SC-CR166-P01 | REQ-CR166-001, REQ-CR166-005, REQ-CR166-007 | contract / determinism / integration | fixture/static | daily fold envelope; 10 reruns→1 hash; consumer projection 3/3 | P0 | planned |
+| SC-CR166-P02 | REQ-CR166-001, REQ-CR166-008 | compatibility / contract | fixture/static | ML purged-embargo policy mapping without training/runtime | P0 | planned |
+| SC-CR166-N01 | REQ-CR166-001, REQ-CR166-003 | negative / sufficiency | fixture/static | missing/empty fold set fail-closed | P0 | planned |
+| SC-CR166-N02 | REQ-CR166-002 | temporal / leakage | fixture/static | reversed/overlapping boundary reason codes | P0 | planned |
+| SC-CR166-N03 | REQ-CR166-002 | leakage / negative | fixture/static | missing purge with label overlap blocked | P0 | planned |
+| SC-CR166-N04 | REQ-CR166-002 | boundary / leakage | fixture/static | one-below vs exact embargo threshold assertions | P0 | planned |
+| SC-CR166-N05 | REQ-CR166-003 | numerical / negative | fixture/static | missing/NaN/Inf metric 3/3 fail-closed | P0 | planned |
+| SC-CR166-N06 | REQ-CR166-004 | integrity / lineage | fixture/static | missing/ref/hash/membership mismatch; orphan refs=0 | P0 | planned |
+| SC-CR166-A01 | REQ-CR166-009 | permission / security | fixture/static | external ref dereference=0; forbidden counters=0 | P0 | planned |
+| SC-CR166-H01 | REQ-CR166-005, REQ-CR166-006 | determinism / integrity | fixture/static | canonical equivalence and tamper mismatch; unknown component no-PASS | P0 | planned |
+| SC-CR166-E01 | REQ-CR166-008 | compatibility / design-review | static | explicit event N/A decision; no empty producer | P1 | planned-CP7-static |
 
 ## Coverage Summary
 
@@ -105,6 +119,13 @@ template_deviation_reason: "CR157 uses Scenario/Requirement/Test Layer/Validatio
 | CR164 P0 scenarios with planned coverage | 13 |
 | CR164 quantitative acceptance criteria | 10 |
 | CR164 external/runtime tests authorized | 0 |
+| CR166 P0 scenarios | 10 |
+| CR166 P0 scenarios with planned coverage | 10 |
+| CR166 P1 applicability scenarios | 1 |
+| CR166 quantitative acceptance criteria | 12 |
+| CR166 P0 fixture families | 2 |
+| CR166 existing-consumer projections | 3 |
+| CR166 external/runtime tests authorized | 0 |
 
 ## Notes
 
@@ -115,3 +136,4 @@ template_deviation_reason: "CR157 uses Scenario/Requirement/Test Layer/Validatio
 - CR161 / CR162 verification is static documentation and existing-evidence traceability only. The matrix does not represent FDR/PBO/DSR, fold-level OOS, TCA, market-impact or capacity computation.
 - CR163 verification remains fixture/static unless a later gate grants separate runtime/data authorization. Future native instrumented runs may set `ExperimentFamilyManifest=present` only after seal/completeness/reference/count/tamper validation; uninstrumented paths remain `typed_unavailable`; invalid/tampered lineages are `blocked`. This prepares only the C1 raw-lineage input and does not make C1 computable.
 - CR164 verification is fixture/static only. Four methods are mandatory but no OR-pass is allowed; DSR raw count must be explicitly identified and never alias effective count; WRC/SPA stationary-bootstrap parameter selection is a CP3 obligation. UC-59/60 rows prove compatibility semantics only, not adapter implementation or real feed/training authorization.
+- CR166 验证仅允许 fixture/static：daily multifactor 与 ML compatibility 为 P0；event 为 CP3 applicability/P1。任何真实 fold/OOS 数据、lake/NAS/provider/runtime 或外部 ref 均不得解引用。CP8 也只能声明桥接 foundation，不得声明 Stage 3 已启动或真实 OOS evidence 可用。

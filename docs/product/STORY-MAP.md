@@ -10,13 +10,16 @@
 | v0.4 | 2026-07-11 | meta-pm | 增量追加 CR163 五个 outcome-oriented candidate Stories；仅作为 CP2/CP3 输入，不写入 DEVELOPMENT-PLAN。 |
 | v0.5 | 2026-07-11 | meta-pm | 根据 SGQ-A 将 CR163-S03 明确覆盖 2 条去重 producer chains / 全部 CPI-CR163-001..004 mappings；五 Story 数量不变。 |
 | v0.6 | 2026-07-12 | meta-pm | 增量追加 CR164 五个 outcome-oriented product-planning candidates，承接四方法、量化 AC、保守聚合与 compatibility-only 范围；不写入 DEVELOPMENT-PLAN。 |
+| v0.7 | 2026-07-13 | host-orchestrator-inline | 增量追加 CR166 五个 outcome candidate；CP2 前不形成正式 Story、DAG 或文件所有权。 |
+| v0.8 | 2026-07-13 | host-orchestrator | 回填 CR166 CP2 批准；五个 outcome 进入 CP3 架构输入，但在 CP3 批准前仍不是正式 Story。 |
+| v0.9 | 2026-07-13 | host-orchestrator | 回填 CR166 CP3 批准；五个 outcome 由 CP4 正式化为 CR166-S01..S05，并进入五个串行安全 Wave。 |
 
 ## 状态
 
-- 文档状态：draft
-- 关联 CR：`CR-157` / `CR-158` / `CR-163` / `CR-164`
-- 当前门禁：CR164 CP3 已批准、CP4 PASS；5/5 LLD ready，等待 CP5 全量确认
-- 注意：CP2 未批准前，以下 Story 只是产品规划候选，不是 `DEVELOPMENT-PLAN` 或 dev-ready Story。
+- 文档状态：confirmed-cp3
+- 关联 CR：`CR-157` / `CR-158` / `CR-163` / `CR-164` / `CR-166`
+- 当前门禁：CR166 CP3 已批准；CP4 自动预检与 CP5 全量设计证据准备中
+- 注意：CR166-S01..S05 已成为正式 Story，但在 CP5 批准前均为 `lld-ready`，不是 `dev-ready`。
 
 ## Activities
 
@@ -60,3 +63,14 @@
 CR163-S03 scope note：不增加第六个 Story；S03 单一 candidate Story 必须覆盖 public Stage 3 chain、legacy CR039 chain 及 `build_strategy_candidate` / `build_strategy_candidates` 两个 hook，即 CPI-CR163-001..004 4/4 instrumentation mappings。
 
 > CR164-S01..S05 只是产品 outcome 候选，不是正式 Story decomposition。CP2 批准后仍须 CP3；正式 Story 数、边界、依赖与文件所有权由 meta-se 在 CP4 决定。
+## CR166 Product-planning Candidates
+
+| Activity | User Task | Candidate Story | Priority | Gate |
+|---|---|---|---|---|
+| C2 contract | 冻结 fold/split/purge/embargo/metric/lineage 输入与 typed envelope | CR166-S01 Common C2 input and evidence contract | P0 | CP3/CP5 |
+| Leakage validation | 阻断时间逆序、purge/embargo 与 metric/lineage 缺口 | CR166-S02 Temporal, leakage and sufficiency validator | P0 | CP3/CP5/CP7 |
+| Deterministic production | 输出 fold-level reason、pass-rate、canonical hash 与 version chain | CR166-S03 Deterministic C2 producer | P0 | CP5/CP6/CP7 |
+| Existing integration | 保守投影到三个 existing consumers，保持 CR155 blocked | CR166-S04 Existing-consumer projection and regression | P0 | CP3/CP5/CP7 |
+| Compatibility and verification | daily/ML fixtures、event applicability、deny-default 与 claim ceiling | CR166-S05 Compatibility and independent verification | P0/P1 | CP5/CP7/CP8 |
+
+以上 5 项已获 CP3 批准，并由 CP4 冻结为正式 Story、五个串行安全 Wave、显式依赖、文件所有权与 `full-lld` policy；CP5 批准前不得实现。

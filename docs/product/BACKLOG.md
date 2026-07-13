@@ -12,6 +12,7 @@
 | v0.6 | 2026-07-11 | meta-pm | 将 `FU-CR161-001` 映射为 active `CR-163`，保留旧 candidate 行并追加 CR163 deferred 统计、backfill 与 real-runner 项。 |
 | v0.7 | 2026-07-11 | meta-pm | 根据 SGQ-A 明确 CR163 只令 C1 raw-lineage input-ready；C1 计算仍由 FU-CR161-002 承接，CR155 继续 blocked。 |
 | v0.8 | 2026-07-12 | meta-pm | 将 `FU-CR161-002` 映射为 active `CR-164`，并追加 effective-trial estimator、real ML/event adapters 与 real recomputation deferred items。 |
+| v0.9 | 2026-07-13 | host-orchestrator-inline | 将 `FU-CR161-003` 映射为 active `CR-166`，把 C3、C4 与 existing-gate integration 归一化为独立 `004/005/007`，并与 CR161 structured tracking 对齐。 |
 
 ## Candidates
 
@@ -23,10 +24,11 @@
 | BL-CR157-004 | Process compact route for existing-evidence hygiene | process follow-up | P2 | 来自 CR156 retrospective，用于减少后续 hygiene CR 过度处理。 |
 | FU-CR161-001 | Experiment-family trial lineage instrumentation | promoted to CR163 | P0 | 已由 `CR-163` 承接 pre-search family declaration、append-only trial/attempt/selection、raw count、seal/supersession、existing-gate integration 与 CR155 regression；CP2 前不得设计/实现。 |
 | FU-CR161-002 | C1 multiple-testing, data-snooping and overfit evidence producer | promoted to CR164 | P0 | 已由 `CR-164` 承接 BH、WRC/SPA、PBO/CSCV、raw-count-declared DSR、输入充分性、保守聚合与 existing-consumer projection；effective-trial estimator 仍 deferred。 |
-| FU-CR161-003 | C2 walk-forward / OOS evidence producer | follow-up CR | P0 | purged-embargo fold manifest、fold metrics 和 OOS inputs 可用时。 |
-| FU-CR161-004 | C3/C4 economic cost and capacity evidence producer | follow-up CR | P0 | 真实可审计成本、impact、capacity 和 liquidity inputs 获独立授权时。 |
-| FU-CR161-005 | Existing-gate integration and CR155 regression implementation | follow-up CR | P1 | 各 producer 可输出 typed evidence 后；必须复用 CR151/CR154，且 CR155 仍 blocked。 |
+| FU-CR161-003 | C2 walk-forward / OOS evidence producer foundation | promoted to CR166 | P0 | CR-166 仅以 fixture/static 输入建立 producer、fail-closed 与既有 consumer projection；真实 fold/OOS 灌入和 Stage 3 运行另行授权。 |
+| FU-CR161-004 | C3 economic cost / slippage / impact evidence producer | follow-up CR | P0 | 可审计成交价、成本模型与 impact inputs 获独立授权时；复用 versioned evidence component envelope。 |
+| FU-CR161-005 | C4 capacity / liquidity / ADV / alpha-decay evidence producer | follow-up CR | P0 | 容量曲线、成交量/流动性 inputs 与方法边界获独立授权时；可与 C3 共享输入合同设计 wave，但计算独立验证。 |
 | FU-CR161-006 | Independent CP7 verifier-lane resilience | process / QA follow-up | P1 | 高风险后续实现需要独立 QA 结论，或 CR161 waiver 到期前。 |
+| FU-CR161-007 | Existing-gate integration and CR155 regression implementation | follow-up CR | P1 | C1-C4 producer 均能输出稳定 typed evidence 后；必须复用 CR151/CR154，且 CR155 仍 blocked。 |
 | FU-CR162-001 | Generic CP8 product-baseline-refresh checker | process follow-up | P1 | 任一 CR 设置 `product_baseline_refresh_required=true` 时；需独立 process CR/授权。 |
 | DF-CR163-001 | Effective-trial and statistical-correction producer | follow-up CR | P0 | CR163 raw lineage 已稳定、统计方法/输入/独立验证另行批准时。 |
 | DF-CR163-002 | Historical lineage backfill | audit/data follow-up | P1 | 获得独立数据与审计授权，并明确 inferred/backfilled provenance 不得伪装为 native instrumentation 时。 |
@@ -42,9 +44,10 @@
 | DF-CR157-001 | FU-CR157-001 | active | `CR-158` | Event strategy adapter implementation 已进入 CR158 统一 adapter scope；仍不授权真实 event feed / live listener。 |
 | DF-CR157-002 | FU-CR157-002 | active | `CR-158` | ML strategy adapter implementation 已进入 CR158 统一 adapter scope；仍不授权真实 model training / external model service / registry promotion。 |
 | BL-CR157-003 / DF-CR157-003 | FU-CR160-STAGE4-OBSERVATION-REVIEW | active | `CR-160` | Stage 4 observation review workflow 已进入 CR160 纯设计 scope；CR160 关闭后只形成 review/gate contract 基线，不自动启动 Stage 5 paper/simulation 或 runtime authorization。 |
-| FU-CR161-001 | CR-163 | active | `CR-163` | 保留 CR161 follow-up 历史；CR163 只实现 raw experiment-family lineage 事实来源，不启动 FU-CR161-002..006。 |
-| FU-CR161-002 | CR-164 | active | `CR-164` | 保留 CR161 follow-up 历史；CR164 承接 C1 computable evidence，但不承接 effective-trial estimator、real batch、UC-59/60 real adapters 或 runtime authorization。 |
+| FU-CR161-001 | CR-163 | closed | `CR-163` | 保留 CR161 follow-up 历史；CR163 只实现 raw experiment-family lineage 事实来源。 |
+| FU-CR161-002 | CR-164 | closed | `CR-164` | 保留 CR161 follow-up 历史；CR164 承接 C1 computable evidence，但不承接 effective-trial estimator、real batch、UC-59/60 real adapters 或 runtime authorization。 |
+| FU-CR161-003 | CR-166 | active | `CR-166` | 承接 C2 fixture/static producer foundation；不连接真实 lake，不宣称真实 OOS evidence 可用，不启动 C3/C4 或 Stage 3。 |
 
 ## Runtime Boundary
 
-CR157 backlog refs, CR158 adapter scope, CR160 Stage 4 observation review scope, CR161/CR162 evidence availability baseline, CR163 trial-lineage instrumentation and CR164 computable-evidence product scope do not authorize real lake/NAS/provider/credential/QMT/gateway/runtime/simulation/paper/live/trading/broker/feed/order/reconciliation/store/catalog/registry/model registry/prediction store/publish/external framework/Git remote operations. CR160/CR161/CR163/CR164 consume existing CR155 evidence only as a fail-closed classification sample; none may create new data access, runtime authorization or historical backfill. CR164 statistical computation remains future fixture/static implementation subject to CP5 and does not authorize real research execution.
+CR157 backlog refs, CR158 adapter scope, CR160 Stage 4 observation review scope, CR161/CR162 evidence availability baseline, CR163 trial-lineage instrumentation, CR164 C1 computable evidence and CR166 C2 fixture/static foundation do not authorize real lake/NAS/provider/credential/QMT/gateway/runtime/simulation/paper/live/trading/broker/feed/order/reconciliation/store/catalog/registry/model registry/prediction store/publish/external framework/Git remote operations. CR160/CR161/CR163/CR164/CR166 consume existing CR155 evidence only as a fail-closed classification sample; none may create new data access, runtime authorization or historical backfill. CR166 does not make real walk-forward/OOS evidence available and does not start Stage 3.

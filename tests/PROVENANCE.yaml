@@ -1906,6 +1906,41 @@ items:
     old_paths: []
     introduced_by: CR-164
     provenance: [{cr: CR-164, story: CR164-S05}]
+  tests/research/test_walk_forward_oos_contracts.py:
+    domains: [research]
+    old_paths: []
+    introduced_by: CR-166
+    provenance: [{cr: CR-166, story: CR166-S01-evidence-envelope-contracts}]
+  tests/research/test_walk_forward_oos_validation.py:
+    domains: [research]
+    old_paths: []
+    introduced_by: CR-166
+    provenance: [{cr: CR-166, story: CR166-S02-fold-validator-adapters}]
+  tests/research/test_walk_forward_oos_producer.py:
+    domains: [research]
+    old_paths: []
+    introduced_by: CR-166
+    provenance: [{cr: CR-166, story: CR166-S03-deterministic-c2-producer}]
+  tests/research/test_walk_forward_oos_projections.py:
+    domains: [research]
+    old_paths: []
+    introduced_by: CR-166
+    provenance: [{cr: CR-166, story: CR166-S04-existing-consumer-projections}]
+  tests/research/test_walk_forward_oos_qac.py:
+    domains: [research]
+    old_paths: []
+    introduced_by: CR-166
+    provenance: [{cr: CR-166, story: CR166-S05-independent-static-verification}]
+  tests/research/test_walk_forward_oos_authorization.py:
+    domains: [research]
+    old_paths: []
+    introduced_by: CR-166
+    provenance: [{cr: CR-166, story: CR166-S05-independent-static-verification}]
+  tests/research/test_walk_forward_oos_cr155_regression.py:
+    domains: [research]
+    old_paths: []
+    introduced_by: CR-166
+    provenance: [{cr: CR-166, story: CR166-S05-independent-static-verification}]
   tests/research/test_trial_lineage_admission_projection.py:
     domains: [research]
     old_paths: [tests/test_cr163_trial_lineage_admission_projection.py]

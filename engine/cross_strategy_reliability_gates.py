@@ -157,6 +157,7 @@ class ReliabilityGateSummary:
     operation_counts: Mapping[str, int] = field(default_factory=dict)
     limitations: tuple[str, ...] = ()
     family_lineage_projection: Mapping[str, Any] = field(default_factory=dict)
+    evidence_identity: Mapping[str, Any] = field(default_factory=dict)
     schema_version: str = CR154_RELIABILITY_SCHEMA_VERSION
 
     def to_dict(self) -> dict[str, Any]:
@@ -381,9 +382,16 @@ def validate_gate2_cv_governance(
     operation_counts: Mapping[str, Any] | None = None,
 ) -> ReliabilityGateSummary:
     counts = normalize_forbidden_operation_counts(operation_counts)
+    evidence_identity = {
+        "component_ref": str(evidence.get("walk_forward_oos_component_ref") or ""),
+        "component_hash": str(evidence.get("walk_forward_oos_component_hash") or ""),
+        "availability": str(evidence.get("walk_forward_oos_availability") or ""),
+        "outcome": str(evidence.get("walk_forward_oos_outcome") or ""),
+        "reason_codes": tuple(str(item) for item in _as_sequence(evidence.get("walk_forward_oos_reason_codes")) if str(item)),
+    }
     status, reason, claims = evaluate_shared_contract(artifact_refs=(), operation_counts=counts, gate_id=GATE_2_CV)
     if status is ReliabilityGateStatus.BLOCKED:
-        return ReliabilityGateSummary(GATE_2_CV, status, blocked_claims=claims, release_blocking_reason=reason, operation_counts=counts)
+        return ReliabilityGateSummary(GATE_2_CV, status, blocked_claims=claims, release_blocking_reason=reason, operation_counts=counts, evidence_identity=evidence_identity)
 
     refs: list[ArtifactRef] = []
     blocked: list[BlockedClaim] = []
@@ -501,7 +509,7 @@ def validate_gate2_cv_governance(
         status = ReliabilityGateStatus.NEEDS_REVIEW
     else:
         status = ReliabilityGateStatus.PASS
-    return ReliabilityGateSummary(GATE_2_CV, status, tuple(refs), tuple(blocked), reason, operation_counts=counts)
+    return ReliabilityGateSummary(GATE_2_CV, status, tuple(refs), tuple(blocked), reason, operation_counts=counts, evidence_identity=evidence_identity)
 
 
 def validate_gate3_pit_universe(

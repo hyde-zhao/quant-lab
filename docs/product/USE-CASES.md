@@ -1,11 +1,11 @@
 ---
-status: draft
-version: "0.8"
-confirmed_by: ""
-confirmed_at: ""
+status: confirmed-cp3
+version: "1.1"
+confirmed_by: "user"
+confirmed_at: "2026-07-13T10:46:00+08:00"
 engagement_mode: production
 scenario_subject_type: target-artifact
-scenario_subject_id: "CR-164"
+scenario_subject_id: "CR-166"
 target_artifact_type: workflow
 governance_mode: review-gated
 review_policy: strict
@@ -13,7 +13,7 @@ delivery_routing:
   mode: project-readme-contract
   output_root: "docs/product"
   source: docs
-total_use_cases: 7
+total_use_cases: 8
 ---
 
 # Product Use Cases
@@ -30,12 +30,15 @@ total_use_cases: 7
 | v0.6 | 2026-07-11 | meta-pm | CR163 增量追加 experiment-family trial lineage instrumentation 用例、候选生产入口清单、count / availability 语义和 SGQ 待确认项；保留既有 CR157-CR162 基线。 |
 | v0.7 | 2026-07-11 | meta-pm | 回填 SGQ-CR163-001..004 全部选择 A；将 inventory 统一表述为“2 条去重 producer chains / 4 个 instrumentation mappings”，并收紧 C1 raw-lineage claim ceiling。 |
 | v0.8 | 2026-07-12 | meta-pm | CR164 增量追加 multiple-testing / WRC-SPA / PBO-CSCV / DSR 可计算证据旅程、fail-closed 语义及 UC-59/UC-60 compatibility 边界；回填 SGQ-CR164-001..004 全部确认强化推荐 A。 |
+| v0.9 | 2026-07-13 | host-orchestrator-inline | CR166 增量追加 fixture/static Walk-forward/OOS C2 producer foundation、八类 fail-closed、ML compatibility、event P1 适用性与 Stage 3 claim ceiling。 |
+| v1.0 | 2026-07-13 | host-orchestrator | 回填 CR166 CP2 人工批准；产品范围、Stage ceiling、C3/C4 扩展约束和 event P1 适用性成为 CP3 正式输入。 |
+| v1.1 | 2026-07-13 | host-orchestrator | 回填 CR166 CP3 人工批准；用户旅程映射到五个正式 Story，event 适用性确定为显式 N/A，下一门禁为 CP5。 |
 
 ## 状态
 
-- 文档状态：draft
-- 关联 CR：`CR-157` / `CR-158` / `CR-160` / `CR-161` / `CR-162` / `CR-163` / `CR-164`
-- 当前门禁：CR164 CP3 已批准、CP4 PASS；5/5 LLD ready，等待 CP5 全量确认
+- 文档状态：confirmed-cp3
+- 关联 CR：`CR-157` / `CR-158` / `CR-160` / `CR-161` / `CR-162` / `CR-163` / `CR-164` / `CR-166`
+- 当前门禁：CR166 CP3 已批准；五个正式 Story 的全量设计证据待 CP5 人工确认，CP5 前不得实现
 - 旧基线保留：当前仓库未发现既有 `docs/product/USE-CASES.md`，本文件作为产品层用例入口；既有组件说明和场景文档不被重写。
 
 ## UC-58 多因子策略研究到准入
@@ -320,3 +323,39 @@ Canonical answer：`process/context/CR164-CP2-SGQ-BATCH.yaml`。该回答不是 
 | DF-CR164-001 | effective-trial estimator / multiplicity model | deferred-confirmed | 独立方法、偏差假设、估计上下界和 verifier 已在后续 CR 获批。 |
 | DF-CR164-002 | real ML/event statistical-evidence adapters | deferred | real runners 与 runtime/data authorization 存在，且 compatibility contract 已经验证稳定。 |
 | DF-CR164-003 | 真实研究批量重算与历史证据迁移 | not-authorized | 独立 data/runtime/audit gate 批准，且 provenance 不被回填伪装。 |
+
+## UC-58-CR166 Walk-forward / OOS Evidence Producer Foundation
+
+| 字段 | 内容 |
+|---|---|
+| 用例 ID | UC-58-CR166 |
+| 名称 | Fixture/static Walk-forward / OOS typed C2 evidence producer foundation |
+| 主要用户 | 量化研究负责人、策略研究员、准入审查者、独立验证者、框架维护者 |
+| 触发条件 | CR161 已定义 `WalkForwardEvidence` availability，现有 statistical gate 能消费 pass rate，但仓库尚无通用 fold-level producer、时间/泄漏边界校验与 lineage-bound C2 evidence。 |
+| 输入 | 显式提供的 fold manifest、split policy、train/validation/OOS 时间边界、purge/embargo、fold metrics、lineage refs 与 fixture authorization metadata。 |
+| 处理逻辑 | 先校验完整性、时间顺序、purge/embargo、有限值、lineage 与 external-ref 权限；再确定性汇总 fold-level 原因和 OOS 指标，生成 typed C2 evidence 并保守投影到既有三个 consumers。 |
+| 输出 / 结果 | C2 evidence header、versioned component、fold-level reason codes、provenance refs、canonical hash、availability 与 consumer projection；未知扩展不得产生 PASS。 |
+| 当前范围 | daily multifactor P0、ML purged-embargo compatibility P0；event 仅 P1 适用性审查。 |
+| 明确不在范围 | 真实 lake/fold/OOS 数据、真实研究运行、C3/C4 计算、event-specific producer、runtime resolver 深度集成、交易/发布/部署。 |
+| Stage 语义 | Stage 2 继续保持 complete；CR166 只是 Stage 2→Stage 3 桥接增强，Stage 3 未启动、真实 OOS evidence 未声明可用。 |
+
+### CR166 用户旅程
+
+| 步骤 | 用户意图 | 系统行为 | 成功标准 |
+|---|---|---|---|
+| 1 | 提交可审计 fold 输入 | 校验 manifest、policy、fold 数、时间边界与 lineage refs。 | 所有必需字段齐备且 refs 一致；缺失或冲突 fail-closed。 |
+| 2 | 防止 look-ahead 与 label overlap | 校验 train→validation→OOS 顺序以及 purge/embargo 下限。 | 时间逆序、purge 缺失、embargo 不足 3/3 被阻断。 |
+| 3 | 形成 fold-level OOS 证据 | 校验 metric 有限性并确定性汇总 pass rate、退化与 reason codes。 | 相同规范化输入 10 次只产生 1 个 canonical hash。 |
+| 4 | 复用既有准入 consumers | 投影至 statistical gate、cross-strategy reliability gate 与 StrategyAdmissionPackage。 | consumer projection 3/3，原 blocked/typed_unavailable 状态不被提升。 |
+| 5 | 保持未来扩展和权限边界 | 允许注册 versioned C3/C4 components，但不计算；external/real-data ref 只作为未授权引用被拒绝。 | C3/C4 实现数 0；外部解引用与禁止操作计数均为 0。 |
+
+### CR166 Scenario Gray Areas 与确认记录
+
+| SGQ | 问题 | 推荐与用户确认 | 状态 |
+|---|---|---|---|
+| SGQ-CR166-001 | C2 是 Stage 2 完成项还是 Stage 3 桥接？ | Stage 2 已完成；C2 是 fixture/static 桥接增强，不构成 Stage 3 启动。 | confirmed-by-review |
+| SGQ-CR166-002 | event fixture 是否为 P0？ | daily + ML 为 P0；event 降为 P1/CP3 applicability，语义未冻结时 N/A。 | confirmed-by-review |
+| SGQ-CR166-003 | C3/C4 是否纳入实现？ | 不纳入；C2 envelope 必须预留 versioned typed component 扩展点。 | confirmed-by-review |
+| SGQ-CR166-004 | 未授权 ref 与 deterministic hash 是否可降级？ | foundation 的零解引用和确定性属于 P0；深度 runtime resolver 与 event-specific semantics 可保持 P1。 | confirmed-by-scope-review |
+
+讨论证据：`process/discussions/CP2-CR166-SCENARIO-DISCUSSION-LOG.md`；正式整体范围与架构分别由 CP2、CP3 于 2026-07-13 批准，当前作为 CP4/CP5 Story 与设计证据输入。

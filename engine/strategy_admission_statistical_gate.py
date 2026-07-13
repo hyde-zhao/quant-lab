@@ -102,6 +102,11 @@ class WalkForwardValidationPlan:
     embargo_days: int
     fold_metrics: tuple[Mapping[str, Any], ...]
     report_ref: str = ""
+    evidence_ref: str = ""
+    evidence_hash: str = ""
+    evidence_availability: str = ""
+    evidence_outcome: str = ""
+    evidence_reason_codes: tuple[str, ...] = ()
 
     def to_dict(self) -> dict[str, Any]:
         return dict(json_safe(asdict(self)))

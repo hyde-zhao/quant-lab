@@ -42,6 +42,7 @@ MF_ADMISSION_EVENT_GATE_BLOCKED = "MF_ADMISSION_EVENT_GATE_BLOCKED"
 MF_ADMISSION_CROSS_STRATEGY_RELIABILITY_BLOCKED = "MF_ADMISSION_CROSS_STRATEGY_RELIABILITY_BLOCKED"
 MF_ADMISSION_FAMILY_LINEAGE_BLOCKED = "MF_ADMISSION_FAMILY_LINEAGE_BLOCKED"
 MF_ADMISSION_COMPUTABLE_STATISTICAL_EVIDENCE_BLOCKED = "MF_ADMISSION_COMPUTABLE_STATISTICAL_EVIDENCE_BLOCKED"
+MF_ADMISSION_WALK_FORWARD_OOS_EVIDENCE_BLOCKED = "MF_ADMISSION_WALK_FORWARD_OOS_EVIDENCE_BLOCKED"
 
 NOT_AUTHORIZED_COUNTER_FIELDS = (
     "qmt_api_call",
@@ -659,6 +660,76 @@ def attach_computable_statistical_evidence(
             ).to_dict()
         )
         payload["blocked_reasons"] = tuple(_dedupe_reason_payloads(reasons))
+    return _json_safe(payload)
+
+
+def attach_walk_forward_oos_evidence(
+    package: StrategyAdmissionPackage | Mapping[str, Any],
+    component: Any,
+) -> dict[str, Any]:
+    """Attach trusted CR166 C2 evidence using worst-state merge only.
+
+    This is an evidence projection, not a new gate and never a runtime,
+    paper, live, broker, or real-data authorization.
+    """
+
+    from engine.strategy_evidence import EvidenceAvailability
+    from engine.walk_forward_oos_evidence import WalkForwardOOSComponent, WalkForwardOutcome
+    from engine.walk_forward_oos_projections import component_projection_identity
+
+    payload = to_jsonable_admission_package(package)
+    trusted = isinstance(component, WalkForwardOOSComponent)
+    identity = component_projection_identity(component) if trusted else {
+        "component_ref": "",
+        "component_hash": "",
+        "availability": EvidenceAvailability.BLOCKED.value,
+        "outcome": "",
+        "reason_codes": ("component_untrusted_or_unavailable",),
+    }
+    if identity["availability"] != EvidenceAvailability.PRESENT.value:
+        mapped = AdmissionStatus.BLOCKED
+    elif component.outcome is WalkForwardOutcome.FAIL:
+        mapped = AdmissionStatus.FAIL
+    elif component.outcome is WalkForwardOutcome.NEEDS_REVIEW:
+        mapped = AdmissionStatus.WARN
+    else:
+        mapped = AdmissionStatus.PASS
+
+    status_field = "package_status" if "package_status" in payload and "paper_candidate" in payload else "admission_status"
+    current = _admission_status_from_value(payload.get(status_field))
+    combined = _worse_admission_status(current, mapped)
+    payload[status_field] = combined.value.upper() if status_field == "package_status" else combined.value
+    if status_field == "package_status" and combined is not AdmissionStatus.PASS:
+        payload["paper_candidate"] = False
+    payload["walk_forward_oos_evidence"] = identity
+
+    refs = list(_as_sequence(payload.get("evidence_refs")))
+    if identity["component_ref"] and identity["component_ref"] not in refs:
+        refs.append(identity["component_ref"])
+    payload["evidence_refs"] = tuple(str(item) for item in refs if str(item))
+    limitations = list(_as_sequence(payload.get("limitations")))
+    limitations.extend(("walk_forward_oos_fixture_static_only", "not_real_oos_evidence", "walk_forward_oos_not_runtime_authorization"))
+    payload["limitations"] = tuple(dict.fromkeys(str(item) for item in limitations if str(item)))
+    if mapped is not AdmissionStatus.PASS:
+        reasons = list(_as_sequence(payload.get("blocked_reasons")))
+        reasons.append(
+            AdmissionBlockedReason(
+                code=MF_ADMISSION_WALK_FORWARD_OOS_EVIDENCE_BLOCKED,
+                message="CR166 Walk-forward/OOS evidence is not fully present and PASS.",
+                source="walk_forward_oos_evidence",
+                field="availability",
+                unlock_condition="provide_self_validated_walk_forward_oos_evidence_under_authorized_scope",
+                evidence_ref=str(identity["component_ref"] or identity["component_hash"]),
+            ).to_dict()
+        )
+        payload["blocked_reasons"] = tuple(_dedupe_reason_payloads(reasons))
+    for field_name in (
+        "not_qmt_authorization",
+        "not_simulation_authorization",
+        "not_live_authorization",
+        "not_broker_order",
+    ):
+        payload[field_name] = bool(payload.get(field_name, True))
     return _json_safe(payload)
 
 

@@ -86,6 +86,48 @@ CURRENT_CR165_SOURCE_ASSETS = frozenset(
     }
 )
 
+CURRENT_CR166_SOURCE_ASSETS = frozenset(
+    {
+        "engine/strategy_evidence.py",
+        "engine/walk_forward_oos_evidence.py",
+        "engine/walk_forward_oos_projections.py",
+        "tests/fixtures/walk_forward_oos/daily_multifactor_pass.json",
+        "tests/fixtures/walk_forward_oos/event_not_applicable.json",
+        "tests/fixtures/walk_forward_oos/ml_compatibility_pass.json",
+        "tests/research/test_walk_forward_oos_authorization.py",
+        "tests/research/test_walk_forward_oos_contracts.py",
+        "tests/research/test_walk_forward_oos_cr155_regression.py",
+        "tests/research/test_walk_forward_oos_producer.py",
+        "tests/research/test_walk_forward_oos_projections.py",
+        "tests/research/test_walk_forward_oos_qac.py",
+        "tests/research/test_walk_forward_oos_validation.py",
+        "tests/research/walk_forward_oos_test_support.py",
+    }
+)
+
+CURRENT_CR166_PROCESS_ASSETS = frozenset(
+    {
+        "changes/CR-032-CHAPTER3-FACTOR-GAP-REMEDIATION-2026-06-08.md",
+        "current/handoff",
+        "current/handoff.ref",
+        "docs/features/strategy-evidence-envelope/DESIGN.md",
+        "docs/features/strategy-evidence-envelope/TASKS.md",
+        "docs/features/strategy-evidence-envelope/TEST-PLAN.md",
+        "docs/features/walk-forward-oos-producer/DESIGN.md",
+        "docs/features/walk-forward-oos-producer/TASKS.md",
+        "docs/features/walk-forward-oos-producer/TEST-PLAN.md",
+        "docs/features/walk-forward-oos-projections/DESIGN.md",
+        "docs/features/walk-forward-oos-projections/TASKS.md",
+        "docs/features/walk-forward-oos-projections/TEST-PLAN.md",
+        "docs/features/walk-forward-oos-validation/DESIGN.md",
+        "docs/features/walk-forward-oos-validation/TASKS.md",
+        "docs/features/walk-forward-oos-validation/TEST-PLAN.md",
+        "docs/features/walk-forward-oos-verification/DESIGN.md",
+        "docs/features/walk-forward-oos-verification/TASKS.md",
+        "docs/features/walk-forward-oos-verification/TEST-PLAN.md",
+    }
+)
+
 CURRENT_WORKFLOW_SHARED_PROCESS_ASSETS = frozenset(
     {
         "STATE.md",
@@ -109,11 +151,14 @@ CURRENT_WORKFLOW_SHARED_PROCESS_ASSETS = frozenset(
         "state/GATE-LEDGER.ndjson",
         "state/QUESTION-LEDGER.ndjson",
         "state/READ-EXPANSION-LEDGER.ndjson",
+        "state/RUN-LEDGER.ndjson",
         "state/STATE.current.json",
         "state/WORKFLOW-HEALTH.json",
         "current/CURRENT.json",
         "current/change",
         "current/change.ref",
+        "current/checkpoint",
+        "current/checkpoint.ref",
         "current/context",
         "current/context.ref",
         "current/release",
@@ -479,6 +524,7 @@ def check_process_artifact_hygiene(
         "current_cr_asset": [],
         "closed_cr164_asset": [],
         "closed_cr165_asset": [],
+        "closed_cr166_asset": [],
         "design_archive_migration_asset": [],
         "current_cr132_asset": [],
         "current_cr133_asset": [],
@@ -524,6 +570,7 @@ def check_process_artifact_hygiene(
                 "current_cr_asset",
                 "closed_cr164_asset",
                 "closed_cr165_asset",
+                "closed_cr166_asset",
                 "design_archive_migration_asset",
                 "current_runner_simulation_entry_asset",
                 "current_guardrail_asset",
@@ -548,6 +595,8 @@ def classify_entry(
             return "current_workflow_shared_asset"
         if entry.path in CURRENT_GUARDRAIL_SOURCE_ASSETS:
             return "current_guardrail_asset"
+        if entry.path in CURRENT_CR166_SOURCE_ASSETS:
+            return "current_cr_asset" if "166" in active_cr_numbers else "closed_cr166_asset"
         if entry.path in CURRENT_CR164_SOURCE_ASSETS:
             return "closed_cr164_asset"
         if entry.path in CURRENT_CR165_SOURCE_ASSETS:
@@ -575,12 +624,16 @@ def classify_entry(
     if entry.repo == "process":
         if entry.path in CURRENT_WORKFLOW_SHARED_PROCESS_ASSETS:
             return "current_workflow_shared_asset"
+        if entry.path in CURRENT_CR166_PROCESS_ASSETS:
+            return "current_cr_asset" if "166" in active_cr_numbers else "closed_cr166_asset"
         if _is_current_cr_process_asset(entry.path, active_cr_numbers, active_cr_process_paths):
             return "current_cr_asset"
         if _is_cr164_process_asset(entry.path):
             return "closed_cr164_asset"
         if _is_cr165_process_asset(entry.path):
             return "closed_cr165_asset"
+        if _is_cr166_process_asset(entry.path):
+            return "closed_cr166_asset"
         if _is_design_archive_migration(entry.path):
             return "design_archive_migration_asset"
         if entry.path in CURRENT_CR138_PROCESS_ASSETS:
@@ -641,6 +694,10 @@ def _is_cr164_process_asset(path: str) -> bool:
 
 def _is_cr165_process_asset(path: str) -> bool:
     return bool(re.search(r"\bCR-?165\b", path))
+
+
+def _is_cr166_process_asset(path: str) -> bool:
+    return bool(re.search(r"\bCR-?166\b", path))
 
 
 def _is_design_archive_migration(path: str) -> bool:
