@@ -12,6 +12,7 @@
 | v0.6 | 2026-07-13 | host-orchestrator-inline | 增量追加 CR166 CP2→CP8 候选切片，明确 fixture/static foundation 与 Stage 3 真实数据启动分离。 |
 | v0.7 | 2026-07-13 | host-orchestrator | 回填 Slice 0 / CP2 已批准；当前进入 Slice 1 / CP3 设计，后续 Slice 2-4 仍受 CP3/CP5/CP8 门禁约束。 |
 | v0.8 | 2026-07-13 | host-orchestrator-inline | 增量追加 CR168 CP2→CP8 候选切片；当前只打开 Slice 0/CP2，后续切片未授权。 |
+| v0.9 | 2026-07-13 | host-orchestrator-inline | 将 CR168 Slice 0 场景更新为 17，并把 Gate 4 absent-no-na-reason 映射、reason-escape rejection、hash domain 与前向治理义务纳入 Slice 1；后续门禁与授权边界不变。 |
 
 ## CR157 Candidate Slices
 
@@ -67,8 +68,8 @@
 
 | Slice | 用户价值 | 包含 | 不包含 | Gate |
 |---|---|---|---|---|
-| Slice 0 | 冻结 C3 产品语义与方法边界 | use case、9 requirements、15 QAC、16 scenarios、两 fixture、Gate 4 联合边界、claim ceiling、Decision Brief | HLD、Story、LLD、实现、真实数据 | CP2 |
-| Slice 1 | 冻结最小且可演进的 C3 架构 | economic_cost component/schema、9 字段 schema、static approximation、C3/C4 shared header、Gate 4 projection | code、C4 calculator、aggregate integration、runtime | CP3 |
+| Slice 0 | 冻结 C3 产品语义与方法边界 | use case、9 requirements、15 QAC、17 scenarios、两 fixture、Gate 4 联合边界与 absent-no-na-reason guard、claim ceiling、Decision Brief | HLD、Story、LLD、实现、真实数据 | CP2 |
+| Slice 1 | 冻结最小且可演进的 C3 架构 | economic_cost component/schema、9 字段 schema、static approximation、C3/C4 shared header、availability→Gate 4 mapping、reason-key denylist、component/envelope hash domain、capability/evidence-kind disposition | code、canonical Gate 4 修改、C4 calculator、aggregate integration、runtime | CP3 |
 | Slice 2 | 形成全量实现设计证据 | CP4 正式 Story/DAG/file ownership 与 CP5 LLD/technical notes/test plan | 未批准代码实现 | CP4/CP5 |
-| Slice 3 | 用本地 fixture 证明 C3 可计算且 fail-closed | daily/ML、10 类负向、determinism、Gate 4 C4-unavailable、CR155 regression、zero-operation guards | real TCA/data/calibration、C4、event feed、trading | CP6/CP7 |
+| Slice 3 | 用本地 fixture 证明 C3 可计算且 fail-closed | daily/ML、10 类 C3 输入负向、determinism、Gate 4 C4 absent 路径、na-reason 逃逸阻断、CR155 regression、zero-operation guards | real TCA/data/calibration、C4、event feed、trading | CP6/CP7 |
 | Slice 4 | 交付不夸大的 C3 foundation | verification、quality docs under `docs/quality/`、release notes、rollback/migration、claim ceiling | Stage3 start、runtime-ready、publish/deploy/Git remote write | CP8 |

@@ -15,6 +15,7 @@
 | v0.9 | 2026-07-13 | host-orchestrator | 回填 CR166 CP2 批准；MVP 范围成为 CP3 正式输入，真实数据、C3/C4 计算、event producer 与 Stage 3 仍明确排除。 |
 | v1.0 | 2026-07-13 | host-orchestrator | 回填 CR166 CP3 批准；范围映射到五个正式 Story，保持 fixture/static、event N/A、C3/C4 calculator=0 与 Stage 3 未启动。 |
 | v1.1 | 2026-07-13 | host-orchestrator-inline | CR168 增量追加 fixture/static C3 typed component、9 字段族、10 类 fail-closed、两类 fixture、联合 Gate 4 投影、claim ceiling 与 C4/FU-007 边界。 |
+| v1.2 | 2026-07-13 | host-orchestrator-inline | 根据 CP2 修改意见收紧 Gate 4 projection-side guard：C4 unavailable 映射为 absent-no-na-reason，reason 逃逸必须阻断；新增 1 个 P0 场景，不改变 6 项 CR168 MVP scope 或 15 项 QAC。 |
 
 ## 状态
 
@@ -68,7 +69,7 @@
 | MVP-CR168-001 | Versioned typed C3 economic-cost component | 复用 CR166 envelope；component/schema=1/1；平行 gate/envelope/registry=0。 |
 | MVP-CR168-002 | Nine-family static input and transparent arithmetic | 9/9 字段族；fee/tax/spread/slippage/impact/total/gross-to-net 可重算；含 `cost_underestimation_status`。 |
 | MVP-CR168-003 | Ten-class deterministic fail-closed contract | 10/10 指定类别 false PASS=0；规范化输入 10 次→1 hash；tamper 检出率 100%。 |
-| MVP-CR168-004 | Joint Gate 4 C3 compatibility projection | C3 投影=1；C4 fields unavailable；capacity/aggregate PASS=0；C4 calculator=0。 |
+| MVP-CR168-004 | Joint Gate 4 C3 compatibility projection | C3 投影=1；C4 refs absent-no-na-reason；字段级/通用 na-reason 逃逸由 projection BLOCKED/REJECTED；capacity/aggregate PASS=0；C4 calculator=0；canonical Gate 4 修改=0。 |
 | MVP-CR168-005 | Two fixture families and event boundary | daily multifactor synthetic + daily/ML compatibility=2/2；event-specific producer=0。 |
 | MVP-CR168-006 | Authorization and claim ceiling | Stage2=true、Stage3=false；真实 TCA/calibration/data/runtime=false；CR155 admission promotion=0。 |
 
@@ -104,7 +105,7 @@
 | CR168 真实 lake/NAS/provider/credential/data-vendor 或真实订单/成交/盘口/ADV/流动性访问 | 当前只消费显式 synthetic/static 输入；任何真实数据读取或参数估计均需独立授权。 |
 | CR168 真实 TCA、真实成交还原或 market-impact calibration | impact 仅为透明静态 approximation，必须携带 `no_real_tca_claim=true` 与 limitations。 |
 | CR168 C4 capacity/liquidity/ADV/alpha-decay calculator | 归属 `FU-CR161-005`；本 CR 数量固定为 0。 |
-| CR168 C1-C4 aggregate integration / final StrategyAdmissionPackage / CR155 promotion decision | 归属 `FU-CR161-007`；本 CR 只做 1 条 C3-to-Gate-4 compatibility projection。 |
+| CR168 canonical Gate 4 validator、C1-C4 aggregate integration / final StrategyAdmissionPackage / CR155 promotion decision | canonical validator 与 aggregate orchestration 均不修改；端到端集成归属 `FU-CR161-007`；本 CR 只做 1 条带 absent-no-na-reason guard 的 C3-to-Gate-4 compatibility projection。 |
 | CR168 event-specific producer | event-time/calendar/execution 语义未冻结；本 CR显式 N/A/deferred。 |
 | CR168 runtime、broker/trading、catalog/store/registry pointer、publish/deploy/tag/release/Git remote write | 不在授权范围；所有相关操作计数为 0。 |
 

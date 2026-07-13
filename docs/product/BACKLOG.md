@@ -14,6 +14,7 @@
 | v0.8 | 2026-07-12 | meta-pm | 将 `FU-CR161-002` 映射为 active `CR-164`，并追加 effective-trial estimator、real ML/event adapters 与 real recomputation deferred items。 |
 | v0.9 | 2026-07-13 | host-orchestrator-inline | 将 `FU-CR161-003` 映射为 active `CR-166`，把 C3、C4 与 existing-gate integration 归一化为独立 `004/005/007`，并与 CR161 structured tracking 对齐。 |
 | v0.10 | 2026-07-13 | host-orchestrator-inline | 将 `FU-CR161-004` 映射为 active `CR-168`；修正 Gate 4 为 C3+C4 联合门禁，冻结 fixture/static-only C3、C4 unavailable/fail-closed、FU-007 deferred 和 CR155 admission BLOCKED 边界。 |
+| v0.11 | 2026-07-13 | host-orchestrator-inline | 根据 CP2 修改意见把 CR168 的 C4 unavailable 投影收紧为 absent-no-na-reason，并禁止字段级/通用 na-reason 逃逸；不启动 C4、FU-007、registry 治理或 runtime 范围。 |
 
 ## Candidates
 
@@ -48,7 +49,7 @@
 | FU-CR161-001 | CR-163 | closed | `CR-163` | 保留 CR161 follow-up 历史；CR163 只实现 raw experiment-family lineage 事实来源。 |
 | FU-CR161-002 | CR-164 | closed | `CR-164` | 保留 CR161 follow-up 历史；CR164 承接 C1 computable evidence，但不承接 effective-trial estimator、real batch、UC-59/60 real adapters 或 runtime authorization。 |
 | FU-CR161-003 | CR-166 | closed | `CR-166` | C2 fixture/static producer foundation 已关闭交付；不连接真实 lake，不宣称真实 OOS evidence 可用，不启动 C3/C4 或 Stage 3。 |
-| FU-CR161-004 | CR-168 | active | `CR-168` | 承接 C3 fixture/static economic cost/slippage/impact approximation foundation；Gate 4 的 C4 字段保持 unavailable/fail-closed，FU-007 aggregate integration 继续 deferred。 |
+| FU-CR161-004 | CR-168 | active | `CR-168` | 承接 C3 fixture/static economic cost/slippage/impact approximation foundation；Gate 4 投影把 C4 unavailable 映射为三个 refs absent-no-na-reason，任何 reason 逃逸由 projection 阻断；FU-007 aggregate integration 继续 deferred。 |
 
 ## Runtime Boundary
 

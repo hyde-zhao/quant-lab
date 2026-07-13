@@ -1,6 +1,6 @@
 ---
 status: awaiting-cp2
-version: "1.2"
+version: "1.3"
 source_scenarios: "docs/product/SCENARIOS.yaml"
 source_requirements: "docs/product/REQUIREMENTS.md"
 cr_id: "CR-168"
@@ -25,6 +25,7 @@ template_deviation_reason: "CR157 uses Scenario/Requirement/Test Layer/Validatio
 | v1.0 | 2026-07-13 | host-orchestrator | 回填 CR166 CP2 批准；11/11 场景保持 planned fixture/static，作为 CP3 架构与后续 CP5/CP7 验证输入。 |
 | v1.1 | 2026-07-13 | host-orchestrator | 回填 CR166 CP3 批准；11/11 场景映射到五个正式 Story 和 CP5 LLD/Feature 测试设计，验证仍为 planned、未执行。 |
 | v1.2 | 2026-07-13 | host-orchestrator-inline | CR168 增量追加 16 个场景的 planned fixture/static 覆盖，精确覆盖 10/10 fail-closed、2/2 fixture、Gate 4 联合边界、权限与 CR155 regression。 |
+| v1.3 | 2026-07-13 | host-orchestrator-inline | 根据 CP2 修改意见新增 `SC-CR168-B02`，覆盖字段级与通用 na-reason 逃逸必须由 projection 阻断；CR168 场景 17/17、P0 16、P1 1，10 类 C3 输入 fail-closed 仍为 10/10。 |
 
 ## 状态
 
@@ -108,6 +109,7 @@ template_deviation_reason: "CR157 uses Scenario/Requirement/Test Layer/Validatio
 | SC-CR168-N09 | REQ-CR168-002, REQ-CR168-004, REQ-CR168-008 | lineage / authorization | fixture/static | missing/inconsistent lineage/provenance/auth fail-closed；dereference=0 | P0 | planned-after-CP5 |
 | SC-CR168-N10 | REQ-CR168-004, REQ-CR168-005 | integrity / tamper | fixture/static | canonical equivalence stable；hash tamper blocked | P0 | planned-after-CP5 |
 | SC-CR168-B01 | REQ-CR168-006, REQ-CR168-009 | integration / fail-closed | fixture/static | C3 fields present + C4 typed_unavailable -> Gate 4 no capacity/aggregate PASS | P0 | planned-after-CP5 |
+| SC-CR168-B02 | REQ-CR168-006, REQ-CR168-009 | projection-guard / negative-integration | fixture/static | field-specific `*_na_reason` / `*_n_a_reason` and generic `na_reason` / `n_a_reason` are rejected before Gate 4；PASS=0 | P0 | planned-after-CP5 |
 | SC-CR168-A01 | REQ-CR168-008 | permission / security | fixture/static | real-data/TCA/runtime/trading/remote-write counters all 0 | P0 | planned-after-CP5 |
 | SC-CR168-G01 | REQ-CR168-006, REQ-CR168-009 | negative-regression / existing-evidence | static | CR155 admission remains BLOCKED；paper_candidate=false；promotion=0 | P0 | planned-after-CP5 |
 | SC-CR168-E01 | REQ-CR168-007, REQ-CR168-009 | applicability / boundary | static | event-specific producer explicit N/A/deferred；count=0 | P1 | planned-static-review |
@@ -143,8 +145,8 @@ template_deviation_reason: "CR157 uses Scenario/Requirement/Test Layer/Validatio
 | CR166 P0 fixture families | 2 |
 | CR166 existing-consumer projections | 3 |
 | CR166 external/runtime tests authorized | 0 |
-| CR168 P0 scenarios | 15 |
-| CR168 P0 scenarios with planned coverage | 15 |
+| CR168 P0 scenarios | 16 |
+| CR168 P0 scenarios with planned coverage | 16 |
 | CR168 P1 applicability scenarios | 1 |
 | CR168 quantitative acceptance criteria | 15 |
 | CR168 typed component / active schema | 1 / 1 |
@@ -165,4 +167,4 @@ template_deviation_reason: "CR157 uses Scenario/Requirement/Test Layer/Validatio
 - CR163 verification remains fixture/static unless a later gate grants separate runtime/data authorization. Future native instrumented runs may set `ExperimentFamilyManifest=present` only after seal/completeness/reference/count/tamper validation; uninstrumented paths remain `typed_unavailable`; invalid/tampered lineages are `blocked`. This prepares only the C1 raw-lineage input and does not make C1 computable.
 - CR164 verification is fixture/static only. Four methods are mandatory but no OR-pass is allowed; DSR raw count must be explicitly identified and never alias effective count; WRC/SPA stationary-bootstrap parameter selection is a CP3 obligation. UC-59/60 rows prove compatibility semantics only, not adapter implementation or real feed/training authorization.
 - CR166 验证仅允许 fixture/static：daily multifactor 与 ML compatibility 为 P0；event 为 CP3 applicability/P1。任何真实 fold/OOS 数据、lake/NAS/provider/runtime 或外部 ref 均不得解引用。CP8 也只能声明桥接 foundation，不得声明 Stage 3 已启动或真实 OOS evidence 可用。
-- CR168 coverage 只描述 CP2 待批准的 fixture/static 验证合同。Gate 4 是 C3+C4 联合门禁；C3 present 时 C4 字段仍必须 `typed_unavailable` 并阻止 capacity/aggregate PASS。CP2 不授权 HLD 之外的实现，也不授权真实 TCA、真实 impact calibration、真实数据、runtime、C4、event producer、交易或远端写入。
+- CR168 coverage 只描述 CP2 待批准的 fixture/static 验证合同。Gate 4 是 C3+C4 联合门禁；C4 reserved/not-built/typed_unavailable 必须由 projection 映射为三个 refs absent-no-na-reason，任何字段级或通用 na-reason 逃逸都必须在 projection 侧阻断，capacity/aggregate PASS=`0`。CP2 不授权 HLD 之外的实现，也不授权真实 TCA、真实 impact calibration、真实数据、runtime、C4、event producer、交易或远端写入。

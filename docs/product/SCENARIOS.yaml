@@ -1,8 +1,8 @@
 schema_version: 1
-version: "1.2"
+version: "1.3"
 status: awaiting-cp2
 cr_id: CR-168
-updated_at: "2026-07-13T17:15:00+08:00"
+updated_at: "2026-07-13T22:45:00+08:00"
 source_requirements:
   - docs/product/REQUIREMENTS.md
 source_use_cases:
@@ -56,6 +56,10 @@ revision_record:
     date: "2026-07-13"
     author: host-orchestrator-inline
     summary: "Add sixteen CR168 fixture/static C3 scenarios: two positive/compatibility paths, ten exact fail-closed classes, joint Gate 4 boundary, authorization, CR155 regression, and event N/A."
+  - version: v1.3
+    date: "2026-07-13"
+    author: host-orchestrator-inline
+    summary: "Add SC-CR168-B02 for field-specific and generic Gate 4 na-reason escape rejection; keep the ten C3 input fail-closed classes and all scope/claim counts unchanged."
 scenarios:
   - id: SC-CR157-P01
     title: "Build mature admission package from complete research refs"
@@ -750,8 +754,16 @@ scenarios:
     priority: P0
     requirement_refs: [REQ-CR168-006, REQ-CR168-009]
     use_case_refs: [UC-58-CR168]
-    steps: ["Project impact_model_family, impact_model_ref, cost_underestimation_status and no_real_tca_claim.", "Leave ADV, capacity-dollar and liquidity-sizing refs typed_unavailable.", "Evaluate Gate 4 and aggregate admission."]
-    expected: ["C3 projection count is 1.", "Gate 4 reports C4 missing reasons.", "Capacity/aggregate PASS count is 0.", "No C4 calculator is invoked."]
+    steps: ["Project impact_model_family, impact_model_ref, cost_underestimation_status and no_real_tca_claim.", "Translate C4 reserved/not-built/typed_unavailable into absent adv_participation_ref, capacity_dollars_ref and liquidity_sizing_refs without field-specific or generic na-reason keys.", "Evaluate Gate 4 and aggregate admission."]
+    expected: ["C3 projection count is 1.", "Gate 4 reports the three C4 refs missing.", "Capacity/aggregate PASS count is 0.", "No C4 calculator is invoked."]
+  - id: SC-CR168-B02
+    title: "Projection rejects C4 field-specific or generic na-reason escape"
+    type: negative
+    priority: P0
+    requirement_refs: [REQ-CR168-006, REQ-CR168-009]
+    use_case_refs: [UC-58-CR168]
+    steps: ["Build separate projection inputs containing adv_participation_ref_na_reason, capacity_dollars_ref_na_reason or liquidity_sizing_refs_na_reason and their *_n_a_reason variants while the refs are absent.", "Build additional inputs containing generic na_reason or n_a_reason.", "Attempt the C3-to-Gate-4 projection without changing the canonical Gate 4 validator."]
+    expected: ["Every field-specific and generic reason escape is BLOCKED or REJECTED by the projection.", "No escaped payload reaches a Gate 4 PASS path.", "Gate 4/capacity/aggregate PASS count is 0.", "Canonical Gate 4 and aggregate orchestration remain unchanged."]
   - id: SC-CR168-A01
     title: "Real-data TCA runtime trading and remote-write operations remain denied"
     type: permission
@@ -777,9 +789,9 @@ scenarios:
     steps: ["Request event-specific economic-cost production.", "Inspect applicability and follow-up routing."]
     expected: ["Result is explicit N/A/deferred with reason.", "Event-specific producer count is 0.", "No event feed access occurs."]
 coverage_summary:
-  total: 75
-  p0_total: 71
-  p0_with_planned_coverage: 71
+  total: 76
+  p0_total: 72
+  p0_with_planned_coverage: 72
   high_priority_positive_and_negative_covered: true
   source_requirements_total: 61
   source_use_cases_total: 9
@@ -807,4 +819,4 @@ coverage_summary:
       description: "SGQ-CR166-001..004、DQ-CP2-CR166-* 与 DQ-CP3-CR166-001..004 已于 2026-07-13 获批；envelope、leakage、integration 与 event N/A 架构已冻结，下一门禁为 CP5。"
     - id: GAP-CR168-001
       status: pending_CR168_CP2
-      description: "C3 method boundary, C3/C4 shared header, Gate 4 projection depth, two fixture families and claim ceiling await CP2 approval; HLD/Story/LLD/implementation/verification remain blocked."
+      description: "C3 method boundary, C3/C4 shared header, revised Gate 4 absent-no-na-reason projection guard, two fixture families and claim ceiling await CP2 approval; HLD/Story/LLD/implementation/verification remain blocked."
