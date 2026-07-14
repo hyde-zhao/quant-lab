@@ -1,6 +1,6 @@
 schema_version: 1
-version: "1.3"
-status: awaiting-cp2
+version: "1.4"
+status: confirmed-cp2
 cr_id: CR-168
 updated_at: "2026-07-13T22:45:00+08:00"
 source_requirements:
@@ -60,6 +60,10 @@ revision_record:
     date: "2026-07-13"
     author: host-orchestrator-inline
     summary: "Add SC-CR168-B02 for field-specific and generic Gate 4 na-reason escape rejection; keep the ten C3 input fail-closed classes and all scope/claim counts unchanged."
+  - version: v1.4
+    date: "2026-07-14"
+    author: host-orchestrator-inline
+    summary: "Record CR168 CP2 approval and refine B01/B02 into adapter-local containment: exact 8-key presence denylist, no private-helper dependency, zero canonical calls for escapes, and a non-PASS postcondition for the safe absent path."
 scenarios:
   - id: SC-CR157-P01
     title: "Build mature admission package from complete research refs"
@@ -754,16 +758,16 @@ scenarios:
     priority: P0
     requirement_refs: [REQ-CR168-006, REQ-CR168-009]
     use_case_refs: [UC-58-CR168]
-    steps: ["Project impact_model_family, impact_model_ref, cost_underestimation_status and no_real_tca_claim.", "Translate C4 reserved/not-built/typed_unavailable into absent adv_participation_ref, capacity_dollars_ref and liquidity_sizing_refs without field-specific or generic na-reason keys.", "Evaluate Gate 4 and aggregate admission."]
-    expected: ["C3 projection count is 1.", "Gate 4 reports the three C4 refs missing.", "Capacity/aggregate PASS count is 0.", "No C4 calculator is invoked."]
+    steps: ["Project impact_model_family, impact_model_ref, cost_underestimation_status and no_real_tca_claim through the CR168 adapter.", "Translate C4 reserved/not-built/typed_unavailable into absent adv_participation_ref, capacity_dollars_ref and liquidity_sizing_refs without any of the eight forbidden reason keys.", "Evaluate canonical Gate 4 through the adapter and enforce the post-call non-PASS assertion."]
+    expected: ["C3 projection count is 1 and CR168 adapter-external direct Gate 4 calls equal 0.", "Gate 4 reports the three C4 refs missing and status is not PASS.", "Capacity/aggregate PASS count is 0.", "No C4 calculator is invoked and canonical Gate 4 remains unchanged."]
   - id: SC-CR168-B02
     title: "Projection rejects C4 field-specific or generic na-reason escape"
     type: negative
     priority: P0
     requirement_refs: [REQ-CR168-006, REQ-CR168-009]
     use_case_refs: [UC-58-CR168]
-    steps: ["Build separate projection inputs containing adv_participation_ref_na_reason, capacity_dollars_ref_na_reason or liquidity_sizing_refs_na_reason and their *_n_a_reason variants while the refs are absent.", "Build additional inputs containing generic na_reason or n_a_reason.", "Attempt the C3-to-Gate-4 projection without changing the canonical Gate 4 validator."]
-    expected: ["Every field-specific and generic reason escape is BLOCKED or REJECTED by the projection.", "No escaped payload reaches a Gate 4 PASS path.", "Gate 4/capacity/aggregate PASS count is 0.", "Canonical Gate 4 and aggregate orchestration remain unchanged."]
+    steps: ["Build eight separate projection inputs, each containing exactly one forbidden key: the six field-specific *_na_reason/*_n_a_reason variants plus generic na_reason and n_a_reason.", "Verify rejection is based on key presence, the adapter uses a strict payload allowlist, and no runtime dependency on private _has_na_reason exists.", "Attempt the C3-to-Gate-4 projection without changing the canonical Gate 4 validator."]
+    expected: ["Forbidden keys rejected equals 8/8 and every escape is BLOCKED or REJECTED before canonical validation.", "Canonical Gate 4 invocation count for escaped payloads is 0.", "Gate 4/capacity/aggregate PASS count is 0.", "Canonical Gate 4 and aggregate orchestration remain unchanged."]
   - id: SC-CR168-A01
     title: "Real-data TCA runtime trading and remote-write operations remain denied"
     type: permission
@@ -818,5 +822,5 @@ coverage_summary:
       status: resolved_by_CR166_CP3_approval
       description: "SGQ-CR166-001..004、DQ-CP2-CR166-* 与 DQ-CP3-CR166-001..004 已于 2026-07-13 获批；envelope、leakage、integration 与 event N/A 架构已冻结，下一门禁为 CP5。"
     - id: GAP-CR168-001
-      status: pending_CR168_CP2
-      description: "C3 method boundary, C3/C4 shared header, revised Gate 4 absent-no-na-reason projection guard, two fixture families and claim ceiling await CP2 approval; HLD/Story/LLD/implementation/verification remain blocked."
+      status: resolved_by_CR168_CP2_approval
+      description: "C3 method boundary, C3/C4 shared header, adapter-local Gate 4 absent-no-na-reason containment, two fixture families and claim ceiling were approved on 2026-07-14; only CP3 solution design is unlocked, while Story/LLD/implementation/verification remain blocked."

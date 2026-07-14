@@ -1941,6 +1941,41 @@ items:
     old_paths: []
     introduced_by: CR-166
     provenance: [{cr: CR-166, story: CR166-S05-independent-static-verification}]
+  tests/research/test_economic_cost_contracts.py:
+    domains: [research]
+    old_paths: []
+    introduced_by: CR-168
+    provenance: [{cr: CR-168, story: CR168-S01-c3-contract-identity-validation}]
+  tests/research/test_economic_cost_producer.py:
+    domains: [research]
+    old_paths: []
+    introduced_by: CR-168
+    provenance: [{cr: CR-168, story: CR168-S02-deterministic-cost-producer}]
+  tests/research/test_economic_cost_envelope_compatibility.py:
+    domains: [research]
+    old_paths: []
+    introduced_by: CR-168
+    provenance: [{cr: CR-168, story: CR168-S03-envelope-multi-strategy-compatibility}]
+  tests/research/test_economic_cost_gate4_projection.py:
+    domains: [research]
+    old_paths: []
+    introduced_by: CR-168
+    provenance: [{cr: CR-168, story: CR168-S04-gate4-projection-containment}]
+  tests/research/test_economic_cost_cr168_qac.py:
+    domains: [research]
+    old_paths: []
+    introduced_by: CR-168
+    provenance: [{cr: CR-168, story: CR168-S05-fixture-static-verification}]
+  tests/research/test_economic_cost_authorization.py:
+    domains: [research]
+    old_paths: []
+    introduced_by: CR-168
+    provenance: [{cr: CR-168, story: CR168-S05-fixture-static-verification}]
+  tests/research/test_economic_cost_cr155_regression.py:
+    domains: [research]
+    old_paths: []
+    introduced_by: CR-168
+    provenance: [{cr: CR-168, story: CR168-S05-fixture-static-verification}]
   tests/research/test_trial_lineage_admission_projection.py:
     domains: [research]
     old_paths: [tests/test_cr163_trial_lineage_admission_projection.py]

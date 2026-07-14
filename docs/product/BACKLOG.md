@@ -15,6 +15,7 @@
 | v0.9 | 2026-07-13 | host-orchestrator-inline | 将 `FU-CR161-003` 映射为 active `CR-166`，把 C3、C4 与 existing-gate integration 归一化为独立 `004/005/007`，并与 CR161 structured tracking 对齐。 |
 | v0.10 | 2026-07-13 | host-orchestrator-inline | 将 `FU-CR161-004` 映射为 active `CR-168`；修正 Gate 4 为 C3+C4 联合门禁，冻结 fixture/static-only C3、C4 unavailable/fail-closed、FU-007 deferred 和 CR155 admission BLOCKED 边界。 |
 | v0.11 | 2026-07-13 | host-orchestrator-inline | 根据 CP2 修改意见把 CR168 的 C4 unavailable 投影收紧为 absent-no-na-reason，并禁止字段级/通用 na-reason 逃逸；不启动 C4、FU-007、registry 治理或 runtime 范围。 |
+| v0.12 | 2026-07-14 | host-orchestrator-inline | 回填 CR168 CP2 批准；记录 projection guard 只对 CR168 adapter 局部生效，FU-CR161-007 在 aggregate integration 或新增直接 caller 前必须复核 canonical Gate 4 的 N/A reason 语义。 |
 
 ## Candidates
 
@@ -30,7 +31,7 @@
 | FU-CR161-004 | C3 economic cost / slippage / impact evidence producer foundation | promoted to CR168 | P0 | 已由 `CR-168` 启动 fixture/static-only 产品基线；只消费显式合成/静态参数，复用 versioned evidence component envelope，不授权真实 TCA、C4 计算或 Stage 3。 |
 | FU-CR161-005 | C4 capacity / liquidity / ADV / alpha-decay evidence producer | follow-up CR | P0 | 容量曲线、成交量/流动性 inputs 与方法边界获独立授权时；可与 C3 共享输入合同设计 wave，但计算独立验证。 |
 | FU-CR161-006 | Independent CP7 verifier-lane resilience | process / QA follow-up | P1 | 高风险后续实现需要独立 QA 结论，或 CR161 waiver 到期前。 |
-| FU-CR161-007 | Existing-gate integration and CR155 regression implementation | follow-up CR | P1 | C1-C4 producer 均能输出稳定 typed evidence 后；必须复用 CR151/CR154，且 CR155 仍 blocked。 |
+| FU-CR161-007 | Existing-gate integration, canonical Gate 4 N/A semantics and CR155 regression implementation | follow-up CR | P1 | C1-C4 producer 均能输出稳定 typed evidence 后；必须复用 CR151/CR154，且 CR155 仍 blocked。aggregate integration 或任何绕过 CR168 adapter 的直接 Gate 4 caller 进入前，必须决定是否全局硬化 absent+na-reason 语义。 |
 | FU-CR162-001 | Generic CP8 product-baseline-refresh checker | process follow-up | P1 | 任一 CR 设置 `product_baseline_refresh_required=true` 时；需独立 process CR/授权。 |
 | DF-CR163-001 | Effective-trial and statistical-correction producer | follow-up CR | P0 | CR163 raw lineage 已稳定、统计方法/输入/独立验证另行批准时。 |
 | DF-CR163-002 | Historical lineage backfill | audit/data follow-up | P1 | 获得独立数据与审计授权，并明确 inferred/backfilled provenance 不得伪装为 native instrumentation 时。 |

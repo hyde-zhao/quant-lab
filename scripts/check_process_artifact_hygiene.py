@@ -105,6 +105,40 @@ CURRENT_CR166_SOURCE_ASSETS = frozenset(
     }
 )
 
+CURRENT_CR168_SOURCE_ASSETS = frozenset(
+    {
+        "engine/economic_cost_calculator.py",
+        "engine/economic_cost_evidence.py",
+        "engine/economic_cost_gate4_projection.py",
+        "engine/strategy_evidence.py",
+        "tests/fixtures/economic_cost/daily_multifactor_synthetic.json",
+        "tests/fixtures/economic_cost/multi_strategy_type_compatibility.json",
+        "tests/research/test_economic_cost_authorization.py",
+        "tests/research/test_economic_cost_contracts.py",
+        "tests/research/test_economic_cost_cr155_regression.py",
+        "tests/research/test_economic_cost_cr168_qac.py",
+        "tests/research/test_economic_cost_envelope_compatibility.py",
+        "tests/research/test_economic_cost_gate4_projection.py",
+        "tests/research/test_economic_cost_producer.py",
+    }
+)
+
+CURRENT_CR168_PROCESS_ASSETS = frozenset(
+    {
+        "current/story",
+        "current/story.ref",
+        "docs/features/economic-cost-evidence/DESIGN.md",
+        "docs/features/economic-cost-evidence/TASKS.md",
+        "docs/features/economic-cost-evidence/TEST-PLAN.md",
+        "docs/features/economic-cost-gate4-projection/DESIGN.md",
+        "docs/features/economic-cost-gate4-projection/TASKS.md",
+        "docs/features/economic-cost-gate4-projection/TEST-PLAN.md",
+        "docs/features/economic-cost-verification/DESIGN.md",
+        "docs/features/economic-cost-verification/TASKS.md",
+        "docs/features/economic-cost-verification/TEST-PLAN.md",
+    }
+)
+
 CURRENT_CR166_PROCESS_ASSETS = frozenset(
     {
         "changes/CR-032-CHAPTER3-FACTOR-GAP-REMEDIATION-2026-06-08.md",
@@ -595,6 +629,8 @@ def classify_entry(
             return "current_workflow_shared_asset"
         if entry.path in CURRENT_GUARDRAIL_SOURCE_ASSETS:
             return "current_guardrail_asset"
+        if entry.path in CURRENT_CR168_SOURCE_ASSETS:
+            return "current_cr_asset" if "168" in active_cr_numbers else "unclassified"
         if entry.path in CURRENT_CR166_SOURCE_ASSETS:
             return "current_cr_asset" if "166" in active_cr_numbers else "closed_cr166_asset"
         if entry.path in CURRENT_CR164_SOURCE_ASSETS:
@@ -624,6 +660,10 @@ def classify_entry(
     if entry.repo == "process":
         if entry.path in CURRENT_WORKFLOW_SHARED_PROCESS_ASSETS:
             return "current_workflow_shared_asset"
+        if _is_state_slim_artifact(entry.path):
+            return "current_workflow_shared_asset"
+        if entry.path in CURRENT_CR168_PROCESS_ASSETS:
+            return "current_cr_asset" if "168" in active_cr_numbers else "unclassified"
         if entry.path in CURRENT_CR166_PROCESS_ASSETS:
             return "current_cr_asset" if "166" in active_cr_numbers else "closed_cr166_asset"
         if _is_current_cr_process_asset(entry.path, active_cr_numbers, active_cr_process_paths):
@@ -677,6 +717,18 @@ def _is_process_history_residual(path: str) -> bool:
     if path.startswith("stories/"):
         return _has_history_cr(path)
     return False
+
+
+def _is_state_slim_artifact(path: str) -> bool:
+    """允许状态机生成的压缩审计产物，避免把运行态维护误报为业务改动。"""
+
+    parts = path.split("/")
+    return (
+        len(parts) == 4
+        and parts[:2] == ["archive", "state"]
+        and bool(parts[2])
+        and parts[3] in {"archived-fields.json", "slim-report.json"}
+    )
 
 
 def _is_cr164_process_asset(path: str) -> bool:

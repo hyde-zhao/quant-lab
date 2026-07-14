@@ -30,7 +30,7 @@ def test_cr166_twelve_quantitative_acceptance_checks() -> None:
     assert result.envelope.components[0].availability is EvidenceAvailability.PRESENT  # QAC-07
     assert plan.evidence_ref == gate2["walk_forward_oos_component_ref"] == component.component_ref  # QAC-08
     assert all(count == 0 for count in value.authorization.operation_counts.values())  # QAC-09
-    assert component_catalog_status("economic_cost", "reserved").value == "reserved"  # QAC-10
+    assert component_catalog_status("economic_cost", "v1").value == "active"  # QAC-10
     assert component_catalog_status("capacity_liquidity", "reserved").value == "reserved"  # QAC-11
     assert set(component.limitations) >= {"fixture_static_only", "not_real_oos_evidence", "not_runtime_authorization"}  # QAC-12
 

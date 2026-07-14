@@ -1,9 +1,9 @@
 ---
-status: awaiting-cp2
-version: "1.3"
-confirmed: false
-confirmed_by: "pending-CR168-CP2"
-confirmed_at: ""
+status: confirmed-cp2
+version: "1.4"
+confirmed: true
+confirmed_by: "user-CR168-CP2"
+confirmed_at: "2026-07-14T09:45:10+08:00"
 ---
 
 # Product Requirements
@@ -25,12 +25,13 @@ confirmed_at: ""
 | v1.1 | 2026-07-13 | host-orchestrator | 回填 CR166 CP3 批准；9 项需求与 12 项 QAC 映射到五个正式 Story 和 CP5 全量设计证据，继续不授权实现。 |
 | v1.2 | 2026-07-13 | host-orchestrator-inline | CR168 增量追加 9 项 C3 需求、15 项精确 QAC、Gate 4 C3+C4 联合边界、两类 fixture 与 5 个 CP2 开放决策；保留既有需求基线。 |
 | v1.3 | 2026-07-13 | host-orchestrator-inline | 根据 CP2 修改意见为 REQ-CR168-006 增加 projection-side absent-no-na-reason guard，新增 `SC-CR168-B02`；9 项需求、15 项 QAC、10 类 C3 fail-closed 与范围边界均不变，并补齐 CP3 前向设计义务。 |
+| v1.4 | 2026-07-14 | host-orchestrator-inline | 回填 CR168 CP2 批准；依据 canonical Gate 4 代码评审，把 reason 逃逸整改精确为 CR168 adapter 的 8-key denylist、strict allowlist、调用前拒绝、调用后非 PASS 断言与 adapter-only 调用面，canonical 全局硬化仍不在本 CR。 |
 
 ## 状态
 
-- 文档状态：awaiting-cp2
+- 文档状态：confirmed-cp2
 - 关联 CR：`CR-157` / `CR-158` / `CR-160` / `CR-161` / `CR-162` / `CR-163` / `CR-164` / `CR-166` / `CR-168`
-- 当前门禁：CR168 CP2 待人工批准；CP2 前不得进入 HLD/CP3、Story、LLD、实现或验证
+- 当前门禁：CR168 CP2 已批准；仅解锁 CP3 solution-design，Story、LLD、实现与验证仍未授权
 - 旧基线保留：当前仓库未发现既有 `docs/product/REQUIREMENTS.md`；既有组件文档和检查证据作为输入，不被替换。
 
 ## Requirement Summary
@@ -501,11 +502,11 @@ QAC-CR164-007 的 3/3 是产品 consumer coverage，不代表 UC-59/60 implement
 | DQ-CP2-CR166-EXTENSION | architecture-boundary | 是否只预留 C3/C4 versioned typed component 扩展点？ | 只冻结兼容约束，不实现或验证 C3/C4 计算。 | resolved-approved 2026-07-13 |
 | DQ-CP2-CR166-COMPATIBILITY | scope | event 是否与 daily/ML 同列 P0？ | daily + ML 为 P0；event 为 P1 applicability，语义未冻结时 N/A。 | resolved-approved 2026-07-13 |
 | DQ-CP2-CR166-AUTHZ | security | CP2 是否授权真实数据/runtime/外部系统或实现？ | 不授权；CP2 后只进入 CP3，CP5 后才可 fixture/static 实现。 | resolved-approved 2026-07-13 |
-| DQ-CP2-CR168-METHOD | scope / methodology | C3 是否包含透明 impact approximation？ | 包含 fee/tax/spread/slippage/impact 分解，但 impact 只使用显式静态参数；备选为延后 impact。 | OPEN，待 CP2 |
-| DQ-CP2-CR168-C3-C4 | architecture-boundary | 是否冻结 C3/C4 最小共享 header？ | 冻结最小共享 header；C4 专属字段 reserved，C4 calculator=0。 | OPEN，待 CP2 |
-| DQ-CP2-CR168-GATE4 | integration-boundary | existing-gate integration 做到何种粒度？ | 只做 1 条 C3-to-Gate-4 compatibility projection；C4 reserved/not-built/typed_unavailable 映射为三个 refs absent 且不输出字段级/通用 na-reason，reason 逃逸由 projection 阻断；不得修改 canonical Gate 4。 | OPEN，推荐方案已按用户修改收紧，待 CP2 重审 |
-| DQ-CP2-CR168-FIXTURE | compatibility | fixture 适用面是什么？ | 2 族：daily multifactor synthetic + daily/ML multi-strategy-type compatibility；event N/A/deferred。 | OPEN，待 CP2 |
-| DQ-CP2-CR168-CLAIM | claim-ceiling | CP2 是否改变 Stage/真实能力声明？ | 不改变：Stage2=true、Stage3=false；真实 TCA/impact calibration/data/runtime/C4/event/CR155 promotion=false/0。 | OPEN，待 CP2 |
+| DQ-CP2-CR168-METHOD | scope / methodology | C3 是否包含透明 impact approximation？ | 包含 fee/tax/spread/slippage/impact 分解，但 impact 只使用显式静态参数；备选为延后 impact。 | resolved-approved 2026-07-14 |
+| DQ-CP2-CR168-C3-C4 | architecture-boundary | 是否冻结 C3/C4 最小共享 header？ | 冻结最小共享 header；C4 专属字段 reserved，C4 calculator=0。 | resolved-approved 2026-07-14 |
+| DQ-CP2-CR168-GATE4 | integration-boundary | existing-gate integration 做到何种粒度？ | 只做 1 条 C3-to-Gate-4 compatibility projection；C4 reserved/not-built/typed_unavailable 映射为三个 refs absent；CR168 adapter 用精确 8-key denylist、strict allowlist、调用前拒绝和调用后非 PASS 断言局部封堵 reason 逃逸；不修改或宣称全局修复 canonical Gate 4。 | resolved-approved 2026-07-14 |
+| DQ-CP2-CR168-FIXTURE | compatibility | fixture 适用面是什么？ | 2 族：daily multifactor synthetic + daily/ML multi-strategy-type compatibility；event N/A/deferred。 | resolved-approved 2026-07-14 |
+| DQ-CP2-CR168-CLAIM | claim-ceiling | CP2 是否改变 Stage/真实能力声明？ | 不改变：Stage2=true、Stage3=false；真实 TCA/impact calibration/data/runtime/C4/event/CR155 promotion=false/0。 | resolved-approved 2026-07-14 |
 
 ## CR166 Walk-forward / OOS Producer Requirements
 
@@ -612,7 +613,9 @@ QAC-CR164-007 的 3/3 是产品 consumer coverage，不代表 UC-59/60 implement
 - Gate 4 canonical 名称为 `GATE_4_CAPACITY_IMPACT`，是 C3+C4 联合门禁，不是 C3-only gate。
 - CR168 的 `1` 条 compatibility projection 只能提供 C3 字段：`impact_model_family`、`impact_model_ref`、`cost_underestimation_status`、`no_real_tca_claim`。
 - Envelope 中 C4 `reserved/not-built/typed_unavailable` 必须在 projection 输出中翻译为 `adv_participation_ref`、`capacity_dollars_ref`、`liquidity_sizing_refs` 三个字段 absent；不得输出与这三个字段相关的 `*_na_reason`、`*_n_a_reason`，也不得输出通用 `na_reason` 或 `n_a_reason`。
-- 任何字段级或通用 na-reason 逃逸输入必须由 projection `BLOCKED/REJECTED`，不得送入 canonical Gate 4 的 N/A PASS 路径；不得修改 `GATE_4_CAPACITY_IMPACT` canonical validator 或 aggregate orchestration 来掩盖投影错误。
+- CR168 adapter 必须按 key presence 精确拒绝以下 `8/8` 键：`adv_participation_ref_na_reason`、`adv_participation_ref_n_a_reason`、`capacity_dollars_ref_na_reason`、`capacity_dollars_ref_n_a_reason`、`liquidity_sizing_refs_na_reason`、`liquidity_sizing_refs_n_a_reason`、`na_reason`、`n_a_reason`；不得依赖私有 helper `_has_na_reason`，也不得把任意上游 mapping 直接透传。
+- 任何字段级或通用 na-reason 逃逸输入必须在调用 canonical Gate 4 前由 projection `BLOCKED/REJECTED`，该路径的 canonical 调用数必须为 `0`。合法 absent-no-na-reason 路径调用后必须断言 Gate 4 不是 PASS；若出现意外 PASS，adapter 必须返回内部合同错误/阻断结果。
+- 本 CR 的整改是 projection 入口局部 containment，不修改 `GATE_4_CAPACITY_IMPACT` canonical validator 或 aggregate orchestration，也不声明绕过 adapter 的未来直接调用已安全；全局语义复核归属 `FU-CR161-007` 或独立治理 CR。
 
 成功标准：C3-to-Gate-4 projection `1`；合法 absent-no-na-reason 路径与 reason 逃逸负向路径均产生 capacity/aggregate PASS `0`；C1-C4 aggregate orchestration `0`。
 
@@ -671,15 +674,18 @@ QAC-CR164-007 的 3/3 是产品 consumer coverage，不代表 UC-59/60 implement
 
 ## CR168 CP3 Design Obligations
 
-状态：`OPEN_AFTER_CP2`。CP2 未批准前不得开始；以下仅记录待冻结内容，不构成 HLD。
+状态：`IN_PROGRESS_CP3`（CP2 于 2026-07-14 批准；以下作为 CP3 强制设计输入，尚未构成实现授权）。
 
 1. 冻结 9 字段族的具体 schema、normalization、N/A、reason-code 与 numeric domain。
 2. 冻结透明 impact approximation 的方法族、参数表达、`cost_underestimation_status` decision table 和 no-real-TCA wording。
 3. 冻结 C3/C4 最小共享 header 与 C4-exclusive field ownership；禁止 C3 预占 capacity/ADV/liquidity/alpha-decay calculator。
 4. 冻结 C3 producer → neutral envelope → Gate 4 compatibility projection 的调用方向、时机、输入、输出、降级和调用方同步修改面；canonical Gate 4 validator 与 aggregate orchestration 不在修改面。
 5. 冻结 envelope availability 到 Gate 4 扁平 payload 的完整映射表：C3 `PRESENT/TYPED_UNAVAILABLE/BLOCKED` 与 C4 `reserved/not-built/typed_unavailable` 分别如何映射；C4 unavailable 的唯一安全映射为三个 refs absent-no-na-reason。
-6. 冻结 projection-side reason-key denylist 与失败合同：三个 C4 字段的 `*_na_reason` / `*_n_a_reason` 以及通用 `na_reason` / `n_a_reason` 均触发 `BLOCKED/REJECTED`，并由 `SC-CR168-B02` 验证 Gate 4/capacity/aggregate PASS=`0`。
+6. 冻结 projection-side reason-key denylist 与失败合同：精确 `8/8` 禁止键按 key presence 触发 `BLOCKED/REJECTED`；禁止对任意上游 mapping 盲目透传；reason 逃逸路径 canonical 调用数=`0`，并由 `SC-CR168-B02` 验证 Gate 4/capacity/aggregate PASS=`0`。
 7. 处理当前 capability registry 缺失：优先记录 N/A-with-reason 并使用既有 feature/module refs；不得为了 CR168 新建平行 registry。若证明必须建立项目级 registry，转独立治理 CR 后再决定。
 8. 把 `fixture_static_c3_typed_component`、`c3_gate4_compatibility_projection`、`cr155_admission_blocked_regression` 映射到既有结构化 evidence kind/taxonomy 或写出明确 N/A/替代验证路径；不得等到 CP7 才发现未知 kind。
 9. 冻结 `impact_model_family=n/a-with-reason` 的合法 C3 条件：必须使用 impact 专属 reason/claim-limit/owner/trigger，不得输出通用或 C4 字段 na-reason；C3 可有效但 Gate 4 仍因 C4 absent 而 fail-closed，并在 CP5 场景/测试设计中保留验证。
 10. 分离并冻结 component semantic hash 与完整 envelope canonical hash 的输入域；strategy type 不得改变相同规范化 C3 成本语义，但 subject/provenance/auth 不同的完整 envelope hash 允许不同，不新增“跨 strategy type 完整 hash 必须相同”的模糊 QAC。
+11. 冻结 CR168 adapter-only 调用面：CR168 新增的 Gate 4 调用必须 `100%` 经过 projection adapter，adapter 外直接调用数=`0`；不得在运行时导入或依赖私有 `_has_na_reason`。
+12. 冻结调用后安全断言：C4 unavailable 的合法 absent-no-na-reason 路径进入 canonical validator 后，Gate 4 status 必须为非 PASS；意外 PASS 必须转为内部合同错误/阻断，不得继续 aggregate。该断言不等价于 canonical Gate 4 已全局修复。
+13. 将 canonical Gate 4 的全局 N/A 语义复核登记到 `FU-CR161-007`：任何未来绕过 CR168 adapter 的直接调用或 aggregate integration 前，必须重新评估并决定是否独立硬化 canonical validator。

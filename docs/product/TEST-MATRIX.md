@@ -1,6 +1,6 @@
 ---
-status: awaiting-cp2
-version: "1.3"
+status: confirmed-cp2
+version: "1.4"
 source_scenarios: "docs/product/SCENARIOS.yaml"
 source_requirements: "docs/product/REQUIREMENTS.md"
 cr_id: "CR-168"
@@ -26,12 +26,13 @@ template_deviation_reason: "CR157 uses Scenario/Requirement/Test Layer/Validatio
 | v1.1 | 2026-07-13 | host-orchestrator | 回填 CR166 CP3 批准；11/11 场景映射到五个正式 Story 和 CP5 LLD/Feature 测试设计，验证仍为 planned、未执行。 |
 | v1.2 | 2026-07-13 | host-orchestrator-inline | CR168 增量追加 16 个场景的 planned fixture/static 覆盖，精确覆盖 10/10 fail-closed、2/2 fixture、Gate 4 联合边界、权限与 CR155 regression。 |
 | v1.3 | 2026-07-13 | host-orchestrator-inline | 根据 CP2 修改意见新增 `SC-CR168-B02`，覆盖字段级与通用 na-reason 逃逸必须由 projection 阻断；CR168 场景 17/17、P0 16、P1 1，10 类 C3 输入 fail-closed 仍为 10/10。 |
+| v1.4 | 2026-07-14 | host-orchestrator-inline | 回填 CR168 CP2 批准；把 B01/B02 的 planned evidence 收紧为 adapter-only 调用、8/8 禁止键拒绝、逃逸路径 canonical 调用=0、safe absent 路径 post-call 非 PASS，且不修改 canonical Gate 4。 |
 
 ## 状态
 
-- 文档状态：awaiting-cp2
+- 文档状态：confirmed-cp2
 - 关联 CR：`CR-157` / `CR-158` / `CR-160` / `CR-161` / `CR-162` / `CR-163` / `CR-164` / `CR-166` / `CR-168`
-- 当前门禁：CR168 CP2 待人工批准；新增 coverage 只是产品层 planned evidence，不代表实现或验证已执行
+- 当前门禁：CR168 CP2 已批准并只解锁 CP3；coverage 仍是 planned evidence，不代表实现或验证已执行
 
 ## Coverage Matrix
 
@@ -108,8 +109,8 @@ template_deviation_reason: "CR157 uses Scenario/Requirement/Test Layer/Validatio
 | SC-CR168-N08 | REQ-CR168-003, REQ-CR168-004 | arithmetic / reconciliation | fixture/static | itemized/total/gross/net mismatch blocked | P0 | planned-after-CP5 |
 | SC-CR168-N09 | REQ-CR168-002, REQ-CR168-004, REQ-CR168-008 | lineage / authorization | fixture/static | missing/inconsistent lineage/provenance/auth fail-closed；dereference=0 | P0 | planned-after-CP5 |
 | SC-CR168-N10 | REQ-CR168-004, REQ-CR168-005 | integrity / tamper | fixture/static | canonical equivalence stable；hash tamper blocked | P0 | planned-after-CP5 |
-| SC-CR168-B01 | REQ-CR168-006, REQ-CR168-009 | integration / fail-closed | fixture/static | C3 fields present + C4 typed_unavailable -> Gate 4 no capacity/aggregate PASS | P0 | planned-after-CP5 |
-| SC-CR168-B02 | REQ-CR168-006, REQ-CR168-009 | projection-guard / negative-integration | fixture/static | field-specific `*_na_reason` / `*_n_a_reason` and generic `na_reason` / `n_a_reason` are rejected before Gate 4；PASS=0 | P0 | planned-after-CP5 |
+| SC-CR168-B01 | REQ-CR168-006, REQ-CR168-009 | integration / fail-closed | fixture/static | adapter-only C3 projection + C4 typed_unavailable absent；canonical returns non-PASS；adapter-external direct calls=0 | P0 | planned-after-CP5 |
+| SC-CR168-B02 | REQ-CR168-006, REQ-CR168-009 | projection-guard / negative-integration | fixture/static | exact 8/8 forbidden reason keys rejected by presence before Gate 4；canonical calls=0；PASS=0 | P0 | planned-after-CP5 |
 | SC-CR168-A01 | REQ-CR168-008 | permission / security | fixture/static | real-data/TCA/runtime/trading/remote-write counters all 0 | P0 | planned-after-CP5 |
 | SC-CR168-G01 | REQ-CR168-006, REQ-CR168-009 | negative-regression / existing-evidence | static | CR155 admission remains BLOCKED；paper_candidate=false；promotion=0 | P0 | planned-after-CP5 |
 | SC-CR168-E01 | REQ-CR168-007, REQ-CR168-009 | applicability / boundary | static | event-specific producer explicit N/A/deferred；count=0 | P1 | planned-static-review |

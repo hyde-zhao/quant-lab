@@ -55,9 +55,9 @@ def test_c2_input_exposes_all_seven_field_families() -> None:
     assert validate_walk_forward_oos_input(evidence_input()).passed
 
 
-def test_catalog_reserves_c3_c4_without_calculators() -> None:
+def test_catalog_activates_c3_and_keeps_c4_reserved() -> None:
     assert component_catalog_status("walk_forward_oos", "v1") is ComponentCatalogStatus.ACTIVE
-    assert component_catalog_status("economic_cost", "reserved") is ComponentCatalogStatus.RESERVED
+    assert component_catalog_status("economic_cost", "v1") is ComponentCatalogStatus.ACTIVE
     assert component_catalog_status("capacity_liquidity", "reserved") is ComponentCatalogStatus.RESERVED
     assert component_catalog_status("future_unknown", "v9") is ComponentCatalogStatus.UNKNOWN
 
@@ -82,7 +82,7 @@ def test_unknown_mandatory_blocks_and_optional_is_preserve_only() -> None:
 
 def test_envelope_order_hash_and_tamper_are_deterministic() -> None:
     first = _descriptor()
-    second = _descriptor(component_type="economic_cost", component_schema_version="reserved", required=False, component_ref="", component_hash="", availability=EvidenceAvailability.TYPED_UNAVAILABLE)
+    second = _descriptor(component_type="capacity_liquidity", component_schema_version="reserved", required=False, component_ref="", component_hash="", availability=EvidenceAvailability.TYPED_UNAVAILABLE)
     envelopes = [_envelope(*order) for order in ((first, second), (second, first)) for _ in range(5)]
     assert len({item.envelope_hash for item in envelopes}) == 1
     assert validate_strategy_evidence_envelope(envelopes[0]).passed

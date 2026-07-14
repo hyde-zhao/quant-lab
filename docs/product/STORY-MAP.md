@@ -15,12 +15,13 @@
 | v0.9 | 2026-07-13 | host-orchestrator | 回填 CR166 CP3 批准；五个 outcome 由 CP4 正式化为 CR166-S01..S05，并进入五个串行安全 Wave。 |
 | v1.0 | 2026-07-13 | host-orchestrator-inline | CR168 只增量追加 5 个产品 outcome 候选；CP2 前不创建正式 Story、DAG、Wave、LLD 或文件所有权。 |
 | v1.1 | 2026-07-13 | host-orchestrator-inline | 收紧 CR168-O04：C4 unavailable 只映射为 absent-no-na-reason，字段级/通用 na-reason 逃逸由 projection 阻断；Outcome 数仍为 5，不提前拆 Story。 |
+| v1.2 | 2026-07-14 | host-orchestrator-inline | 回填 CR168 CP2 批准；O04 进入 CP3 架构输入，并明确整改是 adapter-local containment，仍不创建正式 Story、DAG、Wave、LLD 或文件所有权。 |
 
 ## 状态
 
-- 文档状态：awaiting-cp2
+- 文档状态：confirmed-cp2
 - 关联 CR：`CR-157` / `CR-158` / `CR-163` / `CR-164` / `CR-166` / `CR-168`
-- 当前门禁：CR168 CP2 待人工批准；CP2 前不得创建 CR168 正式 Story、DAG、Wave、LLD 或文件所有权
+- 当前门禁：CR168 CP2 已批准并进入 CP3；CP3 未批准前不得创建 CR168 正式 Story、DAG、Wave、LLD 或文件所有权
 - 注意：下方 `CR168-O01..O05` 只是产品 outcome 候选，不是 Story ID，也不写入 `DEVELOPMENT-PLAN.yaml`。
 
 ## Activities
@@ -85,7 +86,7 @@ CR163-S03 scope note：不增加第六个 Story；S03 单一 candidate Story 必
 | CR168-O01 | 冻结 C3 输入与 typed component 语义 | 1 个 active component/schema、9/9 字段族与 shared-header/C4-exclusive 边界 | P0 | CP2 后进入 CP3 |
 | CR168-O02 | 解释 gross-to-net 与成本低估风险 | fee/tax/spread/slippage/impact approximation、reconciliation、limitations、`cost_underestimation_status` | P0 | CP2 后进入 CP3 |
 | CR168-O03 | 防止错误输入和篡改 | 10/10 fail-closed 类别、10 次→1 hash、reason/lineage/auth 合同 | P0 | CP2 后进入 CP3 |
-| CR168-O04 | 保守接入联合 Gate 4 | 1 条 C3 compatibility projection；C4 absent-no-na-reason；字段级/通用 na-reason 逃逸由 projection 阻断；capacity/aggregate PASS=0 | P0 | CP2 后进入 CP3 |
+| CR168-O04 | 保守接入联合 Gate 4 | 1 条 C3 compatibility projection；C4 absent-no-na-reason；adapter 以 8-key denylist、strict allowlist、前置拒绝与后置非 PASS 断言局部阻断 reason 逃逸；canonical 全局硬化不在本 CR | P0 | CP2 后进入 CP3 |
 | CR168-O05 | 证明适用面与 claim ceiling | daily + ML 两 fixture 族、event N/A、零真实数据/runtime/C4/CR155 promotion | P0/P1 | CP2 后进入 CP3 |
 
-这些 outcome 只能供 CP2 范围确认和后续 CP3 架构输入。正式 Story 数量、边界、依赖、Wave 与文件所有权必须在 CP2、CP3 均批准后由 story-planning 阶段决定。
+这些 outcome 已由 CP2 确认为 CP3 架构输入，但仍不是正式 Story。正式 Story 数量、边界、依赖、Wave 与文件所有权必须在 CP3 批准后由 story-planning 阶段决定。

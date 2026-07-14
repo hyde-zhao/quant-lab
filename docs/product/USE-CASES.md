@@ -1,8 +1,8 @@
 ---
-status: awaiting-cp2
-version: "1.3"
-confirmed_by: "pending-CR168-CP2"
-confirmed_at: ""
+status: confirmed-cp2
+version: "1.4"
+confirmed_by: "user-CR168-CP2"
+confirmed_at: "2026-07-14T09:45:10+08:00"
 engagement_mode: production
 scenario_subject_type: target-artifact
 scenario_subject_id: "CR-168"
@@ -35,12 +35,13 @@ total_use_cases: 9
 | v1.1 | 2026-07-13 | host-orchestrator | 回填 CR166 CP3 人工批准；用户旅程映射到五个正式 Story，event 适用性确定为显式 N/A，下一门禁为 CP5。 |
 | v1.2 | 2026-07-13 | host-orchestrator-inline | CR168 增量追加 C3 economic cost/slippage/impact approximation 用例、Gate 4 C3+C4 联合边界、两类 fixture、10 类 fail-closed 和 CP2 决策项；保留 CR166 及更早基线。 |
 | v1.3 | 2026-07-13 | host-orchestrator-inline | 根据 CP2 修改意见收紧 Gate 4 projection-side fail-closed：C4 not-built/unavailable 只允许 absent-no-na-reason，任何字段级或通用 na_reason 逃逸由 projection 阻断；新增 1 个 P0 场景但不扩大 C3/C4 范围。 |
+| v1.4 | 2026-07-14 | host-orchestrator-inline | 回填 CR168 CP2 批准，并把代码评审发现固化为 CP3 义务：CR168 仅在自身 projection 入口以 8-key denylist、strict allowlist、调用前拒绝和调用后非 PASS 断言封堵 N/A reason 逃逸；不宣称 canonical Gate 4 已全局修复。 |
 
 ## 状态
 
-- 文档状态：awaiting-cp2
+- 文档状态：confirmed-cp2
 - 关联 CR：`CR-157` / `CR-158` / `CR-160` / `CR-161` / `CR-162` / `CR-163` / `CR-164` / `CR-166` / `CR-168`
-- 当前门禁：CR168 CP2 待人工批准；CP2 前不得进入 HLD/CP3、Story、LLD、实现或验证
+- 当前门禁：CR168 CP2 已批准；仅解锁 CP3 solution-design，Story、LLD、实现与验证仍未授权
 - 旧基线保留：当前仓库未发现既有 `docs/product/USE-CASES.md`，本文件作为产品层用例入口；既有组件说明和场景文档不被重写。
 
 ## UC-58 多因子策略研究到准入
@@ -373,7 +374,7 @@ Canonical answer：`process/context/CR164-CP2-SGQ-BATCH.yaml`。该回答不是 
 | 输入 | 显式提供的 9 个字段族：身份；gross/pre-cost basis；trade/position-change/turnover/notional；fee；tax/levy；spread/slippage；impact model + `cost_underestimation_status`/limitations；unit/currency/calendar/price/notional basis；lineage/provenance/authorization refs。 |
 | 处理逻辑 | 只用合成或静态参数做透明成本分项、total cost、gross-to-net reconciliation 与 impact approximation；先校验充分性、有限值、算术、跨字段 basis、权限和 canonical identity，再输出 typed C3 component。 |
 | 输出 / 结果 | `economic_cost` active versioned component、availability/outcome、reason codes、lineage、成本分项、total cost、net reconciliation、impact approximation、`cost_underestimation_status`、canonical hash。 |
-| Gate 4 边界 | Gate 4 是 C3+C4 联合门禁。CR168 只投影 C3 的 `impact_model_family`、`impact_model_ref`、`cost_underestimation_status`、`no_real_tca_claim`；C4 `reserved/not-built/typed_unavailable` 必须翻译为三个 C4 refs absent，且不得输出字段级 `*_na_reason` / `*_n_a_reason` 或通用 `na_reason` / `n_a_reason`。任何 reason 逃逸输入必须由 projection `BLOCKED/REJECTED`，不得调用或修改 canonical Gate 4 使其产生 PASS。 |
+| Gate 4 边界 | Gate 4 是 C3+C4 联合门禁。CR168 只投影 C3 的 `impact_model_family`、`impact_model_ref`、`cost_underestimation_status`、`no_real_tca_claim`；C4 `reserved/not-built/typed_unavailable` 必须翻译为三个 C4 refs absent，且不得输出字段级 `*_na_reason` / `*_n_a_reason` 或通用 `na_reason` / `n_a_reason`。CR168 的 adapter 必须用精确 8-key denylist 与 strict allowlist 在调用前拒绝 reason 逃逸，并以调用后断言保证 C4 unavailable 时 Gate 4 不为 PASS；本 CR 不修改、也不宣称全局修复 canonical Gate 4。 |
 | 当前范围 | daily multifactor synthetic fixture 1 族；daily multifactor + ML 的 multi-strategy-type compatibility fixture 1 族；C3-to-Gate-4 compatibility projection 1 条。 |
 | 明确不在范围 | 真实数据、真实成交/盘口/ADV、真实 TCA、market-impact calibration、C4 calculator、event-specific producer、C1-C4 aggregate integration、runtime/trading/publish/remote write。 |
 | Stage / claim ceiling | Stage 2 保持 complete；Stage 3 不启动；在实际 CP7/CP8 完成前 `c3_fixture_static_foundation=false`；真实 TCA、真实 impact calibration、真实数据、runtime、C4、event producer、CR155 promotion 均为 false/0。 |
@@ -395,19 +396,21 @@ Canonical answer：`process/context/CR164-CP2-SGQ-BATCH.yaml`。该回答不是 
 | SGQ | 问题 | 推荐方案 | 当前状态 | 决策引用 |
 |---|---|---|---|---|
 | SGQ-CR168-000 | 是否按评审修正启动 CR168？ | 修正 Gate 4 联合门禁、成本低估状态、multi-strategy fixture 和跨字段一致性条件后启动。 | RESOLVED；用户要求按提示词启动并继续推进 | `process/REQUEST.md` / `CR-168` |
-| SGQ-CR168-001 | C3 是否包含透明 impact approximation？ | 包含，但只能使用显式静态参数；备选为延后 impact。 | OPEN，待 CP2 | DQ-CP2-CR168-METHOD |
-| SGQ-CR168-002 | C3/C4 是否冻结最小共享 header？ | 冻结最小共享 header，C4 专属字段 reserved，C4 calculator=0。 | OPEN，待 CP2 | DQ-CP2-CR168-C3-C4 |
-| SGQ-CR168-003 | existing-gate integration 粒度？ | 只做 1 条 C3-to-Gate-4 compatibility projection；C4 reserved/not-built/typed_unavailable 映射为 refs absent-no-na-reason，字段级或通用 na-reason 逃逸必须由 projection 阻断，不修改 canonical Gate 4。 | OPEN，推荐方案已按用户修改收紧，待 CP2 重审 | DQ-CP2-CR168-GATE4 |
-| SGQ-CR168-004 | fixture 适用面？ | daily multifactor synthetic + daily/ML multi-strategy-type compatibility 两族；event N/A/deferred。 | OPEN，待 CP2 | DQ-CP2-CR168-FIXTURE |
-| SGQ-CR168-005 | claim ceiling？ | Stage2 complete、Stage3 not-started；真实 TCA/impact calibration/data/runtime/C4/event/CR155 promotion 均为 false/0。 | OPEN，待 CP2 | DQ-CP2-CR168-CLAIM |
+| SGQ-CR168-001 | C3 是否包含透明 impact approximation？ | 包含，但只能使用显式静态参数；备选为延后 impact。 | RESOLVED-APPROVED，2026-07-14 | DQ-CP2-CR168-METHOD |
+| SGQ-CR168-002 | C3/C4 是否冻结最小共享 header？ | 冻结最小共享 header，C4 专属字段 reserved，C4 calculator=0。 | RESOLVED-APPROVED，2026-07-14 | DQ-CP2-CR168-C3-C4 |
+| SGQ-CR168-003 | existing-gate integration 粒度？ | 只做 1 条 C3-to-Gate-4 compatibility projection；C4 reserved/not-built/typed_unavailable 映射为 refs absent-no-na-reason；CR168 adapter 以 8-key denylist、strict allowlist、调用前拒绝和调用后非 PASS 断言局部封堵 reason 逃逸，不修改或全局修复 canonical Gate 4。 | RESOLVED-APPROVED，2026-07-14 | DQ-CP2-CR168-GATE4 |
+| SGQ-CR168-004 | fixture 适用面？ | daily multifactor synthetic + daily/ML multi-strategy-type compatibility 两族；event N/A/deferred。 | RESOLVED-APPROVED，2026-07-14 | DQ-CP2-CR168-FIXTURE |
+| SGQ-CR168-005 | claim ceiling？ | Stage2 complete、Stage3 not-started；真实 TCA/impact calibration/data/runtime/C4/event/CR155 promotion 均为 false/0。 | RESOLVED-APPROVED，2026-07-14 | DQ-CP2-CR168-CLAIM |
 
 用户于 2026-07-13 对 `DQ-CP2-CR168-GATE4` 提出 `修改:`：上述 projection-side guard 与 `SC-CR168-B02` 已进入修订基线；该输入不是 CP2 批准，其余四项 DQ 仍与修订后的 Gate 4 DQ 一并等待统一 `approve`。
+
+用户于 2026-07-14 要求“按照建议完成整改，整改后批准，并推进到下一个人工门禁”，视为批准修订后的五项 CP2 推荐方案。该批准只解锁 CP3；评审所揭示的 canonical Gate 4 宽松 N/A 语义被记录为局部 containment 的设计依据，而不是 CR168 的全局整改授权。
 
 ### CR168 Deferred Ideas
 
 | ID | 内容 | 状态 | 重启条件 |
 |---|---|---|---|
 | FU-CR161-005 | C4 capacity/liquidity/ADV/alpha-decay producer | candidate | 独立 CR 冻结 C4 方法、输入与授权；不得由 CR168 隐式启动。 |
-| FU-CR161-007 | C1-C4 aggregate orchestration、existing-gate 全链路集成与 CR155 综合 regression/promotion decision | candidate | C1-C4 typed producers 全部稳定且获得独立授权。 |
+| FU-CR161-007 | C1-C4 aggregate orchestration、existing-gate 全链路集成、canonical Gate 4 availability/N/A 语义复核与 CR155 综合 regression/promotion decision | candidate | C1-C4 typed producers 全部稳定且获得独立授权；在增加任何绕过 CR168 adapter 的直接调用前，必须决定是否全局硬化 canonical Gate 4。 |
 | DF-CR168-REAL-TCA | 真实 TCA / market-impact calibration / real-data parameter estimation | not-authorized | 独立数据、方法、权限、审计和 runtime gate 全部批准。 |
 | DF-CR168-EVENT | event-specific economic-cost semantics and producer | deferred | event-time、交易日历、窗口和执行语义由独立 CR 冻结。 |
