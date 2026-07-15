@@ -1,8 +1,8 @@
 schema_version: 1
-version: "1.4"
+version: "1.6"
 status: confirmed-cp2
-cr_id: CR-168
-updated_at: "2026-07-13T22:45:00+08:00"
+cr_id: CR-169
+updated_at: "2026-07-14T17:20:00+08:00"
 source_requirements:
   - docs/product/REQUIREMENTS.md
 source_use_cases:
@@ -64,6 +64,14 @@ revision_record:
     date: "2026-07-14"
     author: host-orchestrator-inline
     summary: "Record CR168 CP2 approval and refine B01/B02 into adapter-local containment: exact 8-key presence denylist, no private-helper dependency, zero canonical calls for escapes, and a non-PASS postcondition for the safe absent path."
+  - version: v1.5
+    date: "2026-07-14"
+    author: host-orchestrator-inline-meta-pm
+    summary: "Add seventeen CR169 C4 fixture/static scenarios: two positive paths, ten P0 fail-closed groupings, three Gate4 boundary paths, CR155 regression and alpha-decay applicability; do not authorize real data or implementation."
+  - version: v1.6
+    date: "2026-07-14"
+    author: host-orchestrator-inline
+    summary: "Record CR169 CP2 review remediation: E01 also proves stage3_entry_ready=false and mandates a future 7/7 Stage 2 exit verification; scenario count and priorities remain 17/16-P0/1-P1."
 scenarios:
   - id: SC-CR157-P01
     title: "Build mature admission package from complete research refs"
@@ -792,13 +800,149 @@ scenarios:
     use_case_refs: [UC-58-CR168, UC-60]
     steps: ["Request event-specific economic-cost production.", "Inspect applicability and follow-up routing."]
     expected: ["Result is explicit N/A/deferred with reason.", "Event-specific producer count is 0.", "No event feed access occurs."]
+  - id: SC-CR169-P01
+    title: "Daily multifactor synthetic C4 component is reproducible"
+    type: positive
+    priority: P0
+    requirement_refs: [REQ-CR169-001, REQ-CR169-002, REQ-CR169-003, REQ-CR169-005]
+    use_case_refs: [UC-58-CR169]
+    steps: ["Provide complete static C4 input with synthetic ADV/reference basis, participation cap, capacity/liquidity assumptions, correlation header and lineage/auth refs.", "Produce C4 component ten times."]
+    expected: ["capacity_liquidity@v1 is present with three C4 refs.", "Ten normalized runs yield one canonical hash.", "No real data or runtime operation occurs."]
+  - id: SC-CR169-P02
+    title: "Daily and ML fixtures preserve one C4 arithmetic contract"
+    type: compatibility
+    priority: P0
+    requirement_refs: [REQ-CR169-002, REQ-CR169-007]
+    use_case_refs: [UC-58-CR169]
+    steps: ["Attach equivalent C4 static semantic input to daily multifactor and ML packages with their own identities.", "Compare C4 proxy/basis/reason semantics and correlation validation."]
+    expected: ["Two fixture families use the same C4 arithmetic contract.", "Identity/provenance differences do not imply cross-subject component-hash equality.", "No strategy-type-specific real data is read."]
+  - id: SC-CR169-N01
+    title: "Missing correlation header or synthetic ADV reference basis fails closed"
+    type: negative
+    priority: P0
+    requirement_refs: [REQ-CR169-002, REQ-CR169-004]
+    use_case_refs: [UC-58-CR169]
+    steps: ["Remove correlation identity/basis fields and synthetic ADV/reference basis in separate fixtures.", "Attempt C4 production."]
+    expected: ["Both omissions are BLOCKED or typed unavailable with machine reason.", "No default ADV or header is inferred."]
+  - id: SC-CR169-N02
+    title: "Missing or invalid participation cap or method fails closed"
+    type: negative
+    priority: P0
+    requirement_refs: [REQ-CR169-003, REQ-CR169-004]
+    use_case_refs: [UC-58-CR169]
+    steps: ["Omit participation cap/method, then supply negative or non-finite values.", "Attempt proxy calculation."]
+    expected: ["Every variant is blocked before a C4 ref is emitted.", "No implicit cap is selected."]
+  - id: SC-CR169-N03
+    title: "Missing capacity curve or capacity reference fails closed"
+    type: negative
+    priority: P0
+    requirement_refs: [REQ-CR169-003, REQ-CR169-004]
+    use_case_refs: [UC-58-CR169]
+    steps: ["Remove capacity model family/version or capacity reference.", "Attempt C4 production and Gate4 composition."]
+    expected: ["C4 component is unavailable/blocked.", "Joint adapter cannot construct a seven-field payload."]
+  - id: SC-CR169-N04
+    title: "Missing liquidity sizing reference fails closed"
+    type: negative
+    priority: P0
+    requirement_refs: [REQ-CR169-003, REQ-CR169-004]
+    use_case_refs: [UC-58-CR169]
+    steps: ["Remove liquidity sizing method/ref.", "Attempt C4 output and joint composition."]
+    expected: ["Missing liquidity evidence is fail-closed.", "No substitute based on real liquidity is fetched."]
+  - id: SC-CR169-N05
+    title: "Non-finite negative or infeasible C4 values fail closed"
+    type: negative
+    priority: P0
+    requirement_refs: [REQ-CR169-003, REQ-CR169-004]
+    use_case_refs: [UC-58-CR169]
+    steps: ["Inject NaN, Inf, unauthorized negative and infeasible proxy values.", "Attempt normalization and calculation."]
+    expected: ["All invalid values are blocked.", "No invalid value appears in component/hash input."]
+  - id: SC-CR169-N06
+    title: "Unit currency calendar as-of or horizon mismatch fails closed"
+    type: negative
+    priority: P0
+    requirement_refs: [REQ-CR169-002, REQ-CR169-004]
+    use_case_refs: [UC-58-CR169]
+    steps: ["Mix units, currencies, calendars, as-of dates or horizons without explicit consistent declaration.", "Compare with an internally consistent static fixture."]
+    expected: ["Cross-field mismatch is blocked.", "Consistent fixture is not falsely rejected."]
+  - id: SC-CR169-N07
+    title: "C3 and C4 correlation mismatch fails closed"
+    type: boundary
+    priority: P0
+    requirement_refs: [REQ-CR169-002, REQ-CR169-006]
+    use_case_refs: [UC-58-CR169]
+    steps: ["Supply validated C3 and C4 components with mismatched identity, basis, as-of/horizon or authorization header.", "Attempt strict joint adapter composition."]
+    expected: ["Adapter rejects before canonical Gate4 invocation.", "No aggregate/capacity admission PASS is emitted."]
+  - id: SC-CR169-N08
+    title: "Missing lineage provenance or authorization fails closed"
+    type: integrity
+    priority: P0
+    requirement_refs: [REQ-CR169-002, REQ-CR169-004, REQ-CR169-008]
+    use_case_refs: [UC-58-CR169]
+    steps: ["Remove or contradict C4 lineage/provenance/authorization refs.", "Attempt production and composition."]
+    expected: ["C4 is unavailable or blocked with machine reason.", "External refs are not dereferenced."]
+  - id: SC-CR169-N09
+    title: "C4 canonical identity or hash tamper fails closed"
+    type: integrity
+    priority: P0
+    requirement_refs: [REQ-CR169-004, REQ-CR169-005]
+    use_case_refs: [UC-58-CR169]
+    steps: ["Confirm equivalent normalized field order is stable.", "Modify a canonical C4 field while retaining the old hash."]
+    expected: ["Equivalent inputs share one hash.", "Tampered identity is blocked with zero false negatives."]
+  - id: SC-CR169-N10
+    title: "C4 N/A reason escape flat payload injection or real-capacity claim fails closed"
+    type: negative
+    priority: P0
+    requirement_refs: [REQ-CR169-004, REQ-CR169-006, REQ-CR169-008]
+    use_case_refs: [UC-58-CR169]
+    steps: ["Inject C4 N/A reason keys or arbitrary caller flat fields, then separately set real ADV/capacity/runtime claims or counters.", "Attempt strict joint adapter and readiness evaluation."]
+    expected: ["Injection is rejected before canonical Gate4.", "Any real-data/capacity/runtime assertion blocks readiness without executing an operation."]
+  - id: SC-CR169-B01
+    title: "CR168 C3-only absent-C4 path remains fail-closed"
+    type: negative-regression
+    priority: P0
+    requirement_refs: [REQ-CR169-007, REQ-CR169-009]
+    use_case_refs: [UC-58-CR169]
+    steps: ["Run the existing CR168 C3-only adapter with C4 unavailable.", "Inspect C4 absent behavior and result."]
+    expected: ["Existing adapter behavior is unchanged.", "Gate4 remains non-PASS and no C4-present path is accepted by that adapter."]
+  - id: SC-CR169-B02
+    title: "Verified C3+C4 fixture produces strict Gate4 fixture contract PASS only"
+    type: positive-integration
+    priority: P0
+    requirement_refs: [REQ-CR169-001, REQ-CR169-003, REQ-CR169-006]
+    use_case_refs: [UC-58-CR169]
+    steps: ["Provide verified economic_cost@v1 and capacity_liquidity@v1 with matching correlation headers and no-real-data limitations.", "Compose exact seven-field payload through the new strict adapter and invoke unchanged canonical Gate4."]
+    expected: ["gate4_fixture_contract_pass=1.", "canonical Gate4 and aggregate orchestration modifications=0.", "Aggregate/capacity admission PASS remains 0."]
+  - id: SC-CR169-B03
+    title: "Unexpected canonical PASS or postcondition violation is contained"
+    type: negative-integration
+    priority: P0
+    requirement_refs: [REQ-CR169-006, REQ-CR169-009]
+    use_case_refs: [UC-58-CR169]
+    steps: ["Use a public callable double to return an unexpected canonical status or missing expected contract evidence.", "Evaluate strict adapter postcondition."]
+    expected: ["Adapter returns BLOCKED/REJECTED with an auditable reason.", "No result reaches aggregate admission."]
+  - id: SC-CR169-G01
+    title: "CR155 remains blocked after C4 fixture contract"
+    type: negative-regression
+    priority: P0
+    requirement_refs: [REQ-CR169-006, REQ-CR169-009]
+    use_case_refs: [UC-58-CR169]
+    steps: ["Consume existing CR155 evidence only and attach the fixture compatibility conclusion.", "Inspect package status and paper_candidate."]
+    expected: ["CR155 remains BLOCKED 1/1.", "paper_candidate remains false and promotion count is 0."]
+  - id: SC-CR169-E01
+    title: "Alpha-decay deferred and Stage 3 entry remains explicitly unavailable"
+    type: applicability
+    priority: P1
+    requirement_refs: [REQ-CR169-009]
+    use_case_refs: [UC-58-CR169]
+    steps: ["Request alpha-decay calculation and Stage 3 entry claim during CP2 scope review.", "Inspect routing, implementation count and transition prerequisites."]
+    expected: ["Alpha-decay is deferred to CP3 disposition with reason and calculator count is 0 before a separately approved scope decision.", "stage3_entry_ready is false; CP8/formal exit must require STAGE2-EXIT-VERIFICATION.result.json with 7/7 contract checks, independent verifier follow-up and explicit Stage 3 authorization."]
 coverage_summary:
-  total: 76
-  p0_total: 72
-  p0_with_planned_coverage: 72
+  total: 93
+  p0_total: 88
+  p0_with_planned_coverage: 88
   high_priority_positive_and_negative_covered: true
-  source_requirements_total: 61
-  source_use_cases_total: 9
+  source_requirements_total: 70
+  source_use_cases_total: 10
   gaps:
     - id: GAP-CR157-001
       status: resolved_by_CR157_CP2_and_promoted_CR158
@@ -824,3 +968,6 @@ coverage_summary:
     - id: GAP-CR168-001
       status: resolved_by_CR168_CP2_approval
       description: "C3 method boundary, C3/C4 shared header, adapter-local Gate 4 absent-no-na-reason containment, two fixture families and claim ceiling were approved on 2026-07-14; only CP3 solution design is unlocked, while Story/LLD/implementation/verification remain blocked."
+    - id: GAP-CR169-001
+      status: pending_user_CP2_decision
+      description: "C4 fixture method, C3/C4 correlation header, strict joint adapter ownership, alpha-decay disposition and verifier independence are deliberately open for CP2; no HLD, Story, implementation or real-data action is authorized."

@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "fixture_family": "daily_ml_multi_strategy_compatibility",
+  "common_computational_body": {
+    "price_basis": "adjusted_close",
+    "notional_basis": "market_value",
+    "currency": "CNY",
+    "calendar": "CN-TRADING-DAY",
+    "as_of": "2026-07-10",
+    "horizon_start": "2026-01-01",
+    "horizon_end": "2026-06-30",
+    "lineage_context_ref": "fixture://context/lineage/cr169",
+    "authorization_context_ref": "fixture://context/authorization/static-only",
+    "synthetic_adv": "1000000",
+    "requested_notional": "50000",
+    "turnover_notional": "250000",
+    "participation_cap": "0.10",
+    "currency_minor_unit": "0.01",
+    "method": "static_adv_cap_v1",
+    "model_version": "fixture-static-adv-cap-v1",
+    "lineage_refs": ["fixture://lineage/c4/cr169"],
+    "provenance_refs": ["fixture://provenance/c4/cr169"],
+    "authorization_refs": ["fixture://authorization/static-only"],
+    "limitations": ["fixture_static_only", "multi_strategy_type_compatibility"],
+    "no_real_adv_claim": true,
+    "no_real_liquidity_claim": true,
+    "no_capacity_ready_claim": true
+  },
+  "attachments": {
+    "daily_multifactor": {
+      "manifest_ref": "fixture://manifest/cr169-daily",
+      "run_ref": "fixture://run/cr169-daily",
+      "strategy_ref": "fixture://strategy/daily-multifactor",
+      "package_ref": "fixture://package/cr169-daily"
+    },
+    "ml": {
+      "manifest_ref": "fixture://manifest/cr169-ml",
+      "run_ref": "fixture://run/cr169-ml",
+      "strategy_ref": "fixture://strategy/ml",
+      "package_ref": "fixture://package/cr169-ml"
+    }
+  },
+  "expected": {
+    "component_semantic_hash_count": 1,
+    "attachment_identity_count": 2,
+    "cross_subject_join_status": "BLOCKED",
+    "cross_subject_join_reason": "c4_c3_c4_correlation_header_mismatch"
+  }
+}

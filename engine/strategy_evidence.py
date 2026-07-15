@@ -35,6 +35,7 @@ class ComponentCatalogStatus(str, Enum):
 COMPONENT_CATALOG: Mapping[tuple[str, str], ComponentCatalogStatus] = {
     ("walk_forward_oos", "v1"): ComponentCatalogStatus.ACTIVE,
     ("economic_cost", "v1"): ComponentCatalogStatus.ACTIVE,
+    ("capacity_liquidity", "v1"): ComponentCatalogStatus.ACTIVE,
     ("capacity_liquidity", "reserved"): ComponentCatalogStatus.RESERVED,
 }
 

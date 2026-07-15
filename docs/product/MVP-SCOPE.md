@@ -17,12 +17,14 @@
 | v1.1 | 2026-07-13 | host-orchestrator-inline | CR168 增量追加 fixture/static C3 typed component、9 字段族、10 类 fail-closed、两类 fixture、联合 Gate 4 投影、claim ceiling 与 C4/FU-007 边界。 |
 | v1.2 | 2026-07-13 | host-orchestrator-inline | 根据 CP2 修改意见收紧 Gate 4 projection-side guard：C4 unavailable 映射为 absent-no-na-reason，reason 逃逸必须阻断；新增 1 个 P0 场景，不改变 6 项 CR168 MVP scope 或 15 项 QAC。 |
 | v1.3 | 2026-07-14 | host-orchestrator-inline | 回填 CR168 CP2 批准；明确 Gate 4 整改只发生在 CR168 adapter 入口，以 8-key denylist、strict allowlist、前置拒绝和后置非 PASS 断言局部封堵，canonical 全局硬化继续 deferred。 |
+| v1.4 | 2026-07-14 | host-orchestrator-inline-meta-pm | 增量追加 CR169 C4 fixture/static MVP、strict C3+C4 joint adapter、12 类 fail-closed、alpha-decay CP3 disposition 与真实能力 claim ceiling；不改变 CR168 adapter 或 FU-007 owner 边界。 |
+| v1.5 | 2026-07-14 | host-orchestrator-inline | CR169 CP2 评审整改与批准：补 `stage3_entry_ready=false`、7/7 Stage 2 exit 核验义务，以及 FU-007 007a/007b 的非绑定后续提案；不扩大 MVP 或授权。 |
 
 ## 状态
 
-- 文档状态：confirmed-cp2
-- 关联 CR：`CR-157` / `CR-158` / `CR-160` / `CR-161` / `CR-162` / `CR-163` / `CR-164` / `CR-166` / `CR-168`
-- 当前门禁：CR168 CP2 已批准；只允许推进 CP3 solution-design，Story/LLD/实现/验证仍未授权
+- 文档状态：confirmed-cp2（CR169 基线）
+- 关联 CR：`CR-157` / `CR-158` / `CR-160` / `CR-161` / `CR-162` / `CR-163` / `CR-164` / `CR-166` / `CR-168` / `CR-169`
+- 当前门禁：CR169 CP2 已批准；只允许 CP3 设计，Story/LLD/实现/验证仍未授权
 
 ## In Scope
 
@@ -73,6 +75,12 @@
 | MVP-CR168-004 | Joint Gate 4 C3 compatibility projection | C3 投影=1；C4 refs absent-no-na-reason；adapter 8/8 禁止键拒绝、strict allowlist、逃逸路径 canonical 调用=0、safe absent 路径 post-call 非 PASS；capacity/aggregate PASS=0；C4 calculator=0；canonical Gate 4 修改=0。 |
 | MVP-CR168-005 | Two fixture families and event boundary | daily multifactor synthetic + daily/ML compatibility=2/2；event-specific producer=0。 |
 | MVP-CR168-006 | Authorization and claim ceiling | Stage2=true、Stage3=false；真实 TCA/calibration/data/runtime=false；CR155 admission promotion=0。 |
+| MVP-CR169-001 | Versioned C4 typed component | `capacity_liquidity@v1` component/schema=1/1；平行 envelope/registry/gate=0。 |
+| MVP-CR169-002 | Independent static C4 input and correlation header | C4 proxy input 独立；CP3 冻结一个最小 correlation header，且不默认污染 component semantic hash。 |
+| MVP-CR169-003 | Deterministic C4 proxy and fail-closed contract | 12/12 fail-closed；同一规范化输入 10 次→1 hash；真实 ADV/capacity=0。 |
+| MVP-CR169-004 | Strict C3+C4 Gate4 fixture compatibility | 新 joint adapter=1、三个 C4 refs=3/3、精确七字段 payload；仅 `gate4_fixture_contract_pass=1`，aggregate/capacity admission PASS=0。 |
+| MVP-CR169-005 | CR168 regression and two fixtures | 2/2 fixture families；CR168 C3-only absent-C4 fail-closed 回归=1；C4 present 不进入旧 adapter。 |
+| MVP-CR169-006 | Claim ceiling, Stage exit, alpha and CR155 boundary | Stage2=true 但 `stage3_entry_ready=false`、Stage3=false；CP8/formal Stage 2 exit 前 `STAGE2-EXIT-VERIFICATION.result.json=7/7`；alpha calculator=0（CP3 前）、canonical/aggregate 修改=0、CR155 promotion=0。 |
 
 ## Out of Scope
 
@@ -128,6 +136,25 @@
 | FU-CR161-004 | C3 economic cost / impact producer | 已 promoted to `CR-168`；只启动 fixture/static foundation，真实 TCA/data/runtime 仍未授权。 |
 | FU-CR161-005 | C4 capacity / liquidity producer | 独立方法、输入与数据授权；可与 C3 共用输入-contract wave，但计算与验证独立。 |
 | FU-CR161-007 | Existing-gate integration、canonical Gate 4 N/A 语义复核和 CR155 regression | C1-C4 producer 均稳定后再做端到端整合；任何新增直接 Gate 4 caller 前决定是否全局硬化 canonical validator；CR155 必须保持 blocked。 |
+
+## CR169 In Scope / Out of Scope 增量
+
+| 分类 | 项目 | 边界 |
+|---|---|---|
+| In Scope | C4 fixture/static typed evidence | synthetic ADV/reference、participation、capacity/liquidity sizing、三个 refs、lineage/authorization、deterministic hash。 |
+| In Scope | strict joint fixture adapter | 仅 verified C3+C4 typed components；精确七字段 Gate4 payload；局部 postcondition。 |
+| In Scope | product/architecture decision input | correlation header、alpha disposition、verifier-risk disclosure；CP2 前不形成 HLD 或 Story。 |
+| Out of Scope | CR168 C3-only adapter | 保持不变，继续 C4 unavailable fail-closed；不得承载 C4 present。 |
+| Out of Scope | canonical Gate4 / aggregate | canonical global N/A hardening、StrategyAdmissionPackage/C1-C4 aggregate 仍归 FU-CR161-007。 |
+| Out of Scope | FU-007a / FU-007b 启动 | 007a（canonical N/A 语义硬化）和 007b（aggregate/CR155 regression）仅为拆分提案；必须未来独立 CR、CP0 冲突预检与用户授权。 |
+| Out of Scope | real C4 capability | real ADV/liquidity/order/book/flow、真实 capacity calibration、真实 alpha-decay、Stage3/runtime/trading 均不授权。 |
+| Out of Scope | CR155 promotion | CR155 admission 必须 BLOCKED 且 `paper_candidate=false`。 |
+
+## Promoted to CR169
+
+| Legacy Deferred ID | CR169 scope | 状态 | 说明 |
+|---|---|---|---|
+| FU-CR161-005 | MVP-CR169-001..006 | active / CP2 pending | C4 fixture/static foundation 已进入 CR169 产品基线；alpha-decay 只作为 CP3 disposition，真实 C4 与 global integration 仍不在范围。 |
 
 ## Promoted to CR158
 

@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "fixture_family": "daily_multifactor_synthetic",
+  "input": {
+    "manifest_ref": "fixture://manifest/cr169-daily",
+    "run_ref": "fixture://run/cr169-daily",
+    "strategy_ref": "fixture://strategy/daily-multifactor",
+    "package_ref": "fixture://package/cr169-daily",
+    "price_basis": "adjusted_close",
+    "notional_basis": "market_value",
+    "currency": "CNY",
+    "calendar": "CN-TRADING-DAY",
+    "as_of": "2026-07-10",
+    "horizon_start": "2026-01-01",
+    "horizon_end": "2026-06-30",
+    "lineage_context_ref": "fixture://context/lineage/cr169",
+    "authorization_context_ref": "fixture://context/authorization/static-only",
+    "synthetic_adv": "1000000",
+    "requested_notional": "50000",
+    "turnover_notional": "250000",
+    "participation_cap": "0.10",
+    "currency_minor_unit": "0.01",
+    "method": "static_adv_cap_v1",
+    "model_version": "fixture-static-adv-cap-v1",
+    "lineage_refs": ["fixture://lineage/c4/cr169"],
+    "provenance_refs": ["fixture://provenance/c4/cr169"],
+    "authorization_refs": ["fixture://authorization/static-only"],
+    "limitations": ["fixture_static_only", "no_real_adv", "not_capacity_ready"],
+    "no_real_adv_claim": true,
+    "no_real_liquidity_claim": true,
+    "no_capacity_ready_claim": true
+  },
+  "expected": {
+    "participation_ratio": "0.05",
+    "capacity_amount": "100000.00",
+    "liquidity_headroom": "50000.00",
+    "within_declared_cap": true,
+    "gate4_ref_count": 3,
+    "deterministic_runs": 10,
+    "canonical_hash_count": 1
+  },
+  "capability_registry": {
+    "availability": "not_applicable_with_reason",
+    "reason": "fixture foundation 使用已冻结的 Feature 合同引用；运行时 capability registry 不在 CR-169 授权范围。",
+    "feature_refs": [
+      "docs/features/capacity-liquidity-evidence/DESIGN.md",
+      "docs/features/capacity-liquidity-claim-exit-guard/DESIGN.md"
+    ]
+  },
+  "claim_ceiling": {
+    "fixture_static_only": true,
+    "real_adv_available": false,
+    "real_liquidity_available": false,
+    "capacity_ready": false,
+    "alpha_decay_calculator": 0,
+    "stage3_entry_ready": false
+  }
+}

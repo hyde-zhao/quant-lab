@@ -1,11 +1,11 @@
 ---
 status: confirmed-cp2
-version: "1.4"
-confirmed_by: "user-CR168-CP2"
-confirmed_at: "2026-07-14T09:45:10+08:00"
+version: "1.6"
+confirmed_by: "user-CR169-CP2-review-remediation"
+confirmed_at: "2026-07-14T17:45:00+08:00"
 engagement_mode: production
 scenario_subject_type: target-artifact
-scenario_subject_id: "CR-168"
+scenario_subject_id: "CR-169"
 target_artifact_type: workflow
 governance_mode: review-gated
 review_policy: strict
@@ -13,7 +13,7 @@ delivery_routing:
   mode: project-readme-contract
   output_root: "docs/product"
   source: docs
-total_use_cases: 9
+total_use_cases: 10
 ---
 
 # Product Use Cases
@@ -36,12 +36,14 @@ total_use_cases: 9
 | v1.2 | 2026-07-13 | host-orchestrator-inline | CR168 增量追加 C3 economic cost/slippage/impact approximation 用例、Gate 4 C3+C4 联合边界、两类 fixture、10 类 fail-closed 和 CP2 决策项；保留 CR166 及更早基线。 |
 | v1.3 | 2026-07-13 | host-orchestrator-inline | 根据 CP2 修改意见收紧 Gate 4 projection-side fail-closed：C4 not-built/unavailable 只允许 absent-no-na-reason，任何字段级或通用 na_reason 逃逸由 projection 阻断；新增 1 个 P0 场景但不扩大 C3/C4 范围。 |
 | v1.4 | 2026-07-14 | host-orchestrator-inline | 回填 CR168 CP2 批准，并把代码评审发现固化为 CP3 义务：CR168 仅在自身 projection 入口以 8-key denylist、strict allowlist、调用前拒绝和调用后非 PASS 断言封堵 N/A reason 逃逸；不宣称 canonical Gate 4 已全局修复。 |
+| v1.5 | 2026-07-14 | host-orchestrator-inline-meta-pm | 增量追加 CR169 C4 fixture/static use case、17 个场景的产品语义、五项 CP2 待决与严格 C3+C4 Gate 4 joint adapter 边界；保留 CR168 C3-only adapter、canonical Gate 4、aggregate 和 CR155 基线。 |
+| v1.6 | 2026-07-14 | host-orchestrator-inline | CR169 CP2 评审整改与批准：明确 Stage 2 complete 不等于 Stage 3 entry-ready，新增 7/7 Stage 2 exit 核验义务，并把 FU-007 007a/007b 仅保留为后续提案。 |
 
 ## 状态
 
 - 文档状态：confirmed-cp2
-- 关联 CR：`CR-157` / `CR-158` / `CR-160` / `CR-161` / `CR-162` / `CR-163` / `CR-164` / `CR-166` / `CR-168`
-- 当前门禁：CR168 CP2 已批准；仅解锁 CP3 solution-design，Story、LLD、实现与验证仍未授权
+- 关联 CR：`CR-157` / `CR-158` / `CR-160` / `CR-161` / `CR-162` / `CR-163` / `CR-164` / `CR-166` / `CR-168` / `CR-169`
+- 当前门禁：CR169 CP2 已批准；仅进入 CP3/HLD 设计，Story、LLD、实现和验证仍受后续门禁阻断
 - 旧基线保留：当前仓库未发现既有 `docs/product/USE-CASES.md`，本文件作为产品层用例入口；既有组件说明和场景文档不被重写。
 
 ## UC-58 多因子策略研究到准入
@@ -414,3 +416,49 @@ Canonical answer：`process/context/CR164-CP2-SGQ-BATCH.yaml`。该回答不是 
 | FU-CR161-007 | C1-C4 aggregate orchestration、existing-gate 全链路集成、canonical Gate 4 availability/N/A 语义复核与 CR155 综合 regression/promotion decision | candidate | C1-C4 typed producers 全部稳定且获得独立授权；在增加任何绕过 CR168 adapter 的直接调用前，必须决定是否全局硬化 canonical Gate 4。 |
 | DF-CR168-REAL-TCA | 真实 TCA / market-impact calibration / real-data parameter estimation | not-authorized | 独立数据、方法、权限、审计和 runtime gate 全部批准。 |
 | DF-CR168-EVENT | event-specific economic-cost semantics and producer | deferred | event-time、交易日历、窗口和执行语义由独立 CR 冻结。 |
+
+## UC-58-CR169 C4 Capacity / Liquidity / ADV Evidence Producer Foundation
+
+| 字段 | 内容 |
+|---|---|
+| 用例 ID | UC-58-CR169 |
+| 名称 | Fixture/static C4 capacity / liquidity / ADV typed evidence producer foundation |
+| 主要用户 | 量化研究负责人、策略研究员、准入审查者、验证者、框架维护者 |
+| 触发条件 | CR-168 已交付 C3 `economic_cost@v1` 与 C3-only fail-closed adapter；Gate 4 同时需要 C4 capacity/liquidity refs，但当前 C4 仍为 reserved/typed unavailable。 |
+| 输入 | 仅显式 synthetic/static 的 strategy/run/manifest identity、synthetic ADV/reference basis、participation cap/method、capacity curve/ref、liquidity sizing/ref、unit/currency/calendar/as-of/horizon、lineage/provenance/authorization 与 no-real-ADV limitations。 |
+| 处理逻辑 | 先验证 C4 计算输入充分性、数值域、关联头、单位和授权边界；再确定性输出容量/流动性/ADV proxy。C3/C4 计算体独立，关联头只校验可组合性。 |
+| 输出 / 结果 | `capacity_liquidity@v1`、availability/outcome、machine reason、三个 Gate 4 C4 refs、lineage、limitations 与 canonical hash；真实 ADV/liquidity/capacity 一律不宣称可用。 |
+| Gate 4 边界 | 不修改 CR-168 C3-only adapter；新增独立 strict C3+C4 fixture compatibility adapter，只消费已验证 C3+C4 components，重建精确七字段 payload，并拒绝 reason escape、任意 flat mapping、身份/限制不一致和意外 PASS。canonical Gate 4 与 aggregate orchestration 不修改。 |
+| 当前范围 | daily multifactor synthetic fixture 与 daily/ML multi-strategy-type compatibility fixture 共 2 族；C4 component=1、schema=1、strict joint fixture adapter=1。 |
+| 明确不在范围 | 真实 ADV/liquidity/order/book/flow 数据、真实 capacity calibration、alpha-decay calculator（CP3 决定归属）、canonical Gate 4/global hardening、aggregate integration、Stage 3、runtime/trading/publish/remote write。 |
+| Stage / claim ceiling | Stage 2 保持 complete，但 `stage3_entry_ready=false`、Stage 3 不启动；CP8 / formal Stage 2 exit 前必须以 `STAGE2-EXIT-VERIFICATION.result.json` 核验 7/7 合同。实际 CP7/CP8 前 `c4_fixture_static_foundation=false`、`gate4_fixture_contract_pass=false`；`aggregate_admission_pass=false`、`cr155_promoted=false`。 |
+
+### CR169 用户旅程
+
+| 步骤 | 用户意图 | 系统行为 | 成功标准 |
+|---|---|---|---|
+| 1 | 提供受限的 static C4 输入 | 验证 synthetic ADV/reference basis、participation、capacity/liquidity 方法及关联头。 | 任何缺失、非有限、不可行、跨字段不一致或未经授权输入均 fail-closed。 |
+| 2 | 取得可审计 C4 fixture component | 按显式 static 参数计算 proxy，记录 availability、reason、limitation、lineage 与 hash。 | 1 个 component / 1 个 active schema；同一规范化输入 10 次→1 hash。 |
+| 3 | 让 C3/C4 安全组合进 Gate 4 | strict joint adapter 对 type/version/identity/limitation 验证后产生精确七字段 payload。 | 3/3 C4 refs present 时仅证明 `gate4_fixture_contract_pass`；不产生 aggregate/real-capacity PASS。 |
+| 4 | 保持 CR168 回归安全 | C3-only adapter 持续将 C4 unavailable fail-closed。 | C3-only adapter 行为修改数=0；absent-C4 回归=1。 |
+| 5 | 控制真实能力与晋级声明 | 审查 no-real-data limitation、forbidden counters 和 CR155 package。 | real-data/runtime/trading=0；CR155 仍 BLOCKED 且 `paper_candidate=false`。 |
+
+### CR169 Scenario Gray Areas 与确认记录
+
+| SGQ | 问题 | 推荐方案 | 当前状态 | 决策引用 |
+|---|---|---|---|---|
+| SGQ-CR169-001 | C4 fixture 方法与保守假设？ | 显式 synthetic/static ADV、participation cap、capacity curve、liquidity sizing，真实校准延后。 | OPEN-CP2 | DQ-CP2-CR169-C4-METHOD |
+| SGQ-CR169-002 | C3/C4 共享边界？ | 冻结最小 correlation header；计算 body 与 component semantic hash 域独立。 | OPEN-CP2 | DQ-CP2-CR169-CORRELATION-HEADER |
+| SGQ-CR169-003 | Gate 4 组合路径归谁？ | 新增 strict joint fixture adapter；CR168 adapter/canonical/aggregate 不变。 | OPEN-CP2 | DQ-CP2-CR169-GATE4-COMPOSITION-OWNER |
+| SGQ-CR169-004 | alpha-decay 是否归 C4？ | CP3 由 meta-se 决定 C4、C2 或独立 CR；本 CR 默认不实现。 | OPEN-CP2 | DQ-CP2-CR169-ALPHA-DECAY |
+| SGQ-CR169-005 | FU-006 verifier 是否前置？ | 不阻塞 foundation；未完成时 CP8 最多 READY_WITH_RISK。 | OPEN-CP2 | DQ-CP2-CR169-VERIFIER |
+
+### CR169 Deferred / Adjacent Items
+
+| ID | 内容 | 状态 | 重启 / 归属 |
+|---|---|---|---|
+| FU-CR161-005 | C4 fixture/static capacity/liquidity/ADV foundation | active (`CR-169`) | 当前 CR；CP2 前无实现。 |
+| DF-CR169-ALPHA-DECAY | alpha-decay calculator 归属与方法 | deferred-pending-CP3 | CP3 决定归 C4、C2 或独立 CR 后才可规划。 |
+| FU-CR161-006 | independent verifier lane | candidate | 不阻塞 CP2；若未完成，CP8 必须披露 verifier-independence 风险。 |
+| FU-CR161-007 | canonical Gate 4 global N/A hardening、C1-C4 aggregate orchestration 与 CR155 promotion decision | candidate；可评估 007a/007b 拆分 | 007a（canonical N/A 语义硬化）与 007b（aggregate + CR155 regression）只是后续提案；各自必须先有独立 CR/CP0 conflict precheck 和用户授权，当前不启动。 |
+| DF-CR169-REAL-C4 | real ADV/liquidity/capacity calibration | not-authorized | Stage 3 独立数据、方法、权限与审计 CR。 |

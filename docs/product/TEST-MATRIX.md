@@ -1,9 +1,9 @@
 ---
 status: confirmed-cp2
-version: "1.4"
+version: "1.6"
 source_scenarios: "docs/product/SCENARIOS.yaml"
 source_requirements: "docs/product/REQUIREMENTS.md"
-cr_id: "CR-168"
+cr_id: "CR-169"
 template_deviation_reason: "CR157 uses Scenario/Requirement/Test Layer/Validation Mode columns to preserve gate and no-runtime evidence mapping; coverage statistics remain present below."
 ---
 
@@ -27,12 +27,15 @@ template_deviation_reason: "CR157 uses Scenario/Requirement/Test Layer/Validatio
 | v1.2 | 2026-07-13 | host-orchestrator-inline | CR168 增量追加 16 个场景的 planned fixture/static 覆盖，精确覆盖 10/10 fail-closed、2/2 fixture、Gate 4 联合边界、权限与 CR155 regression。 |
 | v1.3 | 2026-07-13 | host-orchestrator-inline | 根据 CP2 修改意见新增 `SC-CR168-B02`，覆盖字段级与通用 na-reason 逃逸必须由 projection 阻断；CR168 场景 17/17、P0 16、P1 1，10 类 C3 输入 fail-closed 仍为 10/10。 |
 | v1.4 | 2026-07-14 | host-orchestrator-inline | 回填 CR168 CP2 批准；把 B01/B02 的 planned evidence 收紧为 adapter-only 调用、8/8 禁止键拒绝、逃逸路径 canonical 调用=0、safe absent 路径 post-call 非 PASS，且不修改 canonical Gate 4。 |
+| v1.5 | 2026-07-14 | host-orchestrator-inline-meta-pm | 增量追加 CR169 17/17 C4 fixture/static scenarios 的 requirement/matrix 覆盖；包含 CR168 C3-only 回归、strict C3+C4 joint adapter、CR155 blocked 和 alpha-decay applicability，均未执行实现或真实数据操作。 |
+| v1.6 | 2026-07-14 | host-orchestrator-inline | CR169 CP2 评审整改与批准：E01 追加 `stage3_entry_ready=false` 与 CP8/formal Stage 2 exit 的 7/7 核验期望；场景、QAC 和范围计数不变。 |
+| v1.7 | 2026-07-14 | host-orchestrator-inline-meta-se | CR169 CP4：把 17/17 场景映射到 S01–S05 full-lld 与 5 个串行 Wave；覆盖数量不变，仍未授权实现。 |
 
 ## 状态
 
-- 文档状态：confirmed-cp2
-- 关联 CR：`CR-157` / `CR-158` / `CR-160` / `CR-161` / `CR-162` / `CR-163` / `CR-164` / `CR-166` / `CR-168`
-- 当前门禁：CR168 CP2 已批准并只解锁 CP3；coverage 仍是 planned evidence，不代表实现或验证已执行
+- 文档状态：confirmed-cp2（CR169 基线）
+- 关联 CR：`CR-157` / `CR-158` / `CR-160` / `CR-161` / `CR-162` / `CR-163` / `CR-164` / `CR-166` / `CR-168` / `CR-169`
+- 当前门禁：CR169 CP2 已批准；coverage 均是 planned evidence，不代表实现、验证或真实数据操作已执行
 
 ## Coverage Matrix
 
@@ -114,6 +117,23 @@ template_deviation_reason: "CR157 uses Scenario/Requirement/Test Layer/Validatio
 | SC-CR168-A01 | REQ-CR168-008 | permission / security | fixture/static | real-data/TCA/runtime/trading/remote-write counters all 0 | P0 | planned-after-CP5 |
 | SC-CR168-G01 | REQ-CR168-006, REQ-CR168-009 | negative-regression / existing-evidence | static | CR155 admission remains BLOCKED；paper_candidate=false；promotion=0 | P0 | planned-after-CP5 |
 | SC-CR168-E01 | REQ-CR168-007, REQ-CR168-009 | applicability / boundary | static | event-specific producer explicit N/A/deferred；count=0 | P1 | planned-static-review |
+| SC-CR169-P01 | REQ-CR169-001, REQ-CR169-002, REQ-CR169-003, REQ-CR169-005 | contract / determinism | fixture/static | complete daily C4 component; 10 reruns -> 1 hash | P0 | S01,S02,S05 planned-after-CP5 |
+| SC-CR169-P02 | REQ-CR169-002, REQ-CR169-007 | compatibility / contract | fixture/static | daily + ML use one C4 arithmetic contract | P0 | S03,S05 planned-after-CP5 |
+| SC-CR169-N01 | REQ-CR169-002, REQ-CR169-004 | negative / sufficiency | fixture/static | missing correlation header or synthetic ADV basis fails closed | P0 | S01,S05 planned-after-CP5 |
+| SC-CR169-N02 | REQ-CR169-003, REQ-CR169-004 | negative / numeric | fixture/static | missing/invalid participation cap or method fails closed | P0 | S01,S02,S05 planned-after-CP5 |
+| SC-CR169-N03 | REQ-CR169-003, REQ-CR169-004 | negative / model | fixture/static | missing capacity curve/ref fails closed | P0 | S01,S02,S05 planned-after-CP5 |
+| SC-CR169-N04 | REQ-CR169-003, REQ-CR169-004 | negative / model | fixture/static | missing liquidity sizing/ref fails closed | P0 | S01,S02,S05 planned-after-CP5 |
+| SC-CR169-N05 | REQ-CR169-003, REQ-CR169-004 | numerical / negative | fixture/static | non-finite, negative or infeasible C4 values fail closed | P0 | S01,S02,S05 planned-after-CP5 |
+| SC-CR169-N06 | REQ-CR169-002, REQ-CR169-004 | unit / calendar | fixture/static | unit/currency/calendar/as-of/horizon mismatch blocked | P0 | S01,S05 planned-after-CP5 |
+| SC-CR169-N07 | REQ-CR169-002, REQ-CR169-006 | integration / boundary | fixture/static | C3/C4 correlation mismatch rejected before canonical Gate4 | P0 | S01,S04,S05 planned-after-CP5 |
+| SC-CR169-N08 | REQ-CR169-002, REQ-CR169-004, REQ-CR169-008 | lineage / authorization | fixture/static | missing/inconsistent lineage/auth fails closed; dereference=0 | P0 | S01,S05 planned-after-CP5 |
+| SC-CR169-N09 | REQ-CR169-004, REQ-CR169-005 | integrity / tamper | fixture/static | canonical identity tamper blocked | P0 | S01,S03,S05 planned-after-CP5 |
+| SC-CR169-N10 | REQ-CR169-004, REQ-CR169-006, REQ-CR169-008 | injection / permission | fixture/static | reason/flat injection and real-capacity claim rejected | P0 | S04,S05 planned-after-CP5 |
+| SC-CR169-B01 | REQ-CR169-007, REQ-CR169-009 | regression / fail-closed | static | CR168 C3-only absent-C4 adapter unchanged and non-PASS | P0 | S05 planned-after-CP5 |
+| SC-CR169-B02 | REQ-CR169-001, REQ-CR169-003, REQ-CR169-006 | strict joint integration | fixture/static | exact verified C3+C4 payload yields fixture contract PASS only | P0 | S04,S05 planned-after-CP5 |
+| SC-CR169-B03 | REQ-CR169-006, REQ-CR169-009 | postcondition / negative | fixture/static | unexpected canonical result contained by public callable double | P0 | S04,S05 planned-after-CP5 |
+| SC-CR169-G01 | REQ-CR169-006, REQ-CR169-009 | negative-regression | static | CR155 remains BLOCKED; paper_candidate=false; promotion=0 | P0 | S05 planned-after-CP5 |
+| SC-CR169-E01 | REQ-CR169-008, REQ-CR169-009 | applicability / boundary | static / CP8-exit-review | alpha-decay calculator=0; stage3_entry_ready=false; 7/7 Stage 2 exit verification required | P1 | S05/CP8 planned-static-review |
 
 ## Coverage Summary
 
@@ -157,6 +177,16 @@ template_deviation_reason: "CR157 uses Scenario/Requirement/Test Layer/Validatio
 | CR168 C3-to-Gate-4 projections | 1 |
 | CR168 C4 calculators / event producers | 0 / 0 |
 | CR168 external/runtime tests authorized | 0 |
+| CR169 P0 scenarios | 16 |
+| CR169 P0 scenarios with planned coverage | 16 |
+| CR169 P1 applicability scenarios | 1 |
+| CR169 quantitative acceptance criteria | 15 |
+| CR169 typed component / active schema | 1 / 1 |
+| CR169 fail-closed classes | 12/12 |
+| CR169 fixture families | 2/2 |
+| CR169 strict C3+C4 Gate4 fixture adapters | 1 |
+| CR169 canonical/aggregate modifications | 0 / 0 |
+| CR169 external/runtime tests authorized | 0 |
 
 ## Notes
 
@@ -169,3 +199,4 @@ template_deviation_reason: "CR157 uses Scenario/Requirement/Test Layer/Validatio
 - CR164 verification is fixture/static only. Four methods are mandatory but no OR-pass is allowed; DSR raw count must be explicitly identified and never alias effective count; WRC/SPA stationary-bootstrap parameter selection is a CP3 obligation. UC-59/60 rows prove compatibility semantics only, not adapter implementation or real feed/training authorization.
 - CR166 验证仅允许 fixture/static：daily multifactor 与 ML compatibility 为 P0；event 为 CP3 applicability/P1。任何真实 fold/OOS 数据、lake/NAS/provider/runtime 或外部 ref 均不得解引用。CP8 也只能声明桥接 foundation，不得声明 Stage 3 已启动或真实 OOS evidence 可用。
 - CR168 coverage 只描述 CP2 待批准的 fixture/static 验证合同。Gate 4 是 C3+C4 联合门禁；C4 reserved/not-built/typed_unavailable 必须由 projection 映射为三个 refs absent-no-na-reason，任何字段级或通用 na-reason 逃逸都必须在 projection 侧阻断，capacity/aggregate PASS=`0`。CP2 不授权 HLD 之外的实现，也不授权真实 TCA、真实 impact calibration、真实数据、runtime、C4、event producer、交易或远端写入。
+- CR169 coverage 描述已获 CP2 批准但尚未实现的 C4 fixture/static 合同。CR168 C3-only adapter 保持 absent-C4 fail-closed；CR169 的新 joint adapter 仅组合经验证的 C3+C4 components、构造精确七字段 Gate4 payload，并可证明 `gate4_fixture_contract_pass=1`，不产生 aggregate/capacity admission PASS、真实 capacity claim 或 CR155 promotion。alpha-decay 仅为 CP3 disposition；`stage3_entry_ready=false`，正式 Stage 2 exit 必须另以 7/7 核验证据决定。

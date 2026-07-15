@@ -16,13 +16,14 @@
 | v1.0 | 2026-07-13 | host-orchestrator-inline | CR168 只增量追加 5 个产品 outcome 候选；CP2 前不创建正式 Story、DAG、Wave、LLD 或文件所有权。 |
 | v1.1 | 2026-07-13 | host-orchestrator-inline | 收紧 CR168-O04：C4 unavailable 只映射为 absent-no-na-reason，字段级/通用 na-reason 逃逸由 projection 阻断；Outcome 数仍为 5，不提前拆 Story。 |
 | v1.2 | 2026-07-14 | host-orchestrator-inline | 回填 CR168 CP2 批准；O04 进入 CP3 架构输入，并明确整改是 adapter-local containment，仍不创建正式 Story、DAG、Wave、LLD 或文件所有权。 |
+| v1.3 | 2026-07-14 | host-orchestrator-inline-meta-pm | 增量追加 CR169 五个 C4 product outcomes；严格区分 outcome 与正式 Story，CP2 前不创建 DAG、Wave、LLD 或文件所有权。 |
 
 ## 状态
 
-- 文档状态：confirmed-cp2
-- 关联 CR：`CR-157` / `CR-158` / `CR-163` / `CR-164` / `CR-166` / `CR-168`
-- 当前门禁：CR168 CP2 已批准并进入 CP3；CP3 未批准前不得创建 CR168 正式 Story、DAG、Wave、LLD 或文件所有权
-- 注意：下方 `CR168-O01..O05` 只是产品 outcome 候选，不是 Story ID，也不写入 `DEVELOPMENT-PLAN.yaml`。
+- 文档状态：awaiting-cp2（CR169 基线）
+- 关联 CR：`CR-157` / `CR-158` / `CR-163` / `CR-164` / `CR-166` / `CR-168` / `CR-169`
+- 当前门禁：CR169 CP2 待批准；CP2 前不得创建 CR169 正式 Story、DAG、Wave、LLD 或文件所有权
+- 注意：下方 `CR168-O01..O05` 与 `CR169-O01..O05` 都只是产品 outcome 候选，不是 Story ID，也不写入 `DEVELOPMENT-PLAN.yaml`。
 
 ## Activities
 
@@ -61,6 +62,7 @@
 | CR163 trial lineage slice | CR163-S01..S05 candidate set | statistical correction、historical backfill、real ML/event runner、real data/runtime/trading/publish |
 | CR164 computable statistical evidence slice | CR164-S01..S05 product-planning candidates | effective-trial estimator、real ML/event adapter implementation、real research batch/data/runtime/trading/publish |
 | CR168 C3 economic-cost foundation slice | CR168-O01..O05 product outcomes（非正式 Story），含 Gate 4 absent-no-na-reason projection guard | 真实 TCA/calibration/data、C4、event producer、canonical Gate 4/aggregate orchestration 修改、C1-C4 aggregate integration、Stage 3、runtime/trading/remote write |
+| CR169 C4 capacity/liquidity/ADV foundation slice | CR169-O01..O05 product outcomes（非正式 Story），含 strict C3+C4 Gate4 fixture adapter | real ADV/liquidity/capacity calibration、alpha calculator（CP3 前）、CR168 adapter/canonical Gate4/aggregate 修改、Stage3、runtime/trading/remote write |
 
 > CR163-S01..S05 是目标为五个 Stories 的产品规划候选，不是正式 Story decomposition；CP2 批准后仍须 CP3 HLD，之后由 meta-se 在 CP4 生成机器真相源。
 
@@ -90,3 +92,15 @@ CR163-S03 scope note：不增加第六个 Story；S03 单一 candidate Story 必
 | CR168-O05 | 证明适用面与 claim ceiling | daily + ML 两 fixture 族、event N/A、零真实数据/runtime/C4/CR155 promotion | P0/P1 | CP2 后进入 CP3 |
 
 这些 outcome 已由 CP2 确认为 CP3 架构输入，但仍不是正式 Story。正式 Story 数量、边界、依赖、Wave 与文件所有权必须在 CP3 批准后由 story-planning 阶段决定。
+
+## CR169 Product-planning Outcomes（非正式 Story）
+
+| Outcome | 用户任务 | 产品结果 | 优先级 | 解锁门禁 |
+|---|---|---|---|---|
+| CR169-O01 | 冻结 C4 typed component 与独立输入合同 | 1 个 active `capacity_liquidity@v1`、3/3 C4 refs、最小 correlation header | P0 | CP2 后进入 CP3 |
+| CR169-O02 | 解释 static C4 proxy 和限制 | synthetic ADV/reference、participation、capacity/liquidity sizing、availability、reason、no-real-data limitation | P0 | CP2 后进入 CP3 |
+| CR169-O03 | 防止错误 C4 输入和篡改 | 12/12 fail-closed、10 次→1 hash、关联/lineage/auth 合同 | P0 | CP2 后进入 CP3 |
+| CR169-O04 | 安全组合 C3+C4 Gate4 fixture | 新 strict joint adapter、精确七字段 payload、postcondition、CR168 C3-only 回归；canonical/aggregate 修改=0 | P0 | CP2 后进入 CP3 |
+| CR169-O05 | 明确适用面、alpha 与 claim ceiling | 两 fixture 族、alpha CP3 disposition、verifier 风险、CR155 blocked、零真实能力 claim | P0/P1 | CP2 后进入 CP3 |
+
+CR169 outcomes 不是正式 Story：CP2 批准后仍必须先完成 CP3 HLD/ADR，之后由 meta-se 决定正式 Story 数、依赖、Wave 与文件所有权；CP2 前和 CP3 前均不得实施。

@@ -1,9 +1,9 @@
 ---
 status: confirmed-cp2
-version: "1.4"
+version: "1.6"
 confirmed: true
-confirmed_by: "user-CR168-CP2"
-confirmed_at: "2026-07-14T09:45:10+08:00"
+confirmed_by: "user-CR169-CP2-review-remediation"
+confirmed_at: "2026-07-14T17:45:00+08:00"
 ---
 
 # Product Requirements
@@ -26,12 +26,14 @@ confirmed_at: "2026-07-14T09:45:10+08:00"
 | v1.2 | 2026-07-13 | host-orchestrator-inline | CR168 增量追加 9 项 C3 需求、15 项精确 QAC、Gate 4 C3+C4 联合边界、两类 fixture 与 5 个 CP2 开放决策；保留既有需求基线。 |
 | v1.3 | 2026-07-13 | host-orchestrator-inline | 根据 CP2 修改意见为 REQ-CR168-006 增加 projection-side absent-no-na-reason guard，新增 `SC-CR168-B02`；9 项需求、15 项 QAC、10 类 C3 fail-closed 与范围边界均不变，并补齐 CP3 前向设计义务。 |
 | v1.4 | 2026-07-14 | host-orchestrator-inline | 回填 CR168 CP2 批准；依据 canonical Gate 4 代码评审，把 reason 逃逸整改精确为 CR168 adapter 的 8-key denylist、strict allowlist、调用前拒绝、调用后非 PASS 断言与 adapter-only 调用面，canonical 全局硬化仍不在本 CR。 |
+| v1.5 | 2026-07-14 | host-orchestrator-inline-meta-pm | 增量追加 CR169 的 9 项 C4 fixture/static requirements、15 项 QAC、strict C3+C4 joint adapter 边界、alpha-decay CP3 disposition 与五项 CP2 DQ；不改写 CR168、canonical Gate 4 或 CR155 基线。 |
+| v1.6 | 2026-07-14 | host-orchestrator-inline | 根据 CR169 CP2 评审整改，明确 `stage3_entry_ready=false`，将 Stage 2 exit 的 7/7 事实核验固化为 CP8 / formal exit 义务，并把 FU-007 的 007a/007b 仅登记为后续提案。 |
 
 ## 状态
 
-- 文档状态：confirmed-cp2
-- 关联 CR：`CR-157` / `CR-158` / `CR-160` / `CR-161` / `CR-162` / `CR-163` / `CR-164` / `CR-166` / `CR-168`
-- 当前门禁：CR168 CP2 已批准；仅解锁 CP3 solution-design，Story、LLD、实现与验证仍未授权
+- 文档状态：awaiting-cp2（CR169 产品基线增量）
+- 关联 CR：`CR-157` / `CR-158` / `CR-160` / `CR-161` / `CR-162` / `CR-163` / `CR-164` / `CR-166` / `CR-168` / `CR-169`
+- 当前门禁：CR169 CP2 待人工批准；CP2 前不得进入 HLD/CP3、Story、LLD、实现或验证
 - 旧基线保留：当前仓库未发现既有 `docs/product/REQUIREMENTS.md`；既有组件文档和检查证据作为输入，不被替换。
 
 ## Requirement Summary
@@ -90,6 +92,15 @@ confirmed_at: "2026-07-14T09:45:10+08:00"
 | REQ-CR168-007 | Multi-strategy-type fixtures | P0 | awaiting-CP2 | daily multifactor synthetic 与 daily/ML compatibility 两族 2/2；event-specific producer=0。 |
 | REQ-CR168-008 | Authorization and claim ceiling | P0 | awaiting-CP2 | 禁止真实数据/TCA/calibration/runtime/trading/remote write；Stage2=true、Stage3=false，其余真实/运行时 claim=false/0。 |
 | REQ-CR168-009 | C4/FU-007/CR155 boundary | P0 | awaiting-CP2 | C4 calculator=0；aggregate integration 留给 FU-007；CR155 admission promotion=0。 |
+| REQ-CR169-001 | Versioned typed C4 component | P0 | awaiting-CP2 | `capacity_liquidity@v1` component/schema=1/1；平行 envelope/registry/gate=0。 |
+| REQ-CR169-002 | Independent C4 input and correlation header | P0 | awaiting-CP2 | C4 calculation body 独立，最小 correlation header 待 CP3 冻结且不默认进入 semantic hash。 |
+| REQ-CR169-003 | Transparent static C4 proxy | P0 | awaiting-CP2 | 仅 synthetic/static ADV/reference、participation、capacity/liquidity sizing 与 auditable refs。 |
+| REQ-CR169-004 | Twelve-class fail-closed validation | P0 | awaiting-CP2 | 12/12 输入、完整性、reason escape 与越权类别不得产生 present/PASS。 |
+| REQ-CR169-005 | Deterministic C4 identity | P0 | awaiting-CP2 | 规范化输入 10 次→1 hash；tamper blocked。 |
+| REQ-CR169-006 | Strict C3+C4 Gate 4 fixture compatibility | P0 | awaiting-CP2 | 新 adapter 精确组合 verified C3/C4；fixture contract PASS 仅为 1，aggregate/capacity admission PASS=0。 |
+| REQ-CR169-007 | C3-only regression and fixtures | P0 | awaiting-CP2 | 2/2 fixture；CR168 C3-only absent-C4 fail-closed 不变。 |
+| REQ-CR169-008 | Authorization and claim ceiling | P0 | awaiting-CP2 | 真实数据/calibration/runtime/trading/remote write=0；Stage3=false。 |
+| REQ-CR169-009 | Alpha/verifier/FU-007/CR155 boundary | P0 | awaiting-CP2 | alpha CP3 disposition；canonical/global/aggregate 留 FU-007；CR155 BLOCKED。 |
 
 ## Functional Requirements
 
@@ -689,3 +700,63 @@ QAC-CR164-007 的 3/3 是产品 consumer coverage，不代表 UC-59/60 implement
 11. 冻结 CR168 adapter-only 调用面：CR168 新增的 Gate 4 调用必须 `100%` 经过 projection adapter，adapter 外直接调用数=`0`；不得在运行时导入或依赖私有 `_has_na_reason`。
 12. 冻结调用后安全断言：C4 unavailable 的合法 absent-no-na-reason 路径进入 canonical validator 后，Gate 4 status 必须为非 PASS；意外 PASS 必须转为内部合同错误/阻断，不得继续 aggregate。该断言不等价于 canonical Gate 4 已全局修复。
 13. 将 canonical Gate 4 的全局 N/A 语义复核登记到 `FU-CR161-007`：任何未来绕过 CR168 adapter 的直接调用或 aggregate integration 前，必须重新评估并决定是否独立硬化 canonical validator。
+
+## CR169 Capacity / Liquidity / ADV Producer Requirements
+
+### CR169 需求清单
+
+| Requirement ID | 名称 | 优先级 | 状态 | 精确要求 |
+|---|---|---:|---|---|
+| REQ-CR169-001 | Versioned typed C4 component | P0 | awaiting-CP2 | `capacity_liquidity@reserved` 只演进为 `1` 个 active C4 component / `1` 个 schema；平行 envelope/registry/gate=0。 |
+| REQ-CR169-002 | Independent C4 input and correlation header | P0 | awaiting-CP2 | C4 计算字段独立；最小 C3/C4 correlation header 覆盖 identity、basis、currency、calendar、as-of、horizon、lineage/auth；CP3 冻结其规则，且不得默认进入 component semantic hash。 |
+| REQ-CR169-003 | Transparent static C4 proxy | P0 | awaiting-CP2 | 仅显式 synthetic/static ADV/reference basis、participation cap、capacity curve 和 liquidity sizing 输出可审计 C4 proxy、refs、availability、reason、limitations 与 lineage。 |
+| REQ-CR169-004 | Twelve-class fail-closed validation | P0 | awaiting-CP2 | 12/12 指定缺失、数值、关联、完整性、reason escape 与越权类别不得产生 present/PASS。 |
+| REQ-CR169-005 | Deterministic C4 identity | P0 | awaiting-CP2 | 同一规范化 C4 输入运行 10 次只产生 1 个 canonical hash；tamper 必须 blocked。 |
+| REQ-CR169-006 | Strict C3+C4 Gate 4 fixture compatibility | P0 | awaiting-CP2 | 新 joint adapter 只组合已验证的 `economic_cost@v1` + `capacity_liquidity@v1`，重建精确七字段 payload；有效 fixture 可产生 `gate4_fixture_contract_pass`，但 aggregate/capacity admission PASS=0。 |
+| REQ-CR169-007 | C3-only regression and multi-strategy fixtures | P0 | awaiting-CP2 | 2/2 fixture 族；CR168 C3-only adapter 仍以 absent C4 fail-closed；C4 present 不得进入该 adapter。 |
+| REQ-CR169-008 | Authorization and claim ceiling | P0 | confirmed-CP2 | real ADV/liquidity/data/calibration/runtime/trading/remote-write=0；`stage2_complete=true` 不蕴含可进入 Stage 3，`stage3_started=false`、`stage3_entry_ready=false`；真实能力 claim=false。 |
+| REQ-CR169-009 | Alpha, verifier, FU-007, Stage exit and CR155 boundary | P0 | confirmed-CP2 | alpha-decay 只在 CP3 决定归属；CP8 / formal Stage 2 exit 前必须输出 `STAGE2-EXIT-VERIFICATION.result.json` 并核验 7/7 合同；FU-006 风险 CP8 披露；FU-007 的潜在 007a/007b 拆分只属后续提案，任何启动均需独立 CR/CP0/用户授权；CR155 保持 BLOCKED 与 `paper_candidate=false`。 |
+
+### CR169 P0 fail-closed 分类
+
+`12/12`：关联头缺失；synthetic ADV/reference basis 缺失；participation cap/method 缺失或非法；capacity model/ref 缺失；liquidity sizing/ref 缺失；非有限/负值/不可行数值；unit/currency/calendar/as-of/horizon 跨字段不一致；C3/C4 correlation mismatch；lineage/provenance/authorization 缺失或不一致；canonical identity/hash tamper；C4 N/A reason 或任意 flat-payload injection；真实数据/真实容量/runtime 越权声明或操作。
+
+### CR169 Quantitative Acceptance Criteria
+
+| QAC ID | 指标 | 目标值 | 失败处理 |
+|---|---|---:|---|
+| QAC-CR169-01 | 正式 C4 typed component 类型 | 1 | 非 1 阻断 CP7 |
+| QAC-CR169-02 | active C4 schema version | 1 | 缺失或多 active 阻断 |
+| QAC-CR169-03 | Gate 4 C4 refs | 3/3 | 任一缺失阻断 joint fixture contract |
+| QAC-CR169-04 | C3/C4 correlation header 合同 | 1 | CP3 未冻结不得进入实现 |
+| QAC-CR169-05 | fixture 族 | 2/2 | 任一缺失阻断 |
+| QAC-CR169-06 | P0 fail-closed 类别 | 12/12 | 任一 false PASS 阻断 |
+| QAC-CR169-07 | deterministic reruns | 10 次 -> 1 hash | 漂移或 tamper 漏检阻断 |
+| QAC-CR169-08 | CR168 C3-only absent-C4 回归 | 1 | 行为变更阻断 |
+| QAC-CR169-09 | strict C3+C4 Gate 4 fixture contract PASS | 1 | 缺失或非严格 payload 阻断 |
+| QAC-CR169-10 | capacity/aggregate admission PASS、real-capacity claim、CR155 promotion、`stage3_entry_ready` | 0/0/0/false | 任一非零或 true 阻断 |
+| QAC-CR169-11 | canonical Gate 4 / aggregate orchestration 修改 | 0/0 | 任一修改阻断 |
+| QAC-CR169-12 | real data/calibration/runtime/broker/trading 操作 | 0 | 任一非零阻断 |
+| QAC-CR169-13 | alpha-decay calculator（CP3 未归入时） | 0 | 任一实现阻断 |
+| QAC-CR169-14 | CR169 新增路径引入的测试失败 | 0 | 无法归因既有问题时不得过 CP7 |
+| QAC-CR169-15 | 带错误 `process/` 前缀的质量文档引用 | 0 | 必须修正到 `docs/quality/` |
+
+### CR169 Non-Functional Requirements
+
+| NFR ID | 维度 | 要求 | 精确度量 |
+|---|---|---|---|
+| NFR-CR169-001 | 可审计性 | C4 proxy、三个 refs、limitations、correlation 与 lineage 均可由 static input 重算。 | present component 重算一致率 100%；orphan refs=0。 |
+| NFR-CR169-002 | 确定性 | 规范化、canonical serialization 与 hash 对等价输入稳定。 | 10 次仅 1 hash；tamper 检出率 100%。 |
+| NFR-CR169-003 | 安全与权限 | 禁止真实数据、真实容量校准、runtime/trading/remote write。 | 每个 forbidden-operation counter=0。 |
+| NFR-CR169-004 | 可演进性 | C4 复用 neutral envelope；joint adapter 不侵入 CR168 adapter/canonical Gate 4/aggregate。 | 三个既有边界修改数=0；C4 semantic hash 不被 correlation header 隐式污染。 |
+
+### CR169 CP3 Design Obligations
+
+状态：`CP2_APPROVED`。CP2 批准后，CP3 必须：
+
+1. 冻结 C4 static proxy 的方法族、numeric domain、participation 边界、reason-code 与 no-real-ADV/capacity wording。
+2. 冻结 minimal C3/C4 correlation header 的 owner、required/optional、cross-component equality 与它不进入 component semantic hash 的规则。
+3. 冻结 strict joint adapter 的调用方向、type/version/identity/limitation checks、精确七字段 payload、denylist/allowlist、canonical postcondition 与降级行为；不得改变 CR168 adapter 或 canonical Gate 4。
+4. 决定 alpha-decay 的归属（C4、C2 或独立 CR）并回写 Deferred 状态；未归入时维持 calculator=0。
+5. 冻结 FU-006 verifier independence 的 CP8 披露模板与触发条件；不得把 fixture contract PASS 表述为真实 capacity readiness。
+6. 保留 `stage3_entry_ready=false`，在设计中引用 CP8 / formal Stage 2 exit 的 `STAGE2-EXIT-VERIFICATION.result.json`（7/7）；仅把 FU-007 007a/007b 写作非绑定后续提案，不预建 CR、不修改 canonical Gate 4。

@@ -14,6 +14,8 @@
 | v0.8 | 2026-07-13 | host-orchestrator-inline | 增量追加 CR168 CP2→CP8 候选切片；当前只打开 Slice 0/CP2，后续切片未授权。 |
 | v0.9 | 2026-07-13 | host-orchestrator-inline | 将 CR168 Slice 0 场景更新为 17，并把 Gate 4 absent-no-na-reason 映射、reason-escape rejection、hash domain 与前向治理义务纳入 Slice 1；后续门禁与授权边界不变。 |
 | v1.0 | 2026-07-14 | host-orchestrator-inline | 回填 CR168 Slice 0 / CP2 批准；Slice 1 增加 adapter-only 调用、8-key denylist、strict allowlist、前置拒绝和后置非 PASS 断言，canonical 全局硬化仍不在 CR168。 |
+| v1.1 | 2026-07-14 | host-orchestrator-inline-meta-pm | 增量追加 CR169 C4 fixture/static CP2→CP8 候选切片：strict joint adapter 是局部兼容层，alpha-decay 归属留 CP3，真实 C4 与 canonical/global integration 不在切片。 |
+| v1.2 | 2026-07-14 | host-orchestrator-inline | CR169 CP2 评审整改与批准：Slice 4 新增 7/7 Stage 2 exit 核验交付义务并显式排除 Stage 3 entry；FU-007 拆分只作后续提案。 |
 
 ## CR157 Candidate Slices
 
@@ -74,3 +76,13 @@
 | Slice 2 | 形成全量实现设计证据 | CP4 正式 Story/DAG/file ownership 与 CP5 LLD/technical notes/test plan | 未批准代码实现 | CP4/CP5 |
 | Slice 3 | 用本地 fixture 证明 C3 可计算且 fail-closed | daily/ML、10 类 C3 输入负向、determinism、Gate 4 C4 absent 路径、na-reason 逃逸阻断、CR155 regression、zero-operation guards | real TCA/data/calibration、C4、event feed、trading | CP6/CP7 |
 | Slice 4 | 交付不夸大的 C3 foundation | verification、quality docs under `docs/quality/`、release notes、rollback/migration、claim ceiling | Stage3 start、runtime-ready、publish/deploy/Git remote write | CP8 |
+
+## CR169 Candidate Slices
+
+| Slice | 用户价值 | 包含 | 不包含 | Gate |
+|---|---|---|---|---|
+| Slice 0 | 冻结 C4 产品语义与边界 | use case、9 requirements、15 QAC、17 scenarios、两 fixture、12 类 fail-closed、五项 DQ、claim ceiling | HLD、Story、LLD、实现、真实数据 | CP2 |
+| Slice 1 | 冻结可演进 C4 架构 | `capacity_liquidity@v1`、independent C4 body、correlation header、strict joint adapter、seven-key payload、postcondition、alpha disposition | code、CR168 adapter/canonical Gate4/aggregate 修改、真实 capacity、runtime | CP3 |
+| Slice 2 | 形成全量实现设计证据 | CP4 formal Story/DAG/file owner 与 CP5 LLD/technical notes/test plan | 未批准实现 | CP4/CP5 |
+| Slice 3 | 用本地 fixture 证明 C4 合同 | daily/ML、12 类负向、determinism、C3-only regression、joint fixture contract、CR155 blocked、zero-operation guards | real ADV/liquidity/calibration、alpha（未归入时）、aggregate/trading | CP6/CP7 |
+| Slice 4 | 交付不夸大的 C4 foundation | verification、quality docs under `docs/quality/`、release readiness、verifier-risk disclosure、claim ceiling、`STAGE2-EXIT-VERIFICATION.result.json` 的 7/7 合同核验 | Stage3 start/entry-ready、real capacity readiness、canonical hardening/aggregate、publish/deploy/Git remote write | CP8 |

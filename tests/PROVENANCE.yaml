@@ -941,6 +941,60 @@ items:
     provenance:
       -
         cr: CR-011
+  tests/research/test_capacity_liquidity_claim_regression.py:
+    domains:
+      - research
+    old_paths: []
+    introduced_by: CR-169
+    provenance:
+      -
+        cr: CR-169
+        story: CR169-S05-fixture-claim-stage2-exit-verification
+  tests/research/test_capacity_liquidity_contracts.py:
+    domains:
+      - research
+    old_paths: []
+    introduced_by: CR-169
+    provenance:
+      -
+        cr: CR-169
+        story: CR169-S01-capacity-liquidity-contract-validation
+  tests/research/test_capacity_liquidity_cr169_qac.py:
+    domains:
+      - research
+    old_paths: []
+    introduced_by: CR-169
+    provenance:
+      -
+        cr: CR-169
+        story: CR169-S05-fixture-claim-stage2-exit-verification
+  tests/research/test_capacity_liquidity_envelope_compatibility.py:
+    domains:
+      - research
+    old_paths: []
+    introduced_by: CR-169
+    provenance:
+      -
+        cr: CR-169
+        story: CR169-S03-neutral-envelope-c4-activation
+  tests/research/test_capacity_liquidity_gate4_projection.py:
+    domains:
+      - research
+    old_paths: []
+    introduced_by: CR-169
+    provenance:
+      -
+        cr: CR-169
+        story: CR169-S04-strict-c3-c4-gate4-joint-adapter
+  tests/research/test_capacity_liquidity_producer.py:
+    domains:
+      - research
+    old_paths: []
+    introduced_by: CR-169
+    provenance:
+      -
+        cr: CR-169
+        story: CR169-S02-deterministic-static-c4-producer
   tests/research/test_cross_strategy_reliability_gates.py:
     domains:
       - research
