@@ -1,8 +1,8 @@
 ---
 status: awaiting-cp2
-version: "1.3"
+version: "1.4"
 confirmed: false
-confirmed_by: "pending-CR168-CP2"
+confirmed_by: "pending-CR171-CP2"
 confirmed_at: ""
 ---
 
@@ -25,12 +25,13 @@ confirmed_at: ""
 | v1.1 | 2026-07-13 | host-orchestrator | 回填 CR166 CP3 批准；9 项需求与 12 项 QAC 映射到五个正式 Story 和 CP5 全量设计证据，继续不授权实现。 |
 | v1.2 | 2026-07-13 | host-orchestrator-inline | CR168 增量追加 9 项 C3 需求、15 项精确 QAC、Gate 4 C3+C4 联合边界、两类 fixture 与 5 个 CP2 开放决策；保留既有需求基线。 |
 | v1.3 | 2026-07-13 | host-orchestrator-inline | 根据 CP2 修改意见为 REQ-CR168-006 增加 projection-side absent-no-na-reason guard，新增 `SC-CR168-B02`；9 项需求、15 项 QAC、10 类 C3 fail-closed 与范围边界均不变，并补齐 CP3 前向设计义务。 |
+| v1.4 | 2026-07-15 | meta-pm | CR171 增量追加 Stage 3 entry-route、event-bounded verifier waiver、deny-default read scope、historical legacy/revalidation 与 no-overclaim 需求；保留既有需求和决策记录。 |
 
 ## 状态
 
 - 文档状态：awaiting-cp2
-- 关联 CR：`CR-157` / `CR-158` / `CR-160` / `CR-161` / `CR-162` / `CR-163` / `CR-164` / `CR-166` / `CR-168`
-- 当前门禁：CR168 CP2 待人工批准；CP2 前不得进入 HLD/CP3、Story、LLD、实现或验证
+- 关联 CR：`CR-157` / `CR-158` / `CR-160` / `CR-161` / `CR-162` / `CR-163` / `CR-164` / `CR-166` / `CR-168` / `CR-171`
+- 当前门禁：CR171 CP2 待人工批准；CP2 前不得进入 Stage 3、真实数据湖读取、HLD/CP3、Story、LLD、实现或验证
 - 旧基线保留：当前仓库未发现既有 `docs/product/REQUIREMENTS.md`；既有组件文档和检查证据作为输入，不被替换。
 
 ## Requirement Summary
@@ -89,6 +90,11 @@ confirmed_at: ""
 | REQ-CR168-007 | Multi-strategy-type fixtures | P0 | awaiting-CP2 | daily multifactor synthetic 与 daily/ML compatibility 两族 2/2；event-specific producer=0。 |
 | REQ-CR168-008 | Authorization and claim ceiling | P0 | awaiting-CP2 | 禁止真实数据/TCA/calibration/runtime/trading/remote write；Stage2=true、Stage3=false，其余真实/运行时 claim=false/0。 |
 | REQ-CR168-009 | C4/FU-007/CR155 boundary | P0 | awaiting-CP2 | C4 calculator=0；aggregate integration 留给 FU-007；CR155 admission promotion=0。 |
+| REQ-CR171-001 | Stage 3 evidence-route decision | P0 | awaiting-CP2 | CP2 只能在 current runner 与 C1-C4 real-producer 两条路线中选择其一；推荐 C1-C4，且 computation 必须由独立 activation CR 授权。 |
+| REQ-CR171-002 | Event-bounded FU-006 verifier waiver | P0 | awaiting-CP2 | waiver 只在 CP2 明确接受时成立，并在 real-evidence admission PASS/PASS_WITH_RISK 前或 Stage 3 exit gate 启动前自动失效。 |
+| REQ-CR171-003 | Deny-default frozen read contract | P0 | awaiting-CP2 | 后续 read scope 必须固定 release/dataset/date/read identity/output directory，并明确拒绝 credentials、provider、write、catalog/current pointer、runtime 与 trading。 |
+| REQ-CR171-004 | Historical evidence legacy/revalidation ceiling | P0 | awaiting-CP2 | 历史 Stage 3 运行只能是 legacy / require-revalidation；revalidation 只分类、标注、报告，三个合法 verdict 外不得提升任何 readiness claim。 |
+| REQ-CR171-005 | Claim ceiling and adjacent-debt isolation | P0 | awaiting-CP2 | CP8 成功不等于 entry-ready；CR010/018/032 只披露、不修复，新的风险消费者使用 `R-CR170-RUNNER-GAP`。 |
 
 ## Functional Requirements
 
@@ -506,6 +512,9 @@ QAC-CR164-007 的 3/3 是产品 consumer coverage，不代表 UC-59/60 implement
 | DQ-CP2-CR168-GATE4 | integration-boundary | existing-gate integration 做到何种粒度？ | 只做 1 条 C3-to-Gate-4 compatibility projection；C4 reserved/not-built/typed_unavailable 映射为三个 refs absent 且不输出字段级/通用 na-reason，reason 逃逸由 projection 阻断；不得修改 canonical Gate 4。 | OPEN，推荐方案已按用户修改收紧，待 CP2 重审 |
 | DQ-CP2-CR168-FIXTURE | compatibility | fixture 适用面是什么？ | 2 族：daily multifactor synthetic + daily/ML multi-strategy-type compatibility；event N/A/deferred。 | OPEN，待 CP2 |
 | DQ-CP2-CR168-CLAIM | claim-ceiling | CP2 是否改变 Stage/真实能力声明？ | 不改变：Stage2=true、Stage3=false；真实 TCA/impact calibration/data/runtime/C4/event/CR155 promotion=false/0。 | OPEN，待 CP2 |
+| CP2-CR171-DQ-ROUTE | architecture | 哪条 Stage 3 evidence route 获准进入后续设计？ | C1-C4 real-producer；需单独 Real-Evidence Activation CR 才可 computation。 | OPEN，待 CP2 |
+| CP2-CR171-DQ-VERIFIER | risk acceptance | FU-006 是 entry blocker 还是临时 event-bounded waiver？ | event-bounded waiver；在 real-evidence admission PASS/PASS_WITH_RISK 前或 Stage 3 exit gate 前失效。 | OPEN，待 CP2 |
+| CP2-CR171-DQ-READ-SCOPE | runtime authorization | 哪个 release/dataset/date/read identity/output directory 可在后续受控读取中使用？ | scoped research-data-lake read-only，且 deny credentials/provider/write/catalog/runtime/trading。 | OPEN，待 CP2 |
 
 ## CR166 Walk-forward / OOS Producer Requirements
 
@@ -683,3 +692,46 @@ QAC-CR164-007 的 3/3 是产品 consumer coverage，不代表 UC-59/60 implement
 8. 把 `fixture_static_c3_typed_component`、`c3_gate4_compatibility_projection`、`cr155_admission_blocked_regression` 映射到既有结构化 evidence kind/taxonomy 或写出明确 N/A/替代验证路径；不得等到 CP7 才发现未知 kind。
 9. 冻结 `impact_model_family=n/a-with-reason` 的合法 C3 条件：必须使用 impact 专属 reason/claim-limit/owner/trigger，不得输出通用或 C4 字段 na-reason；C3 可有效但 Gate 4 仍因 C4 absent 而 fail-closed，并在 CP5 场景/测试设计中保留验证。
 10. 分离并冻结 component semantic hash 与完整 envelope canonical hash 的输入域；strategy type 不得改变相同规范化 C3 成本语义，但 subject/provenance/auth 不同的完整 envelope hash 允许不同，不新增“跨 strategy type 完整 hash 必须相同”的模糊 QAC。
+
+## CR171 Stage 3 Launch / Real-Lake Entry Requirements
+
+### REQ-CR171-001 Stage 3 Evidence-Route Decision
+
+CP2 必须在 `current_runner` 与 `c1_c4_real_producer` 中选择一条唯一路线。推荐 `c1_c4_real_producer`，其后续 real computation、producer binding 与 aggregate orchestration 必须由独立 Real-Evidence Activation CR 明确授权；`current_runner` 路线则必须由 CP3 先冻结完整 read-only execution boundary。
+
+成功标准：CP2 Decision Brief 只记录 1 条 selected route；路线未确认时 `stage3_started=false`、`real_computation_authorized=false`；路线选择本身不执行任何操作。
+
+### REQ-CR171-002 Event-Bounded FU-006 Verifier Waiver
+
+CP2 可以选择 `fu006_first` 或 `event_bounded_waiver`。若选择 waiver，其不可延展的到期事件为：首个 real-evidence admission 决策可为 `PASS` / `PASS_WITH_RISK` 前，或 Stage 3 exit gate 可启动前。CR170 历史 CP8 的 verifier 风险接受不得继承为本 CR 的授权。
+
+成功标准：waiver 到期事件为 2/2 且可机械判断；到期前外的例外数量为 0；任何到期事件发生后无 FU-006 证据不得产生 admission PASS/PASS_WITH_RISK 或启动 exit gate。
+
+### REQ-CR171-003 Deny-Default Frozen Read Contract
+
+任何未来 read-only 授权必须在 CP2 中冻结 `data_release`、datasets、date range、read identity 和 output directory 五元组，且同时 deny credentials/environment read、provider fetch、lake/NAS write、catalog/current-pointer mutation、runtime 与 trading。本 CP1 只记录该决策合同，不读取真实数据或环境。
+
+成功标准：允许项字段族为 5/5；deny-default 类别为 6/6；本 CR CP1 的真实数据读取、凭据读取、provider 调用、写入、runtime/trading 操作均为 0。
+
+### REQ-CR171-004 Historical Evidence Legacy / Revalidation Ceiling
+
+历史 Stage 3 叙事必须带 `legacy / require-revalidation` 标记。若在后续获授权的审计中进行 revalidation，它只能判定、标注和报告，并且只能输出 `reaffirmed_as_legacy_only`、`insufficient_for_current_entry` 或 `incompatible_rework_required`；数据、schema、PIT、lineage、代码、manifest 或证据缺陷均须路由到新 follow-up/CR，不得在 CR171 修复。
+
+成功标准：合法 revalidation verdict 为 3/3；repair/backfill/rerun/manifest rewrite 数为 0；任何历史事实均不使 `stage3_entry_ready=true` 或 `real_evidence_available=true`。
+
+### REQ-CR171-005 Claim Ceiling and Adjacent-Debt Isolation
+
+CR171 必须把 CP8 delivery 成功与 Stage 3 entry readiness 分离：CP8 只能确认本 CR 的决策/文档/验证闭环，不能确认 `stage3_started`、`stage3_entry_ready`、`real_data_read_authorized`、`real_computation_authorized` 或 runtime/trading。CR010、CR018 和 CR032 仅披露历史邻接债务而不重开；新消费者必须使用 `R-CR170-RUNNER-GAP`，历史 `R-CR170-STAGE3-OVERCLAIM` 仅经 alias 解析。
+
+成功标准：5 个禁止提升的 claim 始终为 false；邻接 CR 修改数为 0；当前风险 ID 仅使用 `R-CR170-RUNNER-GAP` 1 个 canonical consumer ID。
+
+## CR171 Quantitative Acceptance Criteria
+
+| QAC | 指标 | 精确目标 | 失败行为 |
+|---|---|---:|---|
+| QAC-CR171-01 | CP2 formal decisions | 3/3 | 缺任一决策不得进入 CP3 |
+| QAC-CR171-02 | frozen read-contract allow fields / deny classes | 5/5 / 6/6 | 缺字段或 deny 项则 read scope 不成立 |
+| QAC-CR171-03 | revalidation verdicts / repair actions | 3 / 0 | 非法 verdict 或任何 repair 阻断 |
+| QAC-CR171-04 | historical claim marker | 1/1 legacy/require-revalidation | 无标记不得宣称 current entry ready |
+| QAC-CR171-05 | real data / credentials / provider / write / runtime-trading actions in CP1 | 0 / 0 / 0 / 0 / 0 | 任一非零即 CP1 FAIL |
+| QAC-CR171-06 | CP8-to-entry-ready implication | 0 | 任一暗示或状态提升阻断 |

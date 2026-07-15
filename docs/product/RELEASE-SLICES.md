@@ -13,6 +13,7 @@
 | v0.7 | 2026-07-13 | host-orchestrator | 回填 Slice 0 / CP2 已批准；当前进入 Slice 1 / CP3 设计，后续 Slice 2-4 仍受 CP3/CP5/CP8 门禁约束。 |
 | v0.8 | 2026-07-13 | host-orchestrator-inline | 增量追加 CR168 CP2→CP8 候选切片；当前只打开 Slice 0/CP2，后续切片未授权。 |
 | v0.9 | 2026-07-13 | host-orchestrator-inline | 将 CR168 Slice 0 场景更新为 17，并把 Gate 4 absent-no-na-reason 映射、reason-escape rejection、hash domain 与前向治理义务纳入 Slice 1；后续门禁与授权边界不变。 |
+| v1.0 | 2026-07-15 | meta-pm | 增量追加 CR171 decision-only 发布切片；Slice 0 只到 CP2，后续 slice 仍不能替代数据、computation 或 runtime 授权。 |
 
 ## CR157 Candidate Slices
 
@@ -73,3 +74,12 @@
 | Slice 2 | 形成全量实现设计证据 | CP4 正式 Story/DAG/file ownership 与 CP5 LLD/technical notes/test plan | 未批准代码实现 | CP4/CP5 |
 | Slice 3 | 用本地 fixture 证明 C3 可计算且 fail-closed | daily/ML、10 类 C3 输入负向、determinism、Gate 4 C4 absent 路径、na-reason 逃逸阻断、CR155 regression、zero-operation guards | real TCA/data/calibration、C4、event feed、trading | CP6/CP7 |
 | Slice 4 | 交付不夸大的 C3 foundation | verification、quality docs under `docs/quality/`、release notes、rollback/migration、claim ceiling | Stage3 start、runtime-ready、publish/deploy/Git remote write | CP8 |
+
+## CR171 Candidate Slices
+
+| Slice | 用户价值 | 包含 | 不包含 | Gate |
+|---|---|---|---|---|
+| Slice 0 | 形成可审计的 entry 决策包 | UC/REQ/scenario/matrix/scope/backlog、3 个 CP2 choices、legacy marker | 数据读取、HLD、Story、LLD、实现、runtime | CP1→CP2 |
+| Slice 1 | 冻结获批准路线的决策合同 | 仅在 CP2 后设计 route/read/revalidation/verifier contract | 任何 C1-C4 computation、producer binding、repair、provider/lake/NAS 操作 | CP3 |
+| Slice 2 | 验证后续受控行为的边界 | 仅在未来单独授权后验证 frozen boundary、legacy verdict 与 waiver expiry | 凭据、provider、写入、catalog/current pointer、runtime/trading | CP7 |
+| Slice 3 | 交付不夸大的决策闭环 | release/verification 文档与 CP8 readiness；明确 CP8 不代表 entry-ready | Stage 3 start、real-evidence admission PASS、exit gate、publish/deploy | CP8 |

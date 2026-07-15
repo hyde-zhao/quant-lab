@@ -16,6 +16,7 @@
 | v1.0 | 2026-07-13 | host-orchestrator | 回填 CR166 CP3 批准；范围映射到五个正式 Story，保持 fixture/static、event N/A、C3/C4 calculator=0 与 Stage 3 未启动。 |
 | v1.1 | 2026-07-13 | host-orchestrator-inline | CR168 增量追加 fixture/static C3 typed component、9 字段族、10 类 fail-closed、两类 fixture、联合 Gate 4 投影、claim ceiling 与 C4/FU-007 边界。 |
 | v1.2 | 2026-07-13 | host-orchestrator-inline | 根据 CP2 修改意见收紧 Gate 4 projection-side guard：C4 unavailable 映射为 absent-no-na-reason，reason 逃逸必须阻断；新增 1 个 P0 场景，不改变 6 项 CR168 MVP scope 或 15 项 QAC。 |
+| v1.3 | 2026-07-15 | meta-pm | CR171 增量追加 Stage 3 entry decision MVP、明确 out-of-scope 和 conditional follow-up；只准备 CP2，不启动任何真实数据/运行时行为。 |
 
 ## 状态
 
@@ -146,3 +147,25 @@
 | Legacy Deferred ID | CR168 scope | 状态 | 说明 |
 |---|---|---|---|
 | FU-CR161-004 | MVP-CR168-001..006 | active / awaiting CP2 | C3 fixture/static economic cost/slippage/impact approximation foundation 已进入 CR168；C4、FU-007 aggregate integration、真实 TCA/data/runtime、event 与 Stage 3 保持范围外。 |
+
+## CR171 Decision MVP
+
+| MVP ID | In Scope | 成功定义 |
+|---|---|---|
+| MVP-CR171-001 | 证据路线 CP2 决策 | 仅在 current runner / C1-C4 real-producer 中选择一条；推荐 C1-C4 路线且 activation 另立 CR。 |
+| MVP-CR171-002 | FU-006 verifier CP2 决策 | `fu006_first` 或 2 个机械失效点的 event-bounded waiver 二选一。 |
+| MVP-CR171-003 | 冻结 future read-contract 决策 | CP2 审查 5 个 allow fields 与 6 类 deny-default，未选择即不授权读取。 |
+| MVP-CR171-004 | 历史事实和 claim ceiling 收敛 | 历史 Stage 3 标为 legacy/require-revalidation；CP8 不能形成 entry-ready。 |
+
+### CR171 Out of Scope
+
+- 本 CR 不读取真实数据湖/NAS、凭据或环境，不执行 C1-C4 computation、runner、runtime、simulation、paper、live 或 trading。
+- 不实施 producer、aggregate orchestration、FU-006、修复/回填/rerun、manifest rewrite、provider/NAS/lake 写入、catalog/current pointer 或 publish。
+- 不修复 CR010、CR018 或 CR032；只披露其邻接债务与不重开原则。
+
+### CR171 Deferred / Follow-up Conditions
+
+| Deferred ID | 内容 | 重启条件 |
+|---|---|---|
+| DF-CR171-REAL-EVIDENCE-ACTIVATION | C1-C4 real-producer 的 computation/binding/real-evidence activation | 仅当 CP2 选 C1-C4 且后续独立 activation CR 获得明确授权。 |
+| DF-CR171-HISTORICAL-REMEDIATION | 历史数据、schema、PIT、lineage、code、manifest 或证据缺陷修复 | 仅当未来 revalidation 产生 `insufficient_for_current_entry` 或 `incompatible_rework_required`，并另立 CR。 |
