@@ -21,6 +21,7 @@
 | v0.15 | 2026-07-14 | host-orchestrator-inline-meta-se-critical | CR169 CP3 批准：alpha-decay 不进入 C4 v1，登记 `FU-CR161-008` 作为独立 / C2-adjacent owner 与方法边界评估候选；不创建 formal CR、不启动实现。 |
 | v0.16 | 2026-07-15 | host-orchestrator-inline-meta-pm | 关闭 CR169 的 stale active 指针；将 FU-CR161-007 的 canonical-hardening 子切片映射为 active CR170，并把 aggregate + CR155 regression 剩余范围登记为数字型候选 FU-CR161-009。 |
 | v0.17 | 2026-07-15 | host-orchestrator-inline | 回填 CR170 CP2 批准；明确 FU-006 独立验证者仅为 future consumer，本 CR 不声明 verifier independence；FU-009 aggregate/CR155 边界和未授权范围不变。 |
+| v0.18 | 2026-07-15 | host-orchestrator | 回填 CR170 CP8 批准与 READY_WITH_RISK 关闭；canonical Gate 1-5 N/A semantics、Gate 6 admission hardening 已交付，FU-006/FU-008/FU-009 仍为未启动候选。 |
 
 ## Candidates
 
@@ -36,7 +37,7 @@
 | FU-CR161-004 | C3 economic cost / slippage / impact evidence producer foundation | promoted to CR168 | P0 | 已由 `CR-168` 启动 fixture/static-only 产品基线；只消费显式合成/静态参数，复用 versioned evidence component envelope，不授权真实 TCA、C4 计算或 Stage 3。 |
 | FU-CR161-005 | C4 capacity / liquidity / ADV evidence producer foundation | closed (`CR-169`) | P0 | `CR-169` 已以 `READY_WITH_RISK` 关闭：5/5 Story、Stage 2 合同 7/7 与 repository suite 2159/0 已完成；真实 ADV/liquidity、Stage 3 和 CR155 promotion 仍未授权。 |
 | FU-CR161-006 | Independent CP7 verifier-lane resilience | process / QA follow-up | P1 | 高风险后续实现需要独立 QA 结论，或 CR161 waiver 到期前。 |
-| FU-CR161-007 | Canonical Gate 1-5 N/A semantics + Gate 6 admission hardening | promoted to CR170 | P0 | `CR-170` 已正式启动 canonical-hardening 子切片：保留已正确的 lower-level NEEDS_REVIEW merge，冻结并硬化 `resolve_admission_policy` tier 边界；不接 Stage3 runner、不做 aggregate 或 CR155 promotion。 |
+| FU-CR161-007 | Canonical Gate 1-5 N/A semantics + Gate 6 admission hardening | closed (`CR-170`) | P0 | `CR-170` 已经 CP8 批准并以 `READY_WITH_RISK` 关闭：Gate 1-5 N/A semantics 与 Gate 6 admission tier 边界已硬化；未接 Stage3 runner，未实现 aggregate 或 CR155 promotion。 |
 | FU-CR161-008 | Alpha-decay evidence ownership and C2-adjacent method evaluation | methodology / architecture follow-up | P1 | CR169 C4 v1 保持 `alpha_decay_calculator=0`；仅在需要冻结预测能力时间衰减的 owner、输入窗口、OOS/C2 关系和 schema version 时，通过独立 formal CR、CP0 冲突预检与用户授权启动。 |
 | FU-CR161-009 | C1-C4 aggregate integration and CR155 regression | follow-up CR（former FU-007 aggregate slice） | P1 | 以 CR170 closed 为前置；后续才接 aggregate orchestration、最终 StrategyAdmissionPackage 和 CR155 综合 regression，任何 promotion 仍需独立决策。 |
 | FU-CR162-001 | Generic CP8 product-baseline-refresh checker | process follow-up | P1 | 任一 CR 设置 `product_baseline_refresh_required=true` 时；需独立 process CR/授权。 |
@@ -59,7 +60,7 @@
 | FU-CR161-003 | CR-166 | closed | `CR-166` | C2 fixture/static producer foundation 已关闭交付；不连接真实 lake，不宣称真实 OOS evidence 可用，不启动 C3/C4 或 Stage 3。 |
 | FU-CR161-004 | CR-168 | closed | `CR-168` | C3 fixture/static economic cost/slippage/impact approximation foundation 已以 READY_WITH_RISK 关闭；Gate 4 projection containment 仅在 CR168 adapter 局部生效，FU-007 aggregate/global hardening 继续 deferred。 |
 | FU-CR161-005 | CR-169 | closed | `CR-169` | C4 fixture/static capacity/liquidity/ADV foundation 已以 READY_WITH_RISK 关闭；真实 C4、Stage 3 与 CR155 promotion 不授权。 |
-| FU-CR161-007 | CR-170 | active | `CR-170` | 只承接 canonical Gate 1-5 N/A semantics 与 Gate 6 admission policy；aggregate/CR155 regression 保留为 FU-CR161-009。 |
+| FU-CR161-007 | CR-170 | closed | `CR-170` | canonical Gate 1-5 N/A semantics 与 Gate 6 admission policy 已以 READY_WITH_RISK 关闭；aggregate/CR155 regression 仍保留为 FU-CR161-009。 |
 
 ## Runtime Boundary
 

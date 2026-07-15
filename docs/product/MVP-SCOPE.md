@@ -21,12 +21,13 @@
 | v1.5 | 2026-07-14 | host-orchestrator-inline | CR169 CP2 评审整改与批准：补 `stage3_entry_ready=false`、7/7 Stage 2 exit 核验义务，以及 FU-007 007a/007b 的非绑定后续提案；不扩大 MVP 或授权。 |
 | v1.6 | 2026-07-15 | host-orchestrator-inline-meta-pm | 增量追加 CR170 Gate 1-5 N/A semantics、Gate 6 protected merge/admission hardening、21-unit inventory 与明确的 runner/aggregate/Stage3 排除边界。 |
 | v1.7 | 2026-07-15 | host-orchestrator-inline | 回填 CR170 CP2 批准；future verifier 只作为 FU-006 consumer contract，不声明本 CR verifier independence；范围、目标、量化验收和授权边界不变，进入 CP3 设计。 |
+| v1.8 | 2026-07-15 | host-orchestrator | 回填 CR170 CP8 批准与 READY_WITH_RISK 关闭；21/21 policy inventory、Gate 1-5 N/A semantics、Gate 6 admission tier hardening 已交付，Stage3/aggregate/真实 evidence/runtime/CR155 promotion 仍未就绪。 |
 
 ## 状态
 
-- 文档状态：confirmed-cp2（CR170 基线）
+- 文档状态：confirmed-delivered（CR170 CP8 approved / READY_WITH_RISK）
 - 关联 CR：`CR-157` / `CR-158` / `CR-160` / `CR-161` / `CR-162` / `CR-163` / `CR-164` / `CR-166` / `CR-168` / `CR-169` / `CR-170`
-- 当前门禁：CR170 CP2 已批准，进入 CP3 HLD/ADR 人工门禁；CP3 批准前不得进入正式 Story、LLD、实现或验证
+- 当前门禁：CR170 CP8 已批准并关闭；当前无 active formal CR，FU-006/FU-008/FU-009 与 Stage3 Launch 均须另立正式 CR 和明确授权。
 
 ## In Scope
 
@@ -167,13 +168,13 @@
 
 | Legacy Deferred ID | CR169 scope | 状态 | 说明 |
 |---|---|---|---|
-| FU-CR161-005 | MVP-CR169-001..006 | active / CP2 pending | C4 fixture/static foundation 已进入 CR169 产品基线；alpha-decay 只作为 CP3 disposition，真实 C4 与 global integration 仍不在范围。 |
+| FU-CR161-005 | MVP-CR169-001..006 | closed / CP8 approved / READY_WITH_RISK | C4 fixture/static foundation 已由 CR169 关闭交付；alpha-decay、真实 C4 与 global integration 仍不在该 CR 范围。 |
 
 ## Promoted to CR170
 
 | Legacy Deferred ID | CR170 scope | 状态 | 说明 |
 |---|---|---|---|
-| FU-CR161-007 canonical-hardening slice | MVP-CR170-001..006 | active / CP3 pending | Gate 1-5 N/A semantics 与 Gate 6 admission hardening 已进入 CR170；aggregate/CR155 综合决策拆为 FU-CR161-009。 |
+| FU-CR161-007 canonical-hardening slice | MVP-CR170-001..006 | closed / CP8 approved / READY_WITH_RISK | Gate 1-5 N/A semantics 与 Gate 6 admission hardening 已由 CR170 关闭交付；aggregate/CR155 综合决策仍由 FU-CR161-009 承接。 |
 
 ## Promoted to CR158
 
