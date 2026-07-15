@@ -1,8 +1,8 @@
 schema_version: 1
-version: "1.8"
-status: confirmed-cp2
-cr_id: CR-170
-updated_at: "2026-07-15T12:55:40+08:00"
+version: "1.9"
+status: confirmed-delivered
+cr_id: CR-171
+updated_at: "2026-07-15T22:35:00+08:00"
 source_requirements:
   - docs/product/REQUIREMENTS.md
 source_use_cases:
@@ -80,6 +80,10 @@ revision_record:
     date: "2026-07-15"
     author: host-orchestrator-inline
     summary: "Record CR170 CP2 approval; clarify independent verifier as an FU-006 future consumer and retain Gate-maintainer self-verification in CR170. Scenario/QAC/inventory counts remain unchanged and CP3 design is unlocked."
+  - version: v1.9
+    date: "2026-07-15"
+    author: meta-pm
+    summary: "Add and close CR171 route/verifier/read-scope, legacy historical-evidence, deny-default and CP8-not-entry-ready scenarios; no real-data or runtime action is authorized."
 scenarios:
   - id: SC-CR157-P01
     title: "Build mature admission package from complete research refs"
@@ -1104,13 +1108,45 @@ scenarios:
     use_case_refs: [UC-58-CR170]
     steps: ["Inspect current runner imports/calls and historical Stage 3 documentation.", "Apply traceable baseline correction without adding integration."]
     expected: ["New runner canonical calls equal 0 and stage3_entry_ready remains false.", "Historical claims remain preserved but marked legacy/require-revalidation by an independent Stage 3 Launch CR."]
+  - id: SC-CR171-P01
+    title: "CP2 decision brief presents the complete Stage 3 entry choice set"
+    type: positive
+    priority: P0
+    requirement_refs: [REQ-CR171-001, REQ-CR171-002, REQ-CR171-003]
+    use_case_refs: [UC-58-CR171]
+    steps: ["Review the CP2 candidates for route, verifier and frozen read scope.", "Verify each decision contains a recommendation, alternative and consequence."]
+    expected: ["Exactly 3 formal decisions are ready for the host CP2 relay.", "No candidate is treated as approved before the user decision."]
+  - id: SC-CR171-N01
+    title: "CP1 baseline rejects any inferred real-data or runtime authorization"
+    type: negative
+    priority: P0
+    requirement_refs: [REQ-CR171-003, REQ-CR171-005]
+    use_case_refs: [UC-58-CR171]
+    steps: ["Attempt to interpret CR creation, CP1 completion or a future CP8 success as authorization for real lake read, provider access, computation, write, runtime or trading."]
+    expected: ["All attempted interpretations are denied.", "stage3_started, stage3_entry_ready, real_data_read_authorized and real_computation_authorized remain false."]
+  - id: SC-CR171-B01
+    title: "Historical Stage 3 claim is marked legacy and cannot create current entry readiness"
+    type: boundary
+    priority: P0
+    requirement_refs: [REQ-CR171-004, REQ-CR171-005]
+    use_case_refs: [UC-58-CR171]
+    steps: ["Review the historical Stage 3 narrative marker in MULTIFACTOR-RESEARCH.", "Classify a hypothetical future revalidation finding."]
+    expected: ["The historical run is legacy / require-revalidation.", "Only the 3 declared verdicts are possible; no repair, backfill or rerun is performed.", "No verdict yields stage3_entry_ready or a real-evidence admission PASS."]
+  - id: SC-CR171-A01
+    title: "Event-bounded verifier waiver expires before maturity claims"
+    type: precheck
+    priority: P0
+    requirement_refs: [REQ-CR171-002]
+    use_case_refs: [UC-58-CR171]
+    steps: ["Review the two waiver expiry events.", "Attempt a real-evidence admission PASS/PASS_WITH_RISK or Stage 3 exit-gate launch after either event without FU-006."]
+    expected: ["The waiver is invalid at either expiry event.", "The proposed maturity action is blocked until FU-006 has its own evidence."]
 coverage_summary:
-  total: 113
-  p0_total: 107
-  p0_with_planned_coverage: 107
+  total: 117
+  p0_total: 111
+  p0_with_planned_coverage: 111
   high_priority_positive_and_negative_covered: true
-  source_requirements_total: 79
-  source_use_cases_total: 11
+  source_requirements_total: 84
+  source_use_cases_total: 12
   gaps:
     - id: GAP-CR157-001
       status: resolved_by_CR157_CP2_and_promoted_CR158
@@ -1140,5 +1176,8 @@ coverage_summary:
       status: resolved_by_CR169_delivery
       description: "CR169 product decisions were approved and the fixture/static C4 foundation was delivered; Stage 3 entry remains false."
     - id: GAP-CR170-001
-      status: pending_user_CP2_decision
-      description: "Gate 1-5 inventory/five-state semantics, tier policy, protected lower-level merge versus resolve_admission_policy boundary, and adapter retention await CR170 CP2 approval; no HLD or implementation is authorized."
+      status: resolved_by_CR170_CP8
+      description: "CR170 canonical hardening closed; it does not grant Stage 3 runner integration or real-data authorization."
+    - id: GAP-CR171-001
+      status: resolved_by_CR171_CP8_decision_only
+      description: "Three formal decisions were approved and CR171 closed as a decision gate; no data or runtime action is authorized."

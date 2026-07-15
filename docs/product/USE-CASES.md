@@ -1,11 +1,11 @@
 ---
-status: confirmed
-version: "1.8"
-confirmed_by: "user-CR170-CP2"
-confirmed_at: "2026-07-15T12:55:40+08:00"
+status: confirmed-delivered
+version: "1.9"
+confirmed_by: "user-CR171-CP8"
+confirmed_at: "2026-07-15T22:35:00+08:00"
 engagement_mode: production
 scenario_subject_type: target-artifact
-scenario_subject_id: "CR-170"
+scenario_subject_id: "CR-171"
 target_artifact_type: workflow
 governance_mode: review-gated
 review_policy: strict
@@ -13,7 +13,7 @@ delivery_routing:
   mode: project-readme-contract
   output_root: "docs/product"
   source: docs
-total_use_cases: 11
+total_use_cases: 12
 ---
 
 # Product Use Cases
@@ -40,12 +40,13 @@ total_use_cases: 11
 | v1.6 | 2026-07-14 | host-orchestrator-inline | CR169 CP2 评审整改与批准：明确 Stage 2 complete 不等于 Stage 3 entry-ready，新增 7/7 Stage 2 exit 核验义务，并把 FU-007 007a/007b 仅保留为后续提案。 |
 | v1.7 | 2026-07-15 | host-orchestrator-inline-meta-pm | 增量追加 CR170 canonical Gate 1-5 N/A evidence semantics 与 Gate 6 admission worst-state hardening 用例；明确保留既有底层 worst-state 合并、单独审查 `resolve_admission_policy`，并保留 Stage 3、aggregate 与真实数据边界。 |
 | v1.8 | 2026-07-15 | host-orchestrator-inline-meta-pm | 根据 CP2 评审明确“独立验证者”为 `future consumer`：CR170 只建立可审计契约，当前验证由可靠性 Gate 维护者自验证代行，独立 verifier 实际消费留给 `FU-CR161-006`；补充 consumer 端到端调用期望，不增加用例、需求或场景分母。 |
+| v1.9 | 2026-07-15 | meta-pm | CR171 增量追加 Stage 3 Launch / Real-Lake Entry Decision Gate 用例、三项 CP2 决策、historical-run legacy/require-revalidation ceiling 与零执行授权边界；CP8 不构成 entry-ready。 |
 
 ## 状态
 
-- 文档状态：confirmed（CR170 CP2 approved）
-- 关联 CR：`CR-157` / `CR-158` / `CR-160` / `CR-161` / `CR-162` / `CR-163` / `CR-164` / `CR-166` / `CR-168` / `CR-169` / `CR-170`
-- 当前门禁：CR170 CP2 待人工批准；CP2 前不得进入 HLD/CP3、Story、LLD、实现或验证
+- 文档状态：confirmed-delivered（CR170/CR171 CP8 approved）
+- 关联 CR：`CR-157` / `CR-158` / `CR-160` / `CR-161` / `CR-162` / `CR-163` / `CR-164` / `CR-166` / `CR-168` / `CR-169` / `CR-170` / `CR-171`
+- 当前门禁：CR171 已关闭；Stage 3 尚未启动，任何真实读取、computation/runtime、Story、LLD 或实现仍需后续独立授权。
 - 旧基线保留：当前仓库未发现既有 `docs/product/USE-CASES.md`，本文件作为产品层用例入口；既有组件说明和场景文档不被重写。
 
 ## UC-58 多因子策略研究到准入
@@ -513,3 +514,33 @@ Canonical answer：`process/context/CR164-CP2-SGQ-BATCH.yaml`。该回答不是 
 - `FU-CR161-009`（原 FU-007b）保留 aggregate orchestration、mature StrategyAdmissionPackage 聚合与 CR155 综合 regression/promotion 决策。
 - Stage 3 Launch 必须另建 CR，处理 scoped research-data authorization、data release/PIT/lineage、历史 Stage 3 记录 revalidation、路线与 verifier 决策。
 - 当前 Stage 3 runner 未调用 canonical Gate 1-6；CR170 不虚构现有运行依赖，也不负责接入。
+## UC-58-CR171 Stage 3 Launch / Real-Lake Entry Decision Gate
+
+| 字段 | 内容 |
+|---|---|
+| 用例 ID | UC-58-CR171 |
+| 主要用户 | 量化研究负责人、策略研究员、验证负责人、风险/发布审批人 |
+| 触发条件 | 用户已授权创建 CR171，但尚未批准任何真实数据湖读取、真实 computation、runtime、provider、凭据、写入、publish 或 trading。 |
+| 目标 | 在不执行任何真实数据或运行时操作的前提下，决定未来 Stage 3 的证据路线、FU-006 verifier 处置及 deny-default 的冻结 read scope，并把历史 Stage 3 事实限制为 legacy / require-revalidation。 |
+| 当前 CR 范围 | 产品基线、CP2 决策包、历史叙事标注、候选 readiness inventory 语义和风险别名消费；不产出实现、Story、LLD 或真实读取结果。 |
+| 明确不在范围 | C1-C4 producer binding 或 real computation、aggregate orchestration、repair/backfill/rerun、provider/NAS/lake 操作、凭据、catalog/current pointer、runtime/trading、CR010/018/032 修复或关闭。 |
+| 成功标准 | CP2 必须分别决定 1 条证据路线、1 条 verifier 处置和 1 个冻结 read scope；三个决策均未确认前 `stage3_started=false`、`stage3_entry_ready=false`、`real_data_read_authorized=false`、`real_computation_authorized=false`。 |
+
+### CR171 用户旅程
+
+| 步骤 | 用户意图 | 系统行为 | 成功标准 |
+|---|---|---|---|
+| 1 | 选择可审计的 Stage 3 证据路线 | 呈现 current runner 与 C1-C4 real-producer 路线的后续 CR 数、边界和残余风险。 | 只记录 CP2 候选，不开始 producer、aggregate 或 computation。 |
+| 2 | 决定 verifier 是否可短期豁免 | 呈现 FU-006 first 与 event-bounded waiver，并把 waiver 失效点设为机械可判断事件。 | waiver 不继承 CR170 历史风险接受；在任一失效点前不能输出 real-evidence admission PASS/PASS_WITH_RISK 或启动 Stage 3 exit gate。 |
+| 3 | 限定未来可能的研究数据读取 | 仅定义待 CP2 决定的 release/dataset/date/identity/output 五元组及 deny-default 清单。 | 此基线本身不读取任何真实数据、凭据或环境，也不授权 runner。 |
+| 4 | 处理历史事实而不夸大 | 将历史运行标为 legacy / require-revalidation，未来 revalidation 只能分类、标注和报告。 | current-entry verdict 只允许 `revalidated_for_current_entry`、`insufficient_for_current_entry`、`incompatible_rework_required`；`reaffirmed_as_legacy_only` 仅是 annotation；发现缺陷必须另立 CR。 |
+
+### CR171 Scenario Gray Areas 与 CP2 候选
+
+| ID | 问题 | 推荐 | 备选 | 状态 |
+|---|---|---|---|---|
+| SGQ-CR171-001 / CP2-CR171-DQ-ROUTE | 选择 current runner 还是 C1-C4 real-producer 作为 Stage 3 证据路线？ | C1-C4 real-producer；随后必须另立 Real-Evidence Activation CR 才可授权 computation。 | current runner；CP3 必须先冻结其完整 read-only execution boundary。 | pending host CP2 relay |
+| SGQ-CR171-002 / CP2-CR171-DQ-VERIFIER | FU-006 是否阻断 entry？ | event-bounded waiver；仅在两个机械失效点前有效。 | FU-006 first；entry 形成 3 个正式 CR。 | pending host CP2 relay |
+| SGQ-CR171-003 / CP2-CR171-DQ-READ-SCOPE | 哪个 frozen release/dataset/date/read identity/output directory 可以在后续受控读取中使用？ | scoped research-data-lake read-only，且 credentials/provider/write/catalog/runtime/trading 全部 deny。 | 不批准 read scope，保持 Stage 3 未启动。 | resolved-approved 2026-07-15; no read authorization |
+
+CP2 已确认 C1-C4 real-producer、event-bounded waiver 与 deny-default scope；该决定只定义后续 CR 的授权前提，不授予当前数据读取或 computation。

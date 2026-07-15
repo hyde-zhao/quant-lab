@@ -1,9 +1,9 @@
 ---
-status: confirmed-cp2
-version: "1.9"
+status: confirmed-delivered
+version: "2.0"
 source_scenarios: "docs/product/SCENARIOS.yaml"
 source_requirements: "docs/product/REQUIREMENTS.md"
-cr_id: "CR-170"
+cr_id: "CR-171"
 template_deviation_reason: "CR157 uses Scenario/Requirement/Test Layer/Validation Mode columns to preserve gate and no-runtime evidence mapping; coverage statistics remain present below."
 ---
 
@@ -32,12 +32,13 @@ template_deviation_reason: "CR157 uses Scenario/Requirement/Test Layer/Validatio
 | v1.7 | 2026-07-14 | host-orchestrator-inline-meta-se | CR169 CP4：把 17/17 场景映射到 S01–S05 full-lld 与 5 个串行 Wave；覆盖数量不变，仍未授权实现。 |
 | v1.8 | 2026-07-15 | host-orchestrator-inline-meta-pm | 增量追加 CR170 20/20 场景的 planned coverage，包含 Gate 1 三层 masked-escape 断言、Gate 1-5 五态、底层 merge 保留回归、tier admission、adapter/CR155/Stage3 边界。 |
 | v1.9 | 2026-07-15 | host-orchestrator-inline | 回填 CR170 CP2 批准并补 consumer 边界：FU-006 独立验证者为 future consumer，本 CR 的 planned verification 由 Gate 维护者自验证承担；20/20 场景、19 P0/1 P1、21/21 inventory 与 15 QAC 不变。 |
+| v2.0 | 2026-07-15 | meta-pm | CR171 增量追加并关闭 4 个 decision/legacy/waiver/precheck 场景的静态覆盖；不授权真实数据或运行时测试。 |
 
 ## 状态
 
-- 文档状态：confirmed-cp2（CR170 基线）
-- 关联 CR：`CR-157` / `CR-158` / `CR-160` / `CR-161` / `CR-162` / `CR-163` / `CR-164` / `CR-166` / `CR-168` / `CR-169` / `CR-170`
-- 当前门禁：CR170 CP2 已批准，进入 CP3 HLD/ADR 人工门禁；coverage 仍是 planned evidence，不代表 Story、实现、验证或真实数据操作已执行
+- 文档状态：confirmed-delivered（CR170/CR171 closed）
+- 关联 CR：`CR-157` / `CR-158` / `CR-160` / `CR-161` / `CR-162` / `CR-163` / `CR-164` / `CR-166` / `CR-168` / `CR-169` / `CR-170` / `CR-171`
+- 当前门禁：CR171 closed；coverage 只代表静态/决策证据，不代表真实数据、实现或运行时验证。
 
 ## Coverage Matrix
 
@@ -156,6 +157,10 @@ template_deviation_reason: "CR157 uses Scenario/Requirement/Test Layer/Validatio
 | SC-CR170-R02 | REQ-CR170-007 | CR169 adapter / regression | fixture/static | strict joint defense-in-depth guard remains intact | P0 | planned-after-CP5 |
 | SC-CR170-G01 | REQ-CR170-009 | CR155 / negative-regression | existing-evidence/static | CR155 remains BLOCKED and paper_candidate=false | P0 | planned-after-CP5 |
 | SC-CR170-E01 | REQ-CR170-008, REQ-CR170-009 | applicability / static review | static | current runner integration=0; legacy Stage3 claims require independent revalidation | P1 | planned-static-review |
+| SC-CR171-P01 | REQ-CR171-001..003 | decision-brief / traceability | static | 3/3 CP2 choices each contain recommendation, alternative and consequence | P0 | planned-CP2 |
+| SC-CR171-N01 | REQ-CR171-003, REQ-CR171-005 | authorization / negative | static | CP1, CP2 candidate and CP8 cannot imply real read/computation/runtime/trading | P0 | planned-CP2 |
+| SC-CR171-B01 | REQ-CR171-004, REQ-CR171-005 | historical-claim / boundary | static | legacy/require-revalidation marker and three-verdict ceiling review | P0 | planned-CP2 |
+| SC-CR171-A01 | REQ-CR171-002 | waiver / precheck | static | 2/2 mechanical waiver expiry events block maturity claims without FU-006 | P0 | executed-static-CP8 |
 
 ## Coverage Summary
 
@@ -218,6 +223,9 @@ template_deviation_reason: "CR157 uses Scenario/Requirement/Test Layer/Validatio
 | CR170 adapter regressions | 2/2 |
 | CR170 current-runner/aggregate integration modifications | 0 / 0 |
 | CR170 external/runtime tests authorized | 0 |
+| CR171 P0 scenarios / planned coverage | 4 / 4 |
+| CR171 CP2 formal decisions | 3/3 |
+| CR171 real-data / credentials / provider / write / runtime-trading tests authorized | 0 / 0 / 0 / 0 / 0 |
 
 ## Notes
 
@@ -232,3 +240,4 @@ template_deviation_reason: "CR157 uses Scenario/Requirement/Test Layer/Validatio
 - CR166 验证仅允许 fixture/static：daily multifactor 与 ML compatibility 为 P0；event 为 CP3 applicability/P1。任何真实 fold/OOS 数据、lake/NAS/provider/runtime 或外部 ref 均不得解引用。CP8 也只能声明桥接 foundation，不得声明 Stage 3 已启动或真实 OOS evidence 可用。
 - CR168 coverage 只描述 CP2 待批准的 fixture/static 验证合同。Gate 4 是 C3+C4 联合门禁；C4 reserved/not-built/typed_unavailable 必须由 projection 映射为三个 refs absent-no-na-reason，任何字段级或通用 na-reason 逃逸都必须在 projection 侧阻断，capacity/aggregate PASS=`0`。CP2 不授权 HLD 之外的实现，也不授权真实 TCA、真实 impact calibration、真实数据、runtime、C4、event producer、交易或远端写入。
 - CR169 coverage 描述已获 CP2 批准但尚未实现的 C4 fixture/static 合同。CR168 C3-only adapter 保持 absent-C4 fail-closed；CR169 的新 joint adapter 仅组合经验证的 C3+C4 components、构造精确七字段 Gate4 payload，并可证明 `gate4_fixture_contract_pass=1`，不产生 aggregate/capacity admission PASS、真实 capacity claim 或 CR155 promotion。alpha-decay 仅为 CP3 disposition；`stage3_entry_ready=false`，正式 Stage 2 exit 必须另以 7/7 核验证据决定。
+- CR171 coverage 只验证决策包、历史声明和 deny-default wording。它不读取数据湖/NAS、凭据或环境，不运行 runner/computation，也不写 provider/catalog/current pointer；即使未来 CP8 成功，Stage 3 entry readiness 仍须由其独立事实和门禁证明。

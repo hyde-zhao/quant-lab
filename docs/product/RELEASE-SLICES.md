@@ -18,6 +18,7 @@
 | v1.2 | 2026-07-14 | host-orchestrator-inline | CR169 CP2 评审整改与批准：Slice 4 新增 7/7 Stage 2 exit 核验交付义务并显式排除 Stage 3 entry；FU-007 拆分只作后续提案。 |
 | v1.3 | 2026-07-15 | host-orchestrator-inline-meta-pm | 增量追加 CR170 canonical Gate 1-5 N/A semantics 与 Gate 6 admission hardening 候选切片；保留现有 bottom-up merge，并明确不含 runner/aggregate/Stage3。 |
 | v1.4 | 2026-07-15 | host-orchestrator-inline | 回填 CR170 Slice 0 / CP2 批准；当前进入 Slice 1 / CP3 架构设计，future verifier 仅为契约 consumer，后续 Story/实现/验证仍受 CP3/CP5 门禁约束。 |
+| v1.5 | 2026-07-15 | meta-pm | 增量追加 CR171 decision-only 发布切片；CP8 已收敛为决策闭环，仍不能替代数据、computation 或 runtime 授权。 |
 
 ## CR157 Candidate Slices
 
@@ -98,3 +99,12 @@
 | Slice 2 | 形成全量 Story 设计证据 | CP4 formal Story/DAG/file owner、CP5 LLD/test design，含 Gate1 三层断言 | 未批准实现 | CP4/CP5 |
 | Slice 3 | 证明 canonical 语义 fail-closed | 21-unit fixture/static tests、tier 4/4、adapter 2/2、CR155 regression、零外部操作 | Stage3/real lake/provider、aggregate、trading | CP6/CP7 |
 | Slice 4 | 交付安全硬化且不夸大集成 | quality/release docs、rollback/migration、claim ceiling、follow-up refs | publish/deploy/Git remote write、Stage3 entry-ready、CR155 promotion | CP8 |
+
+## CR171 Candidate Slices
+
+| Slice | 用户价值 | 包含 | 不包含 | Gate |
+|---|---|---|---|---|
+| Slice 0 | 形成可审计的 entry 决策包 | UC/REQ/scenario/matrix/scope/backlog、3 个 CP2 choices、legacy marker | 数据读取、HLD、Story、LLD、实现、runtime | CP1→CP2 approved |
+| Slice 1 | 冻结获批准路线的决策合同 | 仅在 CP2 后设计 route/read/revalidation/verifier contract | 任何 C1-C4 computation、producer binding、repair、provider/lake/NAS 操作 | CP3 |
+| Slice 2 | 验证后续受控行为的边界 | 仅在未来单独授权后验证 frozen boundary、legacy verdict 与 waiver expiry | 凭据、provider、写入、catalog/current pointer、runtime/trading | CP7 |
+| Slice 3 | 交付不夸大的决策闭环 | release/verification 文档与 CP8 readiness；明确 CP8 不代表 entry-ready | Stage 3 start、real-evidence admission PASS、exit gate、publish/deploy | CP8 approved |

@@ -22,12 +22,13 @@
 | v1.6 | 2026-07-15 | host-orchestrator-inline-meta-pm | 增量追加 CR170 Gate 1-5 N/A semantics、Gate 6 protected merge/admission hardening、21-unit inventory 与明确的 runner/aggregate/Stage3 排除边界。 |
 | v1.7 | 2026-07-15 | host-orchestrator-inline | 回填 CR170 CP2 批准；future verifier 只作为 FU-006 consumer contract，不声明本 CR verifier independence；范围、目标、量化验收和授权边界不变，进入 CP3 设计。 |
 | v1.8 | 2026-07-15 | host-orchestrator | 回填 CR170 CP8 批准与 READY_WITH_RISK 关闭；21/21 policy inventory、Gate 1-5 N/A semantics、Gate 6 admission tier hardening 已交付，Stage3/aggregate/真实 evidence/runtime/CR155 promotion 仍未就绪。 |
+| v1.9 | 2026-07-15 | meta-pm | CR171 增量追加 Stage 3 entry decision MVP、明确 out-of-scope 和 conditional follow-up；CP8 关闭只表示决策闭环，不启动真实数据/运行时行为。 |
 
 ## 状态
 
-- 文档状态：confirmed-delivered（CR170 CP8 approved / READY_WITH_RISK）
-- 关联 CR：`CR-157` / `CR-158` / `CR-160` / `CR-161` / `CR-162` / `CR-163` / `CR-164` / `CR-166` / `CR-168` / `CR-169` / `CR-170`
-- 当前门禁：CR170 CP8 已批准并关闭；当前无 active formal CR，FU-006/FU-008/FU-009 与 Stage3 Launch 均须另立正式 CR 和明确授权。
+- 文档状态：confirmed-delivered（CR170/CR171 CP8 approved；CR171 为 decision-only closure）
+- 关联 CR：`CR-157` / `CR-158` / `CR-160` / `CR-161` / `CR-162` / `CR-163` / `CR-164` / `CR-166` / `CR-168` / `CR-169` / `CR-170` / `CR-171`
+- 当前门禁：CR171 CP8 已批准并关闭；当前无 active formal CR。后续 real-evidence activation、FU-006、FU-007b 或 FU-008 均须另立正式 CR 和明确授权。
 
 ## In Scope
 
@@ -194,3 +195,25 @@
 | Legacy Deferred ID | CR168 scope | 状态 | 说明 |
 |---|---|---|---|
 | FU-CR161-004 | MVP-CR168-001..006 | active / CP2 approved | C3 fixture/static economic cost/slippage/impact approximation foundation 已进入 CR168 CP3；C4、FU-007 aggregate/global Gate4 hardening、真实 TCA/data/runtime、event 与 Stage 3 保持范围外。 |
+
+## CR171 Decision MVP
+
+| MVP ID | In Scope | 成功定义 |
+|---|---|---|
+| MVP-CR171-001 | 证据路线 CP2 决策 | 已选择 C1-C4 real-producer；activation 另立 CR。 |
+| MVP-CR171-002 | FU-006 verifier CP2 决策 | 已选择 event-bounded waiver；在两个机械失效点前必须完成 FU-006。 |
+| MVP-CR171-003 | 冻结 future read-contract 决策 | 5 个 allow fields 与 6 类 deny-default 已冻结；该冻结本身不授予读取。 |
+| MVP-CR171-004 | 历史事实和 claim ceiling 收敛 | 历史 Stage 3 标为 legacy/require-revalidation；CP8 不能形成 entry-ready。 |
+
+### CR171 Out of Scope
+
+- 本 CR 不读取真实数据湖/NAS、凭据或环境，不执行 C1-C4 computation、runner、runtime、simulation、paper、live 或 trading。
+- 不实施 producer、aggregate orchestration、FU-006、修复/回填/rerun、manifest rewrite、provider/NAS/lake 写入、catalog/current pointer 或 publish。
+- 不修复 CR010、CR018 或 CR032；只披露其邻接债务与不重开原则。
+
+### CR171 Deferred / Follow-up Conditions
+
+| Deferred ID | 内容 | 重启条件 |
+|---|---|---|
+| DF-CR171-REAL-EVIDENCE-ACTIVATION | C1-C4 real-producer 的 computation/binding/real-evidence activation | 仅当 CP2 选 C1-C4 且后续独立 activation CR 获得明确授权。 |
+| DF-CR171-HISTORICAL-REMEDIATION | 历史数据、schema、PIT、lineage、code、manifest 或证据缺陷修复 | 仅当未来 revalidation 产生 `insufficient_for_current_entry` 或 `incompatible_rework_required`，并另立 CR。 |

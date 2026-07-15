@@ -22,6 +22,7 @@
 | v0.16 | 2026-07-15 | host-orchestrator-inline-meta-pm | 关闭 CR169 的 stale active 指针；将 FU-CR161-007 的 canonical-hardening 子切片映射为 active CR170，并把 aggregate + CR155 regression 剩余范围登记为数字型候选 FU-CR161-009。 |
 | v0.17 | 2026-07-15 | host-orchestrator-inline | 回填 CR170 CP2 批准；明确 FU-006 独立验证者仅为 future consumer，本 CR 不声明 verifier independence；FU-009 aggregate/CR155 边界和未授权范围不变。 |
 | v0.18 | 2026-07-15 | host-orchestrator | 回填 CR170 CP8 批准与 READY_WITH_RISK 关闭；canonical Gate 1-5 N/A semantics、Gate 6 admission hardening 已交付，FU-006/FU-008/FU-009 仍为未启动候选。 |
+| v0.19 | 2026-07-15 | meta-pm | CR171 增量登记 historical remediation 与 real-evidence activation 的条件性 follow-up；不提前把任一项变成当前实现范围。 |
 
 ## Candidates
 
@@ -47,6 +48,8 @@
 | DF-CR164-001 | Effective-trial estimator / multiplicity model | methodology follow-up | P0 | CR164 维持 effective count typed_unavailable；另起 CR 冻结 estimator 假设、偏差、上下界与 verifier。 |
 | DF-CR164-002 | Real ML/event computable-evidence adapters | runtime/data follow-up | P1 | UC-59/60 当前 compatibility-only；real runner、lineage 与 data/runtime authorization 均具备后重启。 |
 | DF-CR164-003 | Real research recomputation / historical evidence migration | audit/data follow-up | P1 | 独立 data/runtime/audit gate 批准，且 inferred/backfilled provenance 不伪装为 native evidence。 |
+| DF-CR171-REAL-EVIDENCE-ACTIVATION | C1-C4 real-producer activation | runtime/data follow-up | P0 | 仅当 CR171 CP2 选择 C1-C4 real-producer 后，另立 formal CR 并显式授权 computation、producer binding 与受控数据行为；CR171 本身不授权。 |
+| DF-CR171-HISTORICAL-REMEDIATION | Historical Stage 3 evidence remediation | audit/data follow-up | P1 | 仅在获授权 revalidation 输出 `insufficient_for_current_entry` 或 `incompatible_rework_required` 后；不得在 CR171 内 repair/backfill/rerun。 |
 
 ## Promoted Items
 
@@ -64,4 +67,4 @@
 
 ## Runtime Boundary
 
-CR157 backlog refs, CR158 adapter scope, CR160 Stage 4 observation review scope, CR161/CR162 evidence availability baseline, CR163 trial-lineage instrumentation, CR164 C1 computable evidence, CR166 C2 fixture/static foundation and CR168 C3 fixture/static foundation do not authorize real lake/NAS/provider/credential/QMT/gateway/runtime/simulation/paper/live/trading/broker/feed/order/reconciliation/store/catalog/registry/model registry/prediction store/publish/external framework/Git remote operations. CR160/CR161/CR163/CR164/CR166/CR168 consume existing CR155 evidence only as a fail-closed classification sample; none may create new data access, runtime authorization or historical backfill. CR166 does not make real walk-forward/OOS evidence available; CR168 does not provide real TCA, C4 capacity evidence or Stage 3 readiness。CR155 lifecycle 已关闭，但 admission package 必须继续保持 `BLOCKED` 且 `paper_candidate=false`。
+CR157 backlog refs, CR158 adapter scope, CR160 Stage 4 observation review scope, CR161/CR162 evidence availability baseline, CR163 trial-lineage instrumentation, CR164 C1 computable evidence, CR166 C2 fixture/static foundation, CR168 C3 fixture/static foundation and CR171 decision baseline do not authorize real lake/NAS/provider/credential/QMT/gateway/runtime/simulation/paper/live/trading/broker/feed/order/reconciliation/store/catalog/registry/model registry/prediction store/publish/external framework/Git remote operations. CR171 can only propose a future deny-default read contract; CP1/CP2/CP8 are not real-data, computation or runtime authorization by implication. Historical Stage 3 evidence remains legacy/require-revalidation until a separately authorized revalidation reports a permitted verdict. CR160/CR161/CR163/CR164/CR166/CR168 consume existing CR155 evidence only as a fail-closed classification sample; none may create new data access, runtime authorization or historical backfill. CR166 does not make real walk-forward/OOS evidence available; CR168 does not provide real TCA, C4 capacity evidence or Stage 3 readiness。CR155 lifecycle 已关闭，但 admission package 必须继续保持 `BLOCKED` 且 `paper_candidate=false`。

@@ -6,6 +6,8 @@
 |---|---|---|---|
 | v1.0 | 2026-07-11 | meta-doc | 增量补充 CR-163 trial lineage、准入可用性与恢复边界；不回填历史运行。 |
 | v1.1 | 2026-07-15 | host-orchestrator-inline-meta-pm | CR170 增量澄清历史 Stage 3 run 仅为 legacy audit record；当前 `stage3_entry_ready=false`，必须由独立 Stage 3 Launch CR 完成授权、数据/PIT/lineage 与 canonical revalidation。 |
+| v1.2 | 2026-07-15 | meta-pm | CR171 将第 7 节历史运行叙事标为 legacy / require-revalidation；保留历史事实，不把其表述为 current Stage 3 entry-ready。 |
+| v1.3 | 2026-07-15 | host-orchestrator | CR171 CP8 评审整改：第 7 节对齐 HLD §9 三值 current-entry verdict schema；`reaffirmed_as_legacy_only` 明确降为 annotation。 |
 
 多因子研究组件覆盖 FactorSpec、FactorRunSpec、factor panel、label window、单因子评价、多因子组合和 StrategyAdmissionPackage。它输出“策略准入输入”，不输出真实交易许可。
 
@@ -128,7 +130,7 @@ Mature multifactor research runner 的稳定入口为 `scripts/research/run_mult
 | factor model validation status | `pass_with_risk` |
 | blocked gates | 无 |
 
-历史记录曾将该运行判定为达到当时的 Stage 3 出口标准并可进入 Stage 4 观察审查候选；该判定不自动延续为当前基线结论。`pass_with_risk` 风险和上述 Stage 3 Launch revalidation 均未由 CR170 解除，仍须跟踪因子溢价显著性、时间切分、风格暴露、参数敏感性、IC 衰减、容量冲击和尾部风险。
+**历史事实 / CR171 claim ceiling：** 上述运行记录保留为历史事实，但它是 `legacy / require-revalidation`，不得被解释为当前 `stage3_started`、`stage3_entry_ready`、`real_evidence_available` 或成熟准入 `PASS`。未来若获得独立的受控审计授权，HLD §9 的权威 current-entry verdict schema 只能为 `revalidated_for_current_entry`、`insufficient_for_current_entry` 或 `incompatible_rework_required`；`reaffirmed_as_legacy_only` 只可作为 legacy annotation，**不是**第四个 current-entry verdict。不得在该流程中 repair、backfill、rerun、写数据湖或提高准入状态。`pass_with_risk` 的历史门禁风险仍需在任何后续独立 Stage 3 评估前重新审查，包括因子溢价显著性、时间切分、风格暴露、参数敏感性、IC 衰减、容量冲击和尾部风险。
 
 关键产物：
 
