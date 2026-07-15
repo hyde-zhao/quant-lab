@@ -869,6 +869,9 @@ items:
     provenance:
       -
         cr: CR-132
+      -
+        cr: CR-170
+        story: CR170-S04-compatibility-claim-closure
   tests/research/test_adjustment_audit.py:
     domains:
       - research
@@ -995,6 +998,15 @@ items:
       -
         cr: CR-169
         story: CR169-S02-deterministic-static-c4-producer
+  tests/research/test_canonical_reliability_regression.py:
+    domains:
+      - research
+    old_paths: []
+    introduced_by: CR-170
+    provenance:
+      -
+        cr: CR-170
+        story: CR170-S04-compatibility-claim-closure
   tests/research/test_cross_strategy_reliability_gates.py:
     domains:
       - research
@@ -1003,6 +1015,9 @@ items:
     provenance:
       -
         cr: CR-154
+      -
+        cr: CR-170
+        story: CR170-S02-gate1-5-na-consumer-hardening
   tests/research/test_daily_multifactor_baseline_artifact.py:
     domains:
       - research
@@ -1995,6 +2010,16 @@ items:
     old_paths: []
     introduced_by: CR-166
     provenance: [{cr: CR-166, story: CR166-S05-independent-static-verification}]
+  tests/research/test_reliability_admission_policy.py:
+    domains: [research]
+    old_paths: []
+    introduced_by: CR-170
+    provenance: [{cr: CR-170, story: CR170-S03-admission-worst-state-tier-hardening}]
+  tests/research/test_reliability_na_policy.py:
+    domains: [research]
+    old_paths: []
+    introduced_by: CR-170
+    provenance: [{cr: CR-170, story: CR170-S01-na-policy-inventory-five-state-contract}]
   tests/research/test_economic_cost_contracts.py:
     domains: [research]
     old_paths: []

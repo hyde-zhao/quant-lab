@@ -12,6 +12,14 @@ from enum import Enum
 from typing import Any, Mapping, Sequence
 
 from engine.experiment_family_lineage import FamilyEvidenceProjection, LineageAvailability
+from engine.reliability_na_policy import (
+    NA_POLICY_BY_ID,
+    CompleteNaDisposition,
+    NaEvidenceDecision,
+    NaEvidenceState,
+    NaPolicySpec,
+    classify_na_evidence,
+)
 from engine.serialization import json_safe
 from engine.strategy_admission_statistical_gate import ValidationBoundFamilyEvidence, consume_family_lineage_projection
 
@@ -197,6 +205,15 @@ class AdmissionPolicyResult:
         return dict(json_safe(data))
 
 
+@dataclass(frozen=True, slots=True)
+class _NaConsumption:
+    blocked_claims: tuple[BlockedClaim, ...] = ()
+    review_claims: tuple[BlockedClaim, ...] = ()
+    status_relevant_refs: tuple[ArtifactRef, ...] = ()
+    audit_only_refs: tuple[ArtifactRef, ...] = ()
+    status_floor: ReliabilityGateStatus | None = None
+
+
 def artifact_ref_to_dict(ref: ArtifactRef | Mapping[str, Any]) -> dict[str, Any]:
     return _artifact_dict(ref)
 
@@ -337,10 +354,11 @@ def evaluate_gate1_statistical_reliability(
         reason = source_reason
 
     if status is ReliabilityGateStatus.PASS:
-        severity_status, severity_reason, severity_claims = _gate1_statistical_artifact_policy(projected_artifacts, release_profile, claim_types)
+        severity_status, severity_reason, severity_claims, severity_refs = _gate1_statistical_artifact_policy(projected_artifacts, release_profile, claim_types)
         status = severity_status
         reason = severity_reason
         claims.extend(severity_claims)
+        refs.extend(severity_refs)
 
     # CR163 supplies only validated raw lineage.  Effective trials remain
     # typed-unavailable, so C1/deflated-performance wording is non-computable.
@@ -394,43 +412,12 @@ def validate_gate2_cv_governance(
         return ReliabilityGateSummary(GATE_2_CV, status, blocked_claims=claims, release_blocking_reason=reason, operation_counts=counts, evidence_identity=evidence_identity)
 
     refs: list[ArtifactRef] = []
-    blocked: list[BlockedClaim] = []
     split_refs = _refs_from_value(evidence.get("split_policy_ref") or evidence.get("split_policy_refs"), "split_policy_ref", GATE_2_CV)
     walk_forward_refs = _refs_from_value(evidence.get("walk_forward_ref") or evidence.get("walk_forward_refs"), "walk_forward_ref", GATE_2_CV)
     oos_refs = _refs_from_value(evidence.get("oos_ref") or evidence.get("oos_split_refs"), "oos_ref", GATE_2_CV)
     refs.extend(split_refs)
     refs.extend(walk_forward_refs)
     refs.extend(oos_refs)
-    if not split_refs and not _has_na_reason(evidence, "split_policy"):
-        blocked.append(
-            BlockedClaim(
-                claim_id="split_policy_missing",
-                reason="split policy evidence or n/a-with-reason is required.",
-                source_gate=GATE_2_CV,
-                release_wording_impact="Block split-governed validation wording.",
-                unlock_condition="provide_split_policy_ref_or_structured_na_reason",
-            )
-        )
-    if not walk_forward_refs and not _has_na_reason(evidence, "walk_forward"):
-        blocked.append(
-            BlockedClaim(
-                claim_id="walk_forward_missing",
-                reason="walk-forward evidence or n/a-with-reason is required.",
-                source_gate=GATE_2_CV,
-                release_wording_impact="Block walk-forward validation wording.",
-                unlock_condition="provide_walk_forward_ref_or_structured_na_reason",
-            )
-        )
-    if not oos_refs and not _has_na_reason(evidence, "oos"):
-        blocked.append(
-            BlockedClaim(
-                claim_id="oos_split_missing",
-                reason="OOS split evidence or n/a-with-reason is required.",
-                source_gate=GATE_2_CV,
-                release_wording_impact="Block OOS-proven and production-like validation wording.",
-                unlock_condition="provide_oos_ref_or_structured_na_reason",
-            )
-        )
     overlap_applicability = str(evidence.get("overlap_applicability") or "").strip().lower()
     if not overlap_applicability:
         if bool(evidence.get("overlapping_labels_or_windows")):
@@ -438,6 +425,21 @@ def validate_gate2_cv_governance(
         else:
             overlap_applicability = "unknown"
     requires_purge = overlap_applicability in {"overlapping-label-window", "overlapping-event-window"}
+    purge_refs = _refs_from_value(evidence.get("purge_embargo_refs") or evidence.get("purge_window_ref") or evidence.get("purge_window_refs"), "purge_embargo_refs", GATE_2_CV)
+    embargo_refs = _refs_from_value(evidence.get("embargo_gap_ref") or evidence.get("embargo_gap_refs"), "embargo_gap_ref", GATE_2_CV)
+    event_gap_refs = _refs_from_value(evidence.get("event_safe_gap_refs"), "event_safe_gap_refs", GATE_2_CV)
+    consumption = _merge_na_consumptions(
+        (
+            _classify_and_consume_na("G2-P01", evidence_present=bool(split_refs), applicable=True, evidence=evidence, release_profile=release_profile),
+            _classify_and_consume_na("G2-P02", evidence_present=bool(walk_forward_refs), applicable=True, evidence=evidence, release_profile=release_profile),
+            _classify_and_consume_na("G2-P03", evidence_present=bool(oos_refs), applicable=True, evidence=evidence, release_profile=release_profile),
+            _classify_and_consume_na("G2-P04", evidence_present=bool(purge_refs), applicable=requires_purge or overlap_applicability == "non-overlapping-deterministic", evidence=evidence, release_profile=release_profile),
+            _classify_and_consume_na("G2-P05", evidence_present=bool(embargo_refs), applicable=overlap_applicability == "overlapping-label-window", evidence=evidence, release_profile=release_profile),
+            _classify_and_consume_na("G2-P06", evidence_present=bool(event_gap_refs), applicable=overlap_applicability == "overlapping-event-window", evidence=evidence, release_profile=release_profile),
+        )
+    )
+    blocked: list[BlockedClaim] = list(consumption.blocked_claims)
+    review_claims = list(consumption.review_claims)
     if overlap_applicability == "unknown" and strategy_class in {"ml", "event-driven", "hybrid"}:
         blocked.append(
             BlockedClaim(
@@ -448,68 +450,24 @@ def validate_gate2_cv_governance(
                 unlock_condition="declare_overlap_applicability_or_structured_non_overlap_reason",
             )
         )
-    purge_refs = _refs_from_value(evidence.get("purge_embargo_refs") or evidence.get("purge_window_ref") or evidence.get("purge_window_refs"), "purge_embargo_refs", GATE_2_CV)
-    embargo_refs = _refs_from_value(evidence.get("embargo_gap_ref") or evidence.get("embargo_gap_refs"), "embargo_gap_ref", GATE_2_CV)
-    event_gap_refs = _refs_from_value(evidence.get("event_safe_gap_refs"), "event_safe_gap_refs", GATE_2_CV)
-    if requires_purge and not purge_refs:
-        na_reason = str(evidence.get("purge_embargo_na_reason") or evidence.get("n_a_reason") or "")
-        if not na_reason:
-            blocked.append(
-                BlockedClaim(
-                    claim_id="leakage_safe_cv",
-                    reason="purge/embargo evidence or n/a-with-reason is required.",
-                    source_gate=GATE_2_CV,
-                    release_wording_impact="Block leakage-safe CV wording.",
-                    unlock_condition="provide_purge_embargo_ref_or_explicit_non_overlap_reason",
-                )
-            )
-        else:
-            refs.append(ArtifactRef("purge_embargo_refs", owner_gate=GATE_2_CV, status=ReliabilityGateStatus.NEEDS_REVIEW, n_a_reason=na_reason))
-    if overlap_applicability == "overlapping-label-window" and not embargo_refs:
-        blocked.append(
-            BlockedClaim(
-                claim_id="embargo_gap_missing",
-                reason="ML overlapping label windows require embargo gap evidence.",
-                source_gate=GATE_2_CV,
-                release_wording_impact="Block leakage-safe CV wording.",
-                unlock_condition="provide_embargo_gap_ref",
-            )
-        )
-    if overlap_applicability == "overlapping-event-window" and not (embargo_refs or event_gap_refs):
-        blocked.append(
-            BlockedClaim(
-                claim_id="event_safe_gap_missing",
-                reason="Event overlapping windows require event-safe gap / embargo analog evidence.",
-                source_gate=GATE_2_CV,
-                release_wording_impact="Block leakage-safe event validation wording.",
-                unlock_condition="provide_event_safe_gap_ref",
-            )
-        )
     refs.extend(embargo_refs)
     refs.extend(event_gap_refs)
-    if overlap_applicability == "non-overlapping-deterministic" and not purge_refs:
-        na_reason = str(evidence.get("purge_embargo_na_reason") or evidence.get("n_a_reason") or "")
-        if not na_reason:
-            blocked.append(
-                BlockedClaim(
-                    claim_id="non_overlap_na_reason_missing",
-                    reason="non-overlapping CV requires an explicit n/a-with-reason for purge/embargo.",
-                    source_gate=GATE_2_CV,
-                    release_wording_impact="Block leakage-safe CV wording.",
-                    unlock_condition="provide_non_overlap_na_reason",
-                )
-            )
-        else:
-            refs.append(ArtifactRef("purge_embargo_refs", owner_gate=GATE_2_CV, status=ReliabilityGateStatus.NEEDS_REVIEW, n_a_reason=na_reason))
     refs.extend(purge_refs)
-    if blocked and _is_release_blocking_profile(release_profile):
+    # status-relevant refs 与 audit-only refs 都只在 Gate-local status 已计算后
+    # 附加，避免 conditional audit ref 被 shared evaluator 误升为 Gate NR。
+    refs.extend(consumption.status_relevant_refs)
+    refs.extend(consumption.audit_only_refs)
+    if consumption.status_floor is ReliabilityGateStatus.BLOCKED:
+        status = ReliabilityGateStatus.BLOCKED
+        reason = ReleaseBlockingReason("missing_purge_embargo_governance", "CV governance evidence is incomplete.", GATE_2_CV)
+    elif blocked and _is_release_blocking_profile(release_profile):
         status = ReliabilityGateStatus.BLOCKED
         reason = ReleaseBlockingReason("missing_purge_embargo_governance", "CV governance evidence is incomplete.", GATE_2_CV)
     elif blocked:
         status = ReliabilityGateStatus.NEEDS_REVIEW
     else:
-        status = ReliabilityGateStatus.PASS
-    return ReliabilityGateSummary(GATE_2_CV, status, tuple(refs), tuple(blocked), reason, operation_counts=counts, evidence_identity=evidence_identity)
+        status = _apply_status_floor(ReliabilityGateStatus.PASS, consumption.status_floor)
+    return ReliabilityGateSummary(GATE_2_CV, status, tuple(refs), tuple(blocked + review_claims), reason, operation_counts=counts, evidence_identity=evidence_identity)
 
 
 def validate_gate3_pit_universe(
@@ -525,17 +483,27 @@ def validate_gate3_pit_universe(
     refs = list(_refs_from_value(evidence.get("pit_universe_refs"), "pit_universe_refs", GATE_3_PIT_UNIVERSE))
     refs.extend(_refs_from_value(evidence.get("cr153_universe_pit_audit_refs"), "cr153_universe_pit_audit_refs", GATE_3_PIT_UNIVERSE, source_cr="CR-153"))
     lifecycle = str(evidence.get("cr153_slot_lifecycle") or "retained_as_source_ref")
-    blocked: list[BlockedClaim] = []
+    consumption = _classify_and_consume_na(
+        "G3-P01",
+        evidence_present=bool(refs),
+        applicable=True,
+        evidence=evidence,
+        release_profile=release_profile,
+    )
+    blocked: list[BlockedClaim] = list(consumption.blocked_claims)
     if lifecycle not in {"retained_as_source_ref", "delegated_to_cr154", "deprecation_deferred"}:
         blocked.append(BlockedClaim("cr153_universe_slot_lifecycle", "CR153 universe_pit_audit lifecycle must be explicit.", GATE_3_PIT_UNIVERSE, "Block PIT universe compatibility wording.", "declare_retained_delegated_or_deferred_lifecycle"))
-    if not refs and not str(evidence.get("n_a_reason") or "").strip():
-        blocked.append(BlockedClaim("survivorship_free_universe", "PIT / survivorship-free universe refs or n/a-with-reason are required.", GATE_3_PIT_UNIVERSE, "Block survivorship-free and full-history wording.", "provide_local_static_pit_universe_ref_or_na_reason"))
-    if blocked:
+    refs.extend(consumption.status_relevant_refs)
+    refs.extend(consumption.audit_only_refs)
+    if consumption.status_floor is ReliabilityGateStatus.BLOCKED:
+        status = ReliabilityGateStatus.BLOCKED
+        reason = ReleaseBlockingReason("missing_pit_universe_contract", "PIT universe gate evidence is incomplete.", GATE_3_PIT_UNIVERSE)
+    elif blocked:
         status = ReliabilityGateStatus.BLOCKED if _is_release_blocking_profile(release_profile) else ReliabilityGateStatus.NEEDS_REVIEW
         reason = ReleaseBlockingReason("missing_pit_universe_contract", "PIT universe gate evidence is incomplete.", GATE_3_PIT_UNIVERSE)
     else:
-        status = ReliabilityGateStatus.PASS
-    return ReliabilityGateSummary(GATE_3_PIT_UNIVERSE, status, tuple(refs), tuple(blocked), reason, operation_counts=counts, limitations=("no_real_universe_build",))
+        status = _apply_status_floor(ReliabilityGateStatus.PASS, consumption.status_floor)
+    return ReliabilityGateSummary(GATE_3_PIT_UNIVERSE, status, tuple(refs), tuple(blocked + list(consumption.review_claims)), reason, operation_counts=counts, limitations=("no_real_universe_build",))
 
 
 def validate_gate4_capacity_impact(
@@ -549,20 +517,26 @@ def validate_gate4_capacity_impact(
     if status is ReliabilityGateStatus.BLOCKED:
         return ReliabilityGateSummary(GATE_4_CAPACITY_IMPACT, status, blocked_claims=claims, release_blocking_reason=reason, operation_counts=counts)
     family = str(evidence.get("impact_model_family") or "").strip()
-    refs = list(_refs_from_value(evidence.get("impact_model_ref"), "impact_model_ref", GATE_4_CAPACITY_IMPACT))
-    refs.extend(_refs_from_value(evidence.get("adv_participation_ref"), "adv_participation_ref", GATE_4_CAPACITY_IMPACT))
-    refs.extend(_refs_from_value(evidence.get("capacity_dollars_ref"), "capacity_dollars_ref", GATE_4_CAPACITY_IMPACT))
-    refs.extend(_refs_from_value(evidence.get("liquidity_sizing_refs"), "liquidity_sizing_refs", GATE_4_CAPACITY_IMPACT))
-    blocked: list[BlockedClaim] = []
-    if family not in IMPACT_MODEL_FAMILIES:
+    impact_refs = _refs_from_value(evidence.get("impact_model_ref"), "impact_model_ref", GATE_4_CAPACITY_IMPACT)
+    adv_refs = _refs_from_value(evidence.get("adv_participation_ref"), "adv_participation_ref", GATE_4_CAPACITY_IMPACT)
+    capacity_refs = _refs_from_value(evidence.get("capacity_dollars_ref"), "capacity_dollars_ref", GATE_4_CAPACITY_IMPACT)
+    liquidity_refs = _refs_from_value(evidence.get("liquidity_sizing_refs"), "liquidity_sizing_refs", GATE_4_CAPACITY_IMPACT)
+    refs = list(impact_refs + adv_refs + capacity_refs + liquidity_refs)
+    active_families = {"square_root", "almgren_chriss", "gatheral", "custom"}
+    cost_status = _status_value(evidence.get("cost_underestimation_status") or ReliabilityGateStatus.BLOCKED.value)
+    consumption = _merge_na_consumptions(
+        (
+            _classify_and_consume_na("G4-P01", evidence_present=family in active_families and bool(impact_refs), applicable=True, evidence=evidence, release_profile=release_profile),
+            _classify_and_consume_na("G4-P02", evidence_present=bool(adv_refs), applicable=True, evidence=evidence, release_profile=release_profile),
+            _classify_and_consume_na("G4-P03", evidence_present=bool(capacity_refs), applicable=True, evidence=evidence, release_profile=release_profile),
+            _classify_and_consume_na("G4-P04", evidence_present=bool(liquidity_refs), applicable=True, evidence=evidence, release_profile=release_profile),
+            _classify_and_consume_na("G4-P05", evidence_present=cost_status == ReliabilityGateStatus.PASS.value, applicable=True, evidence=evidence, release_profile=release_profile),
+        )
+    )
+    blocked: list[BlockedClaim] = list(_gate4_compatible_claims(consumption.blocked_claims))
+    if family and family not in IMPACT_MODEL_FAMILIES:
         blocked.append(BlockedClaim("impact_model_family_invalid", "impact_model_family must be a controlled enum.", GATE_4_CAPACITY_IMPACT, "Block market-impact wording.", "use_square_root_almgren_chriss_gatheral_custom_or_na_with_reason"))
-    if family in {"square_root", "almgren_chriss", "gatheral", "custom"} and not _has_ref(evidence.get("impact_model_ref")):
-        blocked.append(BlockedClaim("impact_model_ref_missing", "impact_model_ref is required for active impact model families.", GATE_4_CAPACITY_IMPACT, "Block impact-model wording.", "provide_static_impact_model_ref"))
-    if family == "n/a-with-reason" and not str(evidence.get("impact_model_na_reason") or "").strip():
-        blocked.append(BlockedClaim("impact_model_na_reason_missing", "n/a-with-reason requires a reason.", GATE_4_CAPACITY_IMPACT, "Block impact-model wording.", "provide_impact_model_na_reason"))
-    if family == "n/a-with-reason" and not _has_na_claim_boundary(evidence, "impact_model"):
-        blocked.append(BlockedClaim("impact_model_na_boundary_missing", "n/a-with-reason requires claim_limit, owner and trigger.", GATE_4_CAPACITY_IMPACT, "Block impact-model wording.", "provide_claim_limit_owner_and_trigger"))
-    if family == "custom":
+    if family == "custom" and impact_refs:
         custom_policy = _as_mapping(evidence.get("custom_model_policy"))
         missing_custom_fields = [
             field_name
@@ -571,26 +545,21 @@ def validate_gate4_capacity_impact(
         ]
         if missing_custom_fields:
             blocked.append(BlockedClaim("custom_impact_policy_missing", f"custom impact model policy missing: {', '.join(missing_custom_fields)}.", GATE_4_CAPACITY_IMPACT, "Block custom impact wording.", "provide_complete_custom_model_policy"))
-    for field_name, claim_id, impact in (
-        ("adv_participation_ref", "adv_participation_missing", "Block scalable capacity wording."),
-        ("capacity_dollars_ref", "capacity_dollars_missing", "Block production capacity wording."),
-        ("liquidity_sizing_refs", "liquidity_sizing_missing", "Block liquidity sizing wording."),
-    ):
-        if not _has_ref(evidence.get(field_name)) and not _has_na_reason(evidence, field_name):
-            blocked.append(BlockedClaim(claim_id, f"{field_name} evidence or n/a-with-reason is required.", GATE_4_CAPACITY_IMPACT, impact, f"provide_{field_name}_or_structured_na_reason"))
-    cost_status = _status_value(evidence.get("cost_underestimation_status") or ReliabilityGateStatus.BLOCKED.value)
-    if cost_status != ReliabilityGateStatus.PASS.value and not str(evidence.get("cost_underestimation_na_reason") or "").strip():
-        blocked.append(BlockedClaim("cost_underestimation_status_missing", "cost_underestimation_status must be PASS or carry a reason.", GATE_4_CAPACITY_IMPACT, "Block complete cost / true TCA wording.", "provide_cost_underestimation_status_or_reason"))
     if evidence.get("no_real_tca_claim") is not True:
         blocked.append(BlockedClaim("no_real_tca_claim_missing", "CR154 first wave must explicitly avoid real TCA claims.", GATE_4_CAPACITY_IMPACT, "Block true TCA / execution-ready wording.", "set_no_real_tca_claim_true_and_remove_real_execution_claims"))
     if bool(evidence.get("real_tca_claim") or evidence.get("broker_fill_claim") or evidence.get("execution_replay_claim") or evidence.get("order_book_claim") or evidence.get("runtime_calibration_claim") or evidence.get("execution_ready_claim")):
         blocked.append(BlockedClaim("real_tca_not_authorized", "Real TCA, broker fill and execution replay claims are not authorized.", GATE_4_CAPACITY_IMPACT, "Block real TCA / broker readiness wording.", "open_runtime_or_execution_data_authorization_gate"))
-    if blocked:
+    refs.extend(consumption.status_relevant_refs)
+    refs.extend(consumption.audit_only_refs)
+    if consumption.status_floor is ReliabilityGateStatus.BLOCKED:
+        status = ReliabilityGateStatus.BLOCKED
+        reason = ReleaseBlockingReason("capacity_impact_contract_incomplete", "Capacity/impact evidence is incomplete or overclaims real TCA.", GATE_4_CAPACITY_IMPACT)
+    elif blocked:
         status = ReliabilityGateStatus.BLOCKED if _is_release_blocking_profile(release_profile) else ReliabilityGateStatus.NEEDS_REVIEW
         reason = ReleaseBlockingReason("capacity_impact_contract_incomplete", "Capacity/impact evidence is incomplete or overclaims real TCA.", GATE_4_CAPACITY_IMPACT)
     else:
-        status = ReliabilityGateStatus.PASS
-    return ReliabilityGateSummary(GATE_4_CAPACITY_IMPACT, status, tuple(refs), tuple(blocked), reason, operation_counts=counts, limitations=("no_real_tca",))
+        status = _apply_status_floor(ReliabilityGateStatus.PASS, consumption.status_floor)
+    return ReliabilityGateSummary(GATE_4_CAPACITY_IMPACT, status, tuple(refs), tuple(blocked + list(consumption.review_claims)), reason, operation_counts=counts, limitations=("no_real_tca",))
 
 
 def validate_gate5_slots(
@@ -605,6 +574,7 @@ def validate_gate5_slots(
         return ReliabilityGateSummary(GATE_5_REGIME_ATTRIBUTION_RECONCILIATION, status, blocked_claims=claims, release_blocking_reason=reason, operation_counts=counts)
     refs: list[ArtifactRef] = []
     blocked: list[BlockedClaim] = []
+    consumptions: list[_NaConsumption] = []
     if evidence.get("no_runtime_reconciliation_claim") is not True:
         blocked.append(
             BlockedClaim(
@@ -615,13 +585,33 @@ def validate_gate5_slots(
                 "set_no_runtime_reconciliation_claim_true_and_remove_runtime_reconciliation_claims",
             )
         )
-    for slot, expected_type in (("regime_slots", "regime"), ("attribution_slots", "attribution"), ("reconciliation_slots", "reconciliation")):
+    for slot, expected_type, policy_id in (
+        ("regime_slots", "regime", "G5-P01"),
+        ("attribution_slots", "attribution", "G5-P02"),
+        ("reconciliation_slots", "reconciliation", "G5-P03"),
+    ):
         slot_items = _as_sequence(evidence.get(slot))
-        if not slot_items:
-            if _has_na_reason(evidence, slot) and _has_na_claim_boundary(evidence, slot):
-                refs.append(ArtifactRef(slot, owner_gate=GATE_5_REGIME_ATTRIBUTION_RECONCILIATION, status=ReliabilityGateStatus.NEEDS_REVIEW, n_a_reason=str(evidence.get(f"{slot}_na_reason") or evidence.get("n_a_reason") or "")))
-            else:
-                blocked.append(BlockedClaim(slot, f"{slot} requires structured slot refs or n/a-with-reason.", GATE_5_REGIME_ATTRIBUTION_RECONCILIATION, f"Block {slot} readiness wording.", f"provide_{slot}_refs_or_structured_na_reason"))
+        has_slot_ref = any(_has_ref(_as_mapping(item).get("refs")) for item in slot_items)
+        classifier_evidence = dict(evidence)
+        nested_reason = next(
+            (
+                str(_as_mapping(item).get("n_a_reason") or _as_mapping(item).get("na_reason") or "").strip()
+                for item in slot_items
+                if str(_as_mapping(item).get("n_a_reason") or _as_mapping(item).get("na_reason") or "").strip()
+            ),
+            "",
+        )
+        if nested_reason and not classifier_evidence.get(f"{slot}_na_reason"):
+            classifier_evidence[f"{slot}_na_reason"] = nested_reason
+        consumptions.append(
+            _classify_and_consume_na(
+                policy_id,
+                evidence_present=has_slot_ref,
+                applicable=True,
+                evidence=classifier_evidence,
+                release_profile=release_profile,
+            )
+        )
         for item in slot_items:
             slot_ref, slot_claims = _validate_gate5_slot(item, expected_type)
             refs.extend(slot_ref)
@@ -636,12 +626,19 @@ def validate_gate5_slots(
         or evidence.get("paper_live_reconciliation_claim")
     ):
         blocked.append(BlockedClaim("real_reconciliation_not_authorized", "Real broker/runtime reconciliation is not authorized in CR154.", GATE_5_REGIME_ATTRIBUTION_RECONCILIATION, "Block real reconciliation wording.", "open_runtime_reconciliation_authorization_gate"))
-    if blocked:
+    consumption = _merge_na_consumptions(consumptions)
+    blocked.extend(consumption.blocked_claims)
+    refs.extend(consumption.status_relevant_refs)
+    refs.extend(consumption.audit_only_refs)
+    if consumption.status_floor is ReliabilityGateStatus.BLOCKED:
+        status = ReliabilityGateStatus.BLOCKED
+        reason = ReleaseBlockingReason("gate5_slots_incomplete", "Gate 5 slots are incomplete or overclaim real reconciliation.", GATE_5_REGIME_ATTRIBUTION_RECONCILIATION)
+    elif blocked:
         status = ReliabilityGateStatus.BLOCKED if _is_release_blocking_profile(release_profile) else ReliabilityGateStatus.NEEDS_REVIEW
         reason = ReleaseBlockingReason("gate5_slots_incomplete", "Gate 5 slots are incomplete or overclaim real reconciliation.", GATE_5_REGIME_ATTRIBUTION_RECONCILIATION)
     else:
-        status = ReliabilityGateStatus.PASS
-    return ReliabilityGateSummary(GATE_5_REGIME_ATTRIBUTION_RECONCILIATION, status, tuple(refs), tuple(blocked), reason, operation_counts=counts, limitations=("no_real_reconciliation",))
+        status = _apply_status_floor(ReliabilityGateStatus.PASS, consumption.status_floor)
+    return ReliabilityGateSummary(GATE_5_REGIME_ATTRIBUTION_RECONCILIATION, status, tuple(refs), tuple(blocked + list(consumption.review_claims)), reason, operation_counts=counts, limitations=("no_real_reconciliation",))
 
 
 def resolve_admission_policy(
@@ -674,6 +671,14 @@ def resolve_admission_policy(
     present_gate_ids = {str(summary.get("gate_id") or "").strip() for summary in gate_data}
     mandatory_gate_ids = {GATE_1_STATISTICAL, GATE_2_CV, GATE_3_PIT_UNIVERSE, GATE_4_CAPACITY_IMPACT, GATE_5_REGIME_ATTRIBUTION_RECONCILIATION}
     has_distinct_mandatory_gates = mandatory_gate_ids <= present_gate_ids
+    mandatory_needs_review_gate_ids = tuple(
+        sorted(
+            str(summary.get("gate_id") or "").strip()
+            for summary in gate_data
+            if str(summary.get("gate_id") or "").strip() in mandatory_gate_ids
+            and _status_value(summary.get("status")) == ReliabilityGateStatus.NEEDS_REVIEW.value
+        )
+    )
     if tier == "T2" and any(status in {ReliabilityGateStatus.BLOCKED.value, ReliabilityGateStatus.FAIL.value} for status in gate_statuses):
         return _policy_blocked(tier, mode, "mandatory_gate_evidence_blocked", "Release-readiness wording requires Gate 1-5 not blocked or failed.", all_claims)
     if tier == "T2" and not has_distinct_mandatory_gates:
@@ -682,6 +687,36 @@ def resolve_admission_policy(
         return _policy_blocked(tier, mode, "default_required_gate_evidence_missing", "Admission candidate wording requires explicit Gate 1-5 evidence or structured n/a reasons.", all_claims)
     if tier == "T1" and any(status in {ReliabilityGateStatus.BLOCKED.value, ReliabilityGateStatus.FAIL.value} for status in gate_statuses):
         return _policy_blocked(tier, mode, "default_required_gate_blocked", "Admission candidate wording cannot bypass blocked gates.", all_claims)
+    if mandatory_needs_review_gate_ids:
+        unresolved = ", ".join(mandatory_needs_review_gate_ids)
+        if tier == "T0":
+            return AdmissionPolicyResult(
+                tier=tier,
+                gate_mode=mode,
+                status=ReliabilityGateStatus.NEEDS_REVIEW,
+                release_wording=f"diagnostic-only; mandatory Gate review remains unresolved: {unresolved}; no admission or readiness claim",
+                blocked_claims=tuple(_dedupe_blocked_claims(all_claims)),
+                fallback_reason="mandatory_gate_needs_review",
+                source_rule_id="cr170-t0-mandatory-needs-review",
+            )
+        if tier == "T1":
+            return _policy_blocked(
+                tier,
+                mode,
+                "mandatory_gate_needs_review",
+                f"Admission candidate wording requires review completion for: {unresolved}.",
+                all_claims,
+                source_rule_id="cr170-t1-mandatory-needs-review-blocked",
+            )
+        if tier == "T2":
+            return _policy_blocked(
+                tier,
+                mode,
+                "mandatory_gate_needs_review",
+                f"Release-readiness wording requires review completion for: {unresolved}.",
+                all_claims,
+                source_rule_id="cr170-t2-mandatory-needs-review-blocked",
+            )
 
     requested = {str(claim) for claim in requested_claims}
     wording = "local/static/fixture reliability gate contract passed; not paper/live/trading/broker/runtime readiness"
@@ -726,33 +761,38 @@ def _gate1_statistical_artifact_policy(
     artifacts: Mapping[str, Any],
     release_profile: str,
     claim_types: Sequence[str],
-) -> tuple[ReliabilityGateStatus, ReleaseBlockingReason | None, tuple[BlockedClaim, ...]]:
+) -> tuple[
+    ReliabilityGateStatus,
+    ReleaseBlockingReason | None,
+    tuple[BlockedClaim, ...],
+    tuple[ArtifactRef, ...],
+]:
     claims = {str(item) for item in claim_types}
-    blocked: list[BlockedClaim] = []
-    needs_review: list[BlockedClaim] = []
     wrc_refs = _as_sequence(artifacts.get("white_reality_check_or_hansen_spa_refs"))
     multiple_testing_refs = _as_sequence(artifacts.get("multiple_testing_correction_refs"))
     fdr_bh_refs = _as_sequence(artifacts.get("fdr_bh_refs"))
     pbo_refs = _as_sequence(artifacts.get("pbo_or_cscv_refs"))
     dsr_refs = _as_sequence(artifacts.get("dsr_or_sharpe_ic_deflation_refs"))
     trial = _as_mapping(artifacts.get("trial_count_and_effective_trials"))
-    if _is_release_blocking_profile(release_profile) or {"statistical_significance", "performance_robustness", "production_like"} & claims:
-        if not multiple_testing_refs and not str(artifacts.get("multiple_testing_correction_na_reason") or "").strip():
-            blocked.append(BlockedClaim("multiple_testing_correction", "multiple-testing correction refs are required.", GATE_1_STATISTICAL, "Block statistical reliability wording.", "provide_multiple_testing_correction_ref_or_na_reason"))
-        if not fdr_bh_refs and not str(artifacts.get("fdr_bh_na_reason") or "").strip():
-            blocked.append(BlockedClaim("fdr_bh_correction", "FDR/BH or equivalent refs are required.", GATE_1_STATISTICAL, "Block FDR/significance wording.", "provide_fdr_bh_or_equivalent_ref_or_na_reason"))
-    if not wrc_refs:
-        claim = BlockedClaim("statistical_significance", "WRC/SPA or equivalent data-snooping correction is missing.", GATE_1_STATISTICAL, "Block statistical significance / robustness wording.", "provide_wrc_spa_or_equivalent_ref")
-        if _is_release_blocking_profile(release_profile) or "statistical_significance" in claims:
-            blocked.append(claim)
-        else:
-            needs_review.append(claim)
-    if _is_release_blocking_profile(release_profile) and not pbo_refs:
-        blocked.append(BlockedClaim("performance_robustness", "PBO/CSCV evidence is missing.", GATE_1_STATISTICAL, "Block performance robustness wording.", "provide_pbo_or_cscv_ref"))
-    if {"sharpe", "ic", "performance_robustness"} & claims and not dsr_refs:
-        blocked.append(BlockedClaim("sharpe_ic_reliability", "DSR / Sharpe / IC deflation evidence is missing.", GATE_1_STATISTICAL, "Block Sharpe/IC reliability wording.", "provide_dsr_or_deflation_ref"))
-    if (pbo_refs or dsr_refs or _is_release_blocking_profile(release_profile)) and not _valid_trial_counts(trial):
-        blocked.append(BlockedClaim("trial_count_policy", "raw_trial_count and effective_trial_count must be >= 1, effective_trial_count must not exceed raw_trial_count without approximation_reason, and provenance_ref is required.", GATE_1_STATISTICAL, "Block deflated performance wording.", "provide_valid_trial_counts"))
+    broad_statistical_claim = bool(
+        _is_release_blocking_profile(release_profile)
+        or {"statistical_significance", "performance_robustness", "production_like"} & claims
+    )
+    pbo_applicable = _is_release_blocking_profile(release_profile)
+    dsr_applicable = bool({"sharpe", "ic", "performance_robustness"} & claims)
+    trial_applicable = bool(pbo_refs or dsr_refs or _is_release_blocking_profile(release_profile))
+    consumption = _merge_na_consumptions(
+        (
+            _classify_and_consume_na("G1-P01", evidence_present=bool(multiple_testing_refs), applicable=broad_statistical_claim, evidence=artifacts, release_profile=release_profile),
+            _classify_and_consume_na("G1-P02", evidence_present=bool(fdr_bh_refs), applicable=broad_statistical_claim, evidence=artifacts, release_profile=release_profile),
+            _classify_and_consume_na("G1-P03", evidence_present=bool(wrc_refs), applicable=True, evidence=artifacts, release_profile=release_profile),
+            _classify_and_consume_na("G1-P04", evidence_present=bool(pbo_refs), applicable=pbo_applicable, evidence=artifacts, release_profile=release_profile),
+            _classify_and_consume_na("G1-P05", evidence_present=bool(dsr_refs), applicable=dsr_applicable, evidence=artifacts, release_profile=release_profile),
+            _classify_and_consume_na("G1-P06", evidence_present=_valid_trial_counts(trial), applicable=trial_applicable, evidence=artifacts, release_profile=release_profile),
+        )
+    )
+    blocked = list(consumption.blocked_claims)
+    needs_review = list(consumption.review_claims)
     if _trial_counts_need_review(trial):
         needs_review.append(
             BlockedClaim(
@@ -763,11 +803,14 @@ def _gate1_statistical_artifact_policy(
                 "review_effective_trial_count_approximation",
             )
         )
-    if blocked:
-        return ReliabilityGateStatus.BLOCKED, ReleaseBlockingReason("statistical_reliability_artifact_missing", "Gate 1 mandatory statistical reliability artifacts are missing.", GATE_1_STATISTICAL), tuple(blocked)
-    if needs_review:
-        return ReliabilityGateStatus.NEEDS_REVIEW, None, tuple(needs_review)
-    return ReliabilityGateStatus.PASS, None, ()
+    refs = consumption.status_relevant_refs + consumption.audit_only_refs
+    if consumption.status_floor is ReliabilityGateStatus.BLOCKED:
+        return ReliabilityGateStatus.BLOCKED, ReleaseBlockingReason("statistical_reliability_artifact_missing", "Gate 1 mandatory statistical reliability artifacts are missing.", GATE_1_STATISTICAL), tuple(blocked + needs_review), refs
+    if blocked and _is_release_blocking_profile(release_profile):
+        return ReliabilityGateStatus.BLOCKED, ReleaseBlockingReason("statistical_reliability_artifact_missing", "Gate 1 mandatory statistical reliability artifacts are missing.", GATE_1_STATISTICAL), tuple(blocked + needs_review), refs
+    if blocked or needs_review or consumption.status_floor is ReliabilityGateStatus.NEEDS_REVIEW:
+        return ReliabilityGateStatus.NEEDS_REVIEW, None, tuple(blocked + needs_review), refs
+    return ReliabilityGateStatus.PASS, None, (), refs
 
 
 def _propagate_gate3_gate4(
@@ -845,6 +888,138 @@ def _has_ref(value: Any) -> bool:
     return any(bool(str(ref.ref or "").strip()) for ref in _refs_from_value(value, "ref", "shared"))
 
 
+def _consume_na_decision(
+    decision: NaEvidenceDecision,
+    *,
+    policy: NaPolicySpec,
+) -> _NaConsumption:
+    if decision.state is NaEvidenceState.PRESENT:
+        return _NaConsumption()
+
+    review_ref = ArtifactRef(
+        artifact_type=f"{policy.policy_id.lower()}_n_a_boundary",
+        owner_gate=policy.gate_id,
+        status=ReliabilityGateStatus.NEEDS_REVIEW,
+        n_a_reason=decision.reason_id,
+        reason_id=decision.reason_id,
+        source_cr="CR-170",
+    )
+    claim = BlockedClaim(
+        claim_id=decision.reason_id,
+        reason=f"{policy.policy_id} N/A evidence state is {decision.state.value}.",
+        source_gate=policy.gate_id,
+        release_wording_impact=f"Block unconditional wording for {policy.policy_id}.",
+        unlock_condition=f"provide_present_evidence_or_complete_owned_boundary_for_{policy.policy_id.lower().replace('-', '_')}",
+        evidence_ref=f"policy://CR-170/{policy.policy_id}",
+    )
+
+    if decision.state is NaEvidenceState.NA_WITH_COMPLETE_BOUNDARY:
+        if policy.complete_na_disposition is CompleteNaDisposition.PROHIBITED:
+            return _NaConsumption(
+                blocked_claims=(claim,),
+                status_floor=ReliabilityGateStatus.BLOCKED,
+            )
+        if decision.applicable:
+            return _NaConsumption(
+                review_claims=(claim,),
+                status_relevant_refs=(review_ref,),
+                status_floor=ReliabilityGateStatus.NEEDS_REVIEW,
+            )
+        return _NaConsumption(audit_only_refs=(review_ref,))
+
+    # 纯缺失且 unit 明确不适用时保留历史行为；如果 caller 试图用通用
+    # reason 或不完整 boundary 声明不适用，则必须留下 non-PASS 信号。
+    if not decision.applicable and decision.state is NaEvidenceState.MISSING:
+        return _NaConsumption()
+    return _NaConsumption(
+        blocked_claims=(claim,),
+        status_floor=ReliabilityGateStatus.NEEDS_REVIEW,
+    )
+
+
+def _apply_status_floor(
+    current: ReliabilityGateStatus,
+    floor: ReliabilityGateStatus | None,
+) -> ReliabilityGateStatus:
+    if floor is None:
+        return current
+    rank = {
+        ReliabilityGateStatus.PASS: 0,
+        ReliabilityGateStatus.NEEDS_REVIEW: 1,
+        ReliabilityGateStatus.FAIL: 2,
+        ReliabilityGateStatus.BLOCKED: 3,
+    }
+    return floor if rank[floor] > rank[current] else current
+
+
+def _merge_na_consumptions(consumptions: Sequence[_NaConsumption]) -> _NaConsumption:
+    blocked: list[BlockedClaim] = []
+    review: list[BlockedClaim] = []
+    status_refs: list[ArtifactRef] = []
+    audit_refs: list[ArtifactRef] = []
+    floor: ReliabilityGateStatus | None = None
+    for consumption in consumptions:
+        blocked.extend(consumption.blocked_claims)
+        review.extend(consumption.review_claims)
+        status_refs.extend(consumption.status_relevant_refs)
+        audit_refs.extend(consumption.audit_only_refs)
+        floor = _apply_status_floor(floor or ReliabilityGateStatus.PASS, consumption.status_floor)
+    return _NaConsumption(
+        blocked_claims=tuple(blocked),
+        review_claims=tuple(review),
+        status_relevant_refs=tuple(status_refs),
+        audit_only_refs=tuple(audit_refs),
+        status_floor=None if floor is ReliabilityGateStatus.PASS else floor,
+    )
+
+
+def _classify_and_consume_na(
+    policy_id: str,
+    *,
+    evidence_present: bool,
+    applicable: bool,
+    evidence: Mapping[str, Any],
+    release_profile: str,
+) -> _NaConsumption:
+    policy = NA_POLICY_BY_ID[policy_id]
+    decision = classify_na_evidence(
+        policy=policy,
+        evidence_present=evidence_present,
+        applicable=applicable,
+        evidence=evidence,
+        release_profile=release_profile,
+    )
+    return _consume_na_decision(decision, policy=policy)
+
+
+def _gate4_compatible_claims(claims: Sequence[BlockedClaim]) -> tuple[BlockedClaim, ...]:
+    """保留 CR-168 adapter 已冻结的 Gate 4 C4 missing claim IDs。"""
+
+    legacy_ids = {
+        "gate4_g4_p02_": "adv_participation_missing",
+        "gate4_g4_p03_": "capacity_dollars_missing",
+        "gate4_g4_p04_": "liquidity_sizing_missing",
+    }
+    compatible: list[BlockedClaim] = []
+    for claim in claims:
+        claim_id = claim.claim_id
+        mapped_id = next(
+            (legacy_id for prefix, legacy_id in legacy_ids.items() if claim_id.startswith(prefix)),
+            claim_id,
+        )
+        compatible.append(
+            BlockedClaim(
+                claim_id=mapped_id,
+                reason=f"{claim_id}: {claim.reason}",
+                source_gate=claim.source_gate,
+                release_wording_impact=claim.release_wording_impact,
+                unlock_condition=claim.unlock_condition,
+                evidence_ref=claim.evidence_ref,
+            )
+        )
+    return tuple(compatible)
+
+
 def _has_na_reason(evidence: Mapping[str, Any], prefix: str) -> bool:
     candidates = (
         f"{prefix}_na_reason",
@@ -919,6 +1094,7 @@ def _policy_blocked(
     blocked_claims: Sequence[BlockedClaim],
     *,
     wording: str = "release-blocking; local/static/fixture gate evidence incomplete",
+    source_rule_id: str | None = None,
 ) -> AdmissionPolicyResult:
     reason = ReleaseBlockingReason(reason_id, message, GATE_6_ADMISSION_POLICY)
     claims = list(blocked_claims)
@@ -931,7 +1107,7 @@ def _policy_blocked(
         blocked_claims=tuple(_dedupe_blocked_claims(claims)),
         release_blocking_reason=reason,
         fallback_reason=reason_id,
-        source_rule_id=f"cr154-{tier.lower()}-{_enum_value(mode)}",
+        source_rule_id=source_rule_id or f"cr154-{tier.lower()}-{_enum_value(mode)}",
     )
 
 

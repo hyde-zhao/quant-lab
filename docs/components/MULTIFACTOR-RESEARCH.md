@@ -5,6 +5,7 @@
 | 版本 | 日期 | 修订人 | 变更要点 |
 |---|---|---|---|
 | v1.0 | 2026-07-11 | meta-doc | 增量补充 CR-163 trial lineage、准入可用性与恢复边界；不回填历史运行。 |
+| v1.1 | 2026-07-15 | host-orchestrator-inline-meta-pm | CR170 增量澄清历史 Stage 3 run 仅为 legacy audit record；当前 `stage3_entry_ready=false`，必须由独立 Stage 3 Launch CR 完成授权、数据/PIT/lineage 与 canonical revalidation。 |
 
 多因子研究组件覆盖 FactorSpec、FactorRunSpec、factor panel、label window、单因子评价、多因子组合和 StrategyAdmissionPackage。它输出“策略准入输入”，不输出真实交易许可。
 
@@ -99,7 +100,11 @@ Mature multifactor research runner 的稳定入口为 `scripts/research/run_mult
 
 默认数据湖根目录为 `/home/hyde/data/quant-lab/data-lake`，与 NAS 末级目录 `/data-lake` 保持一致；研究输出根目录为 `/home/hyde/data/quant-lab/research/runs/stage3_mature_multifactor`。reader 优先读取完整 `canonical/<dataset>/1.0` 目录；catalog 中指向单个 parquet 分片的 `canonical_path` 只作为 lineage ref 使用，避免误读局部分片。
 
-当前通过准入的研究候选运行：
+### 历史运行记录与当前基线边界
+
+下列运行记录是历史审计事实，不是当前 Stage 3 已启动、当前 Stage 3 entry-ready、runtime authorization 或最新 canonical reliability 语义已验证的证明。CR170 启动时的当前基线固定为 `stage3_started=false`、`stage3_entry_ready=false`。若要重新将该历史运行用于正式研究路线或成熟准入，必须由独立 Stage 3 Launch CR 同时核验 scoped research-data authorization、data release、PIT universe、lineage、路线选择、canonical Gate 结果和 verifier 决策；CR170 不执行该 revalidation。
+
+历史曾记录为通过准入的研究候选运行：
 
 | 项 | 值 |
 |---|---|
@@ -123,7 +128,7 @@ Mature multifactor research runner 的稳定入口为 `scripts/research/run_mult
 | factor model validation status | `pass_with_risk` |
 | blocked gates | 无 |
 
-该运行达到 Stage 3 出口标准，可进入 Stage 4 观察审查候选。`pass_with_risk` 门禁仍需在 Stage 4 前后持续跟踪，包括因子溢价显著性、时间切分、风格暴露、参数敏感性、IC 衰减、容量冲击和尾部风险。
+历史记录曾将该运行判定为达到当时的 Stage 3 出口标准并可进入 Stage 4 观察审查候选；该判定不自动延续为当前基线结论。`pass_with_risk` 风险和上述 Stage 3 Launch revalidation 均未由 CR170 解除，仍须跟踪因子溢价显著性、时间切分、风格暴露、参数敏感性、IC 衰减、容量冲击和尾部风险。
 
 关键产物：
 

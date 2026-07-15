@@ -1,11 +1,11 @@
 ---
-status: confirmed-cp2
-version: "1.6"
-confirmed_by: "user-CR169-CP2-review-remediation"
-confirmed_at: "2026-07-14T17:45:00+08:00"
+status: confirmed
+version: "1.8"
+confirmed_by: "user-CR170-CP2"
+confirmed_at: "2026-07-15T12:55:40+08:00"
 engagement_mode: production
 scenario_subject_type: target-artifact
-scenario_subject_id: "CR-169"
+scenario_subject_id: "CR-170"
 target_artifact_type: workflow
 governance_mode: review-gated
 review_policy: strict
@@ -13,7 +13,7 @@ delivery_routing:
   mode: project-readme-contract
   output_root: "docs/product"
   source: docs
-total_use_cases: 10
+total_use_cases: 11
 ---
 
 # Product Use Cases
@@ -38,12 +38,14 @@ total_use_cases: 10
 | v1.4 | 2026-07-14 | host-orchestrator-inline | 回填 CR168 CP2 批准，并把代码评审发现固化为 CP3 义务：CR168 仅在自身 projection 入口以 8-key denylist、strict allowlist、调用前拒绝和调用后非 PASS 断言封堵 N/A reason 逃逸；不宣称 canonical Gate 4 已全局修复。 |
 | v1.5 | 2026-07-14 | host-orchestrator-inline-meta-pm | 增量追加 CR169 C4 fixture/static use case、17 个场景的产品语义、五项 CP2 待决与严格 C3+C4 Gate 4 joint adapter 边界；保留 CR168 C3-only adapter、canonical Gate 4、aggregate 和 CR155 基线。 |
 | v1.6 | 2026-07-14 | host-orchestrator-inline | CR169 CP2 评审整改与批准：明确 Stage 2 complete 不等于 Stage 3 entry-ready，新增 7/7 Stage 2 exit 核验义务，并把 FU-007 007a/007b 仅保留为后续提案。 |
+| v1.7 | 2026-07-15 | host-orchestrator-inline-meta-pm | 增量追加 CR170 canonical Gate 1-5 N/A evidence semantics 与 Gate 6 admission worst-state hardening 用例；明确保留既有底层 worst-state 合并、单独审查 `resolve_admission_policy`，并保留 Stage 3、aggregate 与真实数据边界。 |
+| v1.8 | 2026-07-15 | host-orchestrator-inline-meta-pm | 根据 CP2 评审明确“独立验证者”为 `future consumer`：CR170 只建立可审计契约，当前验证由可靠性 Gate 维护者自验证代行，独立 verifier 实际消费留给 `FU-CR161-006`；补充 consumer 端到端调用期望，不增加用例、需求或场景分母。 |
 
 ## 状态
 
-- 文档状态：confirmed-cp2
-- 关联 CR：`CR-157` / `CR-158` / `CR-160` / `CR-161` / `CR-162` / `CR-163` / `CR-164` / `CR-166` / `CR-168` / `CR-169`
-- 当前门禁：CR169 CP2 已批准；仅进入 CP3/HLD 设计，Story、LLD、实现和验证仍受后续门禁阻断
+- 文档状态：confirmed（CR170 CP2 approved）
+- 关联 CR：`CR-157` / `CR-158` / `CR-160` / `CR-161` / `CR-162` / `CR-163` / `CR-164` / `CR-166` / `CR-168` / `CR-169` / `CR-170`
+- 当前门禁：CR170 CP2 待人工批准；CP2 前不得进入 HLD/CP3、Story、LLD、实现或验证
 - 旧基线保留：当前仓库未发现既有 `docs/product/USE-CASES.md`，本文件作为产品层用例入口；既有组件说明和场景文档不被重写。
 
 ## UC-58 多因子策略研究到准入
@@ -462,3 +464,52 @@ Canonical answer：`process/context/CR164-CP2-SGQ-BATCH.yaml`。该回答不是 
 | FU-CR161-006 | independent verifier lane | candidate | 不阻塞 CP2；若未完成，CP8 必须披露 verifier-independence 风险。 |
 | FU-CR161-007 | canonical Gate 4 global N/A hardening、C1-C4 aggregate orchestration 与 CR155 promotion decision | candidate；可评估 007a/007b 拆分 | 007a（canonical N/A 语义硬化）与 007b（aggregate + CR155 regression）只是后续提案；各自必须先有独立 CR/CP0 conflict precheck 和用户授权，当前不启动。 |
 | DF-CR169-REAL-C4 | real ADV/liquidity/capacity calibration | not-authorized | Stage 3 独立数据、方法、权限与审计 CR。 |
+
+## UC-58-CR170 Canonical Cross-Strategy Reliability N/A Semantics and Admission Hardening
+
+| 字段 | 内容 |
+|---|---|
+| 用例 ID | UC-58-CR170 |
+| 名称 | Canonical Gate 1-5 N/A evidence semantics 与 Gate 6 admission worst-state hardening |
+| 主要用户 | 量化研究负责人、准入策略维护者、可靠性 Gate 维护者；独立验证者为 `future consumer`，实际 verifier lane 待 `FU-CR161-006` |
+| 目标 | 使 mandatory evidence 的 missing、通用 reason 逃逸、边界不完整或 `NEEDS_REVIEW` 状态均不能在 canonical Gate / Gate 6 中产生无条件 PASS，同时保留合法结构化 N/A 的可审计边界。 |
+| 当前 CR 范围 | 对 Gate 1-5 的 N/A evidence 业务语义做统一 inventory 与 fail-closed 处理；验证并保留现有底层 worst-state merge；在 `resolve_admission_policy` 边界落实 T0/T1/T2/T3 分层结果；回归 CR168/CR169 adapter。 |
+| 明确不在范围 | 当前 Stage 3 runner 集成、真实数据/lake/provider/NAS、aggregate orchestration、FU-007b、CR155 promotion、runtime/broker/QMT/trading、canonical adapter 删除或简化。 |
+
+### CR170 用户旅程
+
+| 步骤 | 用户意图 | 系统行为 | 成功标准 |
+|---|---|---|---|
+| 1 | 识别全部 canonical N/A 判定面 | 形成 Gate 1-5 共 21 个 policy units 的适用性、mandatory/conditional owner 与边界清单。 | inventory `21/21`，每项均有 Gate、字段族、适用条件、owner 和结果规则。 |
+| 2 | 防止 reason 文本冒充 evidence | 将 PRESENT、MISSING、NA_WITH_COMPLETE_BOUNDARY、NA_WITH_INCOMPLETE_BOUNDARY、GENERIC_REASON_ESCAPE 作为业务语义输入。 | mandatory missing/generic/incomplete 的无条件 PASS 数为 `0`。 |
+| 3 | 保护已经正确的聚合语义 | 先证明 `build_shared_gate_summary` 的现有 worst-state merge 可传播 `NEEDS_REVIEW`，只有失败证据才允许修改。 | 既有传播回归 `1/1 PASS`；无失败证据时修改数为 `0`。 |
+| 4 | 让 admission tier 与风险强度一致 | 在 `resolve_admission_policy` 处分离 T0/T1/T2/T3 的最终判定。 | T0=`NEEDS_REVIEW` 且不得声称 PASS；T1/T2=`BLOCKED`；T3=`NOT_AUTHORIZED`。 |
+| 5 | 保持相邻能力边界 | 回归 CR168/CR169 strict adapter，不把 CR170 描述成 current runner 或 aggregate 集成。 | adapter 回归 `2/2 PASS`；current runner 新增 canonical 调用 `0`；CR155 promotion `0`。 |
+| 6 | 消费 canonical 判定且不越过 claim ceiling | 准入策略维护者以公开 Gate summary 调用 `resolve_admission_policy`；mandatory unresolved evidence 在 T0 只得到可诊断 `NEEDS_REVIEW`，在 T1/T2 得到 `BLOCKED`，T3 得到 `NOT_AUTHORIZED`。 | consumer 端到端 tier 结果 `4/4`；无条件 PASS=`0`；独立验证者当前可消费契约=`0`，future consumer contract=`1`。 |
+
+### CR170 用户可用性边界
+
+| 用户 | 本 CR 使用方式 | 当前可用性 | Claim Ceiling |
+|---|---|---|---|
+| 量化研究负责人 | 间接依赖 fail-closed 结论，避免把 unresolved evidence 误读为可靠性 PASS | 当前间接消费 | 不代表真实数据研究或 Stage 3 ready |
+| 准入策略维护者 | 调用公开 Gate validator / `resolve_admission_policy`，消费分层 admission 结果 | 当前直接消费 | 只覆盖 canonical contract，不含 aggregate SAP |
+| 可靠性 Gate 维护者 | 维护 21-unit inventory、五态判定、三层断言和回归 fixture | 当前验证主体 | 本 CR 的验证证据由该角色自验证产生 |
+| 独立验证者 | 审计 owner/boundary/claim limit 与三层断言 | `future consumer` | CR170 只准备契约；独立 verifier lane 实现与实际使用留给 `FU-CR161-006`，不得声明 verifier independence 已交付 |
+
+### CR170 Scenario Gray Areas 与启动确认
+
+| 灰区 ID | 推荐方案 | 备选方案 | 切换条件 | 当前状态 |
+|---|---|---|---|---|
+| SGQ-CR170-001 | 一次覆盖 Gate 1-5 N/A semantics，并验证 Gate 6 admission policy。 | 只修 Gate 4。 | 仅当 inventory 证明其他 Gate 不存在 mandatory reason escape 时才可缩小。 | recommended-awaiting-CP2 |
+| SGQ-CR170-002 | 五态先作为业务语义冻结，代码形态留 CP3。 | CP2 直接冻结 enum/dataclass。 | 仅当现有公共 schema 已要求固定代码类型时提前冻结。 | recommended-awaiting-CP2 |
+| SGQ-CR170-003 | T0 `NEEDS_REVIEW` 仅允许诊断且不得声称 PASS；T1/T2 BLOCKED；T3 NOT_AUTHORIZED。 | 所有 tier 一律 BLOCKED。 | 若 CP3 证明 exploratory 诊断也会被下游误用为 admission 时切换。 | recommended-awaiting-CP2 |
+| SGQ-CR170-004 | 保留现有底层 worst-state merge；只在失败证据下修改；单独硬化 `resolve_admission_policy`。 | 重写 Gate 6 聚合。 | 仅当回归证明现有 merge 无法传播上游 `NEEDS_REVIEW` 时切换。 | recommended-awaiting-CP2 |
+| SGQ-CR170-005 | CR168/CR169 adapter 作为 defense-in-depth 保留，简化留给 FU-CR161-009。 | CR170 同时删除局部 guard。 | 只有全部 caller 经新 contract、删除不降 fail-closed、全回归通过且 ADR 获批时切换。 | recommended-awaiting-CP2 |
+
+用户已审查 UC-58，并在明确“独立验证者是 future consumer、consumer 调用视角需补强”的前提下批准 CR170 CP2 五项推荐方案。该批准只解锁 CP3 solution-design，不授权 Story、LLD、实现、验证或任何真实/远端操作。
+
+### CR170 Deferred / Adjacent Items
+
+- `FU-CR161-009`（原 FU-007b）保留 aggregate orchestration、mature StrategyAdmissionPackage 聚合与 CR155 综合 regression/promotion 决策。
+- Stage 3 Launch 必须另建 CR，处理 scoped research-data authorization、data release/PIT/lineage、历史 Stage 3 记录 revalidation、路线与 verifier 决策。
+- 当前 Stage 3 runner 未调用 canonical Gate 1-6；CR170 不虚构现有运行依赖，也不负责接入。

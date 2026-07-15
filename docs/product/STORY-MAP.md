@@ -17,13 +17,15 @@
 | v1.1 | 2026-07-13 | host-orchestrator-inline | 收紧 CR168-O04：C4 unavailable 只映射为 absent-no-na-reason，字段级/通用 na-reason 逃逸由 projection 阻断；Outcome 数仍为 5，不提前拆 Story。 |
 | v1.2 | 2026-07-14 | host-orchestrator-inline | 回填 CR168 CP2 批准；O04 进入 CP3 架构输入，并明确整改是 adapter-local containment，仍不创建正式 Story、DAG、Wave、LLD 或文件所有权。 |
 | v1.3 | 2026-07-14 | host-orchestrator-inline-meta-pm | 增量追加 CR169 五个 C4 product outcomes；严格区分 outcome 与正式 Story，CP2 前不创建 DAG、Wave、LLD 或文件所有权。 |
+| v1.4 | 2026-07-15 | host-orchestrator-inline-meta-pm | 增量追加 CR170 五个 canonical hardening product outcomes；CP2 前不形成正式 Story，且把 bottom-up merge 保留与 admission-policy hardening 分成两个 outcome。 |
+| v1.5 | 2026-07-15 | host-orchestrator-inline | 回填 CR170 CP2 批准；五个 product outcomes 成为 CP3 设计输入，但在 CP3 批准和 CP4 自动预检前仍不创建正式 Story、DAG、Wave、LLD 或文件所有权。 |
 
 ## 状态
 
-- 文档状态：awaiting-cp2（CR169 基线）
-- 关联 CR：`CR-157` / `CR-158` / `CR-163` / `CR-164` / `CR-166` / `CR-168` / `CR-169`
-- 当前门禁：CR169 CP2 待批准；CP2 前不得创建 CR169 正式 Story、DAG、Wave、LLD 或文件所有权
-- 注意：下方 `CR168-O01..O05` 与 `CR169-O01..O05` 都只是产品 outcome 候选，不是 Story ID，也不写入 `DEVELOPMENT-PLAN.yaml`。
+- 文档状态：confirmed-cp2（CR170 基线）
+- 关联 CR：`CR-157` / `CR-158` / `CR-163` / `CR-164` / `CR-166` / `CR-168` / `CR-169` / `CR-170`
+- 当前门禁：CR170 CP2 已批准，进入 CP3；CP3 批准和 CP4 自动预检前不得创建 CR170 正式 Story、DAG、Wave、LLD 或文件所有权
+- 注意：下方 `CR170-O01..O05` 只是产品 outcome 候选，不是 Story ID，也不写入 `DEVELOPMENT-PLAN.yaml`。
 
 ## Activities
 
@@ -63,6 +65,7 @@
 | CR164 computable statistical evidence slice | CR164-S01..S05 product-planning candidates | effective-trial estimator、real ML/event adapter implementation、real research batch/data/runtime/trading/publish |
 | CR168 C3 economic-cost foundation slice | CR168-O01..O05 product outcomes（非正式 Story），含 Gate 4 absent-no-na-reason projection guard | 真实 TCA/calibration/data、C4、event producer、canonical Gate 4/aggregate orchestration 修改、C1-C4 aggregate integration、Stage 3、runtime/trading/remote write |
 | CR169 C4 capacity/liquidity/ADV foundation slice | CR169-O01..O05 product outcomes（非正式 Story），含 strict C3+C4 Gate4 fixture adapter | real ADV/liquidity/capacity calibration、alpha calculator（CP3 前）、CR168 adapter/canonical Gate4/aggregate 修改、Stage3、runtime/trading/remote write |
+| CR170 canonical reliability hardening slice | CR170-O01..O05 product outcomes（非正式 Story），含 Gate1-5 N/A semantics、protected merge regression 与 tier admission | current runner integration、aggregate/FU-009、real data/Stage3、adapter deletion、CR155 promotion、remote write |
 
 > CR163-S01..S05 是目标为五个 Stories 的产品规划候选，不是正式 Story decomposition；CP2 批准后仍须 CP3 HLD，之后由 meta-se 在 CP4 生成机器真相源。
 
@@ -104,3 +107,15 @@ CR163-S03 scope note：不增加第六个 Story；S03 单一 candidate Story 必
 | CR169-O05 | 明确适用面、alpha 与 claim ceiling | 两 fixture 族、alpha CP3 disposition、verifier 风险、CR155 blocked、零真实能力 claim | P0/P1 | CP2 后进入 CP3 |
 
 CR169 outcomes 不是正式 Story：CP2 批准后仍必须先完成 CP3 HLD/ADR，之后由 meta-se 决定正式 Story 数、依赖、Wave 与文件所有权；CP2 前和 CP3 前均不得实施。
+
+## CR170 Product-planning Outcomes（非正式 Story）
+
+| Outcome | 用户任务 | 产品结果 | 优先级 | 解锁门禁 |
+|---|---|---|---|---|
+| CR170-O01 | 冻结 Gate 1-5 N/A evidence inventory | 21/21 policy units，含适用性、owner、完整边界与结果规则 | P0 | CP2 后进入 CP3 |
+| CR170-O02 | 区分合法 N/A 与 reason escape | 五态业务语义与 Gate 1 三层 masked-escape 测试义务 | P0 | CP2 后进入 CP3 |
+| CR170-O03 | 保护正确的底层 worst-state merge | 先回归 `build_shared_gate_summary`；无失败证据不修改 | P0 | CP2 后进入 CP3 |
+| CR170-O04 | 硬化 tier/admission 判定 | `resolve_admission_policy` 边界下 T0 NR、T1/T2 BLOCKED、T3 NOT_AUTHORIZED | P0 | CP2 后进入 CP3 |
+| CR170-O05 | 保持 compatibility 与授权边界 | CR168/169 adapter 2/2 回归；runner/aggregate/real-data/CR155 promotion=0 | P0/P1 | CP2 后进入 CP3 |
+
+这些 outcome 必须在 CP2 批准后先经过 CP3 HLD/ADR，再由 story-planning 决定正式 Story 数、依赖、Wave 与文件所有权；当前没有实施授权。

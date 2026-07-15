@@ -1,9 +1,9 @@
 ---
 status: confirmed-cp2
-version: "1.6"
+version: "1.9"
 source_scenarios: "docs/product/SCENARIOS.yaml"
 source_requirements: "docs/product/REQUIREMENTS.md"
-cr_id: "CR-169"
+cr_id: "CR-170"
 template_deviation_reason: "CR157 uses Scenario/Requirement/Test Layer/Validation Mode columns to preserve gate and no-runtime evidence mapping; coverage statistics remain present below."
 ---
 
@@ -30,12 +30,14 @@ template_deviation_reason: "CR157 uses Scenario/Requirement/Test Layer/Validatio
 | v1.5 | 2026-07-14 | host-orchestrator-inline-meta-pm | 增量追加 CR169 17/17 C4 fixture/static scenarios 的 requirement/matrix 覆盖；包含 CR168 C3-only 回归、strict C3+C4 joint adapter、CR155 blocked 和 alpha-decay applicability，均未执行实现或真实数据操作。 |
 | v1.6 | 2026-07-14 | host-orchestrator-inline | CR169 CP2 评审整改与批准：E01 追加 `stage3_entry_ready=false` 与 CP8/formal Stage 2 exit 的 7/7 核验期望；场景、QAC 和范围计数不变。 |
 | v1.7 | 2026-07-14 | host-orchestrator-inline-meta-se | CR169 CP4：把 17/17 场景映射到 S01–S05 full-lld 与 5 个串行 Wave；覆盖数量不变，仍未授权实现。 |
+| v1.8 | 2026-07-15 | host-orchestrator-inline-meta-pm | 增量追加 CR170 20/20 场景的 planned coverage，包含 Gate 1 三层 masked-escape 断言、Gate 1-5 五态、底层 merge 保留回归、tier admission、adapter/CR155/Stage3 边界。 |
+| v1.9 | 2026-07-15 | host-orchestrator-inline | 回填 CR170 CP2 批准并补 consumer 边界：FU-006 独立验证者为 future consumer，本 CR 的 planned verification 由 Gate 维护者自验证承担；20/20 场景、19 P0/1 P1、21/21 inventory 与 15 QAC 不变。 |
 
 ## 状态
 
-- 文档状态：confirmed-cp2（CR169 基线）
-- 关联 CR：`CR-157` / `CR-158` / `CR-160` / `CR-161` / `CR-162` / `CR-163` / `CR-164` / `CR-166` / `CR-168` / `CR-169`
-- 当前门禁：CR169 CP2 已批准；coverage 均是 planned evidence，不代表实现、验证或真实数据操作已执行
+- 文档状态：confirmed-cp2（CR170 基线）
+- 关联 CR：`CR-157` / `CR-158` / `CR-160` / `CR-161` / `CR-162` / `CR-163` / `CR-164` / `CR-166` / `CR-168` / `CR-169` / `CR-170`
+- 当前门禁：CR170 CP2 已批准，进入 CP3 HLD/ADR 人工门禁；coverage 仍是 planned evidence，不代表 Story、实现、验证或真实数据操作已执行
 
 ## Coverage Matrix
 
@@ -134,6 +136,26 @@ template_deviation_reason: "CR157 uses Scenario/Requirement/Test Layer/Validatio
 | SC-CR169-B03 | REQ-CR169-006, REQ-CR169-009 | postcondition / negative | fixture/static | unexpected canonical result contained by public callable double | P0 | S04,S05 planned-after-CP5 |
 | SC-CR169-G01 | REQ-CR169-006, REQ-CR169-009 | negative-regression | static | CR155 remains BLOCKED; paper_candidate=false; promotion=0 | P0 | S05 planned-after-CP5 |
 | SC-CR169-E01 | REQ-CR169-008, REQ-CR169-009 | applicability / boundary | static / CP8-exit-review | alpha-decay calculator=0; stage3_entry_ready=false; 7/7 Stage 2 exit verification required | P1 | S05/CP8 planned-static-review |
+| SC-CR170-P01 | REQ-CR170-001, REQ-CR170-002, REQ-CR170-004 | contract / positive | fixture/static | all applicable Gate1-5 mandatory evidence present without reason substitution | P0 | planned-after-CP5 |
+| SC-CR170-P02 | REQ-CR170-002, REQ-CR170-004, REQ-CR170-006 | boundary / policy | fixture/static | complete structured N/A retains owner/scope/profile and never unconditional PASS | P0 | planned-after-CP5 |
+| SC-CR170-N01 | REQ-CR170-003, REQ-CR170-004 | Gate1 masked-escape / negative | fixture/static | multiple-testing field classification + mandatory claim + final worst-state 3/3 | P0 | planned-after-CP5 |
+| SC-CR170-N02 | REQ-CR170-003, REQ-CR170-004 | Gate1 masked-escape / negative | fixture/static | FDR field classification + mandatory claim + final worst-state 3/3 | P0 | planned-after-CP5 |
+| SC-CR170-N03 | REQ-CR170-001, REQ-CR170-004 | Gate2 / negative | fixture/static | split/WF/OOS generic reason escape produces zero PASS | P0 | planned-after-CP5 |
+| SC-CR170-N04 | REQ-CR170-001, REQ-CR170-004 | Gate2 / boundary | fixture/static | purge/embargo/event-gap incomplete boundary remains non-PASS | P0 | planned-after-CP5 |
+| SC-CR170-N05 | REQ-CR170-001, REQ-CR170-004 | Gate3 / negative | fixture/static | PIT/survivorship generic reason does not waive evidence | P0 | planned-after-CP5 |
+| SC-CR170-N06 | REQ-CR170-001, REQ-CR170-004, REQ-CR170-007 | Gate4 / negative-regression | fixture/static | field/generic reason escape non-PASS plus adapter regressions | P0 | planned-after-CP5 |
+| SC-CR170-N07 | REQ-CR170-004, REQ-CR170-005 | Gate5 / integration | fixture/static | artifact NEEDS_REVIEW remains visible and non-PASS | P0 | planned-after-CP5 |
+| SC-CR170-N08 | REQ-CR170-002, REQ-CR170-004 | semantic-state / boundary | fixture/static | incomplete N/A is distinct from complete N/A | P0 | planned-after-CP5 |
+| SC-CR170-N09 | REQ-CR170-002, REQ-CR170-004 | generic-reason / negative | fixture/static | one generic reason satisfies zero multiple mandatory units | P0 | planned-after-CP5 |
+| SC-CR170-B01 | REQ-CR170-005 | Gate6 merge / protected-regression | fixture/static | build_shared_gate_summary propagates NEEDS_REVIEW; no rewrite without failure | P0 | planned-after-CP5 |
+| SC-CR170-B02 | REQ-CR170-006 | tier-policy / boundary | fixture/static | T0 mandatory NEEDS_REVIEW remains diagnostic and non-PASS | P0 | planned-after-CP5 |
+| SC-CR170-B03 | REQ-CR170-006 | tier-policy / boundary | fixture/static | T1 mandatory NEEDS_REVIEW -> BLOCKED | P0 | planned-after-CP5 |
+| SC-CR170-B04 | REQ-CR170-006 | tier-policy / boundary | fixture/static | T2 mandatory NEEDS_REVIEW -> BLOCKED | P0 | planned-after-CP5 |
+| SC-CR170-B05 | REQ-CR170-006, REQ-CR170-009 | authorization / boundary | fixture/static | T3 -> NOT_AUTHORIZED/no PASS | P0 | planned-after-CP5 |
+| SC-CR170-R01 | REQ-CR170-007 | CR168 adapter / regression | fixture/static | C3-only defense-in-depth guard remains intact | P0 | planned-after-CP5 |
+| SC-CR170-R02 | REQ-CR170-007 | CR169 adapter / regression | fixture/static | strict joint defense-in-depth guard remains intact | P0 | planned-after-CP5 |
+| SC-CR170-G01 | REQ-CR170-009 | CR155 / negative-regression | existing-evidence/static | CR155 remains BLOCKED and paper_candidate=false | P0 | planned-after-CP5 |
+| SC-CR170-E01 | REQ-CR170-008, REQ-CR170-009 | applicability / static review | static | current runner integration=0; legacy Stage3 claims require independent revalidation | P1 | planned-static-review |
 
 ## Coverage Summary
 
@@ -187,6 +209,15 @@ template_deviation_reason: "CR157 uses Scenario/Requirement/Test Layer/Validatio
 | CR169 strict C3+C4 Gate4 fixture adapters | 1 |
 | CR169 canonical/aggregate modifications | 0 / 0 |
 | CR169 external/runtime tests authorized | 0 |
+| CR170 P0 scenarios | 19 |
+| CR170 P0 scenarios with planned coverage | 19 |
+| CR170 P1 applicability scenarios | 1 |
+| CR170 quantitative acceptance criteria | 15 |
+| CR170 Gate1-5 policy inventory | 21/21 |
+| CR170 business semantic states | 5/5 |
+| CR170 adapter regressions | 2/2 |
+| CR170 current-runner/aggregate integration modifications | 0 / 0 |
+| CR170 external/runtime tests authorized | 0 |
 
 ## Notes
 
@@ -196,6 +227,7 @@ template_deviation_reason: "CR157 uses Scenario/Requirement/Test Layer/Validatio
 - CR160 verification is design-only and existing-evidence-only. CP8 approval does not authorize code implementation, checker/schema, new lake access, observation execution, simulation, paper, live, trading, publish or deployment.
 - CR161 / CR162 verification is static documentation and existing-evidence traceability only. The matrix does not represent FDR/PBO/DSR, fold-level OOS, TCA, market-impact or capacity computation.
 - CR163 verification remains fixture/static unless a later gate grants separate runtime/data authorization. Future native instrumented runs may set `ExperimentFamilyManifest=present` only after seal/completeness/reference/count/tamper validation; uninstrumented paths remain `typed_unavailable`; invalid/tampered lineages are `blocked`. This prepares only the C1 raw-lineage input and does not make C1 computable.
+- CR170 CP2 前仅确认产品语义和 planned coverage；`build_shared_gate_summary` 现有传播必须先回归再决定是否修改，`resolve_admission_policy` 的 tier/admission 边界留 CP3 冻结。当前 runner 接入、真实数据、aggregate 与 CR155 promotion 均未授权。
 - CR164 verification is fixture/static only. Four methods are mandatory but no OR-pass is allowed; DSR raw count must be explicitly identified and never alias effective count; WRC/SPA stationary-bootstrap parameter selection is a CP3 obligation. UC-59/60 rows prove compatibility semantics only, not adapter implementation or real feed/training authorization.
 - CR166 验证仅允许 fixture/static：daily multifactor 与 ML compatibility 为 P0；event 为 CP3 applicability/P1。任何真实 fold/OOS 数据、lake/NAS/provider/runtime 或外部 ref 均不得解引用。CP8 也只能声明桥接 foundation，不得声明 Stage 3 已启动或真实 OOS evidence 可用。
 - CR168 coverage 只描述 CP2 待批准的 fixture/static 验证合同。Gate 4 是 C3+C4 联合门禁；C4 reserved/not-built/typed_unavailable 必须由 projection 映射为三个 refs absent-no-na-reason，任何字段级或通用 na-reason 逃逸都必须在 projection 侧阻断，capacity/aggregate PASS=`0`。CP2 不授权 HLD 之外的实现，也不授权真实 TCA、真实 impact calibration、真实数据、runtime、C4、event producer、交易或远端写入。

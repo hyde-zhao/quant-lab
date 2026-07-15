@@ -139,6 +139,28 @@ CURRENT_CR168_PROCESS_ASSETS = frozenset(
     }
 )
 
+CURRENT_CR170_SOURCE_ASSETS = frozenset(
+    {
+        "docs/components/MULTIFACTOR-RESEARCH.md",
+        "engine/cross_strategy_reliability_gates.py",
+        "engine/reliability_na_policy.py",
+        "tests/PROVENANCE.yaml",
+        "tests/research/test_canonical_reliability_regression.py",
+        "tests/research/test_cross_strategy_reliability_gates.py",
+        "tests/research/test_reliability_admission_policy.py",
+        "tests/research/test_reliability_na_policy.py",
+    }
+)
+
+CURRENT_CR170_PROCESS_ASSETS = frozenset(
+    {
+        "REQUEST.md",
+        "docs/features/cross-strategy-reliability-gates/DESIGN.md",
+        "docs/features/cross-strategy-reliability-gates/TASKS.md",
+        "docs/features/cross-strategy-reliability-gates/TEST-PLAN.md",
+    }
+)
+
 CURRENT_CR166_PROCESS_ASSETS = frozenset(
     {
         "changes/CR-032-CHAPTER3-FACTOR-GAP-REMEDIATION-2026-06-08.md",
@@ -629,6 +651,8 @@ def classify_entry(
             return "current_workflow_shared_asset"
         if entry.path in CURRENT_GUARDRAIL_SOURCE_ASSETS:
             return "current_guardrail_asset"
+        if entry.path in CURRENT_CR170_SOURCE_ASSETS:
+            return "current_cr_asset" if "170" in active_cr_numbers else "unclassified"
         if entry.path in CURRENT_CR168_SOURCE_ASSETS:
             return "current_cr_asset" if "168" in active_cr_numbers else "unclassified"
         if entry.path in CURRENT_CR166_SOURCE_ASSETS:
@@ -662,6 +686,8 @@ def classify_entry(
             return "current_workflow_shared_asset"
         if _is_state_slim_artifact(entry.path):
             return "current_workflow_shared_asset"
+        if entry.path in CURRENT_CR170_PROCESS_ASSETS:
+            return "current_cr_asset" if "170" in active_cr_numbers else "unclassified"
         if entry.path in CURRENT_CR168_PROCESS_ASSETS:
             return "current_cr_asset" if "168" in active_cr_numbers else "unclassified"
         if entry.path in CURRENT_CR166_PROCESS_ASSETS:

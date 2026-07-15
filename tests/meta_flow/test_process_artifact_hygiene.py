@@ -89,6 +89,28 @@ def test_cr166_closed_bundle_remains_classified_after_active_state_clears() -> N
     assert {classify_entry(entry) for entry in entries} == {"closed_cr166_asset"}
 
 
+def test_cr170_active_source_and_feature_assets_are_classified_non_blocking() -> None:
+    entries = [
+        StatusEntry(repo="source", status="M", path="docs/components/MULTIFACTOR-RESEARCH.md"),
+        StatusEntry(repo="source", status="M", path="engine/cross_strategy_reliability_gates.py"),
+        StatusEntry(repo="source", status="??", path="engine/reliability_na_policy.py"),
+        StatusEntry(repo="source", status="M", path="tests/PROVENANCE.yaml"),
+        StatusEntry(repo="source", status="??", path="tests/research/test_canonical_reliability_regression.py"),
+        StatusEntry(repo="source", status="M", path="tests/research/test_cross_strategy_reliability_gates.py"),
+        StatusEntry(repo="source", status="??", path="tests/research/test_reliability_admission_policy.py"),
+        StatusEntry(repo="source", status="??", path="tests/research/test_reliability_na_policy.py"),
+        StatusEntry(repo="process", status="M", path="REQUEST.md"),
+        StatusEntry(repo="process", status="M", path="docs/features/cross-strategy-reliability-gates/DESIGN.md"),
+        StatusEntry(repo="process", status="M", path="docs/features/cross-strategy-reliability-gates/TEST-PLAN.md"),
+        StatusEntry(repo="process", status="M", path="docs/features/cross-strategy-reliability-gates/TASKS.md"),
+    ]
+
+    assert {
+        classify_entry(entry, active_cr_numbers=frozenset({"170"}))
+        for entry in entries
+    } == {"current_cr_asset"}
+
+
 def test_cr132_cr138_current_assets_are_rule_classified_non_blocking() -> None:
     entries = [
         StatusEntry(

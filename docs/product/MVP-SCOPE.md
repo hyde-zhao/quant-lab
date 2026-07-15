@@ -19,12 +19,14 @@
 | v1.3 | 2026-07-14 | host-orchestrator-inline | 回填 CR168 CP2 批准；明确 Gate 4 整改只发生在 CR168 adapter 入口，以 8-key denylist、strict allowlist、前置拒绝和后置非 PASS 断言局部封堵，canonical 全局硬化继续 deferred。 |
 | v1.4 | 2026-07-14 | host-orchestrator-inline-meta-pm | 增量追加 CR169 C4 fixture/static MVP、strict C3+C4 joint adapter、12 类 fail-closed、alpha-decay CP3 disposition 与真实能力 claim ceiling；不改变 CR168 adapter 或 FU-007 owner 边界。 |
 | v1.5 | 2026-07-14 | host-orchestrator-inline | CR169 CP2 评审整改与批准：补 `stage3_entry_ready=false`、7/7 Stage 2 exit 核验义务，以及 FU-007 007a/007b 的非绑定后续提案；不扩大 MVP 或授权。 |
+| v1.6 | 2026-07-15 | host-orchestrator-inline-meta-pm | 增量追加 CR170 Gate 1-5 N/A semantics、Gate 6 protected merge/admission hardening、21-unit inventory 与明确的 runner/aggregate/Stage3 排除边界。 |
+| v1.7 | 2026-07-15 | host-orchestrator-inline | 回填 CR170 CP2 批准；future verifier 只作为 FU-006 consumer contract，不声明本 CR verifier independence；范围、目标、量化验收和授权边界不变，进入 CP3 设计。 |
 
 ## 状态
 
-- 文档状态：confirmed-cp2（CR169 基线）
-- 关联 CR：`CR-157` / `CR-158` / `CR-160` / `CR-161` / `CR-162` / `CR-163` / `CR-164` / `CR-166` / `CR-168` / `CR-169`
-- 当前门禁：CR169 CP2 已批准；只允许 CP3 设计，Story/LLD/实现/验证仍未授权
+- 文档状态：confirmed-cp2（CR170 基线）
+- 关联 CR：`CR-157` / `CR-158` / `CR-160` / `CR-161` / `CR-162` / `CR-163` / `CR-164` / `CR-166` / `CR-168` / `CR-169` / `CR-170`
+- 当前门禁：CR170 CP2 已批准，进入 CP3 HLD/ADR 人工门禁；CP3 批准前不得进入正式 Story、LLD、实现或验证
 
 ## In Scope
 
@@ -81,6 +83,12 @@
 | MVP-CR169-004 | Strict C3+C4 Gate4 fixture compatibility | 新 joint adapter=1、三个 C4 refs=3/3、精确七字段 payload；仅 `gate4_fixture_contract_pass=1`，aggregate/capacity admission PASS=0。 |
 | MVP-CR169-005 | CR168 regression and two fixtures | 2/2 fixture families；CR168 C3-only absent-C4 fail-closed 回归=1；C4 present 不进入旧 adapter。 |
 | MVP-CR169-006 | Claim ceiling, Stage exit, alpha and CR155 boundary | Stage2=true 但 `stage3_entry_ready=false`、Stage3=false；CP8/formal Stage 2 exit 前 `STAGE2-EXIT-VERIFICATION.result.json=7/7`；alpha calculator=0（CP3 前）、canonical/aggregate 修改=0、CR155 promotion=0。 |
+| MVP-CR170-001 | Gate 1-5 N/A policy inventory | 21/21 policy units；每项有 mandatory/conditional、owner、complete-boundary、result 规则。 |
+| MVP-CR170-002 | Five-state evidence semantics | PRESENT/MISSING/COMPLETE-N/A/INCOMPLETE-N/A/GENERIC-ESCAPE=5/5；mandatory escape 的 unconditional PASS=0。 |
+| MVP-CR170-003 | Gate 1 masked-escape and Gate 2-5 fail-closed | Gate 1 三层断言=3/3；Gate 2-5 applicable missing/generic/incomplete 全部非 PASS。 |
+| MVP-CR170-004 | Protected merge and tiered admission | 现有 shared-summary NEEDS_REVIEW 传播回归=1；无失败不改；T0 NR、T1/T2 BLOCKED、T3 NOT_AUTHORIZED=4/4。 |
+| MVP-CR170-005 | Compatibility and state correction | public break=0；CR168/169 adapter regressions=2/2；BACKLOG/baseline/legacy Stage3 marker 修正=3/3。 |
+| MVP-CR170-006 | Authorization and claim ceiling | `stage3_entry_ready=false`；runner/aggregate/real-data/runtime/trading/remote-write/CR155 promotion=0。 |
 
 ## Out of Scope
 
@@ -117,6 +125,10 @@
 | CR168 canonical Gate 4 validator、C1-C4 aggregate integration / final StrategyAdmissionPackage / CR155 promotion decision | canonical validator 与 aggregate orchestration 均不修改；本 CR 的 adapter containment 不代表 canonical 已全局安全；端到端集成及绕过 adapter 前的 canonical N/A 语义复核归属 `FU-CR161-007`。 |
 | CR168 event-specific producer | event-time/calendar/execution 语义未冻结；本 CR显式 N/A/deferred。 |
 | CR168 runtime、broker/trading、catalog/store/registry pointer、publish/deploy/tag/release/Git remote write | 不在授权范围；所有相关操作计数为 0。 |
+| CR170 current Stage 3 runner integration | 当前 runner 未调用 canonical Gate；接入必须由独立 Stage 3 Launch CR 决策和授权。 |
+| CR170 aggregate orchestration / FU-CR161-009 | aggregate 与 mature SAP/CR155 综合决策保留给独立 follow-up。 |
+| CR170 删除或简化 CR168/CR169 adapter guard | 本 CR 只作 regression；简化须满足 caller 全覆盖、fail-closed 不降低、全回归和 ADR 四条件。 |
+| CR170 真实数据、Stage 3、runtime、broker/QMT/trading、publish/remote write | 全部不授权；CP2 仅批准产品范围，CP3 仅能设计。 |
 
 ## Deferred
 
@@ -136,6 +148,7 @@
 | FU-CR161-004 | C3 economic cost / impact producer | 已 promoted to `CR-168`；只启动 fixture/static foundation，真实 TCA/data/runtime 仍未授权。 |
 | FU-CR161-005 | C4 capacity / liquidity producer | 独立方法、输入与数据授权；可与 C3 共用输入-contract wave，但计算与验证独立。 |
 | FU-CR161-007 | Existing-gate integration、canonical Gate 4 N/A 语义复核和 CR155 regression | C1-C4 producer 均稳定后再做端到端整合；任何新增直接 Gate 4 caller 前决定是否全局硬化 canonical validator；CR155 必须保持 blocked。 |
+| FU-CR161-009 | Aggregate orchestration、mature SAP 与 CR155 综合 regression/promotion decision | CR170 完成 canonical hardening 后另启正式 CR；必须在 Stage 3 退出/mature SAP PASS/CR155 promotion 前完成。 |
 
 ## CR169 In Scope / Out of Scope 增量
 
@@ -155,6 +168,12 @@
 | Legacy Deferred ID | CR169 scope | 状态 | 说明 |
 |---|---|---|---|
 | FU-CR161-005 | MVP-CR169-001..006 | active / CP2 pending | C4 fixture/static foundation 已进入 CR169 产品基线；alpha-decay 只作为 CP3 disposition，真实 C4 与 global integration 仍不在范围。 |
+
+## Promoted to CR170
+
+| Legacy Deferred ID | CR170 scope | 状态 | 说明 |
+|---|---|---|---|
+| FU-CR161-007 canonical-hardening slice | MVP-CR170-001..006 | active / CP3 pending | Gate 1-5 N/A semantics 与 Gate 6 admission hardening 已进入 CR170；aggregate/CR155 综合决策拆为 FU-CR161-009。 |
 
 ## Promoted to CR158
 

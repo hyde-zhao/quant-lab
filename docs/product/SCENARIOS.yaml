@@ -1,8 +1,8 @@
 schema_version: 1
-version: "1.6"
+version: "1.8"
 status: confirmed-cp2
-cr_id: CR-169
-updated_at: "2026-07-14T17:20:00+08:00"
+cr_id: CR-170
+updated_at: "2026-07-15T12:55:40+08:00"
 source_requirements:
   - docs/product/REQUIREMENTS.md
 source_use_cases:
@@ -72,6 +72,14 @@ revision_record:
     date: "2026-07-14"
     author: host-orchestrator-inline
     summary: "Record CR169 CP2 review remediation: E01 also proves stage3_entry_ready=false and mandates a future 7/7 Stage 2 exit verification; scenario count and priorities remain 17/16-P0/1-P1."
+  - version: v1.7
+    date: "2026-07-15"
+    author: host-orchestrator-inline-meta-pm
+    summary: "Add twenty CR170 scenarios for Gate 1-5 N/A semantics, protected lower-level worst-state merge, tiered Gate 6 admission, adapter regression, state correction and Stage 3 boundary; 19 P0 and 1 P1."
+  - version: v1.8
+    date: "2026-07-15"
+    author: host-orchestrator-inline
+    summary: "Record CR170 CP2 approval; clarify independent verifier as an FU-006 future consumer and retain Gate-maintainer self-verification in CR170. Scenario/QAC/inventory counts remain unchanged and CP3 design is unlocked."
 scenarios:
   - id: SC-CR157-P01
     title: "Build mature admission package from complete research refs"
@@ -936,13 +944,173 @@ scenarios:
     use_case_refs: [UC-58-CR169]
     steps: ["Request alpha-decay calculation and Stage 3 entry claim during CP2 scope review.", "Inspect routing, implementation count and transition prerequisites."]
     expected: ["Alpha-decay is deferred to CP3 disposition with reason and calculator count is 0 before a separately approved scope decision.", "stage3_entry_ready is false; CP8/formal exit must require STAGE2-EXIT-VERIFICATION.result.json with 7/7 contract checks, independent verifier follow-up and explicit Stage 3 authorization."]
+  - id: SC-CR170-P01
+    title: "All applicable Gate 1-5 mandatory evidence is present"
+    type: positive
+    priority: P0
+    requirement_refs: [REQ-CR170-001, REQ-CR170-002, REQ-CR170-004]
+    use_case_refs: [UC-58-CR170]
+    steps: ["Provide complete structured evidence for every applicable policy unit.", "Evaluate Gate 1-5 and inspect claims."]
+    expected: ["No mandatory missing or reason-escape claim is generated.", "Any PASS is attributable to present evidence rather than an N/A reason string."]
+  - id: SC-CR170-P02
+    title: "Complete structured N/A retains owner and boundary semantics"
+    type: positive-boundary
+    priority: P0
+    requirement_refs: [REQ-CR170-002, REQ-CR170-004, REQ-CR170-006]
+    use_case_refs: [UC-58-CR170]
+    steps: ["Provide an applicable structured N/A with reason, owner, scope and profile/authorization boundary.", "Evaluate the canonical Gate and admission tier."]
+    expected: ["The N/A is distinguishable from present evidence and generic reason escape.", "Its outcome obeys the approved tier policy and never becomes an unconditional PASS."]
+  - id: SC-CR170-N01
+    title: "Gate 1 multiple-testing escape remains observable when another claim masks final status"
+    type: negative
+    priority: P0
+    requirement_refs: [REQ-CR170-003, REQ-CR170-004]
+    use_case_refs: [UC-58-CR170]
+    steps: ["Omit multiple-testing evidence, add a generic N/A reason, and keep effective-trial-count unavailable.", "Assert field classification, mandatory claim generation and final worst-state separately."]
+    expected: ["The field is classified as generic reason escape rather than present.", "A multiple-testing mandatory claim exists even if another claim already controls final status.", "Final status is non-PASS."]
+  - id: SC-CR170-N02
+    title: "Gate 1 FDR escape is not hidden by effective-trial-count unavailable"
+    type: negative
+    priority: P0
+    requirement_refs: [REQ-CR170-003, REQ-CR170-004]
+    use_case_refs: [UC-58-CR170]
+    steps: ["Omit FDR evidence, provide only a generic reason, and retain the independent unavailable claim.", "Inspect the three assertion layers."]
+    expected: ["FDR is not treated as present.", "The FDR mandatory claim is emitted.", "Worst-state remains non-PASS."]
+  - id: SC-CR170-N03
+    title: "Gate 2 split walk-forward and OOS generic reasons cannot produce PASS"
+    type: negative
+    priority: P0
+    requirement_refs: [REQ-CR170-001, REQ-CR170-004]
+    use_case_refs: [UC-58-CR170]
+    steps: ["Remove split, walk-forward or OOS refs and supply field or generic reason strings.", "Evaluate Gate 2."]
+    expected: ["Every applicable missing unit emits an auditable claim.", "Gate 2 unconditional PASS count is 0."]
+  - id: SC-CR170-N04
+    title: "Gate 2 purge embargo or event-safe-gap incomplete boundary fails closed"
+    type: negative-boundary
+    priority: P0
+    requirement_refs: [REQ-CR170-001, REQ-CR170-004]
+    use_case_refs: [UC-58-CR170]
+    steps: ["Provide a reason but omit owner, scope or applicability boundary for a conditional leakage-control unit.", "Evaluate Gate 2."]
+    expected: ["The unit is classified as NA_WITH_INCOMPLETE_BOUNDARY.", "The result is non-PASS and carries the responsible claim."]
+  - id: SC-CR170-N05
+    title: "Gate 3 PIT universe generic reason cannot waive survivorship control"
+    type: negative
+    priority: P0
+    requirement_refs: [REQ-CR170-001, REQ-CR170-004]
+    use_case_refs: [UC-58-CR170]
+    steps: ["Omit the PIT/survivorship-free universe reference and provide a generic reason.", "Evaluate Gate 3."]
+    expected: ["The reference is not considered present.", "Gate 3 is non-PASS with an explicit survivorship claim."]
+  - id: SC-CR170-N06
+    title: "Gate 4 field and generic N/A reason escapes cannot replace C3 or C4 evidence"
+    type: negative
+    priority: P0
+    requirement_refs: [REQ-CR170-001, REQ-CR170-004, REQ-CR170-007]
+    use_case_refs: [UC-58-CR170]
+    steps: ["Omit applicable Gate 4 refs and inject field-specific or generic reason keys.", "Evaluate canonical Gate 4 and both strict adapter regressions."]
+    expected: ["Canonical Gate 4 is non-PASS for every applicable mandatory escape.", "CR168/CR169 adapters remain fail-closed."]
+  - id: SC-CR170-N07
+    title: "Gate 5 artifact NEEDS_REVIEW cannot collapse to PASS"
+    type: negative-integration
+    priority: P0
+    requirement_refs: [REQ-CR170-004, REQ-CR170-005]
+    use_case_refs: [UC-58-CR170]
+    steps: ["Make regime, attribution and reconciliation artifacts NEEDS_REVIEW while providing generic reasons.", "Evaluate Gate 5 and the shared summary."]
+    expected: ["Artifact statuses remain visible in the shared summary.", "Gate 5 and downstream admission do not report unconditional PASS."]
+  - id: SC-CR170-N08
+    title: "Incomplete structured N/A boundary is distinct from complete N/A"
+    type: negative-boundary
+    priority: P0
+    requirement_refs: [REQ-CR170-002, REQ-CR170-004]
+    use_case_refs: [UC-58-CR170]
+    steps: ["Remove exactly one required boundary attribute from an otherwise structured N/A.", "Evaluate its semantic state and result."]
+    expected: ["State is NA_WITH_INCOMPLETE_BOUNDARY, not NA_WITH_COMPLETE_BOUNDARY.", "Unconditional PASS count is 0."]
+  - id: SC-CR170-N09
+    title: "A generic cross-field reason cannot satisfy multiple mandatory units"
+    type: negative
+    priority: P0
+    requirement_refs: [REQ-CR170-002, REQ-CR170-004]
+    use_case_refs: [UC-58-CR170]
+    steps: ["Omit multiple mandatory fields and provide one generic na_reason.", "Evaluate every applicable policy unit."]
+    expected: ["The generic reason satisfies zero mandatory evidence refs.", "Each missing unit remains independently auditable and final result is non-PASS."]
+  - id: SC-CR170-B01
+    title: "Existing shared summary propagates NEEDS_REVIEW without rewrite"
+    type: boundary-regression
+    priority: P0
+    requirement_refs: [REQ-CR170-005]
+    use_case_refs: [UC-58-CR170]
+    steps: ["Supply one NEEDS_REVIEW artifact among otherwise PASS artifacts.", "Run build_shared_gate_summary and inspect the diff."]
+    expected: ["Summary status is NEEDS_REVIEW.", "When this regression passes, production merge logic modification count is 0."]
+  - id: SC-CR170-B02
+    title: "T0 exploratory mandatory NEEDS_REVIEW remains diagnostic and non-PASS"
+    type: boundary
+    priority: P0
+    requirement_refs: [REQ-CR170-006]
+    use_case_refs: [UC-58-CR170]
+    steps: ["Provide a mandatory NEEDS_REVIEW result to T0 exploratory admission.", "Resolve admission policy."]
+    expected: ["Final status is NEEDS_REVIEW.", "No admission PASS or real-evidence claim is emitted."]
+  - id: SC-CR170-B03
+    title: "T1 admission mandatory NEEDS_REVIEW is blocked"
+    type: boundary
+    priority: P0
+    requirement_refs: [REQ-CR170-006]
+    use_case_refs: [UC-58-CR170]
+    steps: ["Provide mandatory NEEDS_REVIEW to T1 default-required profile.", "Resolve admission policy."]
+    expected: ["Final status is BLOCKED.", "A stable reason identifies unresolved mandatory evidence."]
+  - id: SC-CR170-B04
+    title: "T2 release mandatory NEEDS_REVIEW is blocked"
+    type: boundary
+    priority: P0
+    requirement_refs: [REQ-CR170-006]
+    use_case_refs: [UC-58-CR170]
+    steps: ["Provide mandatory NEEDS_REVIEW to T2 release-blocking profile.", "Resolve admission policy."]
+    expected: ["Final status is BLOCKED.", "Release readiness PASS count is 0."]
+  - id: SC-CR170-B05
+    title: "T3 unauthorized profile stays not authorized"
+    type: authorization
+    priority: P0
+    requirement_refs: [REQ-CR170-006, REQ-CR170-009]
+    use_case_refs: [UC-58-CR170]
+    steps: ["Use a T3 not-authorized profile with otherwise complete evidence.", "Resolve admission policy."]
+    expected: ["Outcome is NOT_AUTHORIZED or the existing canonical blocked representation of not-authorized.", "No PASS, runtime or trading authorization is produced."]
+  - id: SC-CR170-R01
+    title: "CR168 C3-only adapter remains defense-in-depth"
+    type: regression
+    priority: P0
+    requirement_refs: [REQ-CR170-007]
+    use_case_refs: [UC-58-CR170]
+    steps: ["Run the CR168 absent-C4 and reason-escape regression set.", "Inspect adapter code ownership and outcomes."]
+    expected: ["Regression passes.", "CR170 removes or simplifies zero adapter guards."]
+  - id: SC-CR170-R02
+    title: "CR169 strict joint adapter remains defense-in-depth"
+    type: regression
+    priority: P0
+    requirement_refs: [REQ-CR170-007]
+    use_case_refs: [UC-58-CR170]
+    steps: ["Run strict seven-key composition, denylist and postcondition regressions.", "Inspect public compatibility."]
+    expected: ["Regression passes without a public schema break.", "No result is promoted to aggregate admission."]
+  - id: SC-CR170-G01
+    title: "CR155 remains blocked after canonical hardening"
+    type: negative-regression
+    priority: P0
+    requirement_refs: [REQ-CR170-009]
+    use_case_refs: [UC-58-CR170]
+    steps: ["Re-evaluate the existing CR155 package under the hardened semantics.", "Inspect status and paper_candidate."]
+    expected: ["CR155 remains BLOCKED.", "paper_candidate remains false and promotion count is 0."]
+  - id: SC-CR170-E01
+    title: "Current Stage 3 runner remains outside CR170 integration"
+    type: applicability
+    priority: P1
+    requirement_refs: [REQ-CR170-008, REQ-CR170-009]
+    use_case_refs: [UC-58-CR170]
+    steps: ["Inspect current runner imports/calls and historical Stage 3 documentation.", "Apply traceable baseline correction without adding integration."]
+    expected: ["New runner canonical calls equal 0 and stage3_entry_ready remains false.", "Historical claims remain preserved but marked legacy/require-revalidation by an independent Stage 3 Launch CR."]
 coverage_summary:
-  total: 93
-  p0_total: 88
-  p0_with_planned_coverage: 88
+  total: 113
+  p0_total: 107
+  p0_with_planned_coverage: 107
   high_priority_positive_and_negative_covered: true
-  source_requirements_total: 70
-  source_use_cases_total: 10
+  source_requirements_total: 79
+  source_use_cases_total: 11
   gaps:
     - id: GAP-CR157-001
       status: resolved_by_CR157_CP2_and_promoted_CR158
@@ -969,5 +1137,8 @@ coverage_summary:
       status: resolved_by_CR168_CP2_approval
       description: "C3 method boundary, C3/C4 shared header, adapter-local Gate 4 absent-no-na-reason containment, two fixture families and claim ceiling were approved on 2026-07-14; only CP3 solution design is unlocked, while Story/LLD/implementation/verification remain blocked."
     - id: GAP-CR169-001
+      status: resolved_by_CR169_delivery
+      description: "CR169 product decisions were approved and the fixture/static C4 foundation was delivered; Stage 3 entry remains false."
+    - id: GAP-CR170-001
       status: pending_user_CP2_decision
-      description: "C4 fixture method, C3/C4 correlation header, strict joint adapter ownership, alpha-decay disposition and verifier independence are deliberately open for CP2; no HLD, Story, implementation or real-data action is authorized."
+      description: "Gate 1-5 inventory/five-state semantics, tier policy, protected lower-level merge versus resolve_admission_policy boundary, and adapter retention await CR170 CP2 approval; no HLD or implementation is authorized."

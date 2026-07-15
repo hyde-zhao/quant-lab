@@ -16,6 +16,8 @@
 | v1.0 | 2026-07-14 | host-orchestrator-inline | 回填 CR168 Slice 0 / CP2 批准；Slice 1 增加 adapter-only 调用、8-key denylist、strict allowlist、前置拒绝和后置非 PASS 断言，canonical 全局硬化仍不在 CR168。 |
 | v1.1 | 2026-07-14 | host-orchestrator-inline-meta-pm | 增量追加 CR169 C4 fixture/static CP2→CP8 候选切片：strict joint adapter 是局部兼容层，alpha-decay 归属留 CP3，真实 C4 与 canonical/global integration 不在切片。 |
 | v1.2 | 2026-07-14 | host-orchestrator-inline | CR169 CP2 评审整改与批准：Slice 4 新增 7/7 Stage 2 exit 核验交付义务并显式排除 Stage 3 entry；FU-007 拆分只作后续提案。 |
+| v1.3 | 2026-07-15 | host-orchestrator-inline-meta-pm | 增量追加 CR170 canonical Gate 1-5 N/A semantics 与 Gate 6 admission hardening 候选切片；保留现有 bottom-up merge，并明确不含 runner/aggregate/Stage3。 |
+| v1.4 | 2026-07-15 | host-orchestrator-inline | 回填 CR170 Slice 0 / CP2 批准；当前进入 Slice 1 / CP3 架构设计，future verifier 仅为契约 consumer，后续 Story/实现/验证仍受 CP3/CP5 门禁约束。 |
 
 ## CR157 Candidate Slices
 
@@ -86,3 +88,13 @@
 | Slice 2 | 形成全量实现设计证据 | CP4 formal Story/DAG/file owner 与 CP5 LLD/technical notes/test plan | 未批准实现 | CP4/CP5 |
 | Slice 3 | 用本地 fixture 证明 C4 合同 | daily/ML、12 类负向、determinism、C3-only regression、joint fixture contract、CR155 blocked、zero-operation guards | real ADV/liquidity/calibration、alpha（未归入时）、aggregate/trading | CP6/CP7 |
 | Slice 4 | 交付不夸大的 C4 foundation | verification、quality docs under `docs/quality/`、release readiness、verifier-risk disclosure、claim ceiling、`STAGE2-EXIT-VERIFICATION.result.json` 的 7/7 合同核验 | Stage3 start/entry-ready、real capacity readiness、canonical hardening/aggregate、publish/deploy/Git remote write | CP8 |
+
+## CR170 Candidate Slices
+
+| Slice | 用户价值 | 包含 | 不包含 | Gate |
+|---|---|---|---|---|
+| Slice 0 | 冻结 canonical fail-closed 产品语义（已完成） | 9 requirements、15 QAC、20 scenarios、21-unit inventory、五态、tier policy、future-verifier 边界、Decision Brief | HLD、Story、代码、真实数据 | CP2 approved |
+| Slice 1 | 冻结最小 hardening 架构 | Gate1-5 policy consumption、protected shared-summary merge、`resolve_admission_policy` 边界、public compatibility、adapter retention | current runner/aggregate 接入、adapter 删除、真实数据 | CP3 |
+| Slice 2 | 形成全量 Story 设计证据 | CP4 formal Story/DAG/file owner、CP5 LLD/test design，含 Gate1 三层断言 | 未批准实现 | CP4/CP5 |
+| Slice 3 | 证明 canonical 语义 fail-closed | 21-unit fixture/static tests、tier 4/4、adapter 2/2、CR155 regression、零外部操作 | Stage3/real lake/provider、aggregate、trading | CP6/CP7 |
+| Slice 4 | 交付安全硬化且不夸大集成 | quality/release docs、rollback/migration、claim ceiling、follow-up refs | publish/deploy/Git remote write、Stage3 entry-ready、CR155 promotion | CP8 |

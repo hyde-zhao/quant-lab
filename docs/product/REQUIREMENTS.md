@@ -1,9 +1,9 @@
 ---
 status: confirmed-cp2
-version: "1.6"
+version: "1.8"
 confirmed: true
-confirmed_by: "user-CR169-CP2-review-remediation"
-confirmed_at: "2026-07-14T17:45:00+08:00"
+confirmed_by: "user-CR170-CP2"
+confirmed_at: "2026-07-15T12:55:40+08:00"
 ---
 
 # Product Requirements
@@ -28,12 +28,14 @@ confirmed_at: "2026-07-14T17:45:00+08:00"
 | v1.4 | 2026-07-14 | host-orchestrator-inline | 回填 CR168 CP2 批准；依据 canonical Gate 4 代码评审，把 reason 逃逸整改精确为 CR168 adapter 的 8-key denylist、strict allowlist、调用前拒绝、调用后非 PASS 断言与 adapter-only 调用面，canonical 全局硬化仍不在本 CR。 |
 | v1.5 | 2026-07-14 | host-orchestrator-inline-meta-pm | 增量追加 CR169 的 9 项 C4 fixture/static requirements、15 项 QAC、strict C3+C4 joint adapter 边界、alpha-decay CP3 disposition 与五项 CP2 DQ；不改写 CR168、canonical Gate 4 或 CR155 基线。 |
 | v1.6 | 2026-07-14 | host-orchestrator-inline | 根据 CR169 CP2 评审整改，明确 `stage3_entry_ready=false`，将 Stage 2 exit 的 7/7 事实核验固化为 CP8 / formal exit 义务，并把 FU-007 的 007a/007b 仅登记为后续提案。 |
+| v1.7 | 2026-07-15 | host-orchestrator-inline-meta-pm | 增量追加 CR170 的 9 项 canonical Gate 1-5 N/A semantics / Gate 6 admission hardening 需求、21 项 inventory、15 项 QAC 与 tier 不变量；保留现有底层 worst-state merge，单独审查 `resolve_admission_policy`。 |
+| v1.8 | 2026-07-15 | host-orchestrator-inline | 回填 CR170 CP2 批准；明确“独立验证者”仅为 FU-006 future consumer，本 CR 以可靠性 Gate 维护者自验证代行且不声明 verifier independence；9 项需求、21/21 inventory、15 项 QAC 和 20 个场景计数不变，解锁 CP3 设计。 |
 
 ## 状态
 
-- 文档状态：awaiting-cp2（CR169 产品基线增量）
-- 关联 CR：`CR-157` / `CR-158` / `CR-160` / `CR-161` / `CR-162` / `CR-163` / `CR-164` / `CR-166` / `CR-168` / `CR-169`
-- 当前门禁：CR169 CP2 待人工批准；CP2 前不得进入 HLD/CP3、Story、LLD、实现或验证
+- 文档状态：confirmed-cp2（CR170 产品基线增量）
+- 关联 CR：`CR-157` / `CR-158` / `CR-160` / `CR-161` / `CR-162` / `CR-163` / `CR-164` / `CR-166` / `CR-168` / `CR-169` / `CR-170`
+- 当前门禁：CR170 CP2 已批准，进入 CP3 HLD/ADR 人工门禁；CP3 批准前不得创建正式 Story、LLD、实现或验证
 - 旧基线保留：当前仓库未发现既有 `docs/product/REQUIREMENTS.md`；既有组件文档和检查证据作为输入，不被替换。
 
 ## Requirement Summary
@@ -760,3 +762,59 @@ QAC-CR164-007 的 3/3 是产品 consumer coverage，不代表 UC-59/60 implement
 4. 决定 alpha-decay 的归属（C4、C2 或独立 CR）并回写 Deferred 状态；未归入时维持 calculator=0。
 5. 冻结 FU-006 verifier independence 的 CP8 披露模板与触发条件；不得把 fixture contract PASS 表述为真实 capacity readiness。
 6. 保留 `stage3_entry_ready=false`，在设计中引用 CP8 / formal Stage 2 exit 的 `STAGE2-EXIT-VERIFICATION.result.json`（7/7）；仅把 FU-007 007a/007b 写作非绑定后续提案，不预建 CR、不修改 canonical Gate 4。
+
+## CR170 Canonical Reliability N/A Semantics and Admission Requirements
+
+### CR170 需求清单
+
+| REQ ID | 标题 | 优先级 | 精确要求 |
+|---|---|---:|---|
+| REQ-CR170-001 | Gate 1-5 N/A policy inventory | P0 | 固定 `21/21` policy units；每项必须记录 Gate、证据字段族、mandatory/conditional 适用条件、owner、合法完整边界和结果规则。 |
+| REQ-CR170-002 | Five-state business semantics | P0 | 冻结 PRESENT、MISSING、NA_WITH_COMPLETE_BOUNDARY、NA_WITH_INCOMPLETE_BOUNDARY、GENERIC_REASON_ESCAPE 五种业务语义；CP2 不预先冻结 enum/dataclass 代码形态。 |
+| REQ-CR170-003 | Gate 1 masked-escape observability | P0 | 对 multiple-testing/FDR 等被其他 unavailable claim 掩盖的路径执行字段判定、mandatory claim 生成、最终 worst-state 三层断言；不得只断言最终 status。 |
+| REQ-CR170-004 | Gate 2-5 fail-closed consumption | P0 | mandatory missing、generic reason escape、incomplete boundary 不得因存在 reason 字符串而被当作 present；所有适用 policy unit 均有正/负/边界测试。 |
+| REQ-CR170-005 | Preserve verified lower-level worst-state merge | P0 | 先证明 `build_shared_gate_summary` 对 `NEEDS_REVIEW` 的现有传播 `1/1 PASS`；无失败证据时该逻辑修改数必须为 `0`。 |
+| REQ-CR170-006 | Admission-tier hardening boundary | P0 | 在 `resolve_admission_policy` 或 CP3 选定的最小公共边界处理 mandatory `NEEDS_REVIEW`：T0 返回 NEEDS_REVIEW 且不得声称 PASS；T1/T2 BLOCKED；T3 NOT_AUTHORIZED。 |
+| REQ-CR170-007 | Public compatibility and adapter regression | P0 | 公共 Gate API/结果 schema 保持兼容；CR168 C3-only 与 CR169 strict joint adapter 回归 `2/2 PASS`，局部 guard 不在本 CR 删除。 |
+| REQ-CR170-008 | State/baseline correction with traceability | P0 | BACKLOG、CURRENT-REQUIREMENT-BASELINE 与 MULTIFACTOR-RESEARCH 三类已知状态偏差 `3/3` 增量修正；历史记录保留并标注需独立 Stage 3 CR revalidation。 |
+| REQ-CR170-009 | Authorization, Stage 3 and CR155 boundary | P0 | 真实数据、Stage 3 Launch/current runner integration、aggregate、runtime/trading、remote publish 与 CR155 promotion 均为 `0`；`stage3_entry_ready=false`。 |
+
+### CR170 Gate 1-5 Policy Inventory
+
+固定分母为 `21` 个 policy units：Gate 1=`6`（multiple-testing、FDR、WRC/SPA、PBO/CSCV、DSR/deflation、trial-count）；Gate 2=`6`（split、walk-forward、OOS、purge、embargo、event-safe-gap）；Gate 3=`1`（PIT/survivorship-free universe）；Gate 4=`5`（impact-model、ADV participation、capacity dollars、liquidity sizing、cost-underestimation）；Gate 5=`3`（regime、attribution、reconciliation）。conditional unit 必须记录适用条件，不得因非适用样本减少 inventory 分母。
+
+### CR170 Quantitative Acceptance Criteria
+
+| QAC | 精确标准 |
+|---|---|
+| QAC-CR170-01 | Gate 1-5 policy inventory=`21/21`，mandatory/conditional/owner/boundary/result 规则完整率=`100%`。 |
+| QAC-CR170-02 | 五种业务语义=`5/5`；generic reason 不得替代 mandatory evidence。 |
+| QAC-CR170-03 | Gate 1 masked-escape 三层断言=`3/3`，至少覆盖 multiple-testing 与 FDR 两条路径。 |
+| QAC-CR170-04 | Gate 1-5 任一 applicable mandatory `{missing,generic_reason_escape,incomplete_boundary}` 导致无条件 PASS 的数量=`0`。 |
+| QAC-CR170-05 | NA_WITH_COMPLETE_BOUNDARY 的 owner、reason、scope、profile/authorization 边界完整率=`100%`，结果不得越过 tier policy。 |
+| QAC-CR170-06 | `build_shared_gate_summary` 既有 NEEDS_REVIEW 传播回归=`1/1 PASS`；无失败证据时相关生产逻辑修改=`0`。 |
+| QAC-CR170-07 | mandatory NEEDS_REVIEW 的 tier 结果：T0=`NEEDS_REVIEW`、T1=`BLOCKED`、T2=`BLOCKED`、T3=`NOT_AUTHORIZED`，匹配=`4/4`。 |
+| QAC-CR170-08 | `resolve_admission_policy` 与底层 worst-state merge 的职责边界在 CP3 ADR/HLD 中明确=`1/1`。 |
+| QAC-CR170-09 | public Gate API 和结果 schema 非兼容变更=`0`。 |
+| QAC-CR170-10 | CR168/CR169 adapter 回归=`2/2 PASS`；本 CR 删除或简化 guard=`0`。 |
+| QAC-CR170-11 | current Stage 3 runner 新增 canonical Gate 调用=`0`；aggregate orchestration 修改=`0`。 |
+| QAC-CR170-12 | BACKLOG/baseline/historical Stage3 marker 三类状态修正=`3/3` 且修订记录/CR ref 完整。 |
+| QAC-CR170-13 | CR155 promotion=`0`，`paper_candidate=false` 保持。 |
+| QAC-CR170-14 | real-data/lake/provider/NAS/credential/runtime/broker/QMT/trading/catalog/publish/remote-write 操作=`0`。 |
+| QAC-CR170-15 | CR170 新增路径引入测试失败=`0`；无法证明为既有失败时不得通过 CP7。 |
+
+### CR170 Non-Functional Requirements
+
+- **正确性**：mandatory evidence 的业务状态与 tier/admission 结果必须可由公开输出审计，不以 reason 字符串存在性替代证据有效性。
+- **兼容性**：优先局部硬化判定边界，不破坏公共 callable/result schema；adapter 保持 defense-in-depth。
+- **确定性**：相同 normalized evidence、profile 与 policy 必须得到相同 status、claim IDs 和 reasons。
+- **可审计性**：所有 N/A policy unit 必须关联 owner、适用条件、完整边界与 canonical reason code。
+- **安全性**：T0 只允许非真实数据诊断探索且不得声称 admission PASS；T1/T2 fail-closed；T3 不授权。
+
+### CR170 CP3 Design Obligations
+
+- 明确五态业务语义到代码形态的最小映射；不得仅修改 `_has_na_reason` 的布尔含义而误伤合法结构化 N/A。
+- 绘制 Gate 1-5 policy consumption 与 Gate 6 两层边界：底层 `build_shared_gate_summary` worst-state merge 和上层 `resolve_admission_policy` tier/admission decision。
+- 把现有 bottom-up NEEDS_REVIEW 传播设为受保护回归；只有失败证据才能授权重写。
+- 为 Gate 1 masked escape 固化字段判定、claim 生成、最终 worst-state 三层测试契约。
+- 明确 CR168/CR169 adapter 的保留条件，以及仅由后续 FU-CR161-009 + ADR 评估简化的边界。

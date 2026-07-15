@@ -22,7 +22,10 @@ from engine.cross_strategy_reliability_gates import (
     validate_gate3_pit_universe,
     validate_gate4_capacity_impact,
     validate_gate5_slots,
+    _classify_and_consume_na,
+    _has_na_reason,
 )
+from engine.reliability_na_policy import NA_POLICY_BY_ID, HardeningDirection
 from engine.strategy_admission_statistical_gate import ValidationBoundFamilyEvidence
 
 
@@ -102,7 +105,7 @@ def test_cr154_s02_gate1_requires_explicit_statistical_artifacts_and_propagates_
     assert gate.status is ReliabilityGateStatus.BLOCKED
     assert gate.family_lineage_projection["availability"] == "present"
     assert {claim.claim_id for claim in gate.blocked_claims} == {
-        "trial_count_policy",
+        "gate1_g1_p06_missing",
         "effective_trial_count_unavailable",
     }
 
@@ -122,7 +125,7 @@ def test_cr154_s02_gate1_requires_explicit_statistical_artifacts_and_propagates_
     payload = blocked.to_dict()
     assert payload["status"] == "BLOCKED"
     assert payload["release_blocking_reason"]["reason_id"] == "effective_trial_count_unavailable"
-    assert {"statistical_significance", "trial_count_policy"} <= {claim["claim_id"] for claim in payload["blocked_claims"]}
+    assert {"gate1_g1_p03_missing", "gate1_g1_p06_missing"} <= {claim["claim_id"] for claim in payload["blocked_claims"]}
 
     missing_multiple_and_fdr = evaluate_gate1_statistical_reliability(
         _gate1_artifacts(
@@ -139,7 +142,7 @@ def test_cr154_s02_gate1_requires_explicit_statistical_artifacts_and_propagates_
     )
     missing_payload = missing_multiple_and_fdr.to_dict()
     assert missing_payload["status"] == "BLOCKED"
-    assert {"multiple_testing_correction", "fdr_bh_correction", "trial_count_policy"} <= {
+    assert {"gate1_g1_p01_missing", "gate1_g1_p02_missing", "gate1_g1_p06_missing"} <= {
         claim["claim_id"] for claim in missing_payload["blocked_claims"]
     }
 
@@ -177,7 +180,7 @@ def test_cr154_s03_s04_s05_s06_gate_contracts_are_fixture_only_and_fail_closed()
         release_profile="candidate-release",
     )
     assert cv_missing_oos.to_dict()["status"] == "BLOCKED"
-    assert {"split_policy_missing", "walk_forward_missing", "oos_split_missing", "overlap_applicability_unknown"} <= {
+    assert {"gate2_g2_p01_missing", "gate2_g2_p02_missing", "gate2_g2_p03_missing", "overlap_applicability_unknown"} <= {
         claim["claim_id"] for claim in cv_missing_oos.to_dict()["blocked_claims"]
     }
 
@@ -193,7 +196,9 @@ def test_cr154_s03_s04_s05_s06_gate_contracts_are_fixture_only_and_fail_closed()
         release_profile="candidate-release",
     )
     assert cv.to_dict()["status"] == "BLOCKED"
-    assert "leakage_safe_cv" in {claim["claim_id"] for claim in cv.to_dict()["blocked_claims"]}
+    assert {"gate2_g2_p04_missing", "gate2_g2_p05_missing"} <= {
+        claim["claim_id"] for claim in cv.to_dict()["blocked_claims"]
+    }
 
     pit = validate_gate3_pit_universe({"pit_universe_refs": ["fixture://pit"], "cr153_slot_lifecycle": "delegated_to_cr154"})
     assert pit.to_dict()["status"] == "PASS"
@@ -218,7 +223,7 @@ def test_cr154_s03_s04_s05_s06_gate_contracts_are_fixture_only_and_fail_closed()
     )
     missing_impact_payload = missing_impact.to_dict()
     assert missing_impact_payload["status"] == "BLOCKED"
-    assert {"impact_model_ref_missing", "adv_participation_missing", "capacity_dollars_missing", "liquidity_sizing_missing", "cost_underestimation_status_missing"} <= {
+    assert {"gate4_g4_p01_missing", "adv_participation_missing", "capacity_dollars_missing", "liquidity_sizing_missing", "gate4_g4_p05_missing"} <= {
         claim["claim_id"] for claim in missing_impact_payload["blocked_claims"]
     }
 
@@ -292,6 +297,142 @@ def test_cr154_s03_s04_s05_s06_gate_contracts_are_fixture_only_and_fail_closed()
     assert {"real_reconciliation_not_authorized", "no_runtime_reconciliation_claim_missing"} <= {
         claim["claim_id"] for claim in real_recon.to_dict()["blocked_claims"]
     }
+
+
+def _cr170_boundary(policy_id: str, *, profile: str = "candidate-release") -> dict[str, str]:
+    policy = NA_POLICY_BY_ID[policy_id]
+    return {
+        "reason": "fixture evidence is explicitly unavailable",
+        "owner": policy.owner,
+        "scope": policy.policy_id,
+        "release_profile": profile,
+        "authorization_ref": "",
+    }
+
+
+def test_cr170_all_21_policy_units_have_directional_consumption_without_false_pass() -> None:
+    for policy_id, policy in NA_POLICY_BY_ID.items():
+        if policy.hardening_direction is HardeningDirection.STRICTER:
+            consumption = _classify_and_consume_na(
+                policy_id,
+                evidence_present=False,
+                applicable=True,
+                evidence={"na_reason": "legacy generic reason"},
+                release_profile="candidate-release",
+            )
+            assert consumption.blocked_claims
+            assert consumption.status_floor is ReliabilityGateStatus.NEEDS_REVIEW
+        elif policy.hardening_direction is HardeningDirection.CONTROLLED_WIDENING:
+            consumption = _classify_and_consume_na(
+                policy_id,
+                evidence_present=False,
+                applicable=True,
+                evidence={"n_a_boundaries": {policy_id: _cr170_boundary(policy_id)}},
+                release_profile="candidate-release",
+            )
+            assert consumption.review_claims
+            assert consumption.status_floor is ReliabilityGateStatus.NEEDS_REVIEW
+        else:
+            consumption = _classify_and_consume_na(
+                policy_id,
+                evidence_present=False,
+                applicable=True,
+                evidence={"n_a_boundaries": {policy_id: _cr170_boundary(policy_id)}},
+                release_profile="candidate-release",
+            )
+            assert consumption.blocked_claims
+            assert consumption.status_floor is ReliabilityGateStatus.BLOCKED
+
+
+def test_cr170_conditional_not_applicable_boundary_is_audit_only() -> None:
+    consumption = _classify_and_consume_na(
+        "G2-P05",
+        evidence_present=False,
+        applicable=False,
+        evidence={"n_a_boundaries": {"G2-P05": _cr170_boundary("G2-P05")}},
+        release_profile="candidate-release",
+    )
+    assert len(consumption.audit_only_refs) == 1
+    assert consumption.audit_only_refs[0].status is ReliabilityGateStatus.NEEDS_REVIEW
+    assert consumption.blocked_claims == ()
+    assert consumption.review_claims == ()
+    assert consumption.status_floor is None
+
+
+def test_cr170_gate1_masked_escape_has_decision_claim_and_final_worst_state() -> None:
+    policy_decision = _classify_and_consume_na(
+        "G1-P01",
+        evidence_present=False,
+        applicable=True,
+        evidence={"multiple_testing_correction_na_reason": "legacy escape"},
+        release_profile="candidate-release",
+    )
+    assert policy_decision.blocked_claims[0].claim_id == "gate1_g1_p01_generic_reason_escape"
+
+    gate = evaluate_gate1_statistical_reliability(
+        _gate1_artifacts(
+            multiple_testing_correction_refs=[],
+            fdr_bh_refs=[],
+            multiple_testing_correction_na_reason="legacy escape",
+            fdr_bh_na_reason="legacy escape",
+        ),
+        release_profile="candidate-release",
+        claim_types=("statistical_significance",),
+        family_lineage_projection=_trusted_family_lineage(),
+    )
+    claim_ids = {claim.claim_id for claim in gate.blocked_claims}
+    assert {"gate1_g1_p01_generic_reason_escape", "gate1_g1_p02_generic_reason_escape"} <= claim_ids
+    assert gate.status is ReliabilityGateStatus.BLOCKED
+
+
+def test_cr170_complete_na_reaches_needs_review_across_gate2_to_gate5() -> None:
+    gate2 = validate_gate2_cv_governance(
+        {
+            "split_policy_ref": "fixture://cv/split",
+            "walk_forward_ref": "fixture://cv/wf",
+            "oos_ref": "fixture://cv/oos",
+            "overlap_applicability": "non-overlapping-deterministic",
+            "n_a_boundaries": {"G2-P04": _cr170_boundary("G2-P04")},
+        },
+        strategy_class="ml",
+        release_profile="candidate-release",
+    )
+    assert gate2.status is ReliabilityGateStatus.NEEDS_REVIEW
+
+    gate3 = validate_gate3_pit_universe(
+        {
+            "n_a_boundaries": {"G3-P01": _cr170_boundary("G3-P01")},
+            "cr153_slot_lifecycle": "delegated_to_cr154",
+        },
+        release_profile="candidate-release",
+    )
+    assert gate3.status is ReliabilityGateStatus.NEEDS_REVIEW
+
+    gate4_boundaries = {
+        policy_id: _cr170_boundary(policy_id)
+        for policy_id in ("G4-P01", "G4-P02", "G4-P03", "G4-P04", "G4-P05")
+    }
+    gate4 = validate_gate4_capacity_impact(
+        {"n_a_boundaries": gate4_boundaries, "no_real_tca_claim": True},
+        release_profile="candidate-release",
+    )
+    assert gate4.status is ReliabilityGateStatus.NEEDS_REVIEW
+
+    gate5_boundaries = {
+        policy_id: _cr170_boundary(policy_id)
+        for policy_id in ("G5-P01", "G5-P02", "G5-P03")
+    }
+    gate5 = validate_gate5_slots(
+        {"n_a_boundaries": gate5_boundaries, "no_runtime_reconciliation_claim": True},
+        release_profile="candidate-release",
+    )
+    assert gate5.status is ReliabilityGateStatus.NEEDS_REVIEW
+
+
+def test_cr170_global_legacy_na_helper_semantics_are_unchanged() -> None:
+    assert _has_na_reason({"na_reason": "legacy"}, "any_prefix") is True
+    assert _has_na_reason({"field_na_reason": "specific"}, "field") is True
+    assert _has_na_reason({}, "field") is False
 
 
 def test_cr154_s07_admission_policy_tiers_fail_closed_and_never_authorize_runtime() -> None:
