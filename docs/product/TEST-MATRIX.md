@@ -1,9 +1,9 @@
 ---
-status: confirmed-delivered
-version: "2.0"
+status: confirmed
+version: "2.8"
 source_scenarios: "docs/product/SCENARIOS.yaml"
 source_requirements: "docs/product/REQUIREMENTS.md"
-cr_id: "CR-171"
+cr_id: "CR-172"
 template_deviation_reason: "CR157 uses Scenario/Requirement/Test Layer/Validation Mode columns to preserve gate and no-runtime evidence mapping; coverage statistics remain present below."
 ---
 
@@ -33,12 +33,20 @@ template_deviation_reason: "CR157 uses Scenario/Requirement/Test Layer/Validatio
 | v1.8 | 2026-07-15 | host-orchestrator-inline-meta-pm | 增量追加 CR170 20/20 场景的 planned coverage，包含 Gate 1 三层 masked-escape 断言、Gate 1-5 五态、底层 merge 保留回归、tier admission、adapter/CR155/Stage3 边界。 |
 | v1.9 | 2026-07-15 | host-orchestrator-inline | 回填 CR170 CP2 批准并补 consumer 边界：FU-006 独立验证者为 future consumer，本 CR 的 planned verification 由 Gate 维护者自验证承担；20/20 场景、19 P0/1 P1、21/21 inventory 与 15 QAC 不变。 |
 | v2.0 | 2026-07-15 | meta-pm | CR171 增量追加并关闭 4 个 decision/legacy/waiver/precheck 场景的静态覆盖；不授权真实数据或运行时测试。 |
+| v2.1 | 2026-07-16 | meta-pm（pm-wu） | CR172 增量追加 8/8 CP2/治理场景覆盖；全部为 static/contract planned，不执行真实读取、计算或 runtime。 |
+| v2.2 | 2026-07-16 | meta-pm（pm-zheng） | CR173 增量追加 8/8 offline methodology 场景覆盖；六类场景、七字段 schema、六类 golden vectors、C1 projection 与零授权均为 planned fixture/static。 |
+| v2.3 | 2026-07-16 | meta-pm（pm-zheng） | 依据 CP3 条件拆分把 CR173 consumer 场景改为 standalone evidence + public-boundary stop；public C1 projection/write=`0/0`，八个 requirement/scenario/matrix 映射与六类覆盖分母不变。 |
+| v2.4 | 2026-07-17 | meta-pm（pm-wu） | CR172 前轮草案保留原 8/8 场景并增量映射 13 个 PATH-I trial-return/storage/deployment 场景；部署合同、待决集合与覆盖总数已由 v2.6 correction R1 全量替换。 |
+| v2.5 | 2026-07-17 | host-orchestrator | CP2 发起前补齐关联 CR172/CR173 并同步 CR173 已关闭历史；其前轮 CR172 计数已由 v2.6 correction R1 替换，零真实操作边界保持不变。 |
+| v2.6 | 2026-07-17 | meta-pm（pm-wu） | correction R1 将 storage 场景改为 research-local canonical/NAS verified replica/execution cache，并新增 6 个 REQ-015 signal/sync 场景；CR172 现为 27/27 P0。 |
+| v2.7 | 2026-07-17 | meta-pm（pm-wu） | correction R2 保留 CR172 27/27 P0 与 S01~S06 ID，将信号验证收缩为 8 字段 contract/deferred implementation 边界，并补 `FU-CR173-001` 条件前置与 CP2/3/5/7/8 零操作验证。 |
+| v2.8 | 2026-07-17 | meta-pm（pm-wu） | 回填 CR172 PATH-I scope-delta CP2 用户批准；只把相关 planned-scope-delta 状态改为 approved-CP2/planned，保持 27/27、S01~S06 6/6、验证模式和零真实操作计数不变。 |
 
 ## 状态
 
-- 文档状态：confirmed-delivered（CR170/CR171 closed）
-- 关联 CR：`CR-157` / `CR-158` / `CR-160` / `CR-161` / `CR-162` / `CR-163` / `CR-164` / `CR-166` / `CR-168` / `CR-169` / `CR-170` / `CR-171`
-- 当前门禁：CR171 closed；coverage 只代表静态/决策证据，不代表真实数据、实现或运行时验证。
+- 文档状态：confirmed-CP2（CR172 PATH-I scope delta；CR173 历史覆盖保留）
+- 关联 CR：`CR-157` / `CR-158` / `CR-160` / `CR-161` / `CR-162` / `CR-163` / `CR-164` / `CR-166` / `CR-168` / `CR-169` / `CR-170` / `CR-171` / `CR-172` / `CR-173`
+- 当前门禁：CR172 PATH-I scope-delta CP2 已于 `2026-07-17T16:54:09+08:00` 获用户批准，当前只解锁 CP3 design-only；coverage 仍只代表静态/fixture 合同计划，不代表实现、真实数据、NAS、signal、migration、Git remote 或运行时验证。
 
 ## Coverage Matrix
 
@@ -161,6 +169,41 @@ template_deviation_reason: "CR157 uses Scenario/Requirement/Test Layer/Validatio
 | SC-CR171-N01 | REQ-CR171-003, REQ-CR171-005 | authorization / negative | static | CP1, CP2 candidate and CP8 cannot imply real read/computation/runtime/trading | P0 | planned-CP2 |
 | SC-CR171-B01 | REQ-CR171-004, REQ-CR171-005 | historical-claim / boundary | static | legacy/require-revalidation marker and three-verdict ceiling review | P0 | planned-CP2 |
 | SC-CR171-A01 | REQ-CR171-002 | waiver / precheck | static | 2/2 mechanical waiver expiry events block maturity claims without FU-006 | P0 | executed-static-CP8 |
+| SC-CR172-P01 | REQ-CR172-001, REQ-CR172-002, REQ-CR172-008 | decision / authorization-contract | static | 5/5 finite fields and PATH-C default recommendation with zero execution | P0 | planned-CP2 |
+| SC-CR172-P02 | REQ-CR172-002, REQ-CR172-003 | failure-recovery / workflow | static | PATH-B closes 0 OIs and returns to PATH-C/A selection | P0 | planned-CP2 |
+| SC-CR172-N01 | REQ-CR172-001, REQ-CR172-008 | negative / precheck | static | wildcard/inherited/inferred authorization rejected before dereference | P0 | planned-CP2 |
+| SC-CR172-B01 | REQ-CR172-004 | boundary / claim-ceiling | fixture-contract/static | effective count unavailable, raw alias 0, C1 computable false | P0 | planned-after-CP5 |
+| SC-CR172-F01 | REQ-CR172-005, REQ-CR172-008 | failure-isolation / integration | fixture-contract/static | producer-local isolation without aggregate OR-pass | P0 | planned-after-CP5 |
+| SC-CR172-Q01 | REQ-CR172-002, REQ-CR172-005 | governance / precheck | static | PATH-C C2/C3 independent-CR default and CR-count projection | P0 | planned-CP2 |
+| SC-CR172-A01 | REQ-CR172-006, REQ-CR172-008 | authorization / negative | static | dual owner same-revision/hash approval; partial approval rejects merge | P0 | planned-CP2 |
+| SC-CR172-G01 | REQ-CR172-007, REQ-CR172-008 | claim-ceiling / regression | static | CP8 max path_i_design_ready=true; Stage3/C1/real-data/multi-trial/signal authorization false | P0 | planned-CP2→CP8 |
+| SC-CR172-I01 | REQ-CR172-009, REQ-CR172-011, REQ-CR172-014 | contract / positive | static | truthful PATH-I source contract; six real-action counters 0/6 | P0 | approved-CP2-planned-static |
+| SC-CR172-I02 | REQ-CR172-010, REQ-CR172-012 | deployment / positive | static | 4/4 ownership, 5/5 NAS zones, research-local→replica→execution-cache | P0 | approved-CP2-planned-static |
+| SC-CR172-N02 | REQ-CR172-009, REQ-CR172-014 | object-kind / negative | fixture-contract/static | layered returns, refs and scalar metrics rejected as trial-return source | P0 | planned-after-CP5 |
+| SC-CR172-N03 | REQ-CR172-010 | replica integrity / negative | fixture-contract/static | partial/unversioned/hash-mismatch replica not verified/distributable | P0 | planned-after-CP5 |
+| SC-CR172-N04 | REQ-CR172-009, REQ-CR172-014 | alignment / negative | fixture-contract/static | cross-trial order/window/time-index mismatch blocks empirical R | P0 | planned-after-CP5 |
+| SC-CR172-N05 | REQ-CR172-012 | security / negative-permission | static | GitHub real-data/sensitive payload rejected before remote write | P0 | planned-after-CP5 |
+| SC-CR172-B02 | REQ-CR172-010 | identity / boundary | static | logical URI + hash stable across mount mappings; absolute path excluded | P0 | planned-after-CP5 |
+| SC-CR172-B03 | REQ-CR172-010, REQ-CR172-013 | replica freshness / boundary | fixture-contract/static | stale NAS replica cannot materialize or override research-local canonical | P0 | planned-after-CP5 |
+| SC-CR172-A02 | REQ-CR172-011, REQ-CR172-012 | authorization / permission | static | partial authorization cannot expand six actions; execution direct-NAS read denied | P0 | approved-CP2-planned-static |
+| SC-CR172-F02 | REQ-CR172-010, REQ-CR172-011 | sync/pull / failure-recovery | fixture-contract/static | interrupted sync/pull leaves no distributable replica or runtime cache | P0 | planned-after-CP5 |
+| SC-CR172-Q02 | REQ-CR172-009..015 | activation / phase-guard precheck | static | empirical disposition 1/1; DQ-003 downgrade may design; CP7 real actions 0/6; no auto-resume | P0 | approved-CP2-planned-CP7 |
+| SC-CR172-G02 | REQ-CR172-013 | path / regression-boundary | static | new semantic path only; legacy writes/moves/renames/rewrites=0 | P0 | planned-after-CP5 |
+| SC-CR172-C02 | REQ-CR172-014 | empirical-R / claim-ceiling | fixture-contract/static | pre-FU-CR173-001 positive effective count/C1 rejected; typed-unavailable design path remains valid | P0 | planned-after-CP5 |
+| SC-CR172-S01 | REQ-CR172-012, REQ-CR172-015 | signal / positive | static | execution-local generation default; cross-machine transfer=0 | P0 | approved-CP2-planned-static |
+| SC-CR172-S02 | REQ-CR172-015 | EOD batch contract / positive-boundary | fixture-contract/static | exact minimum fields 8/8; extra mandatory fields=0; exchange implementation=0 | P0 | planned-after-CP5 |
+| SC-CR172-S03 | REQ-CR172-015 | minimum-contract validation / negative | fixture-contract/static | missing/malformed 8 fields rejected; consumer/ack/replay implementation=0 | P0 | planned-after-CP5 |
+| SC-CR172-S04 | REQ-CR172-015 | detailed exchange / deferred-boundary | static | path/state/ack/idempotency/replay implementation=0; routed to DF-CR172-SIGNAL-BATCH-EXCHANGE | P0 | approved-CP2-deferred-boundary |
+| SC-CR172-S05 | REQ-CR172-015 | signal security / permission | static | credential/secret/order-command payload rejected | P0 | planned-after-CP5 |
+| SC-CR172-S06 | REQ-CR172-015 | intraday / precheck | static | base contract reuse blocked; DF-CR172-INTRADAY-REALTIME-SIGNAL candidate; formal CR=0 | P0 | approved-CP2-deferred-boundary |
+| SC-CR173-P01 | REQ-CR173-001 | method / positive | fixture/static | participation-ratio effective dimensionality is method-derived; alias/default/fallback and Li-Ji/BH/FWER/DSR calibration claims=0 | P0 | planned-after-CP5 |
+| SC-CR173-Q01 | REQ-CR173-002 | architecture / precheck | static | CP3 input-contract inventory coverage=100%; incomplete design blocked | P0 | planned-CP3 |
+| SC-CR173-F01 | REQ-CR173-003 | failure-recovery / versioning | fixture/static | invalid input unavailable/blocked; corrected evidence creates new version | P0 | planned-after-CP5 |
+| SC-CR173-N01 | REQ-CR173-004 | schema / provenance / negative | fixture/static | standalone seven fields 7/7; missing/orphan refs yield zero present/available; public projection/write=0 | P0 | planned-after-CP5 |
+| SC-CR173-B01 | REQ-CR173-005 | boundary / strategy-agnostic | fixture/static | strategy identity required/inferred=0; real input=0 | P0 | planned-after-CP5 |
+| SC-CR173-D01 | REQ-CR173-006 | determinism / golden-vector | fixture/static | 6/6 classes × 3/3 repeats; legal group one hash; invalid available=0 | P0 | planned-after-CP5 |
+| SC-CR173-C01 | REQ-CR173-007 | standalone-evidence / public-boundary | fixture-contract/static | standalone evidence=1/1; public C1 projection/write=0/0; current C1/Gate1/admission unavailable and c1_computable=false | P0 | planned-after-CP5 |
+| SC-CR173-A01 | REQ-CR173-008 | permission / workflow | static | forbidden counters=0; CP5 required; CR173 closes methodology prerequisite only; CR172 auto-resume/close=0 | P0 | planned-CP3-and-CP8 |
 
 ## Coverage Summary
 
@@ -226,6 +269,25 @@ template_deviation_reason: "CR157 uses Scenario/Requirement/Test Layer/Validatio
 | CR171 P0 scenarios / planned coverage | 4 / 4 |
 | CR171 CP2 formal decisions | 3/3 |
 | CR171 real-data / credentials / provider / write / runtime-trading tests authorized | 0 / 0 / 0 / 0 / 0 |
+| CR172 P0 scenarios / planned coverage | 27 / 27 |
+| CR172 prior CP2 decisions / current scope-delta decisions | 8/8 approved-history / 7/7 approved-CP2 |
+| CR172 five-field finite-value requirement | prior PATH-B history preserved; future activation still pending 5/5 |
+| CR172 new requirements positive + negative coverage | 7/7 + 7/7 |
+| CR172 scenario classes | positive / negative / boundary / permission / failure-recovery / precheck = 6/6 |
+| CR172 stable URI / components / data-action auth / SignalBatch minimum fields | 1/1 / 4/4 / 6/6 / exactly 8/8 |
+| CR172 detailed signal path/state/ack/idempotency/replay/sync/transport/consumer implementation | 0/0/0/0/0/0/0/0 |
+| CR172 empirical disposition / FU-CR173-001 positive-claim guard | 1/1 / pre-completion available-count=0 and c1_computable=false |
+| CR172 CP2/CP3/CP5/CP7/CP8 phase guards | 5/5; CP7 real-action counters=0/6 |
+| CR172 CP8 maximum / forbidden claims | path_i_design_ready=true; stage3_entry_ready/c1_computable/real_data_authorized/multi_trial_runtime_authorized/signal_transport_authorized=false/false/false/false/false |
+| CR172 expected activation CR count under PATH-C | 3 |
+| CR172 real-data / credentials / provider / write / runtime-trading / NAS-sync-pull / signal / migration / Git-remote tests authorized | 0 / 0 / 0 / 0 / 0 / 0 / 0 / 0 / 0 |
+| CR173 P0 requirements / scenarios / planned coverage | 8 / 8 / 8 |
+| CR173 scenario classes | positive / negative / boundary / permission / failure-recovery / precheck = 6/6 |
+| CR173 typed evidence schema | 7/7 |
+| CR173 golden-vector classes / repeats | 6/6 / 3/3 per class |
+| CR173 standalone evidence / public C1 projection / public C1 write / competing gates | 1 / 0 / 0 / 0 |
+| CR173 raw alias / Stage3-admission-aggregate overclaim | 0 / 0 |
+| CR173 real-data / credentials / provider / write / runtime-trading / Git remote tests authorized | 0 / 0 / 0 / 0 / 0 / 0 |
 
 ## Notes
 
@@ -241,3 +303,5 @@ template_deviation_reason: "CR157 uses Scenario/Requirement/Test Layer/Validatio
 - CR168 coverage 只描述 CP2 待批准的 fixture/static 验证合同。Gate 4 是 C3+C4 联合门禁；C4 reserved/not-built/typed_unavailable 必须由 projection 映射为三个 refs absent-no-na-reason，任何字段级或通用 na-reason 逃逸都必须在 projection 侧阻断，capacity/aggregate PASS=`0`。CP2 不授权 HLD 之外的实现，也不授权真实 TCA、真实 impact calibration、真实数据、runtime、C4、event producer、交易或远端写入。
 - CR169 coverage 描述已获 CP2 批准但尚未实现的 C4 fixture/static 合同。CR168 C3-only adapter 保持 absent-C4 fail-closed；CR169 的新 joint adapter 仅组合经验证的 C3+C4 components、构造精确七字段 Gate4 payload，并可证明 `gate4_fixture_contract_pass=1`，不产生 aggregate/capacity admission PASS、真实 capacity claim 或 CR155 promotion。alpha-decay 仅为 CP3 disposition；`stage3_entry_ready=false`，正式 Stage 2 exit 必须另以 7/7 核验证据决定。
 - CR171 coverage 只验证决策包、历史声明和 deny-default wording。它不读取数据湖/NAS、凭据或环境，不运行 runner/computation，也不写 provider/catalog/current pointer；即使未来 CP8 成功，Stage 3 entry readiness 仍须由其独立事实和门禁证明。
+- CR172 原 DQ-001~008 与 PATH-B 为已批准历史；DQ-009~015 已于 `2026-07-17T16:54:09+08:00` 按推荐值获用户批准。当前 coverage 静态验证 PATH-I、research-local canonical/NAS verified replica/execution cache、stable URI、六类数据动作、信号本地生成与低频精确 8 字段 contract。S01~S06 ID 全部保留，但路径、状态机、ack、idempotency/replay、sync/transport/consumer 只能验证 deferred 与 implementation=0。`FU-CR173-001` 仅是 available effective count / `c1_computable=true` 的硬前置，不阻断 DQ-003 typed-unavailable 设计。CP2 只解锁 CP3；CP7 六类真实动作必须为 0/6，CP8 最高只可声明 `path_i_design_ready=true`。真实 lake/NAS sync/pull、runtime、trial-return/R、signal、migration、trading、deploy 或 Git remote write 均未授权。
+- CR173 coverage 仅描述 strategy-agnostic、estimator-only 的 planned fixture/static 合同。CP3 将方法限定为 participation-ratio 二阶 effective dimensionality，并因 public C1 contract 跨 owner/跨域/非兼容而触发 split；当前覆盖只证明 standalone 七字段证据和 public-boundary stop，不实现 C1 projection，不声称 Li-Ji/BH/FWER/DSR calibration。任何真实 lake/NAS、provider、credential、producer、runtime、write、trading、publish 或 Git remote write 均未授权。

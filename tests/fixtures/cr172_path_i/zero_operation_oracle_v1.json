@@ -1,0 +1,39 @@
+{
+  "schema_version": "cr172-path-i-zero-operation-oracle.v1",
+  "req013": {
+    "contract_ready": 1,
+    "runtime_path_enforcement": 0,
+    "default_switch": 0,
+    "runtime_delivered": 0,
+    "future_prerequisite": 1
+  },
+  "real_operations": {
+    "data_lake_read": {"authorized": 0, "executed": 0},
+    "multi_trial_runtime_and_workspace_write": {"authorized": 0, "executed": 0},
+    "trial_return_generation": {"authorized": 0, "executed": 0},
+    "empirical_R_computation": {"authorized": 0, "executed": 0},
+    "nas_replica_sync": {"authorized": 0, "executed": 0},
+    "execution_pull_verify_materialize": {"authorized": 0, "executed": 0}
+  },
+  "high_order_claims": {
+    "stage3_entry_ready": false,
+    "c1_computable": false,
+    "real_data_authorized": false,
+    "multi_trial_runtime_authorized": false,
+    "signal_transport_authorized": false
+  },
+  "deferred": {
+    "signal_detailed_module": 0,
+    "signal_detailed_story": 0,
+    "signal_detailed_implementation": 0,
+    "fu_v2_story": 0,
+    "public_c1_production_diff": 0,
+    "public_c1_production_call": 0,
+    "legacy_write": 0,
+    "legacy_move": 0,
+    "legacy_rename": 0,
+    "legacy_rewrite": 0,
+    "real_runtime_story": 0,
+    "real_runtime_implementation": 0
+  }
+}

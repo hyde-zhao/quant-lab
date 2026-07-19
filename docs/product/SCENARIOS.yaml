@@ -1,8 +1,8 @@
 schema_version: 1
-version: "1.9"
-status: confirmed-delivered
-cr_id: CR-171
-updated_at: "2026-07-15T22:35:00+08:00"
+version: "2.6"
+status: confirmed
+cr_id: CR-172
+updated_at: "2026-07-17T16:54:09+08:00"
 source_requirements:
   - docs/product/REQUIREMENTS.md
 source_use_cases:
@@ -84,6 +84,34 @@ revision_record:
     date: "2026-07-15"
     author: meta-pm
     summary: "Add and close CR171 route/verifier/read-scope, legacy historical-evidence, deny-default and CP8-not-entry-ready scenarios; no real-data or runtime action is authorized."
+  - version: v2.0
+    date: "2026-07-16"
+    author: meta-pm-pm-wu
+    summary: "Add eight CR172 CP2/activation-governance scenarios covering finite fields, PATH-C default, PATH-B recovery, C1 degradation, C2/C3 governance, joint approval, E1/OI-005 and zero-authorization boundaries."
+  - version: v2.1
+    date: "2026-07-16"
+    author: meta-pm-pm-zheng
+    summary: "Add eight CR173 offline-methodology scenarios covering non-alias estimand, CP3 input-contract precheck, typed-unavailable recovery, seven-field provenance, strategy-agnostic boundary, deterministic golden vectors, C1 projection ceiling and zero-authorization recovery."
+  - version: v2.2
+    date: "2026-07-16"
+    author: meta-pm-pm-zheng
+    summary: "Resolve the approved CP3 conditional branch as participation-ratio estimator-only: keep all eight CR173 IDs and traces, replace consumer projection with standalone seven-field evidence plus a public-boundary stop, and leave public C1/Gate1/admission typed_unavailable."
+  - version: v2.3
+    date: "2026-07-17"
+    author: meta-pm-pm-wu
+    summary: "Preserve the eight original CR172 scenarios and PATH-B history; add thirteen P0 PATH-I trial-return/storage/deployment scenarios covering positive, negative, boundary, permission, failure-recovery and precheck classes without authorizing real operations."
+  - version: v2.4
+    date: "2026-07-17"
+    author: meta-pm-pm-wu
+    summary: "Correction R1 freezes research-local canonical to NAS verified replica to execution-local cache, and adds six P0 signal/sync scenarios for local generation, EOD mailbox, validation, idempotency, forbidden payload and intraday deferral."
+  - version: v2.5
+    date: "2026-07-17"
+    author: meta-pm-pm-wu
+    summary: "Correction R2 preserves all 27 CR172 IDs, narrows S01-S06 to signal-boundary and deferred-implementation checks, adds FU-CR173-001 empirical-method prerequisite semantics, and freezes CP2/3/5/7/8 zero-operation guards."
+  - version: v2.6
+    date: "2026-07-17"
+    author: meta-pm-pm-wu
+    summary: "Backfill user approval of CR172 PATH-I scope-delta CP2 at 2026-07-17T16:54:09+08:00; preserve all 152 scenarios, 27 CR172 P0 IDs, S01-S06 semantics and zero-operation boundaries."
 scenarios:
   - id: SC-CR157-P01
     title: "Build mature admission package from complete research refs"
@@ -1140,13 +1168,294 @@ scenarios:
     use_case_refs: [UC-58-CR171]
     steps: ["Review the two waiver expiry events.", "Attempt a real-evidence admission PASS/PASS_WITH_RISK or Stage 3 exit-gate launch after either event without FU-006."]
     expected: ["The waiver is invalid at either expiry event.", "The proposed maturity action is blocked until FU-006 has its own evidence."]
+  - id: SC-CR172-P01
+    title: "Finite five-field contract and C1-first default are ready for CP2"
+    type: positive
+    priority: P0
+    requirement_refs: [REQ-CR172-001, REQ-CR172-002, REQ-CR172-008]
+    use_case_refs: [UC-58-CR172]
+    steps: ["Provide five exact finite field values from the authorized data owner.", "Keep three-producer blast-radius acceptance absent.", "Build the CP2 decision candidate."]
+    expected: ["Five-field coverage is 5/5 with no wildcard or inherited value.", "PATH-C is the recommended default.", "No read, computation or runtime action occurs."]
+  - id: SC-CR172-P02
+    title: "PATH-B completion returns to activation selection"
+    type: failure-recovery
+    priority: P0
+    requirement_refs: [REQ-CR172-002, REQ-CR172-003]
+    use_case_refs: [UC-58-CR172]
+    steps: ["Select PATH-B because fields or methodology approval are not ready.", "Complete only FU-CR164-004 offline evidence.", "Later make five fields freezeable and resume CR172 routing."]
+    expected: ["PATH-B closes none of OI-CR171-001..005.", "The workflow returns to CP2 to choose PATH-C or PATH-A.", "Estimator completion is not reported as activation completion."]
+  - id: SC-CR172-N01
+    title: "Wildcard inherited or historically inferred authorization is rejected"
+    type: negative-precheck
+    priority: P0
+    requirement_refs: [REQ-CR172-001, REQ-CR172-008]
+    use_case_refs: [UC-58-CR172]
+    steps: ["Provide latest/*, an inherited release or a value inferred from an old directory.", "Attempt to form the read contract."]
+    expected: ["The contract is BLOCKED with the offending field identified.", "No data source is dereferenced and no output-directory write is authorized."]
+  - id: SC-CR172-B01
+    title: "C1 channel remains truthfully degraded without effective-trial estimator"
+    type: boundary
+    priority: P0
+    requirement_refs: [REQ-CR172-004]
+    use_case_refs: [UC-58-CR172]
+    steps: ["Provide valid release/schema/PIT/lineage/run identity without an approved estimator.", "Build the C1 binding projection."]
+    expected: ["effective_trial_count is typed_unavailable and ref/method are empty.", "raw_trial_count is not aliased.", "C1 computable and admission PASS claims remain false."]
+  - id: SC-CR172-F01
+    title: "Producer-local failure is isolated without aggregate OR-pass"
+    type: failure-isolation
+    priority: P0
+    requirement_refs: [REQ-CR172-005, REQ-CR172-008]
+    use_case_refs: [UC-58-CR172]
+    steps: ["Hold shared authorization/PIT/lineage valid.", "Inject one producer-local failure.", "Inspect other producer evidence and aggregate status."]
+    expected: ["Only the failed producer becomes blocked/unavailable.", "Other eligible producers may form truthful evidence.", "Aggregate/admission remains blocked and no OR-pass occurs."]
+  - id: SC-CR172-Q01
+    title: "PATH-C routes C2 and C3 to explicit follow-up governance"
+    type: governance-precheck
+    priority: P0
+    requirement_refs: [REQ-CR172-002, REQ-CR172-005]
+    use_case_refs: [UC-58-CR172]
+    steps: ["Select PATH-C at CP2.", "Inspect follow-up ownership and CR-count projection.", "Evaluate the optional sequential-slice conditions."]
+    expected: ["C2 and C3 each have an independent runtime-high-risk follow-up by default.", "Total activation CR count is projected as 3.", "Sequential slices remain a CP2-explicit conditional alternative, not an implicit path."]
+  - id: SC-CR172-A01
+    title: "Partial or mismatched joint approval cannot merge effective-trial scope"
+    type: authorization
+    priority: P0
+    requirement_refs: [REQ-CR172-006, REQ-CR172-008]
+    use_case_refs: [UC-58-CR172]
+    steps: ["Provide only one owner approval or two approvals with different scope hashes.", "Attempt to merge FU-CR164-004 into CR172."]
+    expected: ["Merge is rejected and estimator stays separate.", "No permission union or risk-boundary expansion occurs.", "A revision change requires two fresh approvals."]
+  - id: SC-CR172-G01
+    title: "E1 OI-005 and Stage 3 ceilings remain outside CR172"
+    type: claim-ceiling
+    priority: P0
+    requirement_refs: [REQ-CR172-007, REQ-CR172-008]
+    use_case_refs: [UC-58-CR172]
+    steps: ["Close a hypothetical CR172 CP8 with all PATH-I static/fixture evidence present.", "Attempt to trigger E1, close OI-005, or claim Stage3/C1/real-data/multi-trial/signal/admission/aggregate readiness."]
+    expected: ["The highest allowed positive claim is path_i_design_ready=true or equivalent verified contract-ready.", "E1 is not triggered and OI-003/004/005 remain separately owned.", "stage3_entry_ready, c1_computable, real_data_authorized, multi_trial_runtime_authorized and signal_transport_authorized remain false."]
+  - id: SC-CR172-I01
+    title: "PATH-I freezes a truthful trial-return source contract before activation"
+    type: positive
+    priority: P0
+    requirement_refs: [REQ-CR172-009, REQ-CR172-011, REQ-CR172-014]
+    use_case_refs: [UC-58-CR172]
+    steps: ["Review the proposed per-trial portfolio-return object and identity fields.", "Verify every real action remains separately unauthorized.", "Build the PATH-I product contract without running a producer."]
+    expected: ["Object kind, family/run/trial identity and nine semantic fields are fully specified.", "No existing metadata, layered return or declared-exact matrix is presented as a real trial-return source.", "Real read/runtime/generation/R-compute/NAS-sync/execution-pull counters remain 0/0/0/0/0/0."]
+  - id: SC-CR172-I02
+    title: "Four-component flow preserves research-local canonical and verified local consumption"
+    type: positive
+    priority: P0
+    requirement_refs: [REQ-CR172-010, REQ-CR172-012]
+    use_case_refs: [UC-58-CR172]
+    steps: ["Map one hypothetical research-local canonical object to a versioned/hash-verified NAS replica.", "Pull it to execution temporary staging, validate release/manifest/hash and atomically materialize a local immutable cache.", "Inspect GitHub payload ceilings."]
+    expected: ["Component responsibilities are 4/4 and NAS zones are 5/5.", "Absolute paths remain deployment metadata; identity is logical URI + hash.", "Execution runtime uses only the verified local cache and GitHub carries metadata only."]
+  - id: SC-CR172-N02
+    title: "Layered forward returns and lineage refs cannot masquerade as trial returns"
+    type: negative
+    priority: P0
+    requirement_refs: [REQ-CR172-009, REQ-CR172-014]
+    use_case_refs: [UC-58-CR172]
+    steps: ["Offer layered_returns.csv, CR163 metadata/ref or a scalar metric as the trial-return source.", "Attempt empirical-R eligibility classification."]
+    expected: ["All wrong object kinds are rejected with a machine-readable source-kind reason.", "Empirical R remains typed_unavailable and c1_computable remains false."]
+  - id: SC-CR172-N03
+    title: "Hash mismatch, partial or unversioned object cannot become a verified NAS replica"
+    type: negative
+    priority: P0
+    requirement_refs: [REQ-CR172-010]
+    use_case_refs: [UC-58-CR172]
+    steps: ["Provide a NAS candidate that is partial, unversioned or whose hash differs from the research-local manifest.", "Attempt to mark it verified/distributable."]
+    expected: ["Replica validation is BLOCKED for all cases.", "Verified/distribution pointer updates and real NAS writes are 0.", "Research-local active canonical remains unchanged."]
+  - id: SC-CR172-N04
+    title: "Cross-trial time alignment failure blocks empirical R"
+    type: negative
+    priority: P0
+    requirement_refs: [REQ-CR172-009, REQ-CR172-014]
+    use_case_refs: [UC-58-CR172]
+    steps: ["Provide trial-return refs with inconsistent ordered trial IDs, estimation windows or time indexes.", "Attempt to classify an empirical dependency matrix as available."]
+    expected: ["Alignment failure is identified before computation.", "No repair is inferred, empirical R is unavailable/blocked and c1_computable remains false."]
+  - id: SC-CR172-N05
+    title: "GitHub rejects real data and sensitive payload leakage"
+    type: negative-permission
+    priority: P0
+    requirement_refs: [REQ-CR172-012]
+    use_case_refs: [UC-58-CR172]
+    steps: ["Attempt to include a real return series, dataset fragment, credential or account/order payload in a GitHub-bound package.", "Evaluate the data ceiling before remote write."]
+    expected: ["Every forbidden payload class is rejected locally.", "Git remote writes and leaked payload counts remain 0."]
+  - id: SC-CR172-B02
+    title: "Logical URI identity remains stable across mount-path changes"
+    type: boundary
+    priority: P0
+    requirement_refs: [REQ-CR172-010]
+    use_case_refs: [UC-58-CR172]
+    steps: ["Map the same logical artifact and content hash through research-local, NAS replica and execution-cache paths.", "Compare lineage identity and deployment metadata."]
+    expected: ["Lineage identity is identical in both mappings.", "Absolute paths differ only in deployment metadata and never enter the identity hash."]
+  - id: SC-CR172-B03
+    title: "Stale NAS replica never overrides research-local active canonical"
+    type: boundary
+    priority: P0
+    requirement_refs: [REQ-CR172-010, REQ-CR172-013]
+    use_case_refs: [UC-58-CR172]
+    steps: ["Create a newer research-local manifest and a stale NAS replica for one logical URI.", "Attempt execution materialization from the stale replica."]
+    expected: ["The stale replica is rejected and materialization count is 0.", "Research-local active canonical authority remains unchanged and no path-precedence promotion occurs."]
+  - id: SC-CR172-A02
+    title: "Partial action authorization and trading-machine research access are denied"
+    type: permission
+    priority: P0
+    requirement_refs: [REQ-CR172-011, REQ-CR172-012]
+    use_case_refs: [UC-58-CR172]
+    steps: ["Approve only a hypothetical data-lake read action.", "Attempt runtime, generation, R computation, NAS sync and execution pull/materialize.", "Attempt execution runtime direct-read from NAS."]
+    expected: ["Only the explicitly approved action is representable; the other five actions remain denied and unexecuted.", "Execution direct-NAS runtime read is denied.", "No permission union occurs."]
+  - id: SC-CR172-F02
+    title: "Interrupted replica sync or execution pull recovers without cache drift"
+    type: failure-recovery
+    priority: P0
+    requirement_refs: [REQ-CR172-010, REQ-CR172-011]
+    use_case_refs: [UC-58-CR172]
+    steps: ["Model an interrupted NAS replica sync and a separate interrupted execution pull before atomic materialization.", "Verify cleanup/retry semantics with fixtures.", "Retry after authorization remains valid."]
+    expected: ["Research-local active canonical remains unchanged.", "Partial replica/staging objects are non-distributable/non-runtime and auditable.", "A retry requires release/manifest/hash validation and atomically creates one immutable cache version."]
+  - id: SC-CR172-Q02
+    title: "PATH-I precheck requires explicit empirical disposition and preserves phase guards"
+    type: precheck
+    priority: P0
+    requirement_refs: [REQ-CR172-009, REQ-CR172-010, REQ-CR172-011, REQ-CR172-012, REQ-CR172-013, REQ-CR172-014, REQ-CR172-015]
+    use_case_refs: [UC-58-CR172]
+    steps: ["Check source contract, owner, stable URI, replica/materialization map, new-path policy and signal boundary.", "At the future PATH-C/A CP2 choose exactly one empirical disposition: complete FU-CR173-001, split future activation, or DQ-003 typed-unavailable downgrade.", "Attempt each CP2/CP3/CP5/CP7/CP8 forbidden action in static guard fixtures."]
+    expected: ["Exactly one empirical disposition is recorded; missing disposition blocks progression.", "The typed-unavailable choice may unlock design but never available effective count or c1_computable=true.", "CP7 proves all six real-action counters 0/6 and PATH-I completion never auto-resumes PATH-C/A."]
+  - id: SC-CR172-G02
+    title: "New runs avoid the legacy stage path while history remains read-only"
+    type: regression-boundary
+    priority: P0
+    requirement_refs: [REQ-CR172-013]
+    use_case_refs: [UC-58-CR172]
+    steps: ["Resolve a hypothetical new run root and a historical run reference.", "Attempt to write the new run under stage3_mature_multifactor or rewrite the historical manifest."]
+    expected: ["The new run resolves only to multifactor-strategy-research/{run_id}.", "Legacy writes, moves, renames and manifest rewrites are all 0.", "Historical audit references remain discoverable."]
+  - id: SC-CR172-C02
+    title: "Declared-exact matrices and pre-v2 empirical methods cannot overclaim positive C1"
+    type: claim-ceiling
+    priority: P0
+    requirement_refs: [REQ-CR172-014]
+    use_case_refs: [UC-58-CR172]
+    steps: ["Provide a CR173-style declared-exact fixture matrix without empirical provenance.", "Provide an empirical candidate without FU-CR173-001 sampling-error/uncertainty evidence, method v2 + hash, valid-domain/bias bounds or independent validation.", "Attempt available effective count and c1_computable=true, then select DQ-003 typed-unavailable downgrade."]
+    expected: ["Declared-exact remains explicitly classified and cannot establish empirical evidence.", "Before FU-CR173-001 completion, available effective count and c1_computable=true are rejected.", "The typed-unavailable downgrade remains a valid design path and does not claim positive C1."]
+  - id: SC-CR172-S01
+    title: "Execution machine generates signals locally by default"
+    type: positive
+    priority: P0
+    requirement_refs: [REQ-CR172-012, REQ-CR172-015]
+    use_case_refs: [UC-58-CR172]
+    steps: ["Provide an approved strategy-package hash and local market-data identity to an execution fixture.", "Select the default signal disposition."]
+    expected: ["Signal generation disposition is execution-local.", "Research-to-execution signal transfer and real signal generation counts remain 0."]
+  - id: SC-CR172-S02
+    title: "Low-frequency immutable batch contract has exactly eight minimum fields"
+    type: positive-boundary
+    priority: P0
+    requirement_refs: [REQ-CR172-015]
+    use_case_refs: [UC-58-CR172]
+    steps: ["Build an EOD SignalBatch contract fixture with schema_version, batch_id, strategy_id, strategy_package_hash, content_sha256, signature/key_id, valid_from/valid_until and sequence_no.", "Attempt to make mailbox path, state machine, ack, idempotency or replay mandatory in PATH-I."]
+    expected: ["Minimum required field coverage is exactly 8/8 with extra mandatory fields 0.", "Detailed exchange concerns route to DF-CR172-SIGNAL-BATCH-EXCHANGE.", "Real mailbox write/read/sync/transport/consume implementation counts remain 0."]
+  - id: SC-CR172-S03
+    title: "Malformed minimum batch contract is rejected without consumer implementation"
+    type: negative
+    priority: P0
+    requirement_refs: [REQ-CR172-015]
+    use_case_refs: [UC-58-CR172]
+    steps: ["Remove each of the eight minimum fields in separate static fixtures, then corrupt content_sha256, signature/key_id, validity or sequence_no.", "Attempt to treat contract validation as implemented mailbox consumption."]
+    expected: ["All missing or malformed minimum-contract variants are rejected 100%.", "Consumer, ack, replay and signal-application implementation counts remain 0 and route to deferred scope."]
+  - id: SC-CR172-S04
+    title: "Idempotency, ack state and replay recovery remain deferred"
+    type: boundary
+    priority: P0
+    requirement_refs: [REQ-CR172-015]
+    use_case_refs: [UC-58-CR172]
+    steps: ["Request idempotency key semantics, seven-level state transitions, ack recovery or replay handling during PATH-I design.", "Attempt to include them in current fixture implementation."]
+    expected: ["All detailed exchange semantics are marked deferred to DF-CR172-SIGNAL-BATCH-EXCHANGE.", "Current idempotency/ack/replay/state-machine implementation counts are 0/0/0/0.", "SC-CR172-S04 trace remains preserved without claiming replay safety is implemented."]
+  - id: SC-CR172-S05
+    title: "Signal mailbox rejects secrets and broker order commands"
+    type: permission
+    priority: P0
+    requirement_refs: [REQ-CR172-015]
+    use_case_refs: [UC-58-CR172]
+    steps: ["Inject a credential, account secret or broker order command into separate batch fixtures.", "Validate before any mailbox write."]
+    expected: ["All forbidden payloads are rejected locally.", "Mailbox writes, broker calls and trading actions remain 0."]
+  - id: SC-CR172-S06
+    title: "Intraday signal transport cannot reuse the NAS mailbox contract"
+    type: precheck
+    priority: P0
+    requirement_refs: [REQ-CR172-015]
+    use_case_refs: [UC-58-CR172]
+    steps: ["Declare an intraday or low-latency signal requirement.", "Attempt to route it through the EOD NAS mailbox or current CR172 implementation scope."]
+    expected: ["The route is BLOCKED and points to DF-CR172-INTRADAY-REALTIME-SIGNAL without creating a formal CR.", "mTLS/ordered-delivery/ack-replay/failover implementation counts remain 0."]
+  - id: SC-CR173-P01
+    title: "Participation-ratio effective dimensionality is method-derived and never a raw-count alias"
+    type: positive
+    priority: P0
+    requirement_refs: [REQ-CR173-001]
+    use_case_refs: [UC-CR173-EFFECTIVE-TRIAL-OFFLINE-METHODOLOGY]
+    preconditions: ["CP3 has approved one estimand and method contract.", "A complete synthetic correlated-trial fixture is available."]
+    steps: ["Provide sealed trial identity and an explicit canonical PSD correlation matrix.", "Compute the approved spectral participation ratio as a second-order effective dimensionality.", "Inspect method, limitation, version, hash and provenance independently from raw count."]
+    expected: ["The result is derived by the approved method and has independent provenance.", "Copy, rename, default and implicit raw fallback counts are all 0.", "Li-Ji, BH, FWER, Sidak, DSR and admission-calibration claims are all 0; no real strategy or data identity is required."]
+  - id: SC-CR173-Q01
+    title: "CP3 cannot proceed without a complete method and input-contract inventory"
+    type: precheck
+    priority: P0
+    requirement_refs: [REQ-CR173-002]
+    use_case_refs: [UC-CR173-EFFECTIVE-TRIAL-OFFLINE-METHODOLOGY]
+    steps: ["Review sealed identity, ordered trial IDs, canonical exact-decimal PSD matrix, method/version/hash, numeric contract, assumptions and switch conditions.", "Attempt to approve CP3 with one category or validity rule missing."]
+    expected: ["Input-contract coverage is 100% before approval.", "Any missing category or validity rule blocks design progression.", "The selected method is limited to spectral participation-ratio effective dimensionality and does not estimate a real correlation matrix."]
+  - id: SC-CR173-F01
+    title: "Invalid input fails closed and corrected input creates a new evidence version"
+    type: failure-recovery
+    priority: P0
+    requirement_refs: [REQ-CR173-003]
+    use_case_refs: [UC-CR173-EFFECTIVE-TRIAL-OFFLINE-METHODOLOGY]
+    steps: ["Omit a required dependency input or inject a non-finite value.", "Record typed_unavailable or blocked evidence.", "Provide corrected validation-bound input and recompute as a new version."]
+    expected: ["The failed evidence never becomes available and never falls back to raw count.", "The prior failure remains auditable.", "The corrected result links new provenance without overwriting the old version."]
+  - id: SC-CR173-N01
+    title: "Incomplete seven-field evidence or orphan provenance is rejected"
+    type: negative
+    priority: P0
+    requirement_refs: [REQ-CR173-004]
+    use_case_refs: [UC-CR173-EFFECTIVE-TRIAL-OFFLINE-METHODOLOGY]
+    steps: ["Remove each of the seven required fields in separate fixtures.", "Provide an orphan lineage or computation ref.", "Attempt standalone evidence serialization and then attempt to cross the public C1 boundary."]
+    expected: ["Seven-field coverage must be 7/7 for present standalone evidence.", "Every missing field or orphan ref yields zero present/available evidence, and public C1 projection/write remains 0.", "The offending field or ref is machine-readable."]
+  - id: SC-CR173-B01
+    title: "Offline estimator remains strategy-agnostic"
+    type: boundary
+    priority: P0
+    requirement_refs: [REQ-CR173-005]
+    use_case_refs: [UC-CR173-EFFECTIVE-TRIAL-OFFLINE-METHODOLOGY]
+    steps: ["Run all method fixtures with synthetic case IDs only.", "Attempt to require or infer strategy_id/strategy_name from a directory, manifest or run label."]
+    expected: ["Strategy identity required and inferred counts are 0.", "The estimator accepts only synthetic/fixture/golden-vector inputs.", "Future CR172 activation ownership remains unchanged."]
+  - id: SC-CR173-D01
+    title: "Six golden-vector classes are deterministic across three repeats"
+    type: determinism
+    priority: P0
+    requirement_refs: [REQ-CR173-006]
+    use_case_refs: [UC-CR173-EFFECTIVE-TRIAL-OFFLINE-METHODOLOGY]
+    steps: ["Evaluate independent, positively correlated, fully correlated, singleton, invalid/non-finite and provenance-mismatch vectors.", "Repeat each normalized vector three times with one method version and parameter set."]
+    expected: ["Golden-vector classes are 6/6 and repeats are 3/3 per class.", "Each legal group yields exactly one canonical result/hash.", "Invalid and mismatch groups yield zero available/PASS results."]
+  - id: SC-CR173-C01
+    title: "Standalone evidence stops at the public C1 boundary"
+    type: claim-ceiling
+    priority: P0
+    requirement_refs: [REQ-CR173-007]
+    use_case_refs: [UC-CR173-EFFECTIVE-TRIAL-OFFLINE-METHODOLOGY]
+    steps: ["Build complete seven-field standalone evidence from an approved fixture input.", "Attempt to write or project it into public C1, Gate 1, statistical summary, DSR or admission consumers.", "Attempt to infer c1_computable, real evidence, Stage3, admission or aggregate readiness."]
+    expected: ["Standalone evidence coverage is 1/1, while public C1 projection/write and competing gate counts are 0/0/0.", "Current public effective_trial_count, C1, Gate 1 and admission remain typed_unavailable and c1_computable remains false.", "A future versioned projection CR is required before any public positive truth; all real-evidence, Stage3, admission and aggregate claims remain false."]
+  - id: SC-CR173-A01
+    title: "Product approval and offline delivery do not authorize runtime or auto-resume CR172"
+    type: permission
+    priority: P0
+    requirement_refs: [REQ-CR173-008]
+    use_case_refs: [UC-CR173-EFFECTIVE-TRIAL-OFFLINE-METHODOLOGY]
+    steps: ["Review CP2/CP3/CP5 authorization boundaries and forbidden counters.", "Close a hypothetical offline-method CP8.", "Attempt real data/runtime operations or automatic CR172 recovery."]
+    expected: ["All real-data, credential, provider, write, runtime, trading and Git remote counters remain 0.", "CP5 is required before fixture-only implementation.", "CR173 closes only the methodology prerequisite; CR172 five-field/data-owner freeze, fresh precheck, strategy identity and runtime binding remain externally owned, and automatic close/resume/activation counts are 0.", "CR172 may retain its DQ-003 unavailable degraded binding, but cannot claim c1_computable without a future projection CR."]
 coverage_summary:
-  total: 117
-  p0_total: 111
-  p0_with_planned_coverage: 111
+  total: 152
+  p0_total: 146
+  p0_with_planned_coverage: 146
   high_priority_positive_and_negative_covered: true
-  source_requirements_total: 84
-  source_use_cases_total: 12
+  source_requirements_total: 107
+  source_use_cases_total: 14
   gaps:
     - id: GAP-CR157-001
       status: resolved_by_CR157_CP2_and_promoted_CR158
@@ -1181,3 +1490,9 @@ coverage_summary:
     - id: GAP-CR171-001
       status: resolved_by_CR171_CP8_decision_only
       description: "Three formal decisions were approved and CR171 closed as a decision gate; no data or runtime action is authorized."
+    - id: GAP-CR172-001
+      status: resolved_by_cr172_scope_delta_cp2_approval
+      description: "DQ-001..008 and PATH-B remain prior-approved history. DQ-009..015 were approved at scope-delta CP2 on 2026-07-17; corrections R1/R2 preserve research-local canonical/NAS replica/execution cache, the exact eight-field signal boundary and zero-operation guards."
+    - id: GAP-CR173-001
+      status: resolved_by_cp2_approval_and_cp3_conditional_split
+      description: "All eight formal DQs were approved at CP2. CP3 resolved the conditional branch as participation-ratio estimator-only with standalone seven-field evidence and a public-boundary stop; the same eight scenario IDs and requirement traces remain current."

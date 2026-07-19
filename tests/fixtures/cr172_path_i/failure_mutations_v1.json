@@ -1,0 +1,11 @@
+{
+  "schema_version": "cr172-path-i-failure-mutations.v1",
+  "mutations": {
+    "forward_label_proxy": {"trial_return_accepted": 0, "empirical_r_accepted": 0, "effective_count_accepted": 0},
+    "payload_byte_tamper": {"accepted": 0, "replica_write": 0, "reason": "CONTENT_MISMATCH"},
+    "partial_lineage": {"canonical_selection_advance": 0, "erase_events": 0, "fake_rollback": 0},
+    "replica_staging_failure": {"accepted": 0, "previous_selection_preserved": 1, "reason": "STAGING_INTERRUPTED"},
+    "materialization_pull_failure": {"accepted": 0, "previous_selection_preserved": 1, "reason": "STAGING_INTERRUPTED"},
+    "revoked_record": {"authorized": 0, "eligible": 0, "reason": "REVOKED"}
+  }
+}

@@ -23,12 +23,21 @@
 | v1.7 | 2026-07-15 | host-orchestrator-inline | 回填 CR170 CP2 批准；future verifier 只作为 FU-006 consumer contract，不声明本 CR verifier independence；范围、目标、量化验收和授权边界不变，进入 CP3 设计。 |
 | v1.8 | 2026-07-15 | host-orchestrator | 回填 CR170 CP8 批准与 READY_WITH_RISK 关闭；21/21 policy inventory、Gate 1-5 N/A semantics、Gate 6 admission tier hardening 已交付，Stage3/aggregate/真实 evidence/runtime/CR155 promotion 仍未就绪。 |
 | v1.9 | 2026-07-15 | meta-pm | CR171 增量追加 Stage 3 entry decision MVP、明确 out-of-scope 和 conditional follow-up；CP8 关闭只表示决策闭环，不启动真实数据/运行时行为。 |
+| v2.0 | 2026-07-16 | meta-pm（pm-wu） | CR172 增量追加 C1-first 默认 MVP、PATH-B 恢复链、C2/C3 独立 CR 与联合审批边界；8 个 DQ 留 CP2。 |
+| v2.1 | 2026-07-16 | meta-pm（pm-zheng） | CR173 增量追加 strategy-agnostic offline effective-trial MVP、七字段 evidence、六类 golden vectors、C1 projection 与 CR172 no-auto-resume 边界；8 个 DQ 留 CP2。 |
+| v2.2 | 2026-07-16 | meta-pm（pm-zheng） | 按 CP3 条件分支将 CR173 MVP 收缩为 participation-ratio estimator-only + standalone 七字段 evidence；从 In Scope 移除 public C1 projection，并明确 CR172 其余数据/身份/runtime 前置不变。 |
+| v2.3 | 2026-07-16 | host-orchestrator | 补齐 CR172/CR173 关联追溯；维持 CP3 待审、estimator-only 与 public C1 projection deferred 边界。 |
+| v2.4 | 2026-07-17 | meta-pm（pm-wu） | CR172 在 prior-approved PATH-B 上增量加入 PATH-I instrumentation-first MVP、trial-return/NAS/stable URI、四组件 ownership、分动作授权、新路径和 empirical-R fail-closed；PATH-I 完成不自动恢复 activation。 |
+| v2.5 | 2026-07-17 | host-orchestrator | CP2 发起前修正当前门禁：CR173 已 closed/cp8_closed，当前唯一产品门禁为 CR172 trial-return/deployment scope-delta CP2；范围与授权不变。 |
+| v2.6 | 2026-07-17 | meta-pm（pm-wu） | correction R1 冻结 research-local canonical/NAS verified replica/execution immutable cache，并把 execution-local signal、EOD mailbox 与 intraday transport split 纳入 MVP/Deferred。 |
+| v2.7 | 2026-07-17 | meta-pm（pm-wu） | correction R2 将当前信号范围收缩为本地默认、可选低频精确 8 字段 contract 与 intraday split；详细 exchange/ack/idempotency/path 实现转 Deferred；补 `FU-CR173-001` 条件前置和 CP2/3/5/7/8 阶段守卫。 |
+| v2.8 | 2026-07-17 | meta-pm（pm-wu） | 回填 CR172 PATH-I scope-delta CP2 用户批准；MVP 内容、Deferred、成功指标与六类零授权不变，状态由 draft/pending 更新为 confirmed-CP2/ready-for-CP3。 |
 
 ## 状态
 
-- 文档状态：confirmed-delivered（CR170/CR171 CP8 approved；CR171 为 decision-only closure）
-- 关联 CR：`CR-157` / `CR-158` / `CR-160` / `CR-161` / `CR-162` / `CR-163` / `CR-164` / `CR-166` / `CR-168` / `CR-169` / `CR-170` / `CR-171`
-- 当前门禁：CR171 CP8 已批准并关闭；当前无 active formal CR。后续 real-evidence activation、FU-006、FU-007b 或 FU-008 均须另立正式 CR 和明确授权。
+- 文档状态：confirmed-CP2（CR172 PATH-I scope delta；CR173 offline-methodology 作为已关闭历史保留）
+- 关联 CR：`CR-157` / `CR-158` / `CR-160` / `CR-161` / `CR-162` / `CR-163` / `CR-164` / `CR-166` / `CR-168` / `CR-169` / `CR-170` / `CR-171` / `CR-172` / `CR-173`
+- 当前门禁：CR172 PATH-I scope-delta CP2 已于 `2026-07-17T16:54:09+08:00` 获用户批准；`ready_for_design=true`，当前只解锁 CP3 design-only。实现、真实数据、multi-trial、NAS 写入/同步、signal transport、迁移和 Git remote write 仍未授权。
 
 ## In Scope
 
@@ -217,3 +226,109 @@
 |---|---|---|
 | DF-CR171-REAL-EVIDENCE-ACTIVATION | C1-C4 real-producer 的 computation/binding/real-evidence activation | 仅当 CP2 选 C1-C4 且后续独立 activation CR 获得明确授权。 |
 | DF-CR171-HISTORICAL-REMEDIATION | 历史数据、schema、PIT、lineage、code、manifest 或证据缺陷修复 | 仅当未来 revalidation 产生 `insufficient_for_current_entry` 或 `incompatible_rework_required`，并另立 CR。 |
+
+## CR172 MVP Scope
+
+### In Scope（CP2 已批准基线）
+
+- 保留 DQ/REQ-001~008 的 prior-approved PATH-B 与 CR173 offline-methodology 历史；本轮只确认 DQ/REQ-009~015。
+- 冻结五字段精确有限值候选及 deny-default `6/6`。
+- 五字段可冻结且未显式接受 C1-C3 blast radius 时，推荐 PATH-C C1-first。
+- C1 release/schema/PIT/lineage/run-identity binding 合同，以及 effective count `typed_unavailable` 降级。
+- PATH-B 完成后恢复 PATH-C/A 的 activation 链。
+- PATH-C 后 C2/C3 默认分别进入独立 runtime-high-risk CR，总 activation CR 数预计为 `3`。
+- effective-trial 不同 owner 合并时的同 revision/hash 双 ledger 和风险交集。
+- shared blocker 与 producer-local failure 的隔离语义；不允许 aggregate OR-pass。
+- 在 PATH-C/A 前新增 PATH-I，冻结 per-trial portfolio-return source/object、family/run/trial alignment 与错误对象 fail-closed。
+- 稳定 identity 使用 logical URI + hash；研究机本地为 active canonical，NAS 为 verified replica/backup/distribution，执行机 pull+verify 后原子 materialize 为 immutable cache。
+- 研究机、交易机、NAS、GitHub 四组件职责与允许/禁止数据流；GitHub metadata-only，交易机 approved-package-only。
+- data-lake read、multi-trial runtime/workspace、trial-return generation、empirical-R compute、NAS sync、execution pull/materialize 六类动作分别授权。
+- 默认执行机本地生成信号；低频/EOD 只冻结 immutable SignalBatch/TargetPositionBatch 的精确 8 字段最小 contract，不冻结 exchange 实现；intraday realtime transport deferred。
+- 新运行默认 `${QUANT_LAB_RESEARCH_RUNS_ROOT}/multifactor-strategy-research/{run_id}/`；历史 stage3 目录只读审计。
+- declared-exact/empirical R 显式分类；DQ-003 typed-unavailable 降级允许 PATH-C/A 继续设计，但 available effective count 或 `c1_computable=true` 必须先完成 `FU-CR173-001` sampling-error methodology v2。
+
+### Out of Scope
+
+- C4 rework/authorization、FU-CR161-009 aggregate/final SAP/CR155 promotion。
+- FU-CR161-006 independent verifier implementation。
+- OI-CR171-005 historical classification/revalidation audit，以及 repair/backfill/rerun/manifest rewrite。
+- provider fetch、真实 lake/NAS read/write/sync、multi-trial runtime、trial-return generation、empirical-R computation、catalog/current-pointer mutation、credential/env/account、QMT/trading、publish/deploy/Git remote write。
+- SignalBatch/TargetPositionBatch 物理 mailbox 路径、七级状态机、ack 状态机、idempotency/replay、真实 sync/transport/consumer；任何 intraday transport 实现。
+- 历史目录 move/rename/rewrite、现有 run recanonicalization、真实 migration。
+- CP2 前的设计、Story、LLD 或代码实现。
+
+### Deferred / Conditional
+
+- `FU-CR164-004` 默认独立；仅双 owner 合同全部满足时可在 CP2 讨论合并。
+- PATH-A 仅在五字段可冻结且用户显式接受 C1-C3 blast radius 时启用。
+- 同 parent 顺序 C2/C3 slice 仅在同五字段 revision、同审批/风险/回滚边界、C1 CP7 通过且证据独立时作为备选。
+- PATH-I fixture implementation 和验证只证明合同；只有 source/owner、five fields、六类逐动作授权、stable URI、副本/materialization 映射和 fresh precheck 全部就绪后，才能重新发起 PATH-C/A 人工门禁。
+- `DF-CR172-SIGNAL-BATCH-EXCHANGE` 承接未来低频 immutable exchange 详细设计与实现；`DF-CR172-INTRADAY-REALTIME-SIGNAL` 承接 intraday realtime transport。两者只登记 backlog candidate，不创建正式 CR。
+- `FU-CR173-001` 承接 empirical dependency-matrix methodology v2 与 sampling-error validation；它不阻断 DQ-003 降级设计，但在任何 positive empirical effective-count/C1 claim 前必须完成。public C1 versioned projection、外部 R import contract 与历史路径迁移继续进入独立 Backlog/后续 CR。
+
+### Phase Guards
+
+| Gate | PATH-I 当前允许 | 不得发生 / 最高声明 |
+|---|---|---|
+| CP2 | 只批准产品范围并解锁 CP3 | 不设计实现，不创建目录，不写 NAS，不运行 multi-trial，不传信号 |
+| CP3 | 只冻结设计 | 目录创建、NAS write、multi-trial runtime、signal generation/transport=`0` |
+| CP5 | repository-local code/test/fixture | 六类真实动作授权=`0/6`；真实 sync/pull/signal/runtime=`0` |
+| CP7 | fixture/static 与零操作验证 | 六类真实动作执行计数=`0/6` |
+| CP8 | 最高 `path_i_design_ready=true` 或等价 verified contract-ready | `stage3_entry_ready=false`、`c1_computable=false`、`real_data_authorized=false`、`multi_trial_runtime_authorized=false`、`signal_transport_authorized=false` |
+
+### Success Metrics
+
+| 指标 | 目标 |
+|---|---:|
+| prior-approved DQ / scope-delta DQ 结构化覆盖 | 8/8 / 7/7 |
+| 五字段有限值 | prior PATH-B history；未来 activation 仍需 5/5 |
+| deny-default 类别 | 6/6 |
+| 新增需求 / 正向+负向覆盖 | 7/7 / 7/7+7/7 |
+| stable URI + hash / 四组件 / 数据动作 / SignalBatch 最小字段 | 100% / 4/4 / 6/6 / exactly 8/8 |
+| detailed signal path/state/ack/idempotency/replay/sync/transport/consumer implementation | 0/0/0/0/0/0/0/0 |
+| PATH-C/A empirical disposition / pre-v2 positive claim | 1/1 / available count=0、c1_computable=false |
+| raw-to-effective alias | 0 |
+| PATH-B 错误 activation-complete 声明 | 0 |
+| partial/mismatched joint approval 合并 | 0 |
+| 错误对象/stale/partial/hash/direct-NAS/alignment/forbidden-signal/empirical overclaim 成功数 | 0/0/0/0/0/0/0/0 |
+| CP1 真实数据/NAS-sync-pull/signal/credential/provider/write/runtime-trading/migration/Git-remote 操作 | 0/0/0/0/0/0/0/0/0 |
+| path_i_design_ready / stage3_entry_ready / c1_computable / real_data_authorized / multi_trial_runtime_authorized / signal_transport_authorized | true(max) / false / false / false / false / false |
+
+## CR173 MVP Scope
+
+### In Scope
+
+- sealed-trial correlation matrix 的 `spectral_participation_ratio` 二阶 effective-dimensionality estimand 与 raw non-alias 边界；不声称 Li–Ji/BH/FWER/Šidák/DSR calibration。
+- CP3 冻结的 sealed identity、ordered trial IDs、canonical PSD matrix、method/version/hash、数值契约、二阶假设和 Spike/版本切换条件。
+- 缺失/无效/矛盾输入的 `typed_unavailable` / `blocked` fail-closed 与 append-only recovery。
+- 独立七字段 `7/7` typed evidence 和 lineage/computation provenance。
+- strategy-agnostic、synthetic/fixture/golden-vector-only 输入边界。
+- 六类 golden vectors `6/6`，每类重复 `3/3` 的确定性验收。
+- standalone evidence 生成 `1/1`、public C1 boundary stop 以及 public projection/write=`0/0` 的 claim ceiling。
+- CP2/CP3/CP5 gate、零真实操作和 CR172 不自动恢复合同。
+
+### Out of Scope
+
+- 具体 `strategy_id/strategy_name`、five-field activation scope、真实 run identity 和 real producer binding。
+- 真实 lake/NAS/provider/credential、真实计算、runtime、write、trading、publish/deploy、Git remote write。
+- public C1 / Gate 1 / statistical summary / DSR / admission 的 versioned projection、adapter、migration、write 与回归；当前这些 consumer 保持 `typed_unavailable`。
+- CR172 activation、C2/C3/C4、FU-006、OI-005、aggregate/FU-009、CR155 promotion 和 admission decision。
+- 历史证据 backfill/revalidation、真实研究批次或从历史目录/manifest 推断输入。
+
+### Deferred / Conditional
+
+- empirical correlation matrix 的采样误差/稳定性、alpha/tail/FWER 校准需要未来 methodology Spike 或 activation evidence；本 CR 实现数为 `0`。
+- public C1 versioned projection 只登记 backlog 后续候选，未建立正式 CR；真正 `c1_computable` 必须经该未来 CR 的 owner、migration 和回归门禁。
+- CR173 只关闭 methodology prerequisite。CR172 可按 DQ-003 保留 effective count unavailable 的降级绑定；五字段 + data owner、fresh conflict precheck、strategy identity 和 runtime/real-producer binding 仍由 CR172 独立冻结/批准。
+
+### Success Metrics
+
+| 指标 | 目标 |
+|---|---:|
+| use case / P0 requirements / scenarios / CP2 DQ | 1 / 8 / 8 / 8 |
+| 六类场景 | 6/6 |
+| typed evidence schema | 7/7 |
+| golden vectors / repeats | 6/6 / 3/3 |
+| standalone evidence / public C1 projection / public C1 write / competing gate | 1 / 0 / 0 / 0 |
+| raw alias / overclaim / CR172 auto-resume | 0 / 0 / 0 |
+| 真实数据/credential/provider/write/runtime-trading/Git remote 操作 | 0/0/0/0/0/0 |

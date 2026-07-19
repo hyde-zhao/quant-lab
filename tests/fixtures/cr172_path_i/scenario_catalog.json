@@ -1,0 +1,42 @@
+{
+  "schema_version": "cr172-path-i-scenario-catalog.v1",
+  "requirements": [
+    "REQ-CR172-001", "REQ-CR172-002", "REQ-CR172-003", "REQ-CR172-004", "REQ-CR172-005",
+    "REQ-CR172-006", "REQ-CR172-007", "REQ-CR172-008", "REQ-CR172-009", "REQ-CR172-010",
+    "REQ-CR172-011", "REQ-CR172-012", "REQ-CR172-013", "REQ-CR172-014", "REQ-CR172-015"
+  ],
+  "outcomes": [
+    "OUT-CR172-001", "OUT-CR172-002", "OUT-CR172-003", "OUT-CR172-004", "OUT-CR172-005",
+    "OUT-CR172-006", "OUT-CR172-007", "OUT-CR172-008", "OUT-CR172-009", "OUT-CR172-010",
+    "OUT-CR172-011"
+  ],
+  "scenarios": [
+    {"id": "SC-CR172-001", "test": "test_canonical_payload_and_seal_contract", "requirements": ["REQ-CR172-001"], "outcomes": ["OUT-CR172-001"]},
+    {"id": "SC-CR172-002", "test": "test_three_stage_artifact_chain_is_exact", "requirements": ["REQ-CR172-002"], "outcomes": ["OUT-CR172-002"]},
+    {"id": "SC-CR172-003", "test": "test_materialization_calls_s02_verifier_once", "requirements": ["REQ-CR172-003"], "outcomes": ["OUT-CR172-003"]},
+    {"id": "SC-CR172-004", "test": "test_forward_label_proxy_is_rejected", "requirements": ["REQ-CR172-004"], "outcomes": ["OUT-CR172-004"]},
+    {"id": "SC-CR172-005", "test": "test_tampered_source_fails_closed_before_replica_write", "requirements": ["REQ-CR172-005"], "outcomes": ["OUT-CR172-005"]},
+    {"id": "SC-CR172-006", "test": "test_partial_lineage_never_advances_selection", "requirements": ["REQ-CR172-006"], "outcomes": ["OUT-CR172-006"]},
+    {"id": "SC-CR172-007", "test": "test_replica_failure_preserves_previous_selection", "requirements": ["REQ-CR172-007"], "outcomes": ["OUT-CR172-007"]},
+    {"id": "SC-CR172-008", "test": "test_materialization_failure_preserves_previous_selection", "requirements": ["REQ-CR172-008"], "outcomes": ["OUT-CR172-008"]},
+    {"id": "SC-CR172-009", "test": "test_s03_s04_keep_only_original_seal_digest", "requirements": ["REQ-CR172-009"], "outcomes": ["OUT-CR172-009"]},
+    {"id": "SC-CR172-010", "test": "test_fixture_provenance_surface_is_minimal", "requirements": ["REQ-CR172-010"], "outcomes": ["OUT-CR172-010"]},
+    {"id": "SC-CR172-011", "test": "test_six_actions_records_enforcement_and_dag", "requirements": ["REQ-CR172-011"], "outcomes": ["OUT-CR172-011"]},
+    {"id": "SC-CR172-012", "test": "test_all_repository_fixture_actions_are_eligible", "requirements": ["REQ-CR172-012"], "outcomes": ["OUT-CR172-001"]},
+    {"id": "SC-CR172-013", "test": "test_runtime_without_read_is_denied", "requirements": ["REQ-CR172-013"], "outcomes": ["OUT-CR172-002"]},
+    {"id": "SC-CR172-014", "test": "test_missing_predecessor_fails_closed", "requirements": ["REQ-CR172-014"], "outcomes": ["OUT-CR172-003"]},
+    {"id": "SC-CR172-015", "test": "test_revoked_record_fails_closed", "requirements": ["REQ-CR172-015"], "outcomes": ["OUT-CR172-004"]},
+    {"id": "SC-CR172-016", "test": "test_predecessor_context_mismatch_fails_closed", "requirements": ["REQ-CR172-001"], "outcomes": ["OUT-CR172-005"]},
+    {"id": "SC-CR172-017", "test": "test_approved_ledger_origin_is_unconditionally_denied", "requirements": ["REQ-CR172-002"], "outcomes": ["OUT-CR172-006"]},
+    {"id": "SC-CR172-018", "test": "test_valid_looking_real_target_cannot_self_authorize", "requirements": ["REQ-CR172-003"], "outcomes": ["OUT-CR172-007"]},
+    {"id": "SC-CR172-019", "test": "test_fixture_origin_cannot_target_real_operation", "requirements": ["REQ-CR172-004"], "outcomes": ["OUT-CR172-008"]},
+    {"id": "SC-CR172-020", "test": "test_traceability_is_exact_and_total", "requirements": ["REQ-CR172-005"], "outcomes": ["OUT-CR172-009"]},
+    {"id": "SC-CR172-021", "test": "test_req013_is_contract_ready_only", "requirements": ["REQ-CR172-013"], "outcomes": ["OUT-CR172-010"]},
+    {"id": "SC-CR172-022", "test": "test_five_high_order_claims_remain_false", "requirements": ["REQ-CR172-007"], "outcomes": ["OUT-CR172-011"]},
+    {"id": "SC-CR172-023", "test": "test_signal_is_only_an_eight_slot_boundary", "requirements": ["REQ-CR172-008"], "outcomes": ["OUT-CR172-001"]},
+    {"id": "SC-CR172-024", "test": "test_deferred_capabilities_have_no_runtime_surface", "requirements": ["REQ-CR172-009"], "outcomes": ["OUT-CR172-002"]},
+    {"id": "SC-CR172-025", "test": "test_zero_real_operation_ledger_is_exact", "requirements": ["REQ-CR172-010"], "outcomes": ["OUT-CR172-003"]},
+    {"id": "SC-CR172-026", "test": "test_empirical_r_stays_typed_unavailable_without_real_source", "requirements": ["REQ-CR172-011"], "outcomes": ["OUT-CR172-004"]},
+    {"id": "SC-CR172-027", "test": "test_s05_imports_no_runner_lineage_or_real_adapter", "requirements": ["REQ-CR172-012", "REQ-CR172-013", "REQ-CR172-014", "REQ-CR172-015"], "outcomes": ["OUT-CR172-005"]}
+  ]
+}
