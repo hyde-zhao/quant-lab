@@ -2,6 +2,13 @@
 
 本目录按“组件说明 + 场景案例 + 参考边界 + legacy 归档”组织。正式阅读入口是本文件和 [USER-MANUAL.md](USER-MANUAL.md)；CR 编号文档只作为历史审计引用，不再作为用户首选入口。
 
+## 文档归属边界
+
+- 本发布仓的 `README.md` 与 `docs/` 保存用户、组件、场景、reference、runbook 和发布入口。
+- Project/Work/CR、门禁、独立 QA、复盘、进化以及未来 BLUEPRINT/HLD/ADR/DOMAIN-MAP/DEPENDENCY-MAP 保存到 sibling 过程仓。
+- `docs/product/` 的 8 个文件、`docs/legacy/` 的 29 个文件与 `docs/goldminer/` 的 1 个文件是过渡库存；CR-174 只完成归属登记，不批量迁移。
+- 旧过程历史只按过程仓 `legacy/LEGACY-SOURCE.yaml` 冻结的 OID/子路径回查。发布仓不创建 `process`、`checkpoints`、`docs/design`、`docs/features` 或 `docs/quality` 软链接。
+
 ## 1. 组件文档
 
 | 组件 | 文档 | 说明 |
