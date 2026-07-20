@@ -32,15 +32,8 @@ pnpm-debug.log*
 AGENTS.md
 CLAUDE.md
 
-# CR081/CR082/CR087/CR088：过程台账和过程文档迁移到仓库外部
-# meta-flow-artifacts project，并归档到
-# /home/hyde/workspace/meta-flow-artifacts/process/quant-lab。
-# 本项目只保留本地 symlink 入口，不跟踪 process 本体或过程文档软链。
-/process
-/checkpoints
-/docs/design
-/docs/features
-/docs/quality
+# Meta Flow vNext：只忽略本地安装清单；发布仓 binding 必须被跟踪。
+/.meta-flow/INSTALL-MANIFEST.yaml
 /docs/release/*-CR*.md
 /docs/release/*-CR*.yaml
 /docs/release/CR*.md
